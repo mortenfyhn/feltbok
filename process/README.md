@@ -19,14 +19,21 @@ also works (`-t docs/artsobs-template-v2.20.xlsx`); column renames are handled.
    seeded with a bird-name prompt.
 2. **Parse** each transcript with Claude → species (corrected against Norwegian
    bird names, optionally validated against `bird_species.csv`), count,
-   activity, notes, and an uncertainty flag.
-3. **Resolve the locality** (a required field). If the GPS is within
+   activity, sex, age, notes, and an uncertainty flag.
+3. **Apply corrections.** A note that starts with *"korreksjon …"* revises an
+   earlier observation instead of adding a new row — handy when you recount
+   (*"korreksjon, det var fem grønnfink"*). It targets the most recent prior
+   note of the same species (or, if it names none, the previous note) and
+   overwrites only the fields it restates; the original keeps its time and
+   place. The fix is recorded in that row's private comment.
+4. **Resolve the locality** (a required field). If the GPS is within
    `--locality-radius` (200 m) of a known locality, that exact name is used so
    the import **links to your established locality**; otherwise a Kartverket
    place name is used, which creates a new point the row flags for review.
-4. **Write** a row per clip into a copy of the template's `Fugl` sheet, then
-   move handled recordings into `recordings/processed/` so re-runs only see new
-   ones (`--keep` to disable). Silent/accidental clips go to `recordings/skipped/`.
+5. **Write** a row per surviving observation into a copy of the template's
+   `Fugl` sheet, then move handled recordings into `recordings/processed/` so
+   re-runs only see new ones (`--keep` to disable). Silent/accidental clips go
+   to `recordings/skipped/`.
 
 Nothing is dropped: a clip Claude is unsure about — or one missing GPS, or a
 species off the checklist — still gets a row, marked `Usikker artsbestemming = X`

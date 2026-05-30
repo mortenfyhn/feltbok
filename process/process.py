@@ -196,8 +196,15 @@ PARSE_TOOL = {
                 "type": "boolean",
                 "description": "true hvis artsbestemmelsen er usikker eller transkripsjonen er uklar.",
             },
+            "correction": {
+                "type": "boolean",
+                "description": "true hvis notatet retter en TIDLIGERE observasjon — typisk når det "
+                               "starter med «korreksjon» (f.eks. «korreksjon, det var fem grønnfink»). "
+                               "I et korreksjonsnotat: fyll KUN ut feltene som faktisk nevnes (resten "
+                               "null/tom), men ta med arten hvis den nevnes så riktig observasjon kan finnes.",
+            },
         },
-        "required": ["species", "count", "activity", "sex", "age", "comment", "uncertain"],
+        "required": ["species", "count", "activity", "sex", "age", "comment", "uncertain", "correction"],
     },
 }
 
@@ -214,7 +221,9 @@ def make_parser(model: str, activities: list[str], species: list[str]):
         "på mest sannsynlige art). Sett sex kun hvis kjønnet er eksplisitt nevnt (Hann, "
         "Hunn, Hunnfarget eller I par), ellers null — ikke gjett. Sett age kun hvis alderen er "
         "eksplisitt nevnt (velg nærmeste gyldige kode, f.eks. voksen→Adult, ungfugl→1K, dununge→Pulli), "
-        "ellers null. Kommentaren skal kun inneholde tilleggsinfo som ikke "
+        "ellers null. Hvis notatet starter med «korreksjon» (eller tydelig retter en tidligere "
+        "observasjon), sett correction=true og fyll kun ut feltene som faktisk nevnes — ta likevel "
+        "med arten hvis den nevnes. Kommentaren skal kun inneholde tilleggsinfo som ikke "
         "allerede er fanget i art, antall eller aktivitet — ikke gjenta disse, og la den "
         "stå tom hvis det ikke er noe ekstra. Velg activity som nøyaktig én verdi fra denne "
         "lista, ellers null:\n"
@@ -231,7 +240,8 @@ def make_parser(model: str, activities: list[str], species: list[str]):
     def parse(transcript: str) -> dict:
         if not transcript.strip():
             return {"species": "", "count": None, "activity": None,
-                    "sex": None, "age": None, "comment": "", "uncertain": True}
+                    "sex": None, "age": None, "comment": "", "uncertain": True,
+                    "correction": False}
         resp = client.messages.create(
             model=model,
             max_tokens=512,
@@ -244,9 +254,41 @@ def make_parser(model: str, activities: list[str], species: list[str]):
             if block.type == "tool_use":
                 return block.input
         return {"species": "", "count": None, "activity": None,
-                "sex": None, "age": None, "comment": "", "uncertain": True}
+                "sex": None, "age": None, "comment": "", "uncertain": True,
+                "correction": False}
 
     return parse
+
+
+# --- corrections -------------------------------------------------------------
+
+# A "korreksjon …" note revises an earlier observation rather than adding a new
+# one (e.g. an updated count). It targets the most recent prior observation of
+# the same species — or, if it names no species, simply the previous one — and
+# overwrites only the fields it actually restates.
+
+def match_correction(prior: list[dict], corr: dict):
+    """The earlier obs a correction revises, or None. `prior` is the list of
+    already-seen, not-yet-consumed observations in chronological order."""
+    candidates = [o for o in prior if not o.get("consumed") and (o["obs"].get("species") or "")]
+    sp = (corr.get("species") or "").strip().lower()
+    if sp:
+        for o in reversed(candidates):
+            if (o["obs"].get("species") or "").lower() == sp:
+                return o
+    return candidates[-1] if candidates else None
+
+
+def merge_correction(target: dict, corr: dict) -> dict:
+    """Overwrite only the fields the correction restates (Replace fields stated)."""
+    merged = dict(target)
+    for f in ("count", "activity", "sex", "age"):
+        if corr.get(f) is not None:
+            merged[f] = corr[f]
+    for f in ("species", "comment"):
+        if (corr.get(f) or "").strip():
+            merged[f] = corr[f]
+    return merged
 
 
 # --- locality resolution -----------------------------------------------------
@@ -431,10 +473,15 @@ def main() -> int:
                        "Privat kommentar (kun synlig for deg selv)")
 
     out_row = review_row = 3  # row 1 = title, row 2 = headers
-    flagged = new_locality = 0
+    flagged = new_locality = corrections = 0
     ws_review = None  # second workbook, created lazily for unidentified rows
     processed: list[tuple[str, str]] = []  # (path, transcript)
     skipped: list[tuple[str, str]] = []
+
+    # Pass 1: transcribe + parse. A "korreksjon" note folds into the earlier
+    # observation it revises instead of becoming its own row, so we collect
+    # records first and only write rows once all corrections are applied.
+    records: list[dict] = []
     for i, clip in enumerate(clips, 1):
         name = os.path.basename(clip.path)
         print(f"[{i}/{len(clips)}] {name}")
@@ -449,7 +496,24 @@ def main() -> int:
             continue
 
         obs = parse(transcript)
+        processed.append((clip.path, transcript))
 
+        if obs.get("correction"):
+            target = match_correction(records, obs)
+            if target is not None:
+                target["obs"] = merge_correction(target["obs"], obs)
+                target["corrections"].append((name, transcript))
+                corrections += 1
+                print(f"    ↳ korreksjon av {os.path.basename(target['clip'].path)}")
+                continue
+            print("    ! korreksjon uten match – beholder som egen rad")
+
+        records.append({"clip": clip, "name": name, "transcript": transcript,
+                        "obs": obs, "corrections": []})
+
+    # Pass 2: resolve locality and write a row per surviving observation.
+    for rec in records:
+        clip, name, transcript, obs = rec["clip"], rec["name"], rec["transcript"], rec["obs"]
         sp = obs.get("species") or ""
         off_list = bool(species_set) and sp and sp.lower() not in species_set
         no_gps = clip.lat is None or clip.lon is None
@@ -474,6 +538,9 @@ def main() -> int:
             lon_out = round(lon_out, 6)
 
         private = f"[{name}] «{transcript}»"
+        if rec["corrections"]:
+            tags = "; ".join(f"[{n}] «{t}»" for n, t in rec["corrections"])
+            private += f" KORRIGERT: {tags}"
         if no_gps:
             private = "GPS MANGLER. " + private
         elif is_new_locality:
@@ -511,12 +578,11 @@ def main() -> int:
                       {**row, col_private: "UIDENTIFISERT – fyll inn art. " + private,
                        "Usikker artsbestemming": "X"})
             review_row += 1
-        processed.append((clip.path, transcript))
 
     wb.save(args.output)
     print(f"\nWrote {out_row - 3} importable row(s) to {args.output} "
-          f"({flagged} flagged species, {new_locality} new localit(y/ies); "
-          f"{len(skipped)} empty skipped).")
+          f"({flagged} flagged species, {new_locality} new localit(y/ies), "
+          f"{corrections} correction(s) folded in; {len(skipped)} empty skipped).")
     if ws_review is not None:
         review_path = re.sub(r"(\.xlsx)$", r"_review\1", args.output)
         ws_review.parent.save(review_path)
