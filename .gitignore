@@ -1,10 +1,27 @@
-*.iml
-.gradle
+# Build output
+/app/build/
+/.gradle/
+/app/.cxx/
+# Android SDK path — machine-specific
 /local.properties
-/.idea
-.DS_Store
-/build
-/app/build
-/captures
-.externalNativeBuild
-.cxx
+
+# LibreOffice/editor lock files
+.~lock.*#
+
+# Python
+process/__pycache__/
+.venv/
+
+# Field data / generated sheets (keep templates, not outputs)
+/recordings/
+/observasjoner.xlsx
+/observasjoner_review.xlsx
+/eksempel*.xlsx
+/probe_*.xlsx
+# Locality lists (your spots + the harvested gazetteer; keep local)
+/my_localities.csv
+/localities_gazetteer.csv
+/bird_species.csv
+
+# Local models (NB-Whisper CTranslate2 build)
+/models/

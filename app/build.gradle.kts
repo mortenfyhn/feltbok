@@ -14,10 +14,6 @@ android {
         targetSdk = 34
         versionCode = 1
         versionName = "0.1"
-
-        ndk {
-            abiFilters += "arm64-v8a"
-        }
     }
 
     buildTypes {
@@ -38,14 +34,6 @@ android {
     buildFeatures {
         compose = true
     }
-
-    ndkVersion = "27.2.12479018"
-
-    externalNativeBuild {
-        cmake {
-            path = file("src/main/jni/whisper/CMakeLists.txt")
-        }
-    }
 }
 
 dependencies {
@@ -53,6 +41,7 @@ dependencies {
     implementation(platform("androidx.compose:compose-bom:2024.12.01"))
     implementation("androidx.compose.material3:material3")
     implementation("androidx.compose.ui:ui")
+    implementation("androidx.core:core-ktx:1.13.1")
     implementation("androidx.lifecycle:lifecycle-viewmodel-compose:2.8.7")
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.9.0")
 }
