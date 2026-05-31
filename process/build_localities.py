@@ -29,6 +29,7 @@ import csv
 import io
 import os
 import sys
+import time
 import xml.etree.ElementTree as ET
 import zipfile
 
@@ -51,21 +52,51 @@ TERMS = {
 
 
 def download(url: str, dest: str) -> None:
-    """Stream the archive to `dest`, skipping if it's already there."""
+    """Stream the archive to `dest`, resuming a dropped download via HTTP Range.
+
+    A few GB over one GET drops often, so we write to `<dest>.part`, resume from
+    wherever it left off (Range), and retry on connection errors. Only renamed to
+    `dest` once complete, so a cached `dest` is always whole."""
     if os.path.exists(dest):
-        print(f"Using cached archive {dest} ({os.path.getsize(dest) >> 20} MB)",
-              file=sys.stderr)
+        print(f"Using cached archive {dest} ({os.path.getsize(dest) >> 20} MB)", file=sys.stderr)
         return
-    print(f"Downloading {url}\n  -> {dest} (this is a few GB, one time)", file=sys.stderr)
-    with requests.get(url, stream=True, timeout=120) as r:
-        r.raise_for_status()
-        got = 0
-        with open(dest, "wb") as f:
-            for chunk in r.iter_content(chunk_size=1 << 20):
-                f.write(chunk)
-                got += len(chunk)
-                print(f"\r  {got >> 20} MB", end="", file=sys.stderr)
-    print(file=sys.stderr)
+    part = dest + ".part"
+    print(f"Downloading {url}\n  -> {dest} (a few GB, one time; resumable)", file=sys.stderr)
+    for attempt in range(1, 9):
+        have = os.path.getsize(part) if os.path.exists(part) else 0
+        headers = {"Range": f"bytes={have}-"} if have else {}
+        try:
+            with requests.get(url, stream=True, timeout=120, headers=headers) as r:
+                if r.status_code == 416:           # already have it all
+                    break
+                mode = "ab"
+                if have and r.status_code != 206:  # server ignored Range -> restart
+                    have, mode = 0, "wb"
+                r.raise_for_status()
+                clen = r.headers.get("Content-Length")
+                total = (have + int(clen)) if clen else None
+                got = have
+                with open(part, mode) as f:
+                    for chunk in r.iter_content(chunk_size=1 << 20):
+                        if not chunk:
+                            continue
+                        f.write(chunk)
+                        got += len(chunk)
+                        if (got >> 20) % 16 == 0:
+                            tot = f" / {total >> 20} MB" if total else ""
+                            print(f"\r  {got >> 20} MB{tot}   ", end="", file=sys.stderr)
+            print(file=sys.stderr)
+            break
+        except (requests.exceptions.ChunkedEncodingError,
+                requests.exceptions.ConnectionError,
+                requests.exceptions.ReadTimeout) as e:
+            wait = min(5 * attempt, 30)
+            print(f"\n  interrupted ({type(e).__name__}); resuming in {wait}s "
+                  f"(attempt {attempt})", file=sys.stderr)
+            time.sleep(wait)
+    else:
+        raise SystemExit("Download kept dropping — try again later.")
+    os.replace(part, dest)
 
 
 def split_name(full: str):
