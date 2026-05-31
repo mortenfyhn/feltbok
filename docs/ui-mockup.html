@@ -7,7 +7,7 @@
 <style>
   :root{
     --bg:#eef1f0; --card:#fff; --ink:#1c2624; --muted:#6b7a76;
-    --accent:#1f7a64; --accent-d:#155a49; --line:#e6eae9; --warn:#c2761b;
+    --accent:#5b7a2b; --accent-d:#41591d; --line:#e6eae9; --warn:#c2761b;
   }
   *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
   body{margin:0;background:#cdd4d2;font:16px/1.35 system-ui,Segoe UI,Roboto,sans-serif;color:var(--ink)}
@@ -18,13 +18,14 @@
   .screen{position:absolute;inset:0;display:none;flex-direction:column}
   .screen.on{display:flex}
   .body{flex:1;overflow:auto}
-  /* list top strip */
+  /* top bars */
   .strip{background:var(--accent);color:#fff;padding:11px 14px;display:flex;align-items:center;gap:7px;font-size:14px}
-  .strip b{font-weight:650}
-  .strip .ok{background:#2c9b7f;padding:1px 8px;border-radius:10px;font-size:12px}
+  .strip .locname{font-weight:650}
+  .strip .ok{background:rgba(255,255,255,.22);padding:1px 8px;border-radius:10px;font-size:12px}
   .strip.wait .ok{background:var(--warn)}
-  .strip .exp{margin-left:auto;color:#fff;font-weight:600;background:rgba(255,255,255,.16);border:0;border-radius:9px;padding:6px 11px;font-size:13px}
+  .strip .exp{margin-left:auto;color:#fff;font-weight:600;background:rgba(255,255,255,.18);border:0;border-radius:9px;padding:6px 11px;font-size:13px}
   .strip .exp:disabled{opacity:.45}
+  .titlebar{background:var(--accent);color:#fff;text-align:center;font-weight:650;font-size:16px;padding:13px}
   .scount{padding:9px 16px;color:var(--muted);font-size:13px}
   /* list rows */
   .row{background:var(--card);display:flex;align-items:center;gap:12px;padding:12px 16px;border-bottom:1px solid var(--line)}
@@ -38,58 +39,57 @@
   .row .chev{color:#b8c2bf;font-size:20px}
   .fab{position:absolute;right:18px;bottom:20px;width:62px;height:62px;border-radius:50%;
     background:var(--accent);color:#fff;border:0;font-size:33px;box-shadow:0 6px 16px rgba(0,0,0,.3)}
-  /* search (top input + inline cancel; no title bar) */
+  /* search */
   .searchtop{display:flex;gap:8px;align-items:center;padding:12px 12px 10px;background:var(--card);border-bottom:1px solid var(--line)}
   .searchtop input{flex:1;padding:12px 14px;border:1px solid var(--line);border-radius:11px;font-size:16px;background:#f4f7f6}
-  .searchtop .lnk{color:var(--accent);background:none;border:0;font-size:15px;font-weight:600;padding:8px 4px}
+  .searchtop .lnk{color:var(--accent-d);background:none;border:0;font-size:15px;font-weight:600;padding:8px 4px}
   .sec{padding:12px 16px 4px;color:var(--muted);font-size:12px;text-transform:uppercase;letter-spacing:.04em}
   .opt{background:var(--card);padding:14px 16px;border-bottom:1px solid var(--line);display:flex;gap:10px;align-items:baseline}
-  /* detail field rows (no title bar) */
-  .frow{background:var(--card);display:flex;align-items:center;gap:12px;padding:14px 16px;border-bottom:1px solid var(--line);min-height:54px}
-  .frow label{color:var(--muted);min-width:84px;font-size:14px}
-  .frow .val{flex:1;text-align:right;font-weight:550}
-  .frow .val .d{color:var(--muted);font-weight:400;font-size:13px;margin-left:6px}
+  /* detail rows */
+  .frow{background:var(--card);display:flex;align-items:center;gap:12px;padding:0 16px;border-bottom:1px solid var(--line);min-height:54px;position:relative}
+  .frow label{color:var(--muted);min-width:84px;font-size:14px;padding:15px 0}
+  .frow .val{flex:1;text-align:right;font-weight:550;padding:15px 0}
+  .frow .val .d{color:var(--muted);font-weight:400;font-size:13px;margin-left:8px}
   .frow .val.empty{color:#aab4b1;font-weight:400}
-  .frow.tap .val::after{content:"›";color:#c2ccc9;margin-left:8px;font-size:18px}
-  .frow .selwrap{flex:1;display:flex;justify-content:flex-end;align-items:center}
-  .frow .selwrap::after{content:"›";color:#c2ccc9;margin-left:8px;font-size:18px;pointer-events:none}
-  .frow select{text-align:right;border:0;background:none;font:inherit;color:var(--ink);font-weight:550;
-    -webkit-appearance:none;appearance:none;text-align-last:right}
+  .frow.tap .val::after,.frow.sel .val::after{content:"›";color:#c2ccc9;margin-left:8px;font-size:18px}
+  .frow.sel select{position:absolute;inset:0;width:100%;height:100%;opacity:0;border:0;margin:0;font-size:16px}
   .stepper{display:flex;align-items:center;border:1px solid var(--line);border-radius:10px;overflow:hidden}
-  .stepper button{width:42px;height:38px;border:0;background:#f1f5f4;font-size:20px;color:var(--accent-d)}
-  .stepper .q{width:48px;text-align:center;font-weight:700;font-size:18px}
+  .stepper button{width:42px;height:40px;border:0;background:#f1f5f4;font-size:22px;color:var(--accent-d)}
+  .stepper .q{width:64px;height:40px;text-align:center;font-weight:700;font-size:18px;border:0;border-left:1px solid var(--line);border-right:1px solid var(--line);background:#fff}
+  .stepper .q::-webkit-outer-spin-button,.stepper .q::-webkit-inner-spin-button{-webkit-appearance:none;margin:0}
   .ca{padding:8px 16px 4px;background:var(--card);border-bottom:1px solid var(--line)}
   .ca label{display:block;color:var(--muted);font-size:13px;margin:8px 0 4px}
   .ca textarea{width:100%;border:1px solid var(--line);border-radius:10px;padding:10px;font:inherit;resize:none;background:#f8faf9}
-  /* bottom action bar */
   .actbar{display:flex;gap:10px;padding:11px 14px;background:var(--card);border-top:1px solid var(--line)}
   .actbar button{border:0;border-radius:12px;padding:15px;font-size:16px;font-weight:650}
   .actbar .secondary{flex:1;background:#eceeed;color:var(--ink)}
   .actbar .primary{flex:1.7;background:var(--accent);color:#fff}
   /* locality picker */
   .locrow{background:var(--card);padding:13px 16px;border-bottom:1px solid var(--line);display:flex;align-items:center;gap:12px}
-  .locrow .mark{font-size:15px;color:var(--accent)}
+  .locrow.sel{background:#eef4e6}
   .locrow .lname{flex:1;font-weight:600}
+  .locrow.sel .lname{color:var(--accent-d)}
   .locrow .lsub{color:var(--muted);font-size:12.5px;font-weight:400;margin-top:1px}
-  .locrow .dist{color:var(--muted);font-size:13px}
+  .locrow .dist{color:var(--muted);font-size:13px;text-align:right;white-space:nowrap}
+  .locrow .dist .chk{color:var(--accent);font-weight:700}
   /* export modal */
   .modal{position:absolute;inset:0;background:rgba(10,20,18,.45);display:none;align-items:center;justify-content:center;padding:20px}
   .modal.on{display:flex}
   .sheet{background:#fff;border-radius:16px;width:100%;max-height:82%;display:flex;flex-direction:column;overflow:hidden}
   .sheet h2{margin:0;padding:15px 16px;font-size:17px;border-bottom:1px solid var(--line)}
   .sheet .hint{padding:10px 16px;color:var(--muted);font-size:13px}
-  .sheet textarea{margin:0 16px;height:160px;border:1px solid var(--line);border-radius:10px;padding:10px;font:12px/1.4 monospace;white-space:pre;overflow:auto}
+  .sheet textarea{margin:0 16px;height:150px;border:1px solid var(--line);border-radius:10px;padding:10px;font:12px/1.4 monospace;white-space:pre;overflow:auto}
   .sheet .acts{display:flex;gap:10px;padding:14px 16px}
   .sheet .acts button{flex:1;border:0;border-radius:11px;padding:12px;font-weight:650}
   .sheet .copy{background:var(--accent);color:#fff}
   .sheet .close{background:#eceeed;color:var(--ink)}
   /* theme picker (skisse only) */
-  .panel{background:#fff;border-radius:14px;padding:14px 16px;width:230px;box-shadow:0 8px 24px rgba(0,0,0,.18)}
-  .panel h3{margin:0 0 8px;font-size:14px}
+  .panel{background:#fff;border-radius:14px;padding:14px 16px;width:240px;box-shadow:0 8px 24px rgba(0,0,0,.18)}
+  .panel h3{margin:0 0 10px;font-size:14px}
   .swatch{display:flex;align-items:center;gap:10px;width:100%;border:1px solid var(--line);background:#fff;
-    border-radius:10px;padding:9px 11px;margin-bottom:8px;font-size:14px;cursor:pointer}
-  .swatch .dot{width:20px;height:20px;border-radius:6px}
-  .panel .note{color:var(--muted);font-size:12px;margin-top:4px}
+    border-radius:9px;padding:7px 10px;margin-bottom:6px;font-size:13.5px;cursor:pointer;text-align:left}
+  .swatch .dot{width:18px;height:18px;border-radius:5px;flex:none}
+  .panel .note{color:var(--muted);font-size:12px;margin-top:6px}
 </style>
 </head>
 <body>
@@ -99,10 +99,7 @@
     <!-- ---- LIST ---- -->
     <section class="screen on" id="s-list">
       <div class="strip" id="gpsbar"></div>
-      <div class="body">
-        <div class="scount" id="count"></div>
-        <div id="notes"></div>
-      </div>
+      <div class="body"><div class="scount" id="count"></div><div id="notes"></div></div>
       <button class="fab" onclick="startAdd()">＋</button>
     </section>
 
@@ -117,14 +114,17 @@
 
     <!-- ---- DETAIL ---- -->
     <section class="screen" id="s-detail">
+      <div class="titlebar" id="d-title">Ny observasjon</div>
       <div class="body">
         <div class="frow tap" onclick="openLocPicker()"><label>Lokalitet</label><span class="val" id="d-loc">—</span></div>
         <div class="frow tap" onclick="changeSpecies()"><label>Art</label><span class="val" id="d-sp">—</span></div>
         <div class="frow"><label>Antall</label><div style="flex:1"></div>
-          <div class="stepper"><button onclick="bump(-1)">−</button><span class="q" id="d-n">1</span><button onclick="bump(1)">＋</button></div></div>
-        <div class="frow"><label>Alder</label><div class="selwrap"><select id="d-age" onchange="markEmpty(this)"></select></div></div>
-        <div class="frow"><label>Aktivitet</label><div class="selwrap"><select id="d-act" onchange="markEmpty(this)"></select></div></div>
-        <div class="frow"><label>Kjønn</label><div class="selwrap"><select id="d-sex" onchange="markEmpty(this)"></select></div></div>
+          <div class="stepper"><button onclick="bump(-1)">−</button>
+            <input class="q" id="d-n" type="number" inputmode="numeric" min="1" value="1" onchange="setCount(this.value)">
+            <button onclick="bump(1)">＋</button></div></div>
+        <div class="frow sel"><label>Alder</label><span class="val empty" id="d-age-v"></span><select id="d-age" onchange="onSel('age')"></select></div>
+        <div class="frow sel"><label>Aktivitet</label><span class="val empty" id="d-act-v"></span><select id="d-act" onchange="onSel('act')"></select></div>
+        <div class="frow sel"><label>Kjønn</label><span class="val empty" id="d-sex-v"></span><select id="d-sex" onchange="onSel('sex')"></select></div>
         <div class="ca">
           <label>Åpen kommentar</label><textarea id="d-pub" rows="2"></textarea>
           <label>Privat kommentar</label><textarea id="d-priv" rows="2"></textarea>
@@ -162,10 +162,7 @@
   <!-- theme comparison (mockup only) -->
   <div class="panel">
     <h3>Grønne temaer</h3>
-    <button class="swatch" onclick="setTheme('#1f7a64','#155a49')"><span class="dot" style="background:#1f7a64"></span>Teal-grønn</button>
-    <button class="swatch" onclick="setTheme('#2f6d3a','#1f4d27')"><span class="dot" style="background:#2f6d3a"></span>Skoggrønn</button>
-    <button class="swatch" onclick="setTheme('#1d5e4b','#123f33')"><span class="dot" style="background:#1d5e4b"></span>Furugrønn (dyp)</button>
-    <button class="swatch" onclick="setTheme('#5b7a2b','#3f5a1c')"><span class="dot" style="background:#5b7a2b"></span>Mosegrønn (olivengrønn)</button>
+    <div id="swatches"></div>
     <div class="note">Trykk for å bytte aksentfarge i skissen.</div>
   </div>
 </div>
@@ -183,7 +180,7 @@ const SPECIES=[
   ["Vipe","Vanellus vanellus"],["Låvesvale","Hirundo rustica"],["Svartbak","Larus marinus"],
   ["Gjøk","Cuculus canorus"],["Tyrkerdue","Streptopelia decaocto"],["Ærfugl","Somateria mollissima"],
   ["Storspove","Numenius arquata"],["Rødstrupe","Erithacus rubecula"],["Bokfink","Fringilla coelebs"]];
-const RECENT=["Kjøttmeis","Gråtrost","Ærfugl","Sivspurv","Ærfugl"].filter((v,i,a)=>a.indexOf(v)===i);
+const RECENT=["Kjøttmeis","Gråtrost","Ærfugl","Sivspurv"];
 const LOCS=[ // navn, hovedlok, kommune, lat, lon, avstand(m)
   ["Ørndalen","Sistranda","Frøya",63.72865,8.81729,120],
   ["Øvre Midtsian","Sistranda","Frøya",63.72823,8.82385,380],
@@ -192,21 +189,32 @@ const LOCS=[ // navn, hovedlok, kommune, lat, lon, avstand(m)
   ["Flatvalsundet","Flatval","Frøya",63.68704,8.75778,1200],
   ["Ellingsundet","Uttian","Frøya",63.76564,8.82686,3400],
   ["Saltnesvågen","Uttian","Frøya",63.76516,8.85196,3600]];
+const THEMES=[
+  ["Mosegrønn (oliven)","#5b7a2b","#41591d"],["Mørk mosegrønn","#556b2f","#3c4c21"],
+  ["Olivengrønn","#6b8e23","#4d6618"],["Eplegrønn","#5a9216","#426a0f"],
+  ["Gressgrønn","#4a8b3a","#34622a"],["Lindegrønn","#3f7d52","#2c5839"],
+  ["Skoggrønn","#2f6d3a","#1f4d27"],["Jaktgrønn","#355e3b","#243f28"],
+  ["Grangrønn (mørk)","#2a4d34","#1b3322"],["Flaskegrønn","#16623c","#0e4429"],
+  ["Furugrønn (dyp)","#1d5e4b","#123f33"],["Teal-grønn","#1f7a64","#155a49"],
+  ["Smaragdgrønn","#1f8a5f","#146043"],["Salviegrønn (dempet)","#7a8b5a","#5b6a40"],
+  ["Kakigrønn","#6e7a3c","#515a2b"]];
 
 let notes=[], cur=null, curLoc=LOCS[0], changingSpecies=false, gpsSettled=true;
 const $=id=>document.getElementById(id);
 function show(id){document.querySelectorAll('.screen').forEach(s=>s.classList.remove('on'));$(id).classList.add('on')}
 function fillSelect(el,arr){el.innerHTML='<option value="" selected></option>'+arr.map(v=>`<option>${v}</option>`).join('')}
 fillSelect($('d-age'),AGES);fillSelect($('d-act'),ACTS);fillSelect($('d-sex'),SEX);
-function markEmpty(s){s.classList.toggle('empty',!s.value)}
 function dist(m){return m<1000?m+' m':(m/1000).toFixed(1)+' km'}
 function ctx(L){return [L[1],L[2]].filter(Boolean).join(', ')}
 function setTheme(a,d){const r=document.documentElement.style;r.setProperty('--accent',a);r.setProperty('--accent-d',d)}
+$('swatches').innerHTML=THEMES.map(t=>`<button class="swatch" onclick="setTheme('${t[1]}','${t[2]}')"><span class="dot" style="background:${t[1]}"></span>${t[0]} <span style="color:#9aa6a2;margin-left:auto;font-size:12px">${t[1]}</span></button>`).join('');
 
 function renderGps(){
-  const b=$('gpsbar');const exp=`<button class="exp" id="expbtn" onclick="openExport()" ${notes.length?'':'disabled'}>Eksporter</button>`;
-  if(gpsSettled)b.outerHTML=`<div class="strip" id="gpsbar">📍 <b>${curLoc[0]}</b>, ${curLoc[2]} <span class="ok">±15 m ✓</span>${exp}</div>`;
-  else b.outerHTML=`<div class="strip wait" id="gpsbar">📍 <b>Finner posisjon…</b> <span class="ok">søker</span>${exp}</div>`;
+  const exp=`<button class="exp" onclick="openExport()" ${notes.length?'':'disabled'}>Eksporter</button>`;
+  const html=gpsSettled
+    ? `📍 <span class="locname">${curLoc[0]}, ${curLoc[2]}</span> <span class="ok">±15 m ✓</span>${exp}`
+    : `📍 <span class="locname">Finner posisjon…</span> <span class="ok">søker</span>${exp}`;
+  const b=$('gpsbar');b.className='strip'+(gpsSettled?'':' wait');b.innerHTML=html;
 }
 function renderNotes(){
   $('count').textContent='I dag · '+notes.length+' '+(notes.length===1?'notat':'notater');
@@ -229,7 +237,7 @@ function renderSpecies(){
   const q=$('sp-q').value.trim().toLowerCase();
   if(!q){$('splist').innerHTML='<div class="sec">Nylig brukt</div>'+RECENT.map(n=>opt(SPECIES.find(x=>x[0]===n))).join('')}
   else{const l=SPECIES.filter(s=>s[0].toLowerCase().includes(q)||s[1].toLowerCase().includes(q));
-       $('splist').innerHTML=l.length?l.map(opt).join(''):'<div class="scount">Ingen treff – skriv for å søke</div>'}
+       $('splist').innerHTML=l.length?l.map(opt).join(''):'<div class="scount">Ingen treff</div>'}
 }
 function pickSpecies(name){
   const s=SPECIES.find(x=>x[0]===name);
@@ -238,10 +246,12 @@ function pickSpecies(name){
   openDetail();
   setTimeout(()=>{if(cur&&cur.idx==null&&!cur.loc){cur.loc=curLoc[0];cur.dist=curLoc[5];cur.lat=curLoc[3];cur.lon=curLoc[4];setLocLabel()}},1400);
 }
+function onSel(k){const s=$('d-'+k),v=$('d-'+k+'-v');v.textContent=s.value;v.classList.toggle('empty',!s.value)}
 function openDetail(){
+  $('d-title').textContent=cur.idx==null?'Ny observasjon':'Endre observasjon';
   $('d-sp').innerHTML=`${cur.sp} <span class="sci" style="font-size:13px;color:var(--muted)">${cur.sci}</span>`;
-  $('d-n').textContent=cur.count;
-  for(const[id,v]of[['d-age',cur.age],['d-act',cur.act],['d-sex',cur.sex]]){$(id).value=v;markEmpty($(id))}
+  $('d-n').value=cur.count;
+  for(const k of['age','act','sex']){$('d-'+k).value=cur[k];onSel(k)}
   $('d-pub').value=cur.pub;$('d-priv').value=cur.priv;$('d-time').textContent=cur.time;
   setLocLabel();show('s-detail');
 }
@@ -250,9 +260,11 @@ function setLocLabel(){
   if(cur.loc){e.innerHTML=`${cur.loc}<span class="d">${dist(cur.dist)}</span>`;e.classList.remove('empty')}
   else{e.textContent='Finner posisjon…';e.classList.add('empty')}
 }
-function bump(d){cur.count=Math.max(1,cur.count+d);$('d-n').textContent=cur.count}
+function bump(d){const n=Math.max(1,(parseInt($('d-n').value)||1)+d);$('d-n').value=n;cur.count=n}
+function setCount(v){const n=Math.max(1,parseInt(v)||1);$('d-n').value=n;cur.count=n}
 function editNote(i){cur=Object.assign({},notes[i],{idx:i});openDetail()}
 function saveNote(){
+  cur.count=Math.max(1,parseInt($('d-n').value)||1);
   cur.age=$('d-age').value;cur.act=$('d-act').value;cur.sex=$('d-sex').value;
   cur.pub=$('d-pub').value;cur.priv=$('d-priv').value;
   if(cur.idx==null)notes.unshift(cur);else notes[cur.idx]=cur;
@@ -265,10 +277,9 @@ function renderLocs(){
   const q=($('loc-q').value||'').toLowerCase();
   $('loclist').innerHTML=LOCS.filter(l=>l[0].toLowerCase().includes(q)).map(l=>{
     const sel=cur&&l[0]===cur.loc;
-    return `<div class="locrow" onclick="pickLoc('${l[0]}')">
-      <span class="mark">${sel?'●':'○'}</span>
+    return `<div class="locrow${sel?' sel':''}" onclick="pickLoc('${l[0]}')">
       <span class="lname">${l[0]}<div class="lsub">${ctx(l)}</div></span>
-      <span class="dist">${dist(l[5])}</span></div>`}).join('');
+      <span class="dist">${sel?'<span class="chk">✓ valgt</span><br>':''}${dist(l[5])}</span></div>`}).join('');
 }
 function pickLoc(name){const L=LOCS.find(l=>l[0]===name);cur.loc=L[0];cur.dist=L[5];cur.lat=L[3];cur.lon=L[4];setLocLabel();show('s-detail')}
 
