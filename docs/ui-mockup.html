@@ -7,78 +7,75 @@
 <style>
   :root{
     --bg:#eef1f0; --card:#fff; --ink:#1c2624; --muted:#6b7a76;
-    --accent:#1f7a64; --accent-d:#155a49; --line:#e2e7e5; --warn:#c2761b;
+    --accent:#1f7a64; --accent-d:#155a49; --line:#e6eae9; --warn:#c2761b;
   }
   *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
   body{margin:0;background:#cdd4d2;font:16px/1.35 system-ui,Segoe UI,Roboto,sans-serif;color:var(--ink)}
+  i,.sci{font-style:italic}
   .wrap{display:flex;flex-wrap:wrap;gap:24px;justify-content:center;padding:24px}
   .phone{width:380px;height:760px;background:var(--bg);border-radius:34px;
     border:10px solid #11201c;overflow:hidden;position:relative;box-shadow:0 12px 40px rgba(0,0,0,.35)}
   .screen{position:absolute;inset:0;display:none;flex-direction:column}
   .screen.on{display:flex}
-  .bar{background:var(--accent);color:#fff;padding:14px 16px;display:flex;align-items:center;gap:12px}
+  .bar{background:var(--accent);color:#fff;padding:14px 16px;display:flex;align-items:center;gap:12px;min-height:54px}
   .bar h1{font-size:19px;margin:0;font-weight:650;flex:1}
-  .bar .btn{color:#fff;font-size:15px;font-weight:600;background:none;border:0;padding:6px 4px}
-  .bar .ico{font-size:20px;width:26px;text-align:center}
-  .sub{background:var(--accent-d);color:#dff1ec;font-size:13px;padding:7px 16px;display:flex;
-    align-items:center;gap:8px}
+  .bar .btn{color:#fff;font-size:15px;font-weight:600;background:none;border:0;padding:6px 2px}
+  .bar .btn:disabled{opacity:.45}
+  .sub{background:var(--accent-d);color:#dff1ec;font-size:13px;padding:7px 16px;display:flex;align-items:center;gap:6px}
   .sub .ok{margin-left:auto;background:#2c9b7f;padding:1px 8px;border-radius:10px;font-size:12px}
   .sub.wait .ok{background:var(--warn)}
   .body{flex:1;overflow:auto}
-  .sccount{padding:8px 16px;color:var(--muted);font-size:13px}
+  .scount{padding:9px 16px;color:var(--muted);font-size:13px}
+  .sec{padding:10px 16px 4px;color:var(--muted);font-size:12px;text-transform:uppercase;letter-spacing:.04em;background:var(--bg)}
   /* list rows */
-  .row{background:var(--card);display:flex;align-items:center;gap:14px;padding:12px 16px;
-    border-bottom:1px solid var(--line)}
+  .row{background:var(--card);display:flex;align-items:center;gap:14px;padding:12px 16px;border-bottom:1px solid var(--line)}
   .row .n{font-size:26px;font-weight:700;min-width:34px;text-align:center;color:var(--accent-d)}
   .row .mid{flex:1;min-width:0}
   .row .sp{font-weight:600}
-  .row .sci{font-style:italic;color:var(--muted);font-size:13px}
+  .row .sci{color:var(--muted);font-size:13px}
   .row .meta{color:var(--muted);font-size:12.5px;margin-top:2px}
   .row .rt{text-align:right;color:var(--muted);font-size:12.5px;white-space:nowrap}
   .row .rt .loc{color:var(--ink);font-weight:500}
   .row .chev{color:#b8c2bf;font-size:20px}
-  /* fab + footer */
-  .fab{position:absolute;right:18px;bottom:74px;width:60px;height:60px;border-radius:50%;
-    background:var(--accent);color:#fff;border:0;font-size:32px;box-shadow:0 6px 16px rgba(0,0,0,.3)}
-  .foot{background:var(--card);border-top:1px solid var(--line);padding:11px}
-  .foot button{width:100%;background:var(--accent);color:#fff;border:0;border-radius:12px;
-    padding:13px;font-size:15px;font-weight:650}
-  .foot button:disabled{background:#a9b8b3}
+  /* fab */
+  .fab{position:absolute;right:18px;bottom:20px;width:62px;height:62px;border-radius:50%;
+    background:var(--accent);color:#fff;border:0;font-size:33px;box-shadow:0 6px 16px rgba(0,0,0,.3)}
+  .repeat{position:absolute;right:22px;bottom:92px;background:var(--card);color:var(--accent-d);
+    border:1px solid var(--line);border-radius:18px;padding:8px 14px;font-size:13px;font-weight:600;box-shadow:0 3px 10px rgba(0,0,0,.12)}
   /* search */
   .search{padding:12px 14px;background:var(--card);border-bottom:1px solid var(--line)}
   .search input{width:100%;padding:12px 14px;border:1px solid var(--line);border-radius:11px;font-size:16px;background:#f4f7f6}
-  .chips{display:flex;flex-wrap:wrap;gap:8px;padding:12px 14px}
-  .chip{background:#dff0eb;color:var(--accent-d);border:0;border-radius:16px;padding:7px 13px;font-size:14px;font-weight:600}
   .opt{background:var(--card);padding:13px 16px;border-bottom:1px solid var(--line);display:flex;gap:10px;align-items:baseline}
-  .opt .sci{font-style:italic;color:var(--muted);font-size:13px}
-  .opt.sel{background:#eef7f4}
-  /* detail */
-  .frow{background:var(--card);display:flex;align-items:center;gap:12px;padding:14px 16px;border-bottom:1px solid var(--line)}
-  .frow label{color:var(--muted);min-width:96px;font-size:14px}
+  /* detail field rows */
+  .frow{background:var(--card);display:flex;align-items:center;gap:12px;padding:14px 16px;border-bottom:1px solid var(--line);min-height:54px}
+  .frow label{color:var(--muted);min-width:88px;font-size:14px}
   .frow .val{flex:1;text-align:right;font-weight:550}
-  .frow.tap .val::after{content:" ›";color:#b8c2bf}
-  .frow select,.frow input[type=text]{flex:1;text-align:right;border:0;background:none;font:inherit;
-    color:var(--ink);font-weight:550;-webkit-appearance:none;appearance:none;text-align-last:right}
-  .frow select:invalid{color:var(--muted);font-weight:400}
-  .locrow{background:var(--card);padding:13px 16px;border-bottom:1px solid var(--line);display:flex;align-items:center;gap:10px}
-  .locrow .pin{font-size:18px}
-  .locrow .lname{flex:1;font-weight:600}
-  .locrow .lsub{color:var(--muted);font-size:12.5px;font-weight:400}
-  .stepper{display:flex;align-items:center;gap:0;border:1px solid var(--line);border-radius:10px;overflow:hidden}
+  .frow .val.empty{color:#aab4b1;font-weight:400}
+  .frow.tap{cursor:pointer}
+  .frow.tap .val::after{content:"›";color:#c2ccc9;margin-left:8px;font-size:18px}
+  .frow select{flex:1;text-align:right;border:0;background:none;font:inherit;color:var(--ink);font-weight:550;
+    -webkit-appearance:none;appearance:none;text-align-last:right;padding-right:2px}
+  .frow .selwrap{flex:1;display:flex;justify-content:flex-end;align-items:center}
+  .frow .selwrap::after{content:"›";color:#c2ccc9;margin-left:8px;font-size:18px}
+  .stepper{display:flex;align-items:center;border:1px solid var(--line);border-radius:10px;overflow:hidden}
   .stepper button{width:42px;height:38px;border:0;background:#f1f5f4;font-size:20px;color:var(--accent-d)}
-  .stepper .q{width:46px;text-align:center;font-weight:700;font-size:18px}
-  .ca{padding:10px 16px;background:var(--card)}
-  .ca label{display:block;color:var(--muted);font-size:13px;margin:6px 0 4px}
+  .stepper .q{width:48px;text-align:center;font-weight:700;font-size:18px}
+  .ca{padding:8px 16px 4px;background:var(--card);border-bottom:1px solid var(--line)}
+  .ca label{display:block;color:var(--muted);font-size:13px;margin:8px 0 4px}
   .ca textarea{width:100%;border:1px solid var(--line);border-radius:10px;padding:10px;font:inherit;resize:none;background:#f8faf9}
-  .when{padding:12px 16px;color:var(--muted);font-size:13px}
-  .clear{color:#c2761b;background:none;border:0;font-size:13px}
+  /* locality picker */
+  .locrow{background:var(--card);padding:13px 16px;border-bottom:1px solid var(--line);display:flex;align-items:center;gap:12px}
+  .locrow .mark{font-size:16px;color:var(--accent)}
+  .locrow .lname{flex:1;font-weight:600}
+  .locrow .lsub{color:var(--muted);font-size:12.5px;font-weight:400;margin-top:1px}
+  .locrow .dist{color:var(--muted);font-size:13px}
   /* export modal */
   .modal{position:absolute;inset:0;background:rgba(10,20,18,.45);display:none;align-items:center;justify-content:center;padding:20px}
   .modal.on{display:flex}
-  .sheet{background:#fff;border-radius:16px;width:100%;max-height:80%;display:flex;flex-direction:column;overflow:hidden}
+  .sheet{background:#fff;border-radius:16px;width:100%;max-height:82%;display:flex;flex-direction:column;overflow:hidden}
   .sheet h2{margin:0;padding:15px 16px;font-size:17px;border-bottom:1px solid var(--line)}
   .sheet .hint{padding:10px 16px;color:var(--muted);font-size:13px}
-  .sheet textarea{margin:0 16px;height:180px;border:1px solid var(--line);border-radius:10px;padding:10px;font:12px/1.4 monospace;white-space:pre;overflow:auto}
+  .sheet textarea{margin:0 16px;height:160px;border:1px solid var(--line);border-radius:10px;padding:10px;font:12px/1.4 monospace;white-space:pre;overflow:auto}
   .sheet .acts{display:flex;gap:10px;padding:14px 16px}
   .sheet .acts button{flex:1;border:0;border-radius:11px;padding:12px;font-weight:650}
   .sheet .copy{background:var(--accent);color:#fff}
@@ -88,67 +85,55 @@
 </head>
 <body>
 <div class="wrap">
-
-  <!-- ================= PHONE ================= -->
   <div class="phone">
 
     <!-- ---- LIST ---- -->
     <section class="screen on" id="s-list">
-      <div class="bar"><h1>AppObs</h1><span style="font-size:14px;opacity:.9">31. mai</span></div>
-      <div class="sub" id="gpsbar"><span>📍</span><b id="curloc">Ørndalen</b>, Frøya<span class="ok" id="gpsok">±15 m ✓</span></div>
+      <div class="bar"><h1>AppObs</h1>
+        <button class="btn" id="expbtn" onclick="openExport()" disabled>Eksporter</button></div>
+      <div class="sub" id="gpsbar"></div>
       <div class="body">
-        <div class="scount" id="count">I dag · 0 notater</div>
+        <div class="scount" id="count"></div>
         <div id="notes"></div>
       </div>
+      <button class="repeat" id="repeatbtn" onclick="repeatLast()">⟲ Som forrige</button>
       <button class="fab" onclick="startAdd()">＋</button>
-      <div class="foot"><button id="expbtn" onclick="openExport()" disabled>Kopiér til Artsobs</button></div>
     </section>
 
     <!-- ---- SPECIES SEARCH ---- -->
     <section class="screen" id="s-search">
-      <div class="bar"><button class="btn ico" onclick="show('s-list')">←</button><h1>Velg art</h1></div>
+      <div class="bar"><button class="btn" onclick="cancelSearch()">Avbryt</button><h1>Velg art</h1></div>
       <div class="search"><input id="sp-q" placeholder="Søk art…" oninput="renderSpecies()" autocomplete="off"></div>
-      <div class="body">
-        <div class="chips" id="recent"></div>
-        <div id="splist"></div>
-      </div>
+      <div class="body"><div id="splist"></div></div>
     </section>
 
     <!-- ---- DETAIL ---- -->
     <section class="screen" id="s-detail">
       <div class="bar">
-        <button class="btn ico" onclick="show('s-list')">←</button>
+        <button class="btn" onclick="show('s-list')">Avbryt</button>
         <h1 id="d-title">Nytt notat</h1>
         <button class="btn" onclick="saveNote()">Lagre</button>
       </div>
       <div class="body">
-        <div class="locrow" onclick="openLocPicker()">
-          <span class="pin">📍</span>
-          <span class="lname" id="d-loc">Ørndalen <span class="lsub" id="d-locsub">Sistranda, Frøya</span></span>
-          <span class="chev" style="color:#b8c2bf">›</span>
-        </div>
-        <div class="frow"><label>Art</label><span class="val" id="d-sp">—</span></div>
-        <div class="frow"><label>Antall</label>
-          <div style="flex:1"></div>
-          <div class="stepper"><button onclick="bump(-1)">−</button><span class="q" id="d-n">1</span><button onclick="bump(1)">＋</button></div>
-        </div>
-        <div class="frow tap"><label>Alder</label>
-          <select id="d-age"><option value="" selected>ikke valgt</option></select></div>
-        <div class="frow tap"><label>Aktivitet</label>
-          <select id="d-act"><option value="" selected>ikke valgt</option></select></div>
-        <div class="frow tap"><label>Kjønn</label>
-          <select id="d-sex"><option value="" selected>ikke valgt</option></select></div>
+        <div class="frow tap" onclick="openLocPicker()"><label>Lokalitet</label><span class="val" id="d-loc">—</span></div>
+        <div class="frow tap" onclick="changeSpecies()"><label>Art</label><span class="val" id="d-sp">—</span></div>
+        <div class="frow"><label>Antall</label><div style="flex:1"></div>
+          <div class="stepper"><button onclick="bump(-1)">−</button><span class="q" id="d-n">1</span><button onclick="bump(1)">＋</button></div></div>
+        <div class="frow"><label>Alder</label><div class="selwrap"><select id="d-age" onchange="markEmpty(this)"></select></div></div>
+        <div class="frow"><label>Aktivitet</label><div class="selwrap"><select id="d-act" onchange="markEmpty(this)"></select></div></div>
+        <div class="frow"><label>Kjønn</label><div class="selwrap"><select id="d-sex" onchange="markEmpty(this)"></select></div></div>
         <div class="ca">
-          <label>Kommentar (synlig for alle)</label><textarea id="d-pub" rows="2"></textarea>
+          <label>Åpen kommentar</label><textarea id="d-pub" rows="2"></textarea>
           <label>Privat kommentar</label><textarea id="d-priv" rows="2"></textarea>
         </div>
-        <div class="when">🕗 <span id="d-time">08:14</span> · 31.05.2026 · <span style="color:#1f7a64">automatisk</span></div>
+        <div class="frow tap"><label>Dato</label><span class="val" id="d-date">31. mai 2026</span></div>
+        <div class="frow tap"><label>Tid</label><span class="val" id="d-time">08:14</span></div>
       </div>
     </section>
 
     <!-- ---- LOCALITY PICKER ---- -->
     <section class="screen" id="s-loc">
-      <div class="bar"><button class="btn ico" onclick="show('s-detail')">←</button><h1>Velg lokalitet</h1></div>
+      <div class="bar"><button class="btn" onclick="show('s-detail')">Avbryt</button><h1>Velg lokalitet</h1></div>
       <div class="search"><input id="loc-q" placeholder="Søk lokalitet…" oninput="renderLocs()" autocomplete="off"></div>
       <div class="body"><div class="scount">Sortert nærmest → fjernest</div><div id="loclist"></div></div>
     </section>
@@ -156,24 +141,24 @@
     <!-- ---- EXPORT MODAL ---- -->
     <div class="modal" id="modal">
       <div class="sheet">
-        <h2>Kopiér til Artsobservasjoner</h2>
-        <div class="hint">Lim inn i <b>Importer observasjoner</b> på artsobservasjoner.no (gammel side). Navn + registrert koordinat — kobles til offisiell lokalitet.</div>
+        <h2>Eksporter til Artsobservasjoner</h2>
+        <div class="hint">Lim inn i <b>Importer observasjoner</b> (gammel side). Navn + registrert koordinat kobles til offisiell lokalitet.</div>
         <textarea id="tsv" readonly></textarea>
         <div class="acts"><button class="close" onclick="closeExport()">Lukk</button><button class="copy" onclick="copyTsv(this)">Kopiér</button></div>
       </div>
     </div>
 
   </div>
-  <div class="caption">Klikkbar skisse · trykk ＋ for å legge til (art → detalj), 📍 for å bytte lokalitet, og «Kopiér til Artsobs».</div>
+  <div class="caption">Klikkbar skisse · ＋ legg til (art → detalj) · «Som forrige» gjenbruker forrige notat · 📍 bytt lokalitet · Eksporter</div>
 </div>
 
 <script>
-// ---- option lists (real Artsobs Fugl values) ----
-const AGES=["Adult","1K","1K+","2K","2K+","2K-","3K","3K+","Pulli","Egg"];
-const ACTS=["Rastende","Næringssøkende","Sang/spill, ikke hekking","Overflygende","Stasjonær",
-  "Trekkende","Trekkende mot N","Trekkende mot S","Reir med egg eller unger","Mat til unger"];
+// Alder in the website's order
+const AGES=["Egg","Pulli","Adult","1K","1K+","2K","2K+","2K-","3K","3K+","3K-","4K","4K+","4K-","5K","5K+","5K-","6K","6K+","6K-","7K","7K+","7K-"];
+const ACTS=["Rastende","Stasjonær","Næringssøkende","Sang/spill, ikke hekking","Overflygende","Trekkende",
+  "Trekkende mot N","Trekkende mot NØ","Trekkende mot Ø","Trekkende mot S","Trekkende mot V",
+  "Reir med egg eller unger","Mat til unger","Rugende","Lokkelyd, øvrige lyder"];
 const SEX=["Hann","Hunn","Hunnfarget","I par"];
-// ---- sample species (norsk + vit.) ----
 const SPECIES=[
   ["Kjøttmeis","Parus major"],["Blåmeis","Cyanistes caeruleus"],["Gråspurv","Passer domesticus"],
   ["Pilfink","Passer montanus"],["Gråtrost","Turdus pilaris"],["Sivspurv","Emberiza schoeniclus"],
@@ -182,8 +167,7 @@ const SPECIES=[
   ["Gjøk","Cuculus canorus"],["Tyrkerdue","Streptopelia decaocto"],["Ærfugl","Somateria mollissima"],
   ["Storspove","Numenius arquata"],["Rødstrupe","Erithacus rubecula"],["Bokfink","Fringilla coelebs"]];
 const RECENT=["Kjøttmeis","Gråtrost","Ærfugl"];
-// ---- sample localities (Frøya) name, hovedlok, kommune, lat, lon, distance-m ----
-const LOCS=[
+const LOCS=[ // navn, hovedlok, kommune, lat, lon, avstand(m)
   ["Ørndalen","Sistranda","Frøya",63.72865,8.81729,120],
   ["Øvre Midtsian","Sistranda","Frøya",63.72823,8.82385,380],
   ["Lærarbyen","Sistranda","Frøya",63.72730,8.82962,520],
@@ -192,61 +176,78 @@ const LOCS=[
   ["Ellingsundet","Uttian","Frøya",63.76564,8.82686,3400],
   ["Saltnesvågen","Uttian","Frøya",63.76516,8.85196,3600]];
 
-let notes=[], cur=null, curLoc=LOCS[0];
+let notes=[], cur=null, curLoc=LOCS[0], changingSpecies=false, gpsSettled=true;
 const $=id=>document.getElementById(id);
 function show(id){document.querySelectorAll('.screen').forEach(s=>s.classList.remove('on'));$(id).classList.add('on')}
-function fillSelect(el,arr){arr.forEach(v=>{const o=document.createElement('option');o.value=o.textContent=v;el.appendChild(o)})}
+function fillSelect(el,arr){el.innerHTML='<option value="" selected></option>'+arr.map(v=>`<option>${v}</option>`).join('')}
 fillSelect($('d-age'),AGES);fillSelect($('d-act'),ACTS);fillSelect($('d-sex'),SEX);
-
+function markEmpty(s){s.classList.toggle('val-empty',!s.value)}
 function dist(m){return m<1000?m+' m':(m/1000).toFixed(1)+' km'}
+function ctx(L){return [L[1],L[2]].filter(Boolean).join(', ')}
 
 // ---- list ----
 function renderNotes(){
   $('count').textContent='I dag · '+notes.length+' '+(notes.length===1?'notat':'notater');
   $('expbtn').disabled=notes.length===0;
-  $('expbtn').textContent='Kopiér til Artsobs'+(notes.length?' ('+notes.length+')':'');
+  $('repeatbtn').style.display=notes.length?'block':'none';
   $('notes').innerHTML=notes.map((n,i)=>{
     const extra=[n.sex,n.act].filter(Boolean).join(' · ');
     return `<div class="row" onclick="editNote(${i})">
       <div class="n">${n.count}</div>
-      <div class="mid"><div class="sp">${n.sp}</div><div class="sci">${n.sci}</div>
-        ${extra?`<div class="meta">${extra}</div>`:''}</div>
-      <div class="rt"><div>${n.time}</div><div class="loc">${n.loc}</div></div>
+      <div class="mid"><div class="sp">${n.sp}</div><div class="sci">${n.sci}</div>${extra?`<div class="meta">${extra}</div>`:''}</div>
+      <div class="rt"><div>${n.time}</div><div class="loc">${n.loc||'…'}</div></div>
       <div class="chev">›</div></div>`}).join('');
+}
+function renderGps(){
+  const bar=$('gpsbar');
+  if(gpsSettled){bar.className='sub';bar.innerHTML=`📍 <b>${curLoc[0]}</b>, ${curLoc[2]} <span class="ok">±15 m ✓</span>`}
+  else{bar.className='sub wait';bar.innerHTML=`📍 <b>Finner posisjon…</b><span class="ok">søker</span>`}
 }
 
 // ---- add flow: species first ----
-function startAdd(){cur=null;$('sp-q').value='';renderSpecies();renderRecent();show('s-search')}
-function renderRecent(){
-  $('recent').innerHTML='<span style="color:var(--muted);font-size:13px;width:100%;margin-bottom:-4px">Nylig brukt</span>'+
-    RECENT.map(s=>`<button class="chip" onclick="pickSpecies('${s}')">${s}</button>`).join('')}
+function startAdd(){cur=null;changingSpecies=false;$('sp-q').value='';renderSpecies();show('s-search')}
+function cancelSearch(){show(cur?'s-detail':'s-list')}
+function changeSpecies(){changingSpecies=true;$('sp-q').value='';renderSpecies();show('s-search')}
+function opt(s){return `<div class="opt" onclick="pickSpecies('${s[0]}')"><span>${s[0]}</span><span class="sci">${s[1]}</span></div>`}
 function renderSpecies(){
-  const q=$('sp-q').value.toLowerCase();
-  const list=SPECIES.filter(s=>s[0].toLowerCase().includes(q)||s[1].toLowerCase().includes(q));
-  $('splist').innerHTML=list.map(s=>`<div class="opt" onclick="pickSpecies('${s[0]}')">
-    <span>${s[0]}</span><span class="sci">${s[1]}</span></div>`).join('');
+  const q=$('sp-q').value.trim().toLowerCase();
+  if(!q){
+    $('splist').innerHTML='<div class="sec">Nylig brukt</div>'+
+      RECENT.map(n=>opt(SPECIES.find(x=>x[0]===n))).join('')+
+      '<div class="sec">Alle arter</div>'+SPECIES.map(opt).join('');
+  }else{
+    const list=SPECIES.filter(s=>s[0].toLowerCase().includes(q)||s[1].toLowerCase().includes(q));
+    $('splist').innerHTML=list.length?list.map(opt).join(''):'<div class="scount">Ingen treff</div>';
+  }
 }
 function pickSpecies(name){
   const s=SPECIES.find(x=>x[0]===name);
-  cur={sp:s[0],sci:s[1],count:1,age:'',act:'',sex:'',pub:'',priv:'',loc:curLoc[0],
-       lat:curLoc[3],lon:curLoc[4],time:'08:14',idx:null};
+  if(cur&&changingSpecies){cur.sp=s[0];cur.sci=s[1];changingSpecies=false;openDetail();return}
+  cur={sp:s[0],sci:s[1],count:1,age:'',act:'',sex:'',pub:'',priv:'',
+       loc:null,lat:null,lon:null,date:'31. mai 2026',time:'08:14',idx:null};
   openDetail();
+  // GPS may not have settled — let the user fill the rest; locality drops in when ready
+  setTimeout(()=>{if(cur&&cur.idx==null&&!cur.loc){cur.loc=curLoc[0];cur.lat=curLoc[3];cur.lon=curLoc[4];setLocLabel()}},1400);
 }
 function openDetail(){
   $('d-title').textContent=cur.idx==null?'Nytt notat':'Rediger';
-  $('d-sp').textContent=cur.sp+'  ';
-  $('d-sp').innerHTML=cur.sp+' <span class="sci" style="font-size:13px">'+cur.sci+'</span>';
+  $('d-sp').innerHTML=`${cur.sp} <span class="sci" style="font-size:13px;color:var(--muted)">${cur.sci}</span>`;
   $('d-n').textContent=cur.count;
-  $('d-age').value=cur.age;$('d-act').value=cur.act;$('d-sex').value=cur.sex;
+  for(const[id,v]of[['d-age',cur.age],['d-act',cur.act],['d-sex',cur.sex]]){$(id).value=v;markEmpty($(id))}
   $('d-pub').value=cur.pub;$('d-priv').value=cur.priv;$('d-time').textContent=cur.time;
   setLocLabel();show('s-detail');
 }
 function setLocLabel(){
-  const L=LOCS.find(l=>l[0]===cur.loc)||curLoc;
-  $('d-loc').innerHTML=`${L[0]} <span class="lsub">${[L[1],L[2]].filter(Boolean).join(', ')}</span>`;
+  const e=$('d-loc');
+  if(cur.loc){e.textContent=cur.loc;e.classList.remove('empty')}
+  else{e.textContent='Finner posisjon…';e.classList.add('empty')}
 }
 function bump(d){cur.count=Math.max(1,cur.count+d);$('d-n').textContent=cur.count}
 function editNote(i){cur=Object.assign({},notes[i],{idx:i});openDetail()}
+function repeatLast(){
+  const p=notes[0];if(!p)return;
+  cur={...p,idx:null,time:'08:21'};openDetail();
+}
 function saveNote(){
   cur.age=$('d-age').value;cur.act=$('d-act').value;cur.sex=$('d-sex').value;
   cur.pub=$('d-pub').value;cur.priv=$('d-priv').value;
@@ -261,29 +262,28 @@ function renderLocs(){
   $('loclist').innerHTML=LOCS.filter(l=>l[0].toLowerCase().includes(q)).map(l=>{
     const sel=cur&&l[0]===cur.loc;
     return `<div class="locrow" onclick="pickLoc('${l[0]}')">
-      <span class="pin">${sel?'●':'○'}</span>
-      <span class="lname">${l[0]}<div class="lsub">${[l[1],l[2]].filter(Boolean).join(', ')}</div></span>
-      <span class="lsub">${dist(l[5])}</span></div>`}).join('');
+      <span class="mark">${sel?'●':'○'}</span>
+      <span class="lname">${l[0]}<div class="lsub">${ctx(l)}</div></span>
+      <span class="dist">${dist(l[5])}</span></div>`}).join('');
 }
 function pickLoc(name){const L=LOCS.find(l=>l[0]===name);cur.loc=L[0];cur.lat=L[3];cur.lon=L[4];setLocLabel();show('s-detail')}
 
-// ---- export (v2.20 paste format, name + registry coord, no UTM) ----
+// ---- export (v2.20 paste format: bare name + registry coord, WGS84 geographic) ----
 const COLS=["Artsnavn","Antall","Alder","Kjønn","Aktivitet","Lokalitetsnavn","Nord","Øst","Nøyaktighet",
   "Fra dato","Fra klokkeslett","Til dato","Til klokkeslett","Kommentar (synlig for alle)","Privat kommentar (kun synlig for deg selv)"];
 function openExport(){
   const rows=notes.map(n=>[n.sp,n.count,n.age,n.sex,n.act,n.loc,n.lat,n.lon,"100 m",
     "31.05.2026",n.time,"31.05.2026",n.time,n.pub,n.priv].join('\t'));
-  $('tsv').value=[COLS.join('\t'),...rows].join('\n');
-  $('modal').classList.add('on');
+  $('tsv').value=[COLS.join('\t'),...rows].join('\n');$('modal').classList.add('on');
 }
 function closeExport(){$('modal').classList.remove('on')}
 function copyTsv(b){navigator.clipboard&&navigator.clipboard.writeText($('tsv').value);b.textContent='Kopiert ✓';setTimeout(()=>b.textContent='Kopiér',1200)}
 
-// seed a couple of notes so the list isn't empty
+// seed
 notes=[
-  {sp:"Gråtrost",sci:"Turdus pilaris",count:1,age:'',act:'Sang/spill, ikke hekking',sex:'Hann',pub:'',priv:'',loc:'Ørndalen',lat:63.72865,lon:8.81729,time:'08:09',idx:null},
-  {sp:"Ærfugl",sci:"Somateria mollissima",count:12,age:'',act:'Rastende',sex:'',pub:'',priv:'',loc:'Flatvalsundet',lat:63.68704,lon:8.75778,time:'07:52',idx:null}];
-renderNotes();
+  {sp:"Gråtrost",sci:"Turdus pilaris",count:1,age:'',act:'Sang/spill, ikke hekking',sex:'Hann',pub:'',priv:'',loc:'Ørndalen',lat:63.72865,lon:8.81729,date:'31. mai 2026',time:'08:09',idx:null},
+  {sp:"Ærfugl",sci:"Somateria mollissima",count:12,age:'',act:'Rastende',sex:'',pub:'',priv:'',loc:'Flatvalsundet',lat:63.68704,lon:8.75778,date:'31. mai 2026',time:'07:52',idx:null}];
+renderGps();renderNotes();
 </script>
 </body>
 </html>
