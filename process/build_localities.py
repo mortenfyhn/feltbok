@@ -18,7 +18,11 @@ Usage:
     python process/build_localities.py --county Trøndelag   # one fylke only
     python process/build_localities.py --min-count 3    # drop rarely-used (likely private) sites
 
-Output: localities.csv  (id,name,lat,lon,kommune,fylke,count), most-used first.
+Output: localities.csv (id,lokalitet,hovedlokalitet,kommune,fylke,lat,lon,count),
+most-used first. The app emits the bare `lokalitet` name + the exact `lat,lon`
+(the registry's canonical point, which the import uses to snap to the official
+locality and disambiguate duplicate names); `hovedlokalitet` is kept for the
+new-site import path and for showing context in the picker.
 """
 import argparse
 import csv
@@ -62,6 +66,19 @@ def download(url: str, dest: str) -> None:
                 got += len(chunk)
                 print(f"\r  {got >> 20} MB", end="", file=sys.stderr)
     print(file=sys.stderr)
+
+
+def split_name(full: str):
+    """Split the qualified registry name into (lokalitet, hovedlokalitet).
+
+    The composite is "Lok[, Hovedlok], Kommune, Fylke-abbr" — drop the trailing
+    kommune + fylke to leave the place part. The bare lokalitet (the most
+    specific sublocality) is what the import matches on."""
+    parts = [p.strip() for p in full.split(",")]
+    place = parts[:-2] if len(parts) >= 3 else parts[:1]
+    lok = place[0] if place else full.strip()
+    hoved = place[1] if len(place) > 1 else ""
+    return lok, hoved
 
 
 def parse_meta(zf: zipfile.ZipFile):
@@ -144,12 +161,15 @@ def main() -> int:
     with zipfile.ZipFile(args.archive) as zf:
         sites = aggregate(zf, args.county, bbox)
 
-    rows = sorted((s for s in sites.values() if s[-1] >= args.min_count),
+    kept = sorted((s for s in sites.values() if s[-1] >= args.min_count),
                   key=lambda s: -s[-1])
     with open(args.output, "w", newline="", encoding="utf-8") as f:
         w = csv.writer(f)
-        w.writerow(["id", "name", "lat", "lon", "kommune", "fylke", "count"])
-        w.writerows(rows)
+        w.writerow(["id", "lokalitet", "hovedlokalitet", "kommune", "fylke",
+                    "lat", "lon", "count"])
+        for lid, name, lat, lon, kommune, fylke, count in kept:
+            lok, hoved = split_name(name)
+            w.writerow([lid, lok, hoved, kommune, fylke, lat, lon, count])
     print(f"Wrote {len(rows)} localities (>= {args.min_count} records) to "
           f"{args.output}, from {len(sites)} sites seen.", file=sys.stderr)
     return 0
