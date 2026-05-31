@@ -29,6 +29,7 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
 
     var screen by mutableStateOf(Screen.LIST); private set
     var showExport by mutableStateOf(false); private set
+    var exportCoords by mutableStateOf(true)   // include Nord/Øst (the proven link recipe)
     var fix by mutableStateOf<GpsFix?>(null); private set
 
     // ---- draft (current add/edit) ----
@@ -109,7 +110,7 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
     fun setCount(n: Int) { dCount = n.coerceAtLeast(1) }
 
     fun save() {
-        val loc = dLoc
+        val loc = dLoc ?: nearest()   // fall back to GPS-nearest if not picked yet
         val n = Note(
             id = if (isEditing) editingId!! else (dTime.takeIf { it > 0 } ?: System.currentTimeMillis()),
             species = dSpecies, latin = dLatin, count = dCount.coerceAtLeast(1),
@@ -132,7 +133,7 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
 
     fun openExport() { showExport = true }
     fun closeExport() { showExport = false }
-    fun exportText(): String = exportTsv(notes)
+    fun exportText(): String = exportTsv(notes, exportCoords)
 
     private fun persist() = saveNotes(ctx, notes)
 }

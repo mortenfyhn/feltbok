@@ -13,6 +13,7 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.widthIn
@@ -26,14 +27,13 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
-import androidx.compose.material3.DropdownMenu
-import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -43,11 +43,14 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalClipboardManager
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.SpanStyle
+import androidx.compose.ui.text.TextRange
 import androidx.compose.ui.text.buildAnnotatedString
+import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
@@ -229,7 +232,8 @@ fun DetailScreen(vm: MainViewModel) {
             horizontalArrangement = Arrangement.spacedBy(10.dp),
         ) {
             OutlinedButton(onClick = { vm.cancel() }, modifier = Modifier.weight(1f)) { Text("Avbryt") }
-            Button(onClick = { vm.save() }, enabled = vm.dSpecies.isNotBlank(),
+            Button(onClick = { vm.save() },
+                enabled = vm.dSpecies.isNotBlank() && (vm.dLoc != null || vm.nearest() != null),
                 modifier = Modifier.weight(1.7f)) { Text("Lagre") }
         }
     }
@@ -238,9 +242,13 @@ fun DetailScreen(vm: MainViewModel) {
 @Composable
 private fun AntallRow(vm: MainViewModel) {
     val cs = MaterialTheme.colorScheme
-    // Local text so the field can be edited freely; reset when the draft changes.
-    var text by remember(vm.dTime, vm.isEditing) { mutableStateOf(vm.dCount.toString()) }
-    fun set(n: Int) { val c = n.coerceAtLeast(1); vm.setCount(c); text = c.toString() }
+    // Local field value; reset when the draft changes. Tapping selects all so a
+    // new number replaces the old one instead of appending.
+    var tfv by remember(vm.dTime, vm.isEditing) { mutableStateOf(TextFieldValue(vm.dCount.toString())) }
+    fun set(n: Int) {
+        val c = n.coerceAtLeast(1); vm.setCount(c)
+        tfv = TextFieldValue(c.toString(), selection = TextRange(c.toString().length))
+    }
     Row(
         Modifier.fillMaxWidth().background(cs.surface).padding(horizontal = 16.dp, vertical = 10.dp),
         verticalAlignment = Alignment.CenterVertically,
@@ -254,12 +262,14 @@ private fun AntallRow(vm: MainViewModel) {
                 Text("−", fontSize = 22.sp, color = cs.onPrimaryContainer)
             }
             BasicTextField(
-                value = text,
+                value = tfv,
                 onValueChange = { v ->
-                    text = v.filter { it.isDigit() }.take(4)
-                    text.toIntOrNull()?.let { vm.setCount(it) }
+                    val digits = v.text.filter { it.isDigit() }.take(4)
+                    tfv = v.copy(text = digits)
+                    digits.toIntOrNull()?.let { vm.setCount(it) }
                 },
-                modifier = Modifier.width(60.dp).padding(vertical = 10.dp),
+                modifier = Modifier.width(64.dp).padding(vertical = 10.dp)
+                    .onFocusChanged { if (it.isFocused) tfv = tfv.copy(selection = TextRange(0, tfv.text.length)) },
                 singleLine = true,
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                 textStyle = androidx.compose.ui.text.TextStyle(
@@ -276,28 +286,37 @@ private fun AntallRow(vm: MainViewModel) {
 
 @Composable
 private fun DropdownRow(label: String, value: String, options: List<String>, onSelect: (String) -> Unit) {
-    val cs = MaterialTheme.colorScheme
     var open by remember { mutableStateOf(false) }
-    Box {
-        Row(
-            Modifier.fillMaxWidth().clickable { open = true }.background(cs.surface)
-                .padding(horizontal = 16.dp, vertical = 14.dp),
-            verticalAlignment = Alignment.CenterVertically,
-        ) {
-            Text(label, color = cs.onSurfaceVariant, fontSize = 14.sp, modifier = Modifier.width(84.dp))
-            Spacer(Modifier.weight(1f))
-            if (value.isNotBlank()) Text(value, fontWeight = FontWeight.Medium)
-            Text("  ›", color = cs.outline, fontSize = 18.sp)
-        }
-        DropdownMenu(expanded = open, onDismissRequest = { open = false }) {
-            DropdownMenuItem(text = { Text("—", color = cs.onSurfaceVariant) },
-                onClick = { onSelect(""); open = false })
-            options.forEach { opt ->
-                DropdownMenuItem(text = { Text(opt) }, onClick = { onSelect(opt); open = false })
-            }
-        }
+    FieldRow(label, onClick = { open = true }) {
+        if (value.isNotBlank()) Text(value, fontWeight = FontWeight.Medium)
     }
-    HorizontalDivider(color = cs.outline.copy(alpha = 0.4f))
+    if (open) {
+        AlertDialog(
+            onDismissRequest = { open = false },
+            title = { Text(label) },
+            text = {
+                LazyColumn(Modifier.heightIn(max = 400.dp)) {
+                    item { OptionItem("Ingen", value.isBlank()) { onSelect(""); open = false } }
+                    items(options) { opt -> OptionItem(opt, opt == value) { onSelect(opt); open = false } }
+                }
+            },
+            confirmButton = {},
+            dismissButton = { TextButton(onClick = { open = false }) { Text("Avbryt") } },
+        )
+    }
+}
+
+@Composable
+private fun OptionItem(text: String, selected: Boolean, onClick: () -> Unit) {
+    val cs = MaterialTheme.colorScheme
+    Row(
+        Modifier.fillMaxWidth().clickable(onClick = onClick).padding(vertical = 13.dp, horizontal = 4.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Text(text, Modifier.weight(1f), color = if (selected) cs.primary else cs.onSurface,
+            fontWeight = if (selected) FontWeight.Bold else FontWeight.Normal)
+        if (selected) Text("✓", color = cs.primary, fontWeight = FontWeight.Bold)
+    }
 }
 
 @Composable
@@ -377,17 +396,28 @@ fun LocalityScreen(vm: MainViewModel) {
 @Composable
 fun ExportDialog(vm: MainViewModel) {
     val cs = MaterialTheme.colorScheme
-    val text = remember { vm.exportText() }
     val clip = LocalClipboardManager.current
+    val text = vm.exportText()   // recomputes when the coords toggle flips
     AlertDialog(
         onDismissRequest = { vm.closeExport() },
         title = { Text("Eksporter til Artsobservasjoner") },
         text = {
             Column {
-                Text("Lim inn i Importer observasjoner (gammel side). Navn + registrert koordinat kobles til offisiell lokalitet.",
+                Text("Lim inn i Importer observasjoner (gammel side).",
                     color = cs.onSurfaceVariant, fontSize = 13.sp)
-                Spacer(Modifier.height(10.dp))
-                OutlinedTextField(text, {}, Modifier.fillMaxWidth().height(180.dp), readOnly = true,
+                Spacer(Modifier.height(6.dp))
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Switch(checked = vm.exportCoords, onCheckedChange = { vm.exportCoords = it })
+                    Spacer(Modifier.width(8.dp))
+                    Text("Ta med koordinater", fontSize = 14.sp)
+                }
+                Text(
+                    if (vm.exportCoords) "Navn + registrert koordinat — kobler også tvetydige navn."
+                    else "Bare navn (som iGoTerra) — krever entydig lokalitetsnavn.",
+                    color = cs.onSurfaceVariant, fontSize = 12.sp,
+                )
+                Spacer(Modifier.height(8.dp))
+                OutlinedTextField(text, {}, Modifier.fillMaxWidth().height(150.dp), readOnly = true,
                     textStyle = androidx.compose.ui.text.TextStyle(fontSize = 11.sp))
             }
         },

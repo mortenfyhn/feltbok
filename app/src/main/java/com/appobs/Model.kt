@@ -20,13 +20,27 @@ object Options {
         "1K", "1K+", "2K", "2K+", "2K-", "3K", "3K+", "3K-", "4K", "4K+", "4K-",
         "5K", "5K+", "5K-", "6K", "6K+", "6K-", "7K", "7K+", "7K-",
     )
+    // Full Fugl activity list, in the template/website order.
     val activities = listOf(
-        "Rastende", "Stasjonær", "Næringssøkende", "Overflygende",
-        "Sang/spill, ikke hekking", "Lokkelyd, øvrige lyder",
-        "Trekkende", "Trekkende mot N", "Trekkende mot NØ", "Trekkende mot Ø",
-        "Trekkende mot SØ", "Trekkende mot S", "Trekkende mot SV",
-        "Trekkende mot V", "Trekkende mot NV",
-        "Rugende", "Reir med egg eller unger", "Mat til unger", "Ringmerket",
+        "Reir med egg eller unger", "Reir, unger hørt", "Rugende", "Mat til unger",
+        "Bar ekskrementpose", "Reir i bruk", "Besøker bebodd reir",
+        "Unger utenfor reir, ikke utvokste", "Brukt reir", "Eggeskall",
+        "Avledningsmanøver", "Mislykket hekking", "Reirbygging", "Rugeflekker",
+        "Engstelig adferd, indikasjon på hekking", "Reirbesøk?",
+        "Paring/kurtise på mulig hekkeplass", "Permanent revir",
+        "Par i passende hekkebiotop", "Sang/spill i hekketid og passende hekkebiotop",
+        "Observasjon i hekketid, passende biotop", "Rastende", "Stasjonær",
+        "Overflygende", "Næringssøkende", "Ved fôring", "Sang/spill, ikke hekking",
+        "Lokkelyd, øvrige lyder", "Revir, ikke hekking", "Ringmerket",
+        "Individmerket (kontroll)", "Trekkforsøk", "Trekkende", "Trekkende mot N",
+        "Trekkende mot NØ", "Trekkende mot Ø", "Trekkende mot SØ", "Trekkende mot S",
+        "Trekkende mot SV", "Trekkende mot V", "Trekkende mot NV", "Syk",
+        "Død - kollisjon med kraftledning", "Død - kollisjon med vindturbin",
+        "Død - kollisjon med vindu", "Død - kollisjon med fyr", "Død - kollisjon med fly",
+        "Død - kollisjon med gjerde", "Drept av elektrokusjon (strømslag)",
+        "Drept av olje", "Trafikkdrept", "Garndød", "Skadet av fiskeredskap",
+        "Drept av predator", "Død av sykdom/sult", "Skutt/avlivet",
+        "Død - ukjent dødsårsak", "Ferske spor", "Eldre spor", "Fersk møkk", "Eldre møkk",
     )
     val sexes = listOf("Hann", "Hunn", "Hunnfarget", "I par")
 
@@ -188,13 +202,15 @@ private val EXPORT_COLS = listOf(
     "Kommentar (synlig for alle)", "Privat kommentar (kun synlig for deg selv)",
 )
 
-fun exportTsv(notes: List<Note>): String {
+fun exportTsv(notes: List<Note>, withCoords: Boolean = true): String {
     val rows = notes.sortedBy { it.id }.map { n ->
         val d = exportDate(n.id); val t = exportTime(n.id)
+        val nord = if (withCoords) n.lat.toString() else ""
+        val ost = if (withCoords) n.lon.toString() else ""
+        val acc = if (withCoords) Options.accuracy else ""
         listOf(
             n.species, n.count.toString(), n.age, n.sex, n.activity, n.locName,
-            n.lat.toString(), n.lon.toString(), Options.accuracy,
-            d, t, d, t, n.publicComment, n.privateComment,
+            nord, ost, acc, d, t, d, t, n.publicComment, n.privateComment,
         ).joinToString("\t")
     }
     return (listOf(EXPORT_COLS.joinToString("\t")) + rows).joinToString("\n")
