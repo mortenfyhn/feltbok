@@ -25,8 +25,8 @@ process/__pycache__/
 # Official locality table + its source archive (built by build_localities.py)
 /localities.csv
 /artsobs-dwca.zip
-# Locality import-matching test sheet
-/lokalitetstest.xlsx
+# Locality import-matching test sheets
+/lokalitetstest*.xlsx
 
 # Local models (NB-Whisper CTranslate2 build)
 /models/
