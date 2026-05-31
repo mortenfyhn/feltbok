@@ -1,165 +1,157 @@
 #!/usr/bin/env python3
-"""Build a locality gazetteer from open Artskart bird observations.
+"""Build the official Artsobservasjoner locality table.
 
-Run once (or occasionally) to populate localities_gazetteer.csv, which
-process.py uses to label rows with established locality names so the import
-links to existing localities instead of creating new points.
+Source: the Norwegian Species Observation Service Darwin Core Archive, published
+by Artsdatabanken (GBIF dataset b124e1e0-4755-430f-9eab-894f25a9b59c). Every
+record carries the registry's *qualified* locality name, its stable site id
+(`locationID`), the site's canonical coordinates, and kommune/fylke — so one
+row per `locationID` reconstructs the locality registry itself.
 
-It queries the open Artskart API for bird records (Institution "Birdlife Norge",
-i.e. the Artsobservasjoner bird data) inside a bounding box, and aggregates the
-distinct localities. Artskart's `Locality` is a composite — the real locality
-name is the part before the first comma (the rest is admin context):
+We need the qualified name because that is exactly what Artsobservasjoner's
+name-based import matches on: "Ørndalen, Sistranda, Frøya, Tø", never bare
+"Ørndalen". (Import *with* coordinates instead creates a new locality per point,
+which is the duplicate mess we're avoiding — so the app uploads names only.)
 
-    "Utnesvatnet, Lensvik, Orkland, Tø"  ->  "Utnesvatnet"
+Usage:
+    python process/build_localities.py                  # download + build national table
+    python process/build_localities.py --archive a.zip  # use a pre-downloaded archive
+    python process/build_localities.py --county Trøndelag   # one fylke only
+    python process/build_localities.py --min-count 3    # drop rarely-used (likely private) sites
 
-Example:
-    python process/build_localities.py --bbox 10.0,63.3,10.7,63.5
+Output: localities.csv  (id,name,lat,lon,kommune,fylke,count), most-used first.
 """
 import argparse
 import csv
+import io
 import os
-import statistics
 import sys
+import xml.etree.ElementTree as ET
+import zipfile
 
 import requests
 
-API = "https://artskart.artsdatabanken.no/publicapi/api/observations/list"
-# In Artskart, the Artsobservasjoner bird data is attributed to BirdLife Norge.
-BIRD_INSTITUTION = "Birdlife Norge"
+# Artsdatabanken's IPT serves the Darwin Core Archive directly (a ~3 GB zip).
+ARCHIVE_URL = "https://ipt.artsdatabanken.no/archive.do?r=speciesobservationsservice2"
+DEFAULT_ARCHIVE = "artsobs-dwca.zip"
+
+# Darwin Core terms we keep, by their full term URI (meta.xml maps these to
+# column indices in the data file).
+TERMS = {
+    "locationID": "http://rs.tdwg.org/dwc/terms/locationID",
+    "locality": "http://rs.tdwg.org/dwc/terms/locality",
+    "lat": "http://rs.tdwg.org/dwc/terms/decimalLatitude",
+    "lon": "http://rs.tdwg.org/dwc/terms/decimalLongitude",
+    "kommune": "http://rs.tdwg.org/dwc/terms/municipality",
+    "fylke": "http://rs.tdwg.org/dwc/terms/county",
+}
 
 
-def wkt_box(minlon, minlat, maxlon, maxlat) -> str:
-    return (f"POLYGON(({minlon} {minlat},{maxlon} {minlat},{maxlon} {maxlat},"
-            f"{minlon} {maxlat},{minlon} {minlat}))")
-
-
-def fetch(bbox, from_date, institution, max_pages, page_size=1000):
-    params = {
-        "pageSize": page_size, "crs": "EPSG:4326", "filter.crs": "EPSG:4326",
-        "filter.wktPolygon": wkt_box(*bbox), "filter.fromDate": from_date,
-    }
-    page = 0
-    while True:
-        params["pageIndex"] = page
-        r = requests.get(API, params=params, timeout=90,
-                         headers={"User-Agent": "appobs-localities/1.0"})
+def download(url: str, dest: str) -> None:
+    """Stream the archive to `dest`, skipping if it's already there."""
+    if os.path.exists(dest):
+        print(f"Using cached archive {dest} ({os.path.getsize(dest) >> 20} MB)",
+              file=sys.stderr)
+        return
+    print(f"Downloading {url}\n  -> {dest} (this is a few GB, one time)", file=sys.stderr)
+    with requests.get(url, stream=True, timeout=120) as r:
         r.raise_for_status()
-        d = r.json()
-        for o in d.get("Observations", []):
-            if institution and o.get("Institution") != institution:
+        got = 0
+        with open(dest, "wb") as f:
+            for chunk in r.iter_content(chunk_size=1 << 20):
+                f.write(chunk)
+                got += len(chunk)
+                print(f"\r  {got >> 20} MB", end="", file=sys.stderr)
+    print(file=sys.stderr)
+
+
+def parse_meta(zf: zipfile.ZipFile):
+    """Read meta.xml -> (core filename, delimiter, header lines, {field: index})."""
+    root = ET.fromstring(zf.read("meta.xml"))
+    ns = "{http://rs.tdwg.org/dwc/text/}"
+    core = root.find(f"{ns}core")
+    delim = (core.get("fieldsTerminatedBy", "\\t")
+             .replace("\\t", "\t").replace("\\n", "\n"))
+    skip = int(core.get("ignoreHeaderLines", "0"))
+    filename = core.find(f"{ns}files/{ns}location").text.strip()
+    idx = {}
+    for key, uri in TERMS.items():
+        field = core.find(f"{ns}field[@term='{uri}']")
+        if field is None:
+            raise SystemExit(f"meta.xml is missing the {key} term ({uri})")
+        idx[key] = int(field.get("index"))
+    return filename, delim, skip, idx
+
+
+def aggregate(zf: zipfile.ZipFile, county: str | None, bbox):
+    """Stream the core file, keeping one entry per locationID.
+
+    Coordinates are stable per site, so first-seen wins; we just tally how many
+    records reference each site (a public-vs-private proxy for --min-count)."""
+    filename, delim, skip, idx = parse_meta(zf)
+    need = max(idx.values())
+    county = county.lower() if county else None
+    sites: dict[str, list] = {}
+    with zf.open(filename) as raw:
+        stream = io.TextIOWrapper(raw, encoding="utf-8", newline="")
+        reader = csv.reader(stream, delimiter=delim)
+        for _ in range(skip):
+            next(reader, None)
+        for n, row in enumerate(reader):
+            if n % 2_000_000 == 0 and n:
+                print(f"\r  {n // 1_000_000}M rows, {len(sites)} sites",
+                      end="", file=sys.stderr)
+            if len(row) <= need:
                 continue
-            yield o
-        total = d.get("TotalPages", 0)
-        page += 1
-        print(f"  page {page}/{total}", file=sys.stderr)
-        if page >= total or page >= max_pages:
-            if page >= max_pages < total:
-                print(f"  (stopped at --max-pages {max_pages} of {total})", file=sys.stderr)
-            break
-
-
-def load_csv_counts(path):
-    """Read a previously written gazetteer/species CSV: name -> (lat, lon, count)."""
-    seed = {}
-    if not os.path.exists(path):
-        return seed
-    with open(path, newline="", encoding="utf-8") as f:
-        for r in csv.reader(f):
-            if not r or r[0].strip().lower() in ("name", "navn"):
+            lid = row[idx["locationID"]].strip()
+            name = row[idx["locality"]].strip()
+            if not (lid and name):
+                continue
+            if lid in sites:
+                sites[lid][-1] += 1
                 continue
             try:
-                if len(r) >= 4:      # gazetteer: name,lat,lon,count
-                    seed[r[0].strip()] = (float(r[1]), float(r[2]), int(r[3]))
-                else:                # species: name,count
-                    seed[r[0].strip()] = int(r[1])
-            except (IndexError, ValueError):
-                pass
-    return seed
-
-
-def write_gazetteer(path, agg, min_count, seed=None) -> int:
-    rows = {name: (round(statistics.median(la), 6), round(statistics.median(lo), 6), len(la))
-            for name, (la, lo) in agg.items() if len(la) >= min_count}
-    for name, val in (seed or {}).items():   # keep prior regions' localities
-        rows.setdefault(name, val)
-    out = sorted(([name, *v] for name, v in rows.items()), key=lambda r: -r[3])
-    with open(path, "w", newline="", encoding="utf-8") as f:
-        w = csv.writer(f)
-        w.writerow(["name", "lat", "lon", "count"])
-        w.writerows(out)
-    return len(out)
-
-
-def write_species(path, species) -> int:
-    rows = sorted(species.items(), key=lambda r: -r[1])  # most-observed first
-    with open(path, "w", newline="", encoding="utf-8") as f:
-        w = csv.writer(f)
-        w.writerow(["name", "count"])
-        w.writerows(rows)
-    return len(rows)
+                lat, lon = float(row[idx["lat"]]), float(row[idx["lon"]])
+            except ValueError:
+                continue
+            fylke = row[idx["fylke"]].strip()
+            if county and county not in fylke.lower():
+                continue
+            if bbox and not (bbox[0] <= lon <= bbox[2] and bbox[1] <= lat <= bbox[3]):
+                continue
+            sites[lid] = [lid, name, round(lat, 6), round(lon, 6),
+                          row[idx["kommune"]].strip(), fylke, 1]
+    print(file=sys.stderr)
+    return sites
 
 
 def main() -> int:
     ap = argparse.ArgumentParser(description=__doc__,
                                  formatter_class=argparse.RawDescriptionHelpFormatter)
-    ap.add_argument("--bbox", default="10.0,63.3,10.7,63.5",
-                    help="minlon,minlat,maxlon,maxlat (default: Trondheim area)")
-    ap.add_argument("--from-date", default="2018-01-01",
-                    help="earliest observation date (default: %(default)s)")
-    ap.add_argument("--institution", default=BIRD_INSTITUTION,
-                    help="source institution to keep; '' for all sources")
+    ap.add_argument("--archive", default=DEFAULT_ARCHIVE,
+                    help="Darwin Core Archive zip; downloaded if absent "
+                         "(default: %(default)s)")
+    ap.add_argument("--county", help="keep only this fylke (e.g. Trøndelag)")
+    ap.add_argument("--bbox", help="minlon,minlat,maxlon,maxlat to clip to a region")
     ap.add_argument("--min-count", type=int, default=2,
-                    help="drop localities seen fewer times (default: %(default)s)")
-    ap.add_argument("--max-pages", type=int, default=400,
-                    help="safety cap on pages of 1000 (default: %(default)s)")
-    ap.add_argument("-o", "--output", default="localities_gazetteer.csv")
-    ap.add_argument("--species-output", default="bird_species.csv",
-                    help="also write the distinct bird names seen (default: %(default)s)")
-    ap.add_argument("--append", action="store_true",
-                    help="merge into existing output files instead of replacing "
-                         "them (use to add a new region to the gazetteer)")
+                    help="drop sites referenced fewer times — rarely-used sites "
+                         "are usually private and won't match on import "
+                         "(default: %(default)s)")
+    ap.add_argument("-o", "--output", default="localities.csv")
     args = ap.parse_args()
 
-    bbox = tuple(float(x) for x in args.bbox.split(","))
-    agg: dict[str, tuple[list, list]] = {}
-    # In append mode, seed from prior regions so they're preserved.
-    gaz_seed = load_csv_counts(args.output) if args.append else None
-    species: dict[str, int] = load_csv_counts(args.species_output) if args.append else {}
-    if args.append:
-        print(f"Appending to {len(gaz_seed)} existing localities, "
-              f"{len(species)} species.", file=sys.stderr)
-    scanned = 0
-    # Deep pagination gets slow on big result sets, so we checkpoint: the output
-    # files are rewritten periodically and stay usable if you stop the run early.
-    CHECKPOINT = 20_000
-    try:
-        for o in fetch(bbox, args.from_date, args.institution or None, args.max_pages):
-            sp = (o.get("Name") or "").strip()
-            if sp:
-                species[sp] = species.get(sp, 0) + 1
-            name = (o.get("Locality") or "").split(",")[0].strip()
-            if not name:
-                continue
-            try:
-                lat, lon = float(o["North"]), float(o["East"])
-            except (KeyError, TypeError, ValueError):
-                continue
-            lats, lons = agg.setdefault(name, ([], []))
-            lats.append(lat)
-            lons.append(lon)
-            scanned += 1
-            if scanned % CHECKPOINT == 0:
-                n = write_gazetteer(args.output, agg, args.min_count, gaz_seed)
-                write_species(args.species_output, species)
-                print(f"  checkpoint: {scanned} obs -> {n} localities, "
-                      f"{len(species)} species", file=sys.stderr)
-    except KeyboardInterrupt:
-        print("\nInterrupted — writing partial output.", file=sys.stderr)
+    bbox = tuple(float(x) for x in args.bbox.split(",")) if args.bbox else None
+    download(ARCHIVE_URL, args.archive)
+    with zipfile.ZipFile(args.archive) as zf:
+        sites = aggregate(zf, args.county, bbox)
 
-    n = write_gazetteer(args.output, agg, args.min_count, gaz_seed)
-    s = write_species(args.species_output, species)
-    print(f"Scanned {scanned} bird obs -> {n} localities "
-          f"(>= {args.min_count} obs) to {args.output}, {s} species to {args.species_output}")
+    rows = sorted((s for s in sites.values() if s[-1] >= args.min_count),
+                  key=lambda s: -s[-1])
+    with open(args.output, "w", newline="", encoding="utf-8") as f:
+        w = csv.writer(f)
+        w.writerow(["id", "name", "lat", "lon", "kommune", "fylke", "count"])
+        w.writerows(rows)
+    print(f"Wrote {len(rows)} localities (>= {args.min_count} records) to "
+          f"{args.output}, from {len(sites)} sites seen.", file=sys.stderr)
     return 0
 
 

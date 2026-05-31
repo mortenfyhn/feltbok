@@ -22,6 +22,11 @@ process/__pycache__/
 /my_localities.csv
 /localities_gazetteer.csv
 /bird_species.csv
+# Official locality table + its source archive (built by build_localities.py)
+/localities.csv
+/artsobs-dwca.zip
+# Locality import-matching test sheet
+/lokalitetstest.xlsx
 
 # Local models (NB-Whisper CTranslate2 build)
 /models/
