@@ -1,116 +1,138 @@
 package com.appobs
 
 import android.app.Application
-import android.util.Log
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateListOf
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
-import kotlinx.coroutines.asCoroutineDispatcher
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
-import java.io.File
-import java.text.SimpleDateFormat
-import java.util.Date
-import java.util.Locale
-import java.util.concurrent.Executors
 
-private const val TAG = "AppObs"
+enum class Screen { LIST, SEARCH, DETAIL, LOCALITY }
 
-enum class AppState { READY, RECORDING }
-
+/**
+ * Single source of truth for the UI. Holds the day's notes (persisted), the live
+ * GPS fix, and the draft being added/edited. The whole app is four screens driven
+ * by [screen]; there's no nav library — overkill for this.
+ */
 class MainViewModel(app: Application) : AndroidViewModel(app) {
-    val state = MutableStateFlow(AppState.READY)
-    val count = MutableStateFlow(0)
-    val lastSaved = MutableStateFlow<String?>(null)
-
-    private val recorder = AudioRecorder()
+    private val ctx = app
     private val tracker = LocationTracker(app)
-    val fix: StateFlow<GpsFix?> = tracker.fix
 
-    private val dir = File(app.getExternalFilesDir(null), "recordings").apply { mkdirs() }
-    private val tmpFile = File(dir, "current.m4a")
+    val localities: List<Locality> = loadLocalities(app)
+    val species: List<Species> = loadSpecies(app)
 
-    // Single thread so start/stop of the recorder are serialized and can never
-    // race, while the UI state flips instantly on the main thread.
-    private val recorderDispatcher = Executors.newSingleThreadExecutor().asCoroutineDispatcher()
+    val notes = mutableStateListOf<Note>().apply { addAll(loadNotes(app)) }
+    /** Recently chosen species (norsk), most-recent first — the quick list when search is empty. */
+    val recent = mutableStateListOf<String>().apply { addAll(species.take(6).map { it.norsk }) }
+
+    var screen by mutableStateOf(Screen.LIST); private set
+    var showExport by mutableStateOf(false); private set
+    var fix by mutableStateOf<GpsFix?>(null); private set
+
+    // ---- draft (current add/edit) ----
+    private var editingId: Long? = null
+    private var changingSpecies = false
+    var dSpecies by mutableStateOf("")
+    var dLatin by mutableStateOf("")
+    var dCount by mutableStateOf(1)
+    var dAge by mutableStateOf("")
+    var dAct by mutableStateOf("")
+    var dSex by mutableStateOf("")
+    var dPub by mutableStateOf("")
+    var dPriv by mutableStateOf("")
+    var dLoc by mutableStateOf<Locality?>(null)
+    var dTime by mutableStateOf(0L)
+    val isEditing: Boolean get() = editingId != null
 
     init {
-        count.value = recordings().size
+        viewModelScope.launch {
+            tracker.fix.collect { f ->
+                fix = f
+                // Fill the locality once GPS settles, if adding and untouched.
+                if (screen == Screen.DETAIL && editingId == null && dLoc == null) dLoc = nearest()
+            }
+        }
     }
 
-    // GPS runs only while the screen is visible; the Activity drives this from
-    // its lifecycle so the receiver stays warm without draining battery in the
-    // background.
     fun startLocationUpdates() = tracker.start()
     fun stopLocationUpdates() = tracker.stop()
 
-    fun startRecording() {
-        if (state.value != AppState.READY) return
-        state.value = AppState.RECORDING   // instant visual feedback
-        lastSaved.value = null
-        viewModelScope.launch(recorderDispatcher) {
-            try {
-                recorder.start(tmpFile)
-                Log.i(TAG, "Recording started")
-            } catch (e: Exception) {
-                Log.e(TAG, "Failed to start recording", e)
-                lastSaved.value = "Feil ved opptak: ${e.message}"
-                state.value = AppState.READY
-            }
+    /** Official locality nearest the current fix, or null until GPS settles. */
+    fun nearest(): Locality? =
+        fix?.let { f -> localities.minByOrNull { haversine(f.lat, f.lon, it.lat, it.lon) } }
+
+    fun distanceTo(loc: Locality): Double? =
+        fix?.let { haversine(it.lat, it.lon, loc.lat, loc.lon) }
+
+    // ---- navigation / actions ----
+    fun startAdd() {
+        editingId = null; changingSpecies = false
+        dSpecies = ""; dLatin = ""; dCount = 1
+        dAge = ""; dAct = ""; dSex = ""; dPub = ""; dPriv = ""
+        dLoc = null; dTime = 0L
+        screen = Screen.SEARCH
+    }
+
+    fun changeSpecies() { changingSpecies = true; screen = Screen.SEARCH }
+    fun cancelSearch() { screen = if (dSpecies.isNotEmpty() || isEditing) Screen.DETAIL else Screen.LIST }
+    fun backToDetail() { screen = Screen.DETAIL }
+    fun cancel() { screen = Screen.LIST }
+
+    fun pickSpecies(s: Species) {
+        dSpecies = s.norsk; dLatin = s.latin
+        recent.remove(s.norsk); recent.add(0, s.norsk)
+        while (recent.size > 8) recent.removeAt(recent.size - 1)
+        if (!changingSpecies && !isEditing) {
+            dTime = System.currentTimeMillis()  // stamp the entry time now
+            dLoc = nearest()
         }
+        changingSpecies = false
+        screen = Screen.DETAIL
     }
 
-    fun stopRecording() {
-        if (state.value != AppState.RECORDING) return
-        state.value = AppState.READY       // instant visual feedback
-        val current = fix.value            // capture position at the moment of stop
-        viewModelScope.launch(recorderDispatcher) {
-            val ok = recorder.stop()
-            if (!ok) {
-                tmpFile.delete()
-                lastSaved.value = "For kort opptak"
-                return@launch
-            }
-            val name = buildName(current)
-            if (!tmpFile.renameTo(File(dir, name))) {
-                Log.e(TAG, "Failed to rename recording")
-                lastSaved.value = "Feil ved lagring"
-                return@launch
-            }
-            count.value = recordings().size
-            lastSaved.value = when {
-                current == null -> "Lagret (uten GPS!)"
-                current.accuracyM.isNaN() -> "Lagret (GPS-nøyaktighet ukjent)"
-                else -> "Lagret ±${current.accuracyM.toInt()} m"
-            }
-            Log.i(TAG, "Saved $name")
-        }
+    fun editNote(n: Note) {
+        editingId = n.id; changingSpecies = false
+        dSpecies = n.species; dLatin = n.latin; dCount = n.count
+        dAge = n.age; dAct = n.activity; dSex = n.sex
+        dPub = n.publicComment; dPriv = n.privateComment
+        dTime = n.id
+        dLoc = localities.firstOrNull { it.lokalitet == n.locName && it.lat == n.lat && it.lon == n.lon }
+            ?: Locality("", n.locName, "", "", n.lat, n.lon)
+        screen = Screen.DETAIL
     }
 
-    /** Discard the most recent note — for an accidental tap or a changed mind. */
-    fun deleteLast() {
-        if (state.value == AppState.RECORDING) return
-        val last = recordings().lastOrNull() ?: return
-        last.delete()
-        count.value = recordings().size
-        lastSaved.value = "Slettet siste"
+    fun openLocalityPicker() { screen = Screen.LOCALITY }
+    fun pickLocality(loc: Locality) { dLoc = loc; screen = Screen.DETAIL }
+
+    fun setCount(n: Int) { dCount = n.coerceAtLeast(1) }
+
+    fun save() {
+        val loc = dLoc
+        val n = Note(
+            id = if (isEditing) editingId!! else (dTime.takeIf { it > 0 } ?: System.currentTimeMillis()),
+            species = dSpecies, latin = dLatin, count = dCount.coerceAtLeast(1),
+            age = dAge, activity = dAct, sex = dSex,
+            publicComment = dPub, privateComment = dPriv,
+            locName = loc?.lokalitet ?: "", lat = loc?.lat ?: 0.0, lon = loc?.lon ?: 0.0,
+        )
+        if (isEditing) {
+            val i = notes.indexOfFirst { it.id == n.id }
+            if (i >= 0) notes[i] = n else notes.add(0, n)
+        } else notes.add(0, n)
+        persist()
+        screen = Screen.LIST
     }
 
-    /** The saved notes, for the share action. Excludes the in-progress temp file. */
-    fun recordings(): List<File> =
-        dir.listFiles { f -> f.isFile && f.name.endsWith(".m4a") && f.name != tmpFile.name }
-            ?.sortedBy { it.name }
-            ?: emptyList()
-
-    // Encode all field metadata in the filename so there is nothing else to
-    // sync: the laptop script parses time + position + accuracy straight back
-    // out of this. NA marks a value we couldn't capture, so it gets flagged
-    // for manual review later rather than silently dropped.
-    private fun buildName(fix: GpsFix?): String {
-        val ts = SimpleDateFormat("yyyy-MM-dd'T'HH-mm-ss", Locale.US).format(Date())
-        val lat = fix?.let { "%.6f".format(Locale.US, it.lat) } ?: "NA"
-        val lon = fix?.let { "%.6f".format(Locale.US, it.lon) } ?: "NA"
-        val acc = fix?.takeIf { !it.accuracyM.isNaN() }?.let { it.accuracyM.toInt().toString() } ?: "NA"
-        return "${ts}_lat${lat}_lon${lon}_acc${acc}.m4a"
+    fun delete() {
+        editingId?.let { id -> notes.removeAll { it.id == id }; persist() }
+        screen = Screen.LIST
     }
+
+    fun openExport() { showExport = true }
+    fun closeExport() { showExport = false }
+    fun exportText(): String = exportTsv(notes)
+
+    private fun persist() = saveNotes(ctx, notes)
 }
