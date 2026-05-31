@@ -99,6 +99,51 @@ def download(url: str, dest: str) -> None:
     os.replace(part, dest)
 
 
+GBIF_SEARCH = "https://api.gbif.org/v1/occurrence/search"
+GBIF_DATASET = "b124e1e0-4755-430f-9eab-894f25a9b59c"  # Norwegian Species Observation Service
+
+
+def wkt_box(minlon, minlat, maxlon, maxlat) -> str:
+    return (f"POLYGON(({minlon} {minlat},{maxlon} {minlat},{maxlon} {maxlat},"
+            f"{minlon} {maxlat},{minlon} {minlat}))")
+
+
+def api_harvest(bbox, max_records=100_000):
+    """Build the locality table from the GBIF occurrence API instead of the bulk
+    archive — many small paged requests, reliable on flaky links. One row per
+    locationID. GBIF caps paging at a 100k offset window, so within a regional
+    --bbox this captures the established (multi-record, i.e. public) localities."""
+    sites: dict[str, list] = {}
+    offset = 0
+    while offset < max_records:
+        params = {"datasetKey": GBIF_DATASET, "limit": 300, "offset": offset,
+                  "hasCoordinate": "true", "geometry": wkt_box(*bbox)}
+        r = requests.get(GBIF_SEARCH, params=params, timeout=90)
+        r.raise_for_status()
+        d = r.json()
+        for o in d.get("results", []):
+            lid = str(o.get("locationID") or "").strip()
+            name = (o.get("locality") or "").strip()
+            if not (lid and name):
+                continue
+            if lid in sites:
+                sites[lid][-1] += 1
+                continue
+            try:
+                lat, lon = float(o["decimalLatitude"]), float(o["decimalLongitude"])
+            except (KeyError, TypeError, ValueError):
+                continue
+            sites[lid] = [lid, name, round(lat, 6), round(lon, 6),
+                          (o.get("municipality") or "").strip(),
+                          (o.get("county") or "").strip(), 1]
+        offset += 300
+        print(f"\r  {offset} records, {len(sites)} sites", end="", file=sys.stderr)
+        if d.get("endOfRecords") or not d.get("results"):
+            break
+    print(file=sys.stderr)
+    return sites
+
+
 def split_name(full: str):
     """Split the qualified registry name into (lokalitet, hovedlokalitet).
 
@@ -180,6 +225,9 @@ def main() -> int:
                          "(default: %(default)s)")
     ap.add_argument("--county", help="keep only this fylke (e.g. Trøndelag)")
     ap.add_argument("--bbox", help="minlon,minlat,maxlon,maxlat to clip to a region")
+    ap.add_argument("--api", action="store_true",
+                    help="harvest from the GBIF occurrence API (needs --bbox) instead "
+                         "of the bulk archive — reliable when the big download won't finish")
     ap.add_argument("--min-count", type=int, default=2,
                     help="drop sites referenced fewer times — rarely-used sites "
                          "are usually private and won't match on import "
@@ -188,9 +236,14 @@ def main() -> int:
     args = ap.parse_args()
 
     bbox = tuple(float(x) for x in args.bbox.split(",")) if args.bbox else None
-    download(ARCHIVE_URL, args.archive)
-    with zipfile.ZipFile(args.archive) as zf:
-        sites = aggregate(zf, args.county, bbox)
+    if args.api:
+        if not bbox:
+            raise SystemExit("--api needs --bbox minlon,minlat,maxlon,maxlat")
+        sites = api_harvest(bbox)
+    else:
+        download(ARCHIVE_URL, args.archive)
+        with zipfile.ZipFile(args.archive) as zf:
+            sites = aggregate(zf, args.county, bbox)
 
     kept = sorted((s for s in sites.values() if s[-1] >= args.min_count),
                   key=lambda s: -s[-1])
@@ -201,7 +254,7 @@ def main() -> int:
         for lid, name, lat, lon, kommune, fylke, count in kept:
             lok, hoved = split_name(name)
             w.writerow([lid, lok, hoved, kommune, fylke, lat, lon, count])
-    print(f"Wrote {len(rows)} localities (>= {args.min_count} records) to "
+    print(f"Wrote {len(kept)} localities (>= {args.min_count} records) to "
           f"{args.output}, from {len(sites)} sites seen.", file=sys.stderr)
     return 0
 
