@@ -12,21 +12,10 @@
 process/__pycache__/
 .venv/
 
-# Field data / generated sheets (keep templates, not outputs)
-/recordings/
-/observasjoner.xlsx
-/observasjoner_review.xlsx
-/eksempel*.xlsx
-/probe_*.xlsx
-# Locality lists (your spots + the harvested gazetteer; keep local)
-/my_localities.csv
-/localities_gazetteer.csv
-/bird_species.csv
 # Official locality table + its source archive (built by build_localities.py)
 /localities.csv
 /artsobs-dwca.zip
+# Generated species list (if regenerated locally)
+/species.csv
 # Locality import-matching test sheets
 /lokalitetstest*.xlsx
-
-# Local models (NB-Whisper CTranslate2 build)
-/models/

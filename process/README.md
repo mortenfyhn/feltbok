@@ -1,130 +1,54 @@
-# Processing voice notes → Artsobservasjoner import sheet
+# Locality tooling
 
-The Android app records one voice note per observation, encoding time + GPS +
-accuracy in each filename, e.g.:
-
-```
-2026-05-30T08-33-12_lat59.912340_lon10.756780_acc8.m4a
-```
-
-This script turns a folder of those into rows in the Artsobservasjoner import
-template (`docs/artsobs-template-v3.0.xlsx`), ready to paste into
-Artsobservasjoner → *Rapportere* → *Importer observasjoner*. The v2.20 template
-also works (`-t docs/artsobs-template-v2.20.xlsx`); column renames are handled.
-
-## Pipeline
-
-1. **Transcribe** locally with `faster-whisper` — by default the dialect-tuned
-   **NB-Whisper** model (see Setup), falling back to `large-v3` if not built —
-   seeded with a bird-name prompt.
-2. **Parse** each transcript with Claude → species (corrected against Norwegian
-   bird names, optionally validated against `bird_species.csv`), count,
-   activity, sex, age, notes, and an uncertainty flag.
-3. **Apply corrections.** A note that starts with *"korreksjon …"* revises an
-   earlier observation instead of adding a new row — handy when you recount
-   (*"korreksjon, det var fem grønnfink"*). It targets the most recent prior
-   note of the same species (or, if it names none, the previous note) and
-   overwrites only the fields it restates; the original keeps its time and
-   place. The fix is recorded in that row's private comment.
-4. **Resolve the locality** (a required field). If the GPS is within
-   `--locality-radius` (200 m) of a known locality, that exact name is used so
-   the import **links to your established locality**; otherwise a Kartverket
-   place name is used, which creates a new point the row flags for review.
-5. **Write** a row per surviving observation into a copy of the template's
-   `Fugl` sheet, then move handled recordings into `recordings/processed/` so
-   re-runs only see new ones (`--keep` to disable). Silent/accidental clips go
-   to `recordings/skipped/`.
-
-Nothing is dropped: a clip Claude is unsure about — or one missing GPS, or a
-species off the checklist — still gets a row, marked `Usikker artsbestemming = X`
-with the raw transcript in the private comment, so you can fix it on the
-website's *Kontrollér og publisér* step.
+The Feltbok app matches each observation to an official Artsobservasjoner
+locality. These scripts build the locality table the app ships, and verify how
+the import matches names.
 
 ## Setup
 
 ```sh
 python3 -m venv .venv && . .venv/bin/activate
 pip install -r process/requirements.txt
-export ANTHROPIC_API_KEY=sk-ant-...
 ```
 
-Build the **NB-Whisper** Norwegian model once (~3 GB download + convert):
+## `build_localities.py` — the official locality table
+
+Reconstructs the Artsobservasjoner locality registry from the **Artsdatabanken /
+GBIF** Darwin Core Archive of the Norwegian Species Observation Service. Every
+record carries the qualified locality name, its stable site id (`locationID`),
+the site's canonical coordinates, and kommune/fylke — so one row per `locationID`
+*is* the registry.
 
 ```sh
-just nb-whisper          # -> models/nb-whisper-large-ct2
+just localities                      # national (downloads the ~3 GB archive once)
+just localities --county Trøndelag   # one fylke only (same download, smaller output)
+# or directly:
+python process/build_localities.py [--archive a.zip] [--bbox minlon,minlat,maxlon,maxlat] [--min-count 2]
 ```
 
-Without it, transcription falls back to stock `large-v3` (downloaded on first
-run). It runs on CPU; expect roughly real-time-ish per clip on the Framework.
+Output `localities.csv`: `id,lokalitet,hovedlokalitet,kommune,fylke,lat,lon,count`.
+`--min-count` drops rarely-referenced sites (usually private, won't match on
+import). Push it onto the device with `just push-data` — it overrides the bundled
+asset, no rebuild.
 
-## Run
+**Why this shape:** the import links a row when `Lokalitetsnavn` is the **bare**
+name *and* the row carries the locality's **exact registry coordinate** — the
+coordinate disambiguates duplicate names and rescues otherwise-unfound ones. The
+app emits exactly that (WGS 84 geographic, the old import page's coordinate
+setting). Importing *with an approximate* coordinate instead mints a duplicate
+locality — which is the mess this avoids.
+
+## `make_locality_test.py` — import-matching probes
+
+Builds small no-/with-coordinate sheets (`lokalitetstest-gammel.xlsx` for the old
+v2.20 site, `lokalitetstest-ny.xlsx` for the new v3.0 site) to confirm how the
+import resolves locality names. Paste into *Rapportere → Importer observasjoner*
+(don't publish) and read the per-row validation. This is how the recipe above was
+established; keep it for re-testing if the import behaviour ever changes.
 
 ```sh
-just process             # or: .venv/bin/python process/process.py recordings/
-# -> observasjoner.xlsx
+python process/make_locality_test.py
 ```
 
-Parsing defaults to Claude **Sonnet**. Options: `-o out.xlsx`, `-t template.xlsx`,
-`--claude-model claude-opus-4-8` (better on rare species, higher cost),
-`--whisper-model large-v3` (skip NB-Whisper), `--localities file.csv`,
-`--locality-radius 150`, `--species file.csv`, `--keep` (don't archive
-processed clips).
-
-Each observation is written at its **locality's** coordinate (from the gazetteer
-or, for new spots, the nearest Kartverket place point) rather than the raw GPS
-fix, so every note at the same place groups under one locality instead of
-minting a new tiny locality per observation.
-
-When you paste into the import form, set its **coordinate-system selector to
-"WGS 84 geographic"** (lat/long decimal degrees) — it defaults to UTM 32N, which
-would misread the coordinates. No profile change needed; the selector wins.
-
-## Localities
-
-The import links a row to an existing locality when the **name matches one near
-the coordinates** — and coordinates disambiguate same-named localities
-nationwide. So a recording near a known locality gets that exact name → links to
-the established locality; anywhere else falls back to a Kartverket name (a new
-point, flagged for review). `process.py` reads two CSVs (`name,lat,lon`):
-
-**1. The harvested gazetteer (`localities_gazetteer.csv`) — build it once:**
-
-```sh
-python process/build_localities.py --bbox 10.0,63.3,10.7,63.5   # minlon,minlat,maxlon,maxlat
-```
-
-This pulls bird records (Artsobservasjoner / BirdLife Norge) from the open
-Artskart API inside the box and aggregates the distinct localities with their
-names and coordinates — no manual list-building. It also writes the distinct
-bird names seen to `bird_species.csv`, used as the parser's checklist. Widen the
-`--bbox` to cover wherever you bird; `--from-date` / `--max-pages` control depth.
-
-**2. Your own list (`my_localities.csv`) — for private spots the gazetteer
-won't have**, e.g. nest nicknames:
-
-```
-name,lat,lon
-"reir-ringdue-furu-1",63.42704,10.41914
-```
-
-Names with commas/quotes work if wrapped in double quotes. Both files are
-optional and merged; your list is a good place for anything the harvest misses.
-
-## Example sheet (no recording / no API needed)
-
-```sh
-python process/make_example.py   # -> eksempel_observasjoner.xlsx
-```
-
-Three fake observations, to test the upload flow end to end.
-
-## Notes
-
-- `Nord`/`Øst` are decimal degrees (WGS84/ETRS89) — the template takes them
-  directly, no UTM conversion.
-- GPS accuracy is rounded **up** to the nearest allowed `Nøyaktighet` radius, so
-  the sheet never claims more precision than the fix had.
-- openpyxl drops the in-cell dropdown *validation* when it saves the copy; the
-  values are plain text and import fine — the website validates on import.
-- If local Whisper underperforms on bird names, swapping in a cloud STT is a
-  one-function change in `make_transcriber`.
+The Artsobservasjoner import templates live in `docs/` (`artsobs-template-v2.20.xlsx`,
+`artsobs-template-v3.0.xlsx`).

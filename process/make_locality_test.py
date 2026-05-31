@@ -22,15 +22,28 @@ per-row validation. Each row's private comment says what it tests.
 
     python process/make_locality_test.py
 """
-import importlib.util
-import sys
-
 from openpyxl import load_workbook
 
-_spec = importlib.util.spec_from_file_location("process", "process/process.py")
-proc = importlib.util.module_from_spec(_spec)
-sys.modules["process"] = proc
-_spec.loader.exec_module(proc)
+
+def fugl_headers(wb):
+    """Map column name -> 1-based column index from the Fugl header (row 2)."""
+    ws = wb["Fugl"]
+    return {str(c.value).strip(): c.column for c in ws[2] if c.value is not None}
+
+
+def pick(cols, *names):
+    """First of `names` present in the sheet (handles v2.20 vs v3.0 renames)."""
+    for n in names:
+        if n in cols:
+            return n
+    return names[0]
+
+
+def write_row(ws, row, cols, values):
+    for name, value in values.items():
+        if value is None or value == "" or name not in cols:
+            continue
+        ws.cell(row=row, column=cols[name], value=value)
 
 DATE = "31.05.2026"
 SPECIES = "Kjøttmeis"
@@ -48,10 +61,10 @@ LOCS = [
 
 
 def writer(wb):
-    cols = proc.fugl_headers(wb)
+    cols = fugl_headers(wb)
     ws = wb["Fugl"]
-    pub = proc.pick(cols, "Merknad (synlig for alle)", "Kommentar (synlig for alle)")
-    priv = proc.pick(cols, "Privat merknad (kun synlig for deg selv)",
+    pub = pick(cols, "Merknad (synlig for alle)", "Kommentar (synlig for alle)")
+    priv = pick(cols, "Privat merknad (kun synlig for deg selv)",
                      "Privat kommentar (kun synlig for deg selv)")
 
     def emit(row, name, label, *, hoved=None, coords=False):
@@ -65,7 +78,7 @@ def writer(wb):
             vals["Hovedlokalitet"] = hoved
         if coords:
             vals.update({"Nord": coords[0], "Øst": coords[1], "Nøyaktighet": ACC})
-        proc.write_row(ws, row, cols, vals)
+        write_row(ws, row, cols, vals)
         print(f"  L{row} {label}")
 
     return ws, emit
