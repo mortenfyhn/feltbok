@@ -29,7 +29,9 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
 
     var screen by mutableStateOf(Screen.LIST); private set
     var showExport by mutableStateOf(false); private set
-    var exportCoords by mutableStateOf(true)   // include Nord/Øst (the proven link recipe)
+    // Paste links on the bare name; including coords mints custom localities
+    // (paste behaves unlike the file-upload test). Default off, like iGoTerra.
+    var exportCoords by mutableStateOf(false)
     var fix by mutableStateOf<GpsFix?>(null); private set
 
     // ---- draft (current add/edit) ----
