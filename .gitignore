@@ -19,3 +19,13 @@ process/__pycache__/
 /species.csv
 # Locality import-matching test sheets
 /lokalitetstest*.xlsx
+
+# Leftover voice-era local files (never committed; safe to delete to reclaim space)
+/recordings/
+/models/
+/observasjoner*.xlsx
+/eksempel*.xlsx
+/probe_*.xlsx
+/my_localities.csv
+/localities_gazetteer.csv
+/bird_species.csv
