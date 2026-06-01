@@ -164,9 +164,15 @@ private fun NoteRow(n: Note, distance: Double?, onClick: () -> Unit) {
 fun SearchScreen(vm: MainViewModel) {
     val cs = MaterialTheme.colorScheme
     var q by remember { mutableStateOf("") }
-    val results = if (q.isBlank())
-        vm.recent.mapNotNull { name -> vm.species.firstOrNull { it.norsk == name } }
-    else
+    val results = if (q.isBlank()) {
+        // Recent picks first (in-session), then your other most-used species.
+        val recentList = vm.recent.mapNotNull { name -> vm.species.firstOrNull { it.norsk == name } }
+        val recentNames = recentList.map { it.norsk }.toSet()
+        val frequent = vm.species
+            .filter { it.norsk !in recentNames && vm.useCount(it.norsk) > 0 }
+            .sortedByDescending { vm.useCount(it.norsk) }
+        (recentList + frequent).take(12)
+    } else
         vm.species
             .mapNotNull { s ->
                 val n = fuzzyScore(q, s.norsk)
@@ -178,7 +184,8 @@ fun SearchScreen(vm: MainViewModel) {
                 }
                 score?.let { s to it }
             }
-            .sortedBy { it.second }   // stable: keeps frequency order within a rank
+            // best fuzzy rank first, then your most-used; Norway-wide frequency breaks ties (stable)
+            .sortedWith(compareBy({ it.second }, { -vm.useCount(it.first.norsk) }))
             .map { it.first }
     // Auto-focus with the keyboard up so you can type the moment the screen opens.
     val focus = remember { FocusRequester() }

@@ -3,6 +3,7 @@ package com.appobs
 import android.app.Application
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateListOf
+import androidx.compose.runtime.mutableStateMapOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.AndroidViewModel
@@ -30,6 +31,10 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
         val saved = loadRecent(app)
         addAll(if (saved.isNotEmpty()) saved else species.take(6).map { it.norsk })
     }
+    /** How many times each species (norsk) has been picked, so your own regulars
+     *  rank to the top of the quick list and of typed results. Persisted. */
+    private val uses = mutableStateMapOf<String, Int>().apply { putAll(loadUses(app)) }
+    fun useCount(norsk: String): Int = uses[norsk] ?: 0
 
     var screen by mutableStateOf(Screen.LIST); private set
     var showExport by mutableStateOf(false); private set
@@ -94,6 +99,8 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
         recent.remove(s.norsk); recent.add(0, s.norsk)
         while (recent.size > 8) recent.removeAt(recent.size - 1)
         saveRecent(ctx, recent)
+        uses[s.norsk] = (uses[s.norsk] ?: 0) + 1
+        saveUses(ctx, uses)
         if (!changingSpecies && !isEditing) {
             dTime = System.currentTimeMillis()  // stamp the entry time now
             dLoc = nearest()

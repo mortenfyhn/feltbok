@@ -247,6 +247,25 @@ fun saveRecent(ctx: Context, names: List<String>) {
     recentFile(ctx).writeText(JSONArray(names.toList()).toString())
 }
 
+// ---- per-species use counts, so your own regulars rank to the top ----
+
+private fun usesFile(ctx: Context) = File(ctx.filesDir, "uses.json")
+
+fun loadUses(ctx: Context): Map<String, Int> {
+    val f = usesFile(ctx)
+    if (!f.exists()) return emptyMap()
+    return runCatching {
+        val o = JSONObject(f.readText())
+        o.keys().asSequence().associateWith { o.getInt(it) }
+    }.getOrDefault(emptyMap())
+}
+
+fun saveUses(ctx: Context, uses: Map<String, Int>) {
+    val o = JSONObject()
+    uses.forEach { (k, v) -> o.put(k, v) }
+    usesFile(ctx).writeText(o.toString())
+}
+
 // ---- export (v2.20 paste format: bare name only, no coords) ----
 
 private val EXPORT_COLS = listOf(
