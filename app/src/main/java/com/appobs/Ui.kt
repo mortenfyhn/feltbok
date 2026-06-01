@@ -66,6 +66,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import kotlinx.coroutines.delay
 
 // ============================ LIST ============================
 
@@ -158,27 +159,34 @@ private fun NoteRow(n: Note, distance: Double?, onClick: () -> Unit) {
 
 // ============================ SEARCH ============================
 
+/** The blank-search quick list: your recent picks first, then your most-used species. */
+private fun speciesQuickList(vm: MainViewModel): List<Species> {
+    val recentList = vm.recent.mapNotNull { name -> vm.species.firstOrNull { it.norsk == name } }
+    val recentNames = recentList.map { it.norsk }.toSet()
+    val frequent = vm.species
+        .filter { it.norsk !in recentNames && vm.useCount(it.norsk) > 0 }
+        .sortedByDescending { vm.useCount(it.norsk) }
+    return (recentList + frequent).take(12)
+}
+
 @Composable
 fun SearchScreen(vm: MainViewModel) {
     val cs = MaterialTheme.colorScheme
     var q by remember { mutableStateOf("") }
-    val results = if (q.isBlank()) {
-        // Recent picks first (in-session), then your other most-used species.
-        val recentList = vm.recent.mapNotNull { name -> vm.species.firstOrNull { it.norsk == name } }
-        val recentNames = recentList.map { it.norsk }.toSet()
-        val frequent = vm.species
-            .filter { it.norsk !in recentNames && vm.useCount(it.norsk) > 0 }
-            .sortedByDescending { vm.useCount(it.norsk) }
-        (recentList + frequent).take(12)
-    } else {
-        // Match the Norwegian name only (Latin added too much noise). Fold the query
-        // once; the names are pre-folded. Best fuzzy rank first, then your most-used;
-        // Norway-wide frequency breaks ties (stable sort).
-        val fq = foldQuery(q)
-        vm.species.indices
-            .mapNotNull { i -> fuzzyRank(fq, vm.foldedNorsk[i])?.let { i to it } }
-            .sortedWith(compareBy({ it.second }, { -vm.useCount(vm.species[it.first].norsk) }))
-            .map { vm.species[it.first] }
+    // Suggestions are computed off the typing path: the field updates instantly while a
+    // debounced effect refreshes `results` a moment later, so keystrokes never wait on it.
+    var results by remember { mutableStateOf(speciesQuickList(vm)) }
+    LaunchedEffect(q) {
+        if (q.isBlank()) {
+            results = speciesQuickList(vm)
+        } else {
+            delay(70)  // coalesce fast keystrokes
+            val fq = foldQuery(q)
+            results = vm.species.indices
+                .mapNotNull { i -> fuzzyRank(fq, vm.foldedNorsk[i])?.let { i to it } }
+                .sortedWith(compareBy({ it.second }, { -vm.useCount(vm.species[it.first].norsk) }))
+                .map { vm.species[it.first] }
+        }
     }
     // Auto-focus with the keyboard up so you can type the moment the screen opens.
     val focus = remember { FocusRequester() }
