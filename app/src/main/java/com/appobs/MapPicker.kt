@@ -15,6 +15,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.material3.Button
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -57,10 +58,15 @@ fun LocalityScreen(vm: MainViewModel) {
         MapView(ctx).apply {
             setTileSource(TileSourceFactory.MAPNIK)
             setMultiTouchControls(true)
-            val start = vm.dLoc ?: vm.nearest()
-            controller.setZoom(16.0)
-            controller.setCenter(GeoPoint(start?.lat ?: vm.fix?.lat ?: 63.7,
-                                          start?.lon ?: vm.fix?.lon ?: 8.7))
+            if (vm.mapLat != 0.0) {                  // restore the last camera if we have one
+                controller.setZoom(vm.mapZoom)
+                controller.setCenter(GeoPoint(vm.mapLat, vm.mapLon))
+            } else {
+                val start = vm.dLoc ?: vm.nearest()
+                controller.setZoom(16.0)
+                controller.setCenter(GeoPoint(start?.lat ?: vm.fix?.lat ?: 63.7,
+                                              start?.lon ?: vm.fix?.lon ?: 8.7))
+            }
         }
     }
     val overlay = remember {
@@ -70,7 +76,12 @@ fun LocalityScreen(vm: MainViewModel) {
 
     DisposableEffect(Unit) {
         mapView.onResume()
-        onDispose { mapView.onPause(); mapView.onDetach() }
+        onDispose {
+            vm.mapZoom = mapView.zoomLevelDouble     // keep the camera for next time
+            vm.mapLat = mapView.mapCenter.latitude
+            vm.mapLon = mapView.mapCenter.longitude
+            mapView.onPause(); mapView.onDetach()
+        }
     }
 
     Column(Modifier.fillMaxSize()) {
@@ -84,7 +95,7 @@ fun LocalityScreen(vm: MainViewModel) {
         }
         AndroidView(
             factory = { mapView },
-            modifier = Modifier.weight(1f).fillMaxWidth(),
+            modifier = Modifier.weight(1f).fillMaxWidth().clipToBounds(),  // keep the map off the toolbar
             update = { m ->
                 // Only touch the overlay when something actually changed, so a GPS tick
                 // mid-gesture doesn't force a redraw (which flickers the view).

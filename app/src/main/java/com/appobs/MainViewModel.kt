@@ -55,6 +55,11 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
     var showExport by mutableStateOf(false); private set
     var fix by mutableStateOf<GpsFix?>(null); private set
 
+    // Remembered locality-picker camera, so reopening it keeps your last view (lat 0 = unset).
+    var mapZoom = 16.0
+    var mapLat = 0.0
+    var mapLon = 0.0
+
     // ---- draft (current add/edit) ----
     private var editingId: Long? = null
     private var changingSpecies = false
