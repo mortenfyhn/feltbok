@@ -264,14 +264,24 @@ def main() -> int:
 
     kept = sorted((s for s in sites.values() if s[-1] >= args.min_count),
                   key=lambda s: -s[-1])
+    # Collapse near-duplicate registrations of the same place — the same bare name
+    # within ~100 m — to the most-used one (kept is count-desc, so first wins), so
+    # the picker lists each place once. Distinct places sharing a name stay separate.
+    seen: dict = {}
+    for lid, name, lat, lon, kommune, fylke, count in kept:
+        lok, hoved = split_name(name)
+        key = (lok.lower(), round(lat, 3), round(lon, 3))
+        if key in seen:
+            seen[key][-1] += count
+        else:
+            seen[key] = [lid, lok, hoved, kommune, fylke, lat, lon, count]
+    rows = sorted(seen.values(), key=lambda r: -r[-1])
     with open(args.output, "w", newline="", encoding="utf-8") as f:
         w = csv.writer(f)
         w.writerow(["id", "lokalitet", "hovedlokalitet", "kommune", "fylke",
                     "lat", "lon", "count"])
-        for lid, name, lat, lon, kommune, fylke, count in kept:
-            lok, hoved = split_name(name)
-            w.writerow([lid, lok, hoved, kommune, fylke, lat, lon, count])
-    print(f"Wrote {len(kept)} localities (>= {args.min_count} records) to "
+        w.writerows(rows)
+    print(f"Wrote {len(rows)} localities (>= {args.min_count} records, deduped) to "
           f"{args.output}, from {len(sites)} sites seen.", file=sys.stderr)
     return 0
 
