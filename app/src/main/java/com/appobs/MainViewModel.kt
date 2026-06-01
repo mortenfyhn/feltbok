@@ -61,6 +61,18 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
     val isEditing: Boolean get() = editingId != null
 
     init {
+        // Backfill qualified locality names on notes saved before `locFull` existed,
+        // so re-exporting an earlier day links instead of failing on the bare name.
+        var migrated = false
+        for (i in notes.indices) {
+            val n = notes[i]
+            if (n.locFull.isBlank() && n.locName.isNotBlank()) {
+                val loc = localities.firstOrNull { it.lokalitet == n.locName && it.lat == n.lat && it.lon == n.lon }
+                    ?: localities.firstOrNull { it.lokalitet == n.locName }
+                if (loc != null) { notes[i] = n.copy(locFull = loc.fullname); migrated = true }
+            }
+        }
+        if (migrated) saveNotes(ctx, notes)
         // Seed "som forrige" from the most recent note that carried a comment.
         notes.firstOrNull { it.publicComment.isNotBlank() }?.let { lastPub = it.publicComment }
         notes.firstOrNull { it.privateComment.isNotBlank() }?.let { lastPriv = it.privateComment }
