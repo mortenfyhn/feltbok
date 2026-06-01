@@ -16,6 +16,27 @@ import requests
 
 DATASET = "b124e1e0-4755-430f-9eab-894f25a9b59c"
 AVES = 212
+NORTAXA = "a6c6cead-b5ce-4a4e-8cf5-1542ba708dec"  # Artsdatabanken's Norwegian name base
+
+
+def nortaxa_name(latin):
+    """Norwegian name from Artsnavnebasen — Artsobservasjoner uses the same base.
+    Prefer Bokmål (nob, what Artsobs reports) over Nynorsk (nno)."""
+    d = get("https://api.gbif.org/v1/species/search",
+            {"datasetKey": NORTAXA, "q": latin, "qField": "SCIENTIFIC", "limit": 30}) or {}
+    nob = nor = nno = None
+    for r in d.get("results", []):
+        if r.get("canonicalName") != latin:
+            continue
+        for v in r.get("vernacularNames", []):
+            lang, nm = v.get("language"), v["vernacularName"]
+            if lang == "nob" and not nob:
+                nob = nm
+            elif lang == "nor" and not nor:
+                nor = nm
+            elif lang == "nno" and not nno:
+                nno = nm
+    return nob or nor or nno
 
 
 def get(url, params=None):
@@ -45,14 +66,19 @@ def resolve(key):
     latin = sp.get("canonicalName") or sp.get("scientificName")
     if not latin:
         return None
-    vn = get(f"https://api.gbif.org/v1/species/{key}/vernacularNames", {"limit": 200}) or {}
-    by_lang: dict = {}
-    for v in vn.get("results", []):
-        by_lang.setdefault(v.get("language"), v.get("vernacularName"))
-    norsk = by_lang.get("nor") or by_lang.get("nno") or ""
+    # Artsnavnebasen (Bokmål) first — it matches Artsobservasjoner. The GBIF
+    # backbone vernacular is an inconsistent Bokmål/Nynorsk mix, so use it only
+    # for species Artsnavnebasen doesn't cover.
+    norsk = nortaxa_name(latin)
+    if not norsk:
+        vn = get(f"https://api.gbif.org/v1/species/{key}/vernacularNames", {"limit": 200}) or {}
+        by_lang: dict = {}
+        for v in vn.get("results", []):
+            by_lang.setdefault(v.get("language"), v.get("vernacularName"))
+        norsk = by_lang.get("nor") or by_lang.get("nno") or ""
     if norsk:                                  # Artsobs capitalises the first letter
         norsk = norsk[:1].upper() + norsk[1:]
-    return norsk, latin
+    return norsk or "", latin
 
 
 def main() -> int:
