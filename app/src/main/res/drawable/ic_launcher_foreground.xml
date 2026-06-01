@@ -3,16 +3,32 @@
     android:height="108dp"
     android:viewportWidth="108"
     android:viewportHeight="108">
-    <!-- tail -->
-    <path android:fillColor="#FFFFFF" android:pathData="M36,52 L21,45 L37,67 Z" />
-    <!-- body -->
-    <path android:fillColor="#FFFFFF" android:pathData="M32,58 a18,18 0 1,0 36,0 a18,18 0 1,0 -36,0 Z" />
-    <!-- wing -->
-    <path android:fillColor="#C8E6C9" android:pathData="M43,58 a9,6 0 1,0 18,0 a9,6 0 1,0 -18,0 Z" />
-    <!-- head -->
-    <path android:fillColor="#FFFFFF" android:pathData="M57,44 a11,11 0 1,0 22,0 a11,11 0 1,0 -22,0 Z" />
-    <!-- beak -->
-    <path android:fillColor="#FBC02D" android:pathData="M78,40 L89,43 L78,49 Z" />
-    <!-- eye -->
-    <path android:fillColor="#2E7D32" android:pathData="M69,40 a2.4,2.4 0 1,0 4.8,0 a2.4,2.4 0 1,0 -4.8,0 Z" />
+
+    <!-- Closed field notebook with a little bird on the cover. -->
+
+    <!-- page edges peeking on the right and bottom -->
+    <path android:fillColor="#FFFFFF"
+        android:pathData="M40,25 L74,25 A6,6 0 0,1 80,31 L80,83 A6,6 0 0,1 74,89 L40,89 A6,6 0 0,1 34,83 L34,31 A6,6 0 0,1 40,25 Z" />
+    <!-- cover -->
+    <path android:fillColor="#F4EAD0"
+        android:pathData="M37,22 L69,22 A7,7 0 0,1 76,29 L76,79 A7,7 0 0,1 69,86 L37,86 A7,7 0 0,1 30,79 L30,29 A7,7 0 0,1 37,22 Z" />
+    <!-- binding strip on the left -->
+    <path android:fillColor="#E3D4AE" android:pathData="M31,27 L36,27 L36,81 L31,81 Z" />
+
+    <!-- bird: tail -->
+    <path android:fillColor="#4F93C4" android:pathData="M36,53 L29,49 L35,60 Z" />
+    <!-- bird: body -->
+    <path android:fillColor="#4F93C4"
+        android:pathData="M34,56 a12,9 0 1,0 24,0 a12,9 0 1,0 -24,0 Z" />
+    <!-- bird: wing -->
+    <path android:fillColor="#82B7DD"
+        android:pathData="M39.5,56 a6.5,4 0 1,0 13,0 a6.5,4 0 1,0 -13,0 Z" />
+    <!-- bird: head -->
+    <path android:fillColor="#4F93C4"
+        android:pathData="M48,49 a8,8 0 1,0 16,0 a8,8 0 1,0 -16,0 Z" />
+    <!-- bird: beak -->
+    <path android:fillColor="#F0A23C" android:pathData="M63,47 L71,49 L63,52 Z" />
+    <!-- bird: eye -->
+    <path android:fillColor="#1F2D36"
+        android:pathData="M56.2,47 a1.8,1.8 0 1,0 3.6,0 a1.8,1.8 0 1,0 -3.6,0 Z" />
 </vector>
