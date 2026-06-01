@@ -1,17 +1,21 @@
 package com.appobs
 
+import android.content.Context
 import android.graphics.Canvas
 import android.graphics.Paint
 import android.graphics.Point
 import android.view.MotionEvent
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.ui.draw.clip
 import androidx.compose.material3.Button
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -51,11 +55,7 @@ fun LocalityScreen(vm: MainViewModel) {
     var picked by remember { mutableStateOf(vm.dLoc) }
 
     val mapView = remember {
-        Configuration.getInstance().apply {
-            userAgentValue = ctx.packageName               // required by the OSM tile policy
-            osmdroidBasePath = File(ctx.cacheDir, "osmdroid")
-            osmdroidTileCache = File(ctx.cacheDir, "osmdroid/tiles")
-        }
+        configureOsmdroid(ctx)
         MapView(ctx).apply {
             setTileSource(TileSourceFactory.MAPNIK)
             setMultiTouchControls(true)
@@ -110,37 +110,79 @@ fun LocalityScreen(vm: MainViewModel) {
     }
 }
 
+private fun configureOsmdroid(ctx: Context) {
+    Configuration.getInstance().apply {
+        userAgentValue = ctx.packageName               // required by the OSM tile policy
+        osmdroidBasePath = File(ctx.cacheDir, "osmdroid")
+        osmdroidTileCache = File(ctx.cacheDir, "osmdroid/tiles")
+    }
+}
+
 /**
- * A small static map preview for the main screen, showing where the GPS-nearest
- * locality (the one in the status strip) sits, highlighted, with your position.
- * Non-interactive; tiles are the same cached OSM ones as the picker.
+ * A small round minimap for the main screen: tightly zoomed on the GPS-nearest
+ * locality (the one named in the status strip) with your position pin. Static and
+ * non-interactive; tiles are the same cached OSM ones as the picker.
  */
 @Composable
 fun LocalityPreview(vm: MainViewModel) {
     val near = vm.nearest() ?: return
     val ctx = LocalContext.current
+    val cs = MaterialTheme.colorScheme
     val map = remember {
-        Configuration.getInstance().apply {
-            userAgentValue = ctx.packageName
-            osmdroidBasePath = File(ctx.cacheDir, "osmdroid")
-            osmdroidTileCache = File(ctx.cacheDir, "osmdroid/tiles")
-        }
+        configureOsmdroid(ctx)
         MapView(ctx).apply {
             setTileSource(TileSourceFactory.MAPNIK)
             setMultiTouchControls(false)
             setOnTouchListener { _, _ -> true }   // static preview: swallow pan/zoom
-            controller.setZoom(14.5)
+            controller.setZoom(16.5)              // ~200 m across
         }
     }
-    val overlay = remember { LocalityOverlay(vm.localities) {}.also { map.overlays.add(it) } }
-    overlay.picked = near
+    val overlay = remember { PreviewOverlay().also { map.overlays.add(it) } }
+    overlay.loc = near
     overlay.fix = vm.fix?.let { GeoPoint(it.lat, it.lon) }
     LaunchedEffect(near.lat, near.lon) { map.controller.setCenter(GeoPoint(near.lat, near.lon)) }
     DisposableEffect(Unit) {
         map.onResume()
         onDispose { map.onPause(); map.onDetach() }
     }
-    AndroidView(factory = { map }, modifier = Modifier.fillMaxWidth().height(140.dp)) { it.invalidate() }
+    AndroidView(
+        factory = { map },
+        modifier = Modifier.padding(10.dp).size(96.dp).clip(CircleShape)
+            .border(2.dp, cs.outline, CircleShape),
+    ) { it.invalidate() }
+}
+
+/** Draws a single locality disk plus the GPS pin, for the main-screen minimap. */
+private class PreviewOverlay : Overlay() {
+    var loc: Locality? = null
+    var fix: GeoPoint? = null
+
+    private val fill = Paint().apply { style = Paint.Style.FILL; color = 0x553C8C28.toInt(); isAntiAlias = true }
+    private val stroke = Paint().apply { style = Paint.Style.STROKE; color = 0xFF2E7D32.toInt(); strokeWidth = 3f; isAntiAlias = true }
+    private val gps = Paint().apply { style = Paint.Style.FILL; color = 0xFF2962FF.toInt(); isAntiAlias = true }
+    private val gpsRing = Paint().apply { style = Paint.Style.STROKE; color = 0xFFFFFFFF.toInt(); strokeWidth = 3f; isAntiAlias = true }
+    private val p = Point()
+
+    override fun draw(c: Canvas, map: MapView, shadow: Boolean) {
+        if (shadow) return
+        val proj = map.projection
+        loc?.let {
+            val center = map.mapCenter
+            val a = proj.toPixels(GeoPoint(center.latitude, center.longitude), null)
+            val b = proj.toPixels(GeoPoint(center.latitude + 100.0 / 111_320.0, center.longitude), null)
+            val ppm = abs(a.y - b.y) / 100.0
+            val m = if (it.radius > 0) it.radius else 40.0
+            val rPx = (m * ppm).toFloat().coerceIn(4f, 200f)
+            proj.toPixels(GeoPoint(it.lat, it.lon), p)
+            c.drawCircle(p.x.toFloat(), p.y.toFloat(), rPx, fill)
+            c.drawCircle(p.x.toFloat(), p.y.toFloat(), rPx, stroke)
+        }
+        fix?.let {
+            proj.toPixels(it, p)
+            c.drawCircle(p.x.toFloat(), p.y.toFloat(), 8f, gps)
+            c.drawCircle(p.x.toFloat(), p.y.toFloat(), 8f, gpsRing)
+        }
+    }
 }
 
 /** Draws each locality as a green disk at its real-world radius and resolves taps to
