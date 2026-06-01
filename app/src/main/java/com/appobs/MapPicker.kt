@@ -9,7 +9,9 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.material3.Button
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -106,6 +108,39 @@ fun LocalityScreen(vm: MainViewModel) {
             }
         }
     }
+}
+
+/**
+ * A small static map preview for the main screen, showing where the GPS-nearest
+ * locality (the one in the status strip) sits, highlighted, with your position.
+ * Non-interactive; tiles are the same cached OSM ones as the picker.
+ */
+@Composable
+fun LocalityPreview(vm: MainViewModel) {
+    val near = vm.nearest() ?: return
+    val ctx = LocalContext.current
+    val map = remember {
+        Configuration.getInstance().apply {
+            userAgentValue = ctx.packageName
+            osmdroidBasePath = File(ctx.cacheDir, "osmdroid")
+            osmdroidTileCache = File(ctx.cacheDir, "osmdroid/tiles")
+        }
+        MapView(ctx).apply {
+            setTileSource(TileSourceFactory.MAPNIK)
+            setMultiTouchControls(false)
+            setOnTouchListener { _, _ -> true }   // static preview: swallow pan/zoom
+            controller.setZoom(14.5)
+        }
+    }
+    val overlay = remember { LocalityOverlay(vm.localities) {}.also { map.overlays.add(it) } }
+    overlay.picked = near
+    overlay.fix = vm.fix?.let { GeoPoint(it.lat, it.lon) }
+    LaunchedEffect(near.lat, near.lon) { map.controller.setCenter(GeoPoint(near.lat, near.lon)) }
+    DisposableEffect(Unit) {
+        map.onResume()
+        onDispose { map.onPause(); map.onDetach() }
+    }
+    AndroidView(factory = { map }, modifier = Modifier.fillMaxWidth().height(140.dp)) { it.invalidate() }
 }
 
 /** Draws each locality as a green disk at its real-world radius and resolves taps to

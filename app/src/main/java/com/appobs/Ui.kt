@@ -74,6 +74,7 @@ fun ListScreen(vm: MainViewModel) {
     Box(Modifier.fillMaxSize()) {
         Column(Modifier.fillMaxSize()) {
             StatusStrip(vm)
+            LocalityPreview(vm)
             if (vm.notes.isEmpty()) {
                 Box(Modifier.weight(1f).fillMaxWidth(), Alignment.Center) {
                     Text(
