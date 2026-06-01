@@ -108,19 +108,36 @@ def wkt_box(minlon, minlat, maxlon, maxlat) -> str:
             f"{minlon} {maxlat},{minlon} {minlat}))")
 
 
-def api_harvest(bbox, max_records=100_000):
+def _gbif_page(params):
+    """Fetch one page, retrying transient GBIF errors (503 backend hiccups,
+    dropped connections). Returns the JSON, or None if it should stop."""
+    for attempt in range(1, 7):
+        try:
+            r = requests.get(GBIF_SEARCH, params=params, timeout=90)
+            r.raise_for_status()
+            return r.json()
+        except (requests.exceptions.HTTPError, requests.exceptions.ConnectionError,
+                requests.exceptions.ReadTimeout, requests.exceptions.ChunkedEncodingError) as e:
+            if attempt == 6:
+                print(f"\n  page failed after {attempt} tries, keeping what we have: {e}",
+                      file=sys.stderr)
+                return None
+            time.sleep(min(3 * attempt, 20))
+
+
+def api_harvest(bbox, max_records=99_900):
     """Build the locality table from the GBIF occurrence API instead of the bulk
     archive — many small paged requests, reliable on flaky links. One row per
     locationID. GBIF caps paging at a 100k offset window, so within a regional
     --bbox this captures the established (multi-record, i.e. public) localities."""
     sites: dict[str, list] = {}
     offset = 0
-    while offset < max_records:
+    while offset < max_records and offset + 300 <= 100_000:
         params = {"datasetKey": GBIF_DATASET, "limit": 300, "offset": offset,
                   "hasCoordinate": "true", "geometry": wkt_box(*bbox)}
-        r = requests.get(GBIF_SEARCH, params=params, timeout=90)
-        r.raise_for_status()
-        d = r.json()
+        d = _gbif_page(params)
+        if d is None:
+            break  # transient errors exhausted — return the localities we gathered
         for o in d.get("results", []):
             lid = str(o.get("locationID") or "").strip()
             name = (o.get("locality") or "").strip()
