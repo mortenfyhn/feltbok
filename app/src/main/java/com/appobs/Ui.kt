@@ -27,13 +27,13 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -82,7 +82,9 @@ fun ListScreen(vm: MainViewModel) {
                     modifier = Modifier.padding(horizontal = 16.dp, vertical = 9.dp),
                 )
                 LazyColumn(Modifier.weight(1f)) {
-                    items(vm.notes, key = { it.id }) { n -> NoteRow(n) { vm.editNote(n) } }
+                    items(vm.notes, key = { it.id }) { n ->
+                        NoteRow(n, vm.distanceToNote(n)) { vm.editNote(n) }
+                    }
                 }
             }
         }
@@ -123,7 +125,7 @@ private fun StatusStrip(vm: MainViewModel) {
 }
 
 @Composable
-private fun NoteRow(n: Note, onClick: () -> Unit) {
+private fun NoteRow(n: Note, distance: Double?, onClick: () -> Unit) {
     val cs = MaterialTheme.colorScheme
     Row(
         Modifier.fillMaxWidth().clickable(onClick = onClick).background(cs.surface)
@@ -139,7 +141,11 @@ private fun NoteRow(n: Note, onClick: () -> Unit) {
         )
         if (n.locName.isNotBlank()) {
             Text(n.locName, color = cs.onSurface, fontSize = 13.sp, maxLines = 1,
-                overflow = TextOverflow.Ellipsis, modifier = Modifier.widthIn(max = 150.dp))
+                overflow = TextOverflow.Ellipsis, modifier = Modifier.widthIn(max = 130.dp))
+            Spacer(Modifier.width(8.dp))
+        }
+        distance?.let {
+            Text(formatDistance(it), color = cs.onSurfaceVariant, fontSize = 12.sp)
             Spacer(Modifier.width(8.dp))
         }
         Text(shortTime(n.id), color = cs.onSurfaceVariant, fontSize = 13.sp)
@@ -169,11 +175,18 @@ fun SearchScreen(vm: MainViewModel) {
         if (q.isBlank()) SectionLabel("Nylig brukt")
         LazyColumn(Modifier.weight(1f)) {
             items(results, key = { it.norsk }) { s ->
-                Column(Modifier.fillMaxWidth().clickable { vm.pickSpecies(s) }.background(cs.surface)
-                    .padding(horizontal = 16.dp, vertical = 13.dp)) {
-                    Text(s.norsk, fontWeight = FontWeight.Medium)
-                    if (s.latin.isNotBlank())
-                        Text(s.latin, color = cs.onSurfaceVariant, fontStyle = FontStyle.Italic, fontSize = 13.sp)
+                Row(
+                    Modifier.fillMaxWidth().clickable { vm.pickSpecies(s) }.background(cs.surface)
+                        .padding(horizontal = 16.dp, vertical = 9.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    Text(s.norsk, fontWeight = FontWeight.Medium, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                    if (s.latin.isNotBlank()) {
+                        Spacer(Modifier.width(8.dp))
+                        Text(s.latin, color = cs.onSurfaceVariant, fontStyle = FontStyle.Italic,
+                            fontSize = 13.sp, maxLines = 1, overflow = TextOverflow.Ellipsis,
+                            modifier = Modifier.weight(1f))
+                    }
                 }
                 HorizontalDivider(color = cs.outline.copy(alpha = 0.4f))
             }
@@ -221,11 +234,13 @@ fun DetailScreen(vm: MainViewModel) {
             FieldRow("Tidspunkt") {
                 Text(displayTime(if (vm.dTime > 0) vm.dTime else System.currentTimeMillis()))
             }
-            if (vm.isEditing) {
-                TextButton(onClick = { vm.delete() }, modifier = Modifier.padding(8.dp)) {
-                    Text("Slett observasjon", color = cs.error)
-                }
-            }
+        }
+        if (vm.isEditing) {
+            HorizontalDivider(color = cs.outline.copy(alpha = 0.4f))
+            TextButton(
+                onClick = { vm.delete() },
+                modifier = Modifier.fillMaxWidth().background(cs.surface).padding(vertical = 4.dp),
+            ) { Text("Slett observasjon", color = cs.error) }
         }
         Row(
             Modifier.fillMaxWidth().background(cs.surface).padding(horizontal = 14.dp, vertical = 11.dp),
@@ -397,28 +412,18 @@ fun LocalityScreen(vm: MainViewModel) {
 fun ExportDialog(vm: MainViewModel) {
     val cs = MaterialTheme.colorScheme
     val clip = LocalClipboardManager.current
-    val text = vm.exportText()   // recomputes when the coords toggle flips
+    val text = vm.exportText()
+    var confirmClear by remember { mutableStateOf(false) }
     AlertDialog(
         onDismissRequest = { vm.closeExport() },
         title = { Text("Eksporter til Artsobservasjoner") },
         text = {
             Column {
-                Text("Lim inn i Importer observasjoner (gammel side).",
-                    color = cs.onSurfaceVariant, fontSize = 13.sp)
-                Spacer(Modifier.height(6.dp))
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Switch(checked = vm.exportCoords, onCheckedChange = { vm.exportCoords = it })
-                    Spacer(Modifier.width(8.dp))
-                    Text("Ta med koordinater", fontSize = 14.sp)
-                }
-                Text(
-                    if (vm.exportCoords) "Navn + registrert koordinat — kobler også tvetydige navn."
-                    else "Bare navn (som iGoTerra) — krever entydig lokalitetsnavn.",
-                    color = cs.onSurfaceVariant, fontSize = 12.sp,
-                )
-                Spacer(Modifier.height(8.dp))
-                OutlinedTextField(text, {}, Modifier.fillMaxWidth().height(150.dp), readOnly = true,
+                OutlinedTextField(text, {}, Modifier.fillMaxWidth().height(170.dp), readOnly = true,
                     textStyle = androidx.compose.ui.text.TextStyle(fontSize = 11.sp))
+                TextButton(onClick = { confirmClear = true }) {
+                    Text("Tøm alle notater", color = cs.error)
+                }
             }
         },
         confirmButton = {
@@ -426,6 +431,23 @@ fun ExportDialog(vm: MainViewModel) {
         },
         dismissButton = { TextButton(onClick = { vm.closeExport() }) { Text("Lukk") } },
     )
+    if (confirmClear) {
+        AlertDialog(
+            onDismissRequest = { confirmClear = false },
+            title = { Text("Tøm alle notater?") },
+            text = {
+                Text("Sletter alle ${vm.notes.size} notatene. Gjør dette først når du har "
+                    + "importert og publisert på Artsobservasjoner.")
+            },
+            confirmButton = {
+                Button(
+                    onClick = { vm.clearAll(); confirmClear = false; vm.closeExport() },
+                    colors = ButtonDefaults.buttonColors(containerColor = cs.error),
+                ) { Text("Slett alle") }
+            },
+            dismissButton = { TextButton(onClick = { confirmClear = false }) { Text("Avbryt") } },
+        )
+    }
 }
 
 @Composable

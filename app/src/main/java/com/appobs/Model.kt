@@ -20,8 +20,15 @@ object Options {
         "1K", "1K+", "2K", "2K+", "2K-", "3K", "3K+", "3K-", "4K", "4K+", "4K-",
         "5K", "5K+", "5K-", "6K", "6K+", "6K-", "7K", "7K+", "7K-",
     )
-    // Full Fugl activity list, in the template/website order.
-    val activities = listOf(
+    // The everyday non-breeding activities, surfaced first so the long list below
+    // doesn't have to be scrolled for the common case.
+    private val commonActivities = listOf(
+        "Rastende", "Stasjonær", "Overflygende", "Næringssøkende", "Trekkende",
+        "Sang/spill, ikke hekking", "Lokkelyd, øvrige lyder", "Ved fôring",
+        "Revir, ikke hekking", "Permanent revir",
+    )
+    // The full Fugl activity list, in the template/website order.
+    private val allActivities = listOf(
         "Reir med egg eller unger", "Reir, unger hørt", "Rugende", "Mat til unger",
         "Bar ekskrementpose", "Reir i bruk", "Besøker bebodd reir",
         "Unger utenfor reir, ikke utvokste", "Brukt reir", "Eggeskall",
@@ -42,9 +49,10 @@ object Options {
         "Drept av predator", "Død av sykdom/sult", "Skutt/avlivet",
         "Død - ukjent dødsårsak", "Ferske spor", "Eldre spor", "Fersk møkk", "Eldre møkk",
     )
+    val activities = commonActivities + allActivities.filterNot { it in commonActivities }
     val sexes = listOf("Hann", "Hunn", "Hunnfarget", "I par")
 
-    /** Nøyaktighet written for every row — the locality's own coordinate is exact
+    /** Nøyaktighet written for every row - the locality's own coordinate is exact
      *  enough that the import snaps to the registered locality. */
     const val accuracy = "100 m"
 }
@@ -66,7 +74,7 @@ data class Locality(
 data class Species(val norsk: String, val latin: String)
 
 data class Note(
-    val id: Long,                 // creation time in ms — stable key and the entry's timestamp
+    val id: Long,                 // creation time in ms - stable key and the entry's timestamp
     val species: String,
     val latin: String,
     val count: Int,
@@ -194,7 +202,24 @@ fun saveNotes(ctx: Context, notes: List<Note>) {
     notesFile(ctx).writeText(arr.toString())
 }
 
-// ---- export (v2.20 paste format: bare name + registry coord, WGS84 geographic) ----
+// ---- recent species (most-recent first), persisted so the quick list survives restarts ----
+
+private fun recentFile(ctx: Context) = File(ctx.filesDir, "recent.json")
+
+fun loadRecent(ctx: Context): List<String> {
+    val f = recentFile(ctx)
+    if (!f.exists()) return emptyList()
+    return runCatching {
+        val arr = JSONArray(f.readText())
+        (0 until arr.length()).map { arr.getString(it) }
+    }.getOrDefault(emptyList())
+}
+
+fun saveRecent(ctx: Context, names: List<String>) {
+    recentFile(ctx).writeText(JSONArray(names.toList()).toString())
+}
+
+// ---- export (v2.20 paste format: bare name only, no coords) ----
 
 private val EXPORT_COLS = listOf(
     "Artsnavn", "Antall", "Alder", "Kjønn", "Aktivitet", "Lokalitetsnavn", "Nord", "Øst",
@@ -202,15 +227,15 @@ private val EXPORT_COLS = listOf(
     "Kommentar (synlig for alle)", "Privat kommentar (kun synlig for deg selv)",
 )
 
-fun exportTsv(notes: List<Note>, withCoords: Boolean = true): String {
+fun exportTsv(notes: List<Note>): String {
+    // Bare locality name, no coordinates: paste links the name to the public
+    // locality, while including coords would mint a custom one (see
+    // docs/artsobs-import.md). Nord/Øst/Nøyaktighet are left blank.
     val rows = notes.sortedBy { it.id }.map { n ->
         val d = exportDate(n.id); val t = exportTime(n.id)
-        val nord = if (withCoords) n.lat.toString() else ""
-        val ost = if (withCoords) n.lon.toString() else ""
-        val acc = if (withCoords) Options.accuracy else ""
         listOf(
             n.species, n.count.toString(), n.age, n.sex, n.activity, n.locName,
-            nord, ost, acc, d, t, d, t, n.publicComment, n.privateComment,
+            "", "", "", d, t, d, t, n.publicComment, n.privateComment,
         ).joinToString("\t")
     }
     return (listOf(EXPORT_COLS.joinToString("\t")) + rows).joinToString("\n")

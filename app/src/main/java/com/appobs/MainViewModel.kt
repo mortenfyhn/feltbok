@@ -14,7 +14,7 @@ enum class Screen { LIST, SEARCH, DETAIL, LOCALITY }
 /**
  * Single source of truth for the UI. Holds the day's notes (persisted), the live
  * GPS fix, and the draft being added/edited. The whole app is four screens driven
- * by [screen]; there's no nav library — overkill for this.
+ * by [screen]; there's no nav library - overkill for this.
  */
 class MainViewModel(app: Application) : AndroidViewModel(app) {
     private val ctx = app
@@ -24,14 +24,15 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
     val species: List<Species> = loadSpecies(app)
 
     val notes = mutableStateListOf<Note>().apply { addAll(loadNotes(app)) }
-    /** Recently chosen species (norsk), most-recent first — the quick list when search is empty. */
-    val recent = mutableStateListOf<String>().apply { addAll(species.take(6).map { it.norsk }) }
+    /** Recently chosen species (norsk), most-recent first - the quick list when search is empty.
+     *  Persisted, so it survives restarts; seeds with the most common species first run. */
+    val recent = mutableStateListOf<String>().apply {
+        val saved = loadRecent(app)
+        addAll(if (saved.isNotEmpty()) saved else species.take(6).map { it.norsk })
+    }
 
     var screen by mutableStateOf(Screen.LIST); private set
     var showExport by mutableStateOf(false); private set
-    // Paste links on the bare name; including coords mints custom localities
-    // (paste behaves unlike the file-upload test). Default off, like iGoTerra.
-    var exportCoords by mutableStateOf(false)
     var fix by mutableStateOf<GpsFix?>(null); private set
 
     // ---- draft (current add/edit) ----
@@ -69,6 +70,11 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
     fun distanceTo(loc: Locality): Double? =
         fix?.let { haversine(it.lat, it.lon, loc.lat, loc.lon) }
 
+    /** Distance from the current fix to where a note was made, or null if unknown. */
+    fun distanceToNote(n: Note): Double? =
+        if (n.lat == 0.0 && n.lon == 0.0) null
+        else fix?.let { haversine(it.lat, it.lon, n.lat, n.lon) }
+
     // ---- navigation / actions ----
     fun startAdd() {
         editingId = null; changingSpecies = false
@@ -87,6 +93,7 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
         dSpecies = s.norsk; dLatin = s.latin
         recent.remove(s.norsk); recent.add(0, s.norsk)
         while (recent.size > 8) recent.removeAt(recent.size - 1)
+        saveRecent(ctx, recent)
         if (!changingSpecies && !isEditing) {
             dTime = System.currentTimeMillis()  // stamp the entry time now
             dLoc = nearest()
@@ -135,7 +142,10 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
 
     fun openExport() { showExport = true }
     fun closeExport() { showExport = false }
-    fun exportText(): String = exportTsv(notes, exportCoords)
+    fun exportText(): String = exportTsv(notes)
+
+    /** Clear the day's notes - after they've been imported and published. */
+    fun clearAll() { notes.clear(); persist() }
 
     private fun persist() = saveNotes(ctx, notes)
 }
