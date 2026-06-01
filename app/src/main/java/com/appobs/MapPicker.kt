@@ -135,7 +135,7 @@ fun LocalityPreview(vm: MainViewModel, modifier: Modifier = Modifier) {
             setTileSource(TileSourceFactory.MAPNIK)
             setMultiTouchControls(false)
             setOnTouchListener { _, _ -> true }   // static preview: swallow pan/zoom
-            controller.setZoom(16.5)              // ~200 m across
+            controller.setZoom(16.0)              // ~280 m across, so a ~100 m accuracy disk reads as a disk
         }
     }
     val overlay = remember { PreviewOverlay().also { map.overlays.add(it) } }
@@ -164,8 +164,8 @@ private class PreviewOverlay : Overlay() {
 
     private val fill = Paint().apply { style = Paint.Style.FILL; color = 0x553C8C28.toInt(); isAntiAlias = true }
     private val stroke = Paint().apply { style = Paint.Style.STROKE; color = 0xFF2E7D32.toInt(); strokeWidth = 3f; isAntiAlias = true }
-    private val accFill = Paint().apply { style = Paint.Style.FILL; color = 0x222962FF.toInt(); isAntiAlias = true }
-    private val accStroke = Paint().apply { style = Paint.Style.STROKE; color = 0x552962FF.toInt(); strokeWidth = 2f; isAntiAlias = true }
+    private val accFill = Paint().apply { style = Paint.Style.FILL; color = 0x332962FF.toInt(); isAntiAlias = true }
+    private val accStroke = Paint().apply { style = Paint.Style.STROKE; color = 0xAA2962FF.toInt(); strokeWidth = 2.5f; isAntiAlias = true }
     private val gps = Paint().apply { style = Paint.Style.FILL; color = 0xFF2962FF.toInt(); isAntiAlias = true }
     private val gpsRing = Paint().apply { style = Paint.Style.STROKE; color = 0xFFFFFFFF.toInt(); strokeWidth = 3f; isAntiAlias = true }
     private val p = Point()

@@ -14,6 +14,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.widthIn
@@ -94,8 +95,8 @@ fun ListScreen(vm: MainViewModel) {
                 }
             }
         }
-        // Round minimap sitting on the right of the top bar, hanging a bit below it.
-        LocalityPreview(vm, Modifier.align(Alignment.TopEnd).padding(end = 8.dp, top = 4.dp))
+        // Round minimap on the left of the top bar, nudged up so it clips the screen top.
+        LocalityPreview(vm, Modifier.align(Alignment.TopStart).offset(x = 8.dp, y = (-10).dp))
         FloatingActionButton(
             onClick = { vm.startAdd() },
             containerColor = cs.primary, contentColor = Color.White,
@@ -109,9 +110,9 @@ private fun StatusStrip(vm: MainViewModel) {
     val cs = MaterialTheme.colorScheme
     val near = vm.nearest()
     Row(
-        // end padding leaves room for the round minimap overlaid on the right.
+        // start padding leaves room for the round minimap overlaid on the left.
         Modifier.fillMaxWidth().background(cs.primary)
-            .padding(start = 14.dp, end = 104.dp, top = 11.dp, bottom = 11.dp),
+            .padding(start = 104.dp, end = 14.dp, top = 11.dp, bottom = 11.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Text(if (near != null) "${near.lokalitet}, ${near.kommune}" else "Finner posisjon…",
