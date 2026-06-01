@@ -118,6 +118,8 @@ internal fun configureOsmdroid(ctx: Context) {
         userAgentValue = ctx.packageName               // required by the OSM tile policy
         osmdroidBasePath = File(ctx.cacheDir, "osmdroid")
         osmdroidTileCache = File(ctx.cacheDir, "osmdroid/tiles")
+        animationSpeedDefault = 200                    // snappier zoom (default ~1s lags fast pinches)
+        animationSpeedShort = 100
     }
 }
 
