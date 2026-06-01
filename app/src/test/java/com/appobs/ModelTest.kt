@@ -74,4 +74,23 @@ class ModelTest {
         assertEquals("500 m", formatDistance(500.0))
         assertEquals("1.5 km", formatDistance(1500.0))
     }
+
+    @Test
+    fun fuzzyRanksPrefixThenSubstringThenSubsequence() {
+        assertEquals(0, fuzzyScore("rødv", "Rødvingetrost"))   // prefix
+        assertEquals(1, fuzzyScore("trost", "Rødvingetrost"))  // substring
+        assertEquals(2, fuzzyScore("rvt", "Rødvingetrost"))    // subsequence
+        assertEquals(null, fuzzyScore("xyz", "Rødvingetrost")) // no match
+    }
+
+    @Test
+    fun fuzzyFoldsNorwegianLettersSoAsciiMatches() {
+        assertEquals(0, fuzzyScore("rodvinge", "Rødvingetrost"))
+        assertEquals(2, fuzzyScore("blmeis", "Blåmeis"))
+    }
+
+    @Test
+    fun fuzzyIgnoresSpacesAndCase() {
+        assertEquals(2, fuzzyScore("R V T", "Rødvingetrost"))
+    }
 }

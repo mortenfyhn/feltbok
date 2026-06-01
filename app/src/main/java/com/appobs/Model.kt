@@ -103,6 +103,34 @@ fun haversine(lat1: Double, lon1: Double, lat2: Double, lon2: Double): Double {
 fun formatDistance(m: Double): String =
     if (m < 1000) "${m.toInt()} m" else String.format(Locale.US, "%.1f km", m / 1000)
 
+// ---- species search ----
+
+/** Fold Norwegian/diacritic letters so typing plain ASCII still matches. */
+private fun fold(s: String) = s.lowercase()
+    .replace("æ", "ae").replace("ø", "o").replace("å", "a")
+    .replace("ô", "o").replace("é", "e").replace("è", "e").replace("ü", "u")
+
+/**
+ * Fuzzy match a query against a name. Returns a rank (lower is better) or null
+ * for no match: 0 = prefix, 1 = substring, 2 = subsequence (letters in order
+ * but not adjacent, so "rvt" matches "Rødvingetrost"). Spaces in the query are
+ * ignored. Caller keeps the list's frequency order within an equal rank.
+ */
+fun fuzzyScore(query: String, target: String): Int? {
+    val q = fold(query).filterNot { it.isWhitespace() }
+    if (q.isEmpty()) return 0
+    val t = fold(target)
+    val idx = t.indexOf(q)
+    if (idx == 0) return 0
+    if (idx > 0) return 1
+    var qi = 0
+    for (c in t) {
+        if (c == q[qi]) qi++
+        if (qi == q.length) return 2
+    }
+    return null
+}
+
 // ---- date/time formatting ----
 
 private val NB = Locale("nb", "NO")

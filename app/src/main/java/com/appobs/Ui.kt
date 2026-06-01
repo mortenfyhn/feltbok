@@ -23,6 +23,7 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
+import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.AlertDialog
@@ -37,13 +38,17 @@ import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.focus.onFocusChanged
+import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalClipboardManager
 import androidx.compose.ui.text.AnnotatedString
@@ -162,14 +167,31 @@ fun SearchScreen(vm: MainViewModel) {
     val results = if (q.isBlank())
         vm.recent.mapNotNull { name -> vm.species.firstOrNull { it.norsk == name } }
     else
-        vm.species.filter { it.norsk.contains(q, true) || it.latin.contains(q, true) }
+        vm.species
+            .mapNotNull { s ->
+                val n = fuzzyScore(q, s.norsk)
+                val l = fuzzyScore(q, s.latin)
+                val score = when {
+                    n == null -> l
+                    l == null -> n
+                    else -> minOf(n, l)
+                }
+                score?.let { s to it }
+            }
+            .sortedBy { it.second }   // stable: keeps frequency order within a rank
+            .map { it.first }
+    // Auto-focus with the keyboard up so you can type the moment the screen opens.
+    val focus = remember { FocusRequester() }
+    LaunchedEffect(Unit) { focus.requestFocus() }
     Column(Modifier.fillMaxSize()) {
         Row(
             Modifier.fillMaxWidth().background(cs.surface).padding(start = 12.dp, end = 4.dp, top = 10.dp, bottom = 10.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
-            OutlinedTextField(q, { q = it }, Modifier.weight(1f), singleLine = true,
-                placeholder = { Text("Søk art…") })
+            OutlinedTextField(q, { q = it }, Modifier.weight(1f).focusRequester(focus), singleLine = true,
+                placeholder = { Text("Søk art…") },
+                keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
+                keyboardActions = KeyboardActions(onSearch = { results.firstOrNull()?.let { vm.pickSpecies(it) } }))
             TextButton(onClick = { vm.cancelSearch() }) { Text("Avbryt") }
         }
         if (q.isBlank()) SectionLabel("Nylig brukt")
