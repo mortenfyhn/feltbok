@@ -124,7 +124,7 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
         dPub = n.publicComment; dPriv = n.privateComment
         dTime = n.id
         dLoc = localities.firstOrNull { it.lokalitet == n.locName && it.lat == n.lat && it.lon == n.lon }
-            ?: Locality("", n.locName, "", "", n.lat, n.lon)
+            ?: Locality("", n.locName, "", "", n.lat, n.lon, n.locFull)
         screen = Screen.DETAIL
     }
 
@@ -140,7 +140,8 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
             species = dSpecies, latin = dLatin, count = dCount.coerceAtLeast(1),
             age = dAge, activity = dAct, sex = dSex,
             publicComment = dPub, privateComment = dPriv,
-            locName = loc?.lokalitet ?: "", lat = loc?.lat ?: 0.0, lon = loc?.lon ?: 0.0,
+            locName = loc?.lokalitet ?: "", locFull = loc?.fullname ?: "",
+            lat = loc?.lat ?: 0.0, lon = loc?.lon ?: 0.0,
         )
         if (isEditing) {
             val i = notes.indexOfFirst { it.id == n.id }

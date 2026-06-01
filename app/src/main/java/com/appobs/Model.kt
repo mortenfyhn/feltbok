@@ -67,6 +67,7 @@ data class Locality(
     val kommune: String,
     val lat: Double,
     val lon: Double,
+    val fullname: String,         // qualified "Lok, Hovedlok, Kommune, Fylke" - what the import matches
 ) {
     val context: String get() = listOf(hovedlokalitet, kommune).filter { it.isNotBlank() }.joinToString(", ")
 }
@@ -83,7 +84,8 @@ data class Note(
     val sex: String,
     val publicComment: String,
     val privateComment: String,
-    val locName: String,          // bare Lokalitetsnavn
+    val locName: String,          // short locality name, for display
+    val locFull: String,          // qualified Lokalitetsnavn, for the import
     val lat: Double,
     val lon: Double,
 )
@@ -172,13 +174,14 @@ private fun readData(ctx: Context, name: String): List<List<String>> {
         .toList()
 }
 
-/** Columns: id,lokalitet,hovedlokalitet,kommune,fylke,lat,lon,count */
+/** Columns: id,lokalitet,hovedlokalitet,kommune,fylke,lat,lon,count,observers,fullname */
 fun loadLocalities(ctx: Context): List<Locality> =
     readData(ctx, "localities.csv").mapNotNull { c ->
         if (c.size < 7) return@mapNotNull null
         val lat = c[5].toDoubleOrNull() ?: return@mapNotNull null
         val lon = c[6].toDoubleOrNull() ?: return@mapNotNull null
-        Locality(c[0], c[1], c[2], c[3], lat, lon)
+        val full = c.getOrElse(9) { "" }.ifBlank { c[1] }   // fall back to bare name pre-fullname
+        Locality(c[0], c[1], c[2], c[3], lat, lon, full)
     }
 
 /** Columns: norsk,latin */
@@ -209,6 +212,7 @@ fun loadNotes(ctx: Context): List<Note> {
                 publicComment = o.optString("publicComment"),
                 privateComment = o.optString("privateComment"),
                 locName = o.optString("locName"),
+                locFull = o.optString("locFull"),
                 lat = o.getDouble("lat"),
                 lon = o.getDouble("lon"),
             )
@@ -223,7 +227,8 @@ fun saveNotes(ctx: Context, notes: List<Note>) {
             put("id", n.id); put("species", n.species); put("latin", n.latin)
             put("count", n.count); put("age", n.age); put("activity", n.activity)
             put("sex", n.sex); put("publicComment", n.publicComment)
-            put("privateComment", n.privateComment); put("locName", n.locName)
+            put("privateComment", n.privateComment)
+            put("locName", n.locName); put("locFull", n.locFull)
             put("lat", n.lat); put("lon", n.lon)
         })
     }
@@ -275,13 +280,15 @@ private val EXPORT_COLS = listOf(
 )
 
 fun exportTsv(notes: List<Note>): String {
-    // Bare locality name, no coordinates: paste links the name to the public
-    // locality, while including coords would mint a custom one (see
-    // docs/artsobs-import.md). Nord/Øst/Nøyaktighet are left blank.
+    // Emit the *qualified* Lokalitetsnavn ("Lok, Hovedlok, Kommune, Fylke") with no
+    // coordinates: that exact string links to the public locality, while the bare
+    // name only matches your own localities (see docs/artsobs-import.md).
+    // Nord/Øst/Nøyaktighet are left blank.
     val rows = notes.sortedBy { it.id }.map { n ->
         val d = exportDate(n.id); val t = exportTime(n.id)
+        val loc = n.locFull.ifBlank { n.locName }
         listOf(
-            n.species, n.count.toString(), n.age, n.sex, n.activity, n.locName,
+            n.species, n.count.toString(), n.age, n.sex, n.activity, loc,
             "", "", "", d, t, d, t, n.publicComment, n.privateComment,
         ).joinToString("\t")
     }

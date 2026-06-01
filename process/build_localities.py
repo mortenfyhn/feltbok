@@ -345,13 +345,16 @@ def main() -> int:
             seen[key][7] += count
             seen[key][8] |= obs
         else:
-            seen[key] = [lid, lok, hoved, kommune, fylke, lat, lon, count, set(obs)]
+            # Keep the original *qualified* name ("Lok, Hovedlok, Kommune, Fylke") as
+            # `fullname` - that exact string is what the import matches on; the bare
+            # `lokalitet` does not link to a public locality (it only matches your own).
+            seen[key] = [lid, lok, hoved, kommune, fylke, lat, lon, count, set(obs), name]
     merged = drop_name_collisions(list(seen.values()), args.public_min, args.cluster_km)
-    rows = [r[:8] + [len(r[8])] for r in sorted(merged, key=lambda r: -r[7])]
+    rows = [r[:8] + [len(r[8]), r[9]] for r in sorted(merged, key=lambda r: -r[7])]
     with open(args.output, "w", newline="", encoding="utf-8") as f:
         w = csv.writer(f)
         w.writerow(["id", "lokalitet", "hovedlokalitet", "kommune", "fylke",
-                    "lat", "lon", "count", "observers"])
+                    "lat", "lon", "count", "observers", "fullname"])
         w.writerows(rows)
     print(f"Wrote {len(rows)} public localities (>= {args.min_observers} observers, "
           f">= {args.min_count} records, name-collisions dropped) to {args.output}, "

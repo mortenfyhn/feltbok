@@ -28,20 +28,31 @@ But see below: **we normally export without coordinates**, so this rarely matter
 
 ## Locality matching — the make-or-break
 
-The app exports the **bare `Lokalitetsnavn`** and (by default) **no coordinates**.
-Observed matching rules for the **paste** flow on the old site:
+The app exports the **qualified `Lokalitetsnavn`** and **no coordinates**. Observed
+matching rules for the **paste** flow on the old site:
 
 | What you paste | Result |
 |---|---|
-| Bare name, **no** coordinates | ✅ Links to the existing **public** (allmenn) locality of that name. *(verified: "Lundeveien 9", "Litle Hammarvatnet")* |
-| Bare name **+ coordinates** | ❌ **Mints a new custom locality** at those coords — the duplicate mess. Paste behaves *unlike* file-upload here (in an `.xlsx` upload test, name+coords linked instead). |
-| Qualified name `"Ørndalen, Frøya, Tø"` | ❌ `Lokalitet ble ikke funnet`. Appending kommune/fylke **breaks** the match — it is *not* a disambiguation method. The bare sublocality name is the match key. |
-| A name that is only a **private** locality | ❌ `LOKALITET: Kunne ikke validere lokalitet., Feltet er obligatorisk` — there is no public locality to match. *(verified: "Skogholt ved Børaunet")* |
-| A bare name shared by **several public** localities | ❌ `flere allmenne lokaliteter` — needs **manual** disambiguation on the site. |
+| **Qualified** name `"Lok, Hovedlok, Kommune, Fylke"` (e.g. `"Meliaunskjæret, Uttian, Frøya, Tø"`) | ✅ Links to the existing **public** (allmenn) locality. This is the match key. *(verified 2026-06-01 across a full day's upload)* |
+| **Bare** name (`"Frøya sykehjem"`) | ❌ `LOKALITET: Kunne ikke validere lokalitet., Feltet er obligatorisk` — even for a clearly public locality. The bare name only matches **your own** localities ("Mine lokaliteter"), **not** the public registry. *(verified: a whole batch failed, incl. known-public sites)* |
+| Bare name **+ coordinates** | ❌ Mints a new custom locality at those coords — the duplicate mess. |
+| A name that is only a **private** locality | ❌ same `Kunne ikke validere lokalitet` — no public locality to match. *(e.g. "Skogholt ved Børaunet")* |
 
-**Conclusion:** export bare name, strip coordinates. Coordinates are kept in
-`localities.csv` only to pick the GPS-nearest locality in the app, never exported.
-This is the same trick iGoTerra documents ("strip GPS before upload").
+**This corrects an earlier wrong conclusion** (that the *bare* name links and the
+*qualified* name fails). The earlier "bare name works" cases — "Lundeveien 9" etc. —
+were the tester's **own** localities, which the bare name *does* match. For public
+localities you must send the **full qualified name**, and the earlier qualified-name
+failure ("Ørndalen, Frøya, Tø") was a **malformed** qualification that dropped the
+hovedlokalitet — the real name is "Ørndalen, **Sistranda**, Frøya, Tø". Send the exact
+registered string.
+
+**Conclusion:** export the qualified name (`fullname` in `localities.csv`), no
+coordinates. The qualified name must be exact — sublocality, hovedlokalitet (when the
+locality has one), kommune, and the **fylke abbreviation** ("Tø" for Trøndelag), e.g.
+`"Neset (Frøya), Frøya, Tø"` (no hovedlokalitet) vs `"Gåsvika, Uttian, Frøya, Tø"`.
+`build_localities.py` preserves this exact string from the GBIF `locality` field as the
+`fullname` column; the app emits it verbatim. Coordinates stay in the table only for
+GPS-nearest picking, never exported.
 
 ## Why the locality list still needs filtering
 

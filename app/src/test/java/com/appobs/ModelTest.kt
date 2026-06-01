@@ -22,7 +22,7 @@ class ModelTest {
         id = ms, species = "Gråmåke", latin = "Larus argentatus", count = 3,
         age = "Adult", activity = "Næringssøk", sex = "Hann",
         publicComment = "på sjøen", privateComment = "test",
-        locName = "Titran", lat = 63.67, lon = 8.31,
+        locName = "Titran", locFull = "Titran, Frøya, Tø", lat = 63.67, lon = 8.31,
     )
 
     private val noonMs = LocalDateTime.of(2026, 6, 1, 9, 30, 0)
@@ -39,7 +39,7 @@ class ModelTest {
         assertEquals("Adult", c[2])
         assertEquals("Hann", c[3])
         assertEquals("Næringssøk", c[4])
-        assertEquals("Titran", c[5])
+        assertEquals("Titran, Frøya, Tø", c[5])   // qualified name, what the import matches
         // Coordinates are deliberately omitted so paste links the name to the public locality.
         assertEquals("", c[6])
         assertEquals("", c[7])

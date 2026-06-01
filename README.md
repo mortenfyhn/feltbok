@@ -12,9 +12,9 @@ network needed in the field** — so it can be shared with friends as-is.
    fields (antall, alder, kjønn, aktivitet, comments). Date/time are automatic. The
    nearest official locality is pre-filled from GPS; tap to pick another by distance.
 2. **Export at home.** Hit *Eksporter* to copy a tab-separated block and paste it into
-   Artsobservasjoner's *Importer observasjoner* page. Locality is matched by bare name
-   (no coordinates) — see [docs/artsobs-import.md](docs/artsobs-import.md) for the
-   reverse-engineered import behaviour.
+   Artsobservasjoner's *Importer observasjoner* page. Locality is matched by its full
+   qualified name (no coordinates) — see [docs/artsobs-import.md](docs/artsobs-import.md)
+   for the reverse-engineered import behaviour.
 
 ## Layout
 
