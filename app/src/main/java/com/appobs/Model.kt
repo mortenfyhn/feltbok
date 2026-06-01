@@ -69,6 +69,7 @@ data class Locality(
     val lon: Double,
     val fullname: String,         // qualified "Lok, Hovedlok, Kommune, Fylke" - what the import matches
     val observers: Int,           // distinct observers - a public-establishedness signal for the map
+    val radius: Double,           // the locality's map footprint radius in metres (0 = unknown)
 ) {
     val context: String get() = listOf(hovedlokalitet, kommune).filter { it.isNotBlank() }.joinToString(", ")
 }
@@ -175,7 +176,7 @@ private fun readData(ctx: Context, name: String): List<List<String>> {
         .toList()
 }
 
-/** Columns: id,lokalitet,hovedlokalitet,kommune,fylke,lat,lon,count,observers,fullname */
+/** Columns: id,lokalitet,hovedlokalitet,kommune,fylke,lat,lon,count,observers,fullname,radius */
 fun loadLocalities(ctx: Context): List<Locality> =
     readData(ctx, "localities.csv").mapNotNull { c ->
         if (c.size < 7) return@mapNotNull null
@@ -183,7 +184,8 @@ fun loadLocalities(ctx: Context): List<Locality> =
         val lon = c[6].toDoubleOrNull() ?: return@mapNotNull null
         val full = c.getOrElse(9) { "" }.ifBlank { c[1] }   // fall back to bare name pre-fullname
         val obs = c.getOrElse(8) { "" }.toIntOrNull() ?: 0
-        Locality(c[0], c[1], c[2], c[3], lat, lon, full, obs)
+        val radius = c.getOrElse(10) { "" }.toDoubleOrNull() ?: 0.0
+        Locality(c[0], c[1], c[2], c[3], lat, lon, full, obs, radius)
     }
 
 /** Columns: norsk,latin */

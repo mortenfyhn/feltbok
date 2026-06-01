@@ -64,7 +64,7 @@ fun LocalityScreen(vm: MainViewModel) {
         }
     }
     val overlay = remember {
-        LocalityOverlay(vm.localities, radiusMeters = 50.0) { picked = it; mapView.invalidate() }
+        LocalityOverlay(vm.localities) { picked = it; mapView.invalidate() }
             .also { mapView.overlays.add(it) }
     }
     overlay.picked = picked
@@ -113,9 +113,10 @@ fun LocalityScreen(vm: MainViewModel) {
  *  we have the allmenn flag. */
 private class LocalityOverlay(
     private val localities: List<Locality>,
-    private val radiusMeters: Double,
     private val onTap: (Locality) -> Unit,
 ) : Overlay() {
+    // Fallback radius for localities whose footprint is unknown (radius == 0).
+    private val defaultRadiusM = 40.0
     var picked: Locality? = null
     var fix: GeoPoint? = null
 
@@ -135,16 +136,22 @@ private class LocalityOverlay(
         return abs(a.y - b.y) / 100.0
     }
 
+    private fun radiusPx(loc: Locality, ppm: Double): Float {
+        val m = if (loc.radius > 0) loc.radius else defaultRadiusM
+        return (m * ppm).toFloat().coerceIn(3f, 260f)
+    }
+
     override fun draw(c: Canvas, map: MapView, shadow: Boolean) {
         if (shadow) return
         val proj = map.projection
-        val rPx = (radiusMeters * pxPerMeter(map)).toFloat().coerceIn(3f, 220f)
+        val ppm = pxPerMeter(map)
         val bb = map.boundingBox
         val w = map.width; val h = map.height
         for (loc in localities) {
             if (bb != null && (loc.lat > bb.latNorth || loc.lat < bb.latSouth ||
                     loc.lon < bb.lonWest || loc.lon > bb.lonEast)) continue
             proj.toPixels(GeoPoint(loc.lat, loc.lon), p)
+            val rPx = radiusPx(loc, ppm)
             if (p.x < -rPx || p.x > w + rPx || p.y < -rPx || p.y > h + rPx) continue
             val isPick = loc === picked
             c.drawCircle(p.x.toFloat(), p.y.toFloat(), rPx, if (isPick) pickedFill else fill)
@@ -159,15 +166,16 @@ private class LocalityOverlay(
 
     override fun onSingleTapConfirmed(e: MotionEvent, map: MapView): Boolean {
         val proj = map.projection
-        val threshold = (radiusMeters * pxPerMeter(map)).toFloat().coerceAtLeast(70f)
+        val ppm = pxPerMeter(map)
         var best: Locality? = null
         var bestD = Float.MAX_VALUE
         for (loc in localities) {
             proj.toPixels(GeoPoint(loc.lat, loc.lon), p)
             val d = hypot((p.x - e.x), (p.y - e.y))
-            if (d < bestD) { bestD = d; best = loc }
+            // accept a tap inside the disk, or within a comfortable touch radius
+            if (d < bestD && d <= maxOf(radiusPx(loc, ppm), 44f)) { bestD = d; best = loc }
         }
-        if (best != null && bestD <= threshold) { onTap(best); return true }
+        best?.let { onTap(it); return true }
         return false
     }
 }

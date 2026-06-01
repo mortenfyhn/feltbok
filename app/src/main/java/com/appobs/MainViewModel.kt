@@ -136,7 +136,7 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
         dPub = n.publicComment; dPriv = n.privateComment
         dTime = n.id
         dLoc = localities.firstOrNull { it.lokalitet == n.locName && it.lat == n.lat && it.lon == n.lon }
-            ?: Locality("", n.locName, "", "", n.lat, n.lon, n.locFull, 0)
+            ?: Locality("", n.locName, "", "", n.lat, n.lon, n.locFull, 0, 0.0)
         screen = Screen.DETAIL
     }
 

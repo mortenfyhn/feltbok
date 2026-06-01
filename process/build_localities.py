@@ -169,9 +169,13 @@ def api_harvest(bbox, taxon_key=212, max_records=99_900):
                 lat, lon = float(o["decimalLatitude"]), float(o["decimalLongitude"])
             except (KeyError, TypeError, ValueError):
                 continue
+            try:
+                radius = float(o.get("coordinateUncertaintyInMeters"))  # the locality's radius
+            except (TypeError, ValueError):
+                radius = 0.0
             sites[lid] = [lid, name, round(lat, 6), round(lon, 6),
                           (o.get("municipality") or "").strip(),
-                          (o.get("county") or "").strip(), 1, set(who)]
+                          (o.get("county") or "").strip(), 1, set(who), radius]
         offset += 300
         print(f"\r  {offset} records, {len(sites)} sites", end="", file=sys.stderr)
         if d.get("endOfRecords") or not d.get("results"):
@@ -221,7 +225,7 @@ def drop_name_collisions(rows, public_min=25, cluster_km=2.0):
 def save_raw(sites, path):
     """Dump the unfiltered harvested sites to JSON, so thresholds can be re-tuned
     offline without re-downloading. The observer set is stored as a sorted list."""
-    data = {lid: [s[0], s[1], s[2], s[3], s[4], s[5], s[6], sorted(s[7])]
+    data = {lid: [s[0], s[1], s[2], s[3], s[4], s[5], s[6], sorted(s[7]), s[8]]
             for lid, s in sites.items()}
     with open(path, "w", encoding="utf-8") as f:
         json.dump(data, f, ensure_ascii=False)
@@ -231,7 +235,7 @@ def load_raw(path):
     """Inverse of save_raw: the sites dict, observer lists back to sets."""
     with open(path, encoding="utf-8") as f:
         data = json.load(f)
-    return {lid: [s[0], s[1], s[2], s[3], s[4], s[5], s[6], set(s[7])]
+    return {lid: [s[0], s[1], s[2], s[3], s[4], s[5], s[6], set(s[7]), s[8]]
             for lid, s in data.items()}
 
 
@@ -305,7 +309,7 @@ def aggregate(zf: zipfile.ZipFile, county: str | None, bbox):
             if bbox and not (bbox[0] <= lon <= bbox[2] and bbox[1] <= lat <= bbox[3]):
                 continue
             sites[lid] = [lid, name, round(lat, 6), round(lon, 6),
-                          row[idx["kommune"]].strip(), fylke, 1, set(who)]
+                          row[idx["kommune"]].strip(), fylke, 1, set(who), 0.0]
     print(file=sys.stderr)
     return sites
 
@@ -367,7 +371,7 @@ def main() -> int:
     # within ~100 m - to the most-used one (kept is count-desc, so first wins), so
     # the picker lists each place once. Distinct places sharing a name stay separate.
     seen: dict = {}
-    for lid, name, lat, lon, kommune, fylke, count, obs in kept:
+    for lid, name, lat, lon, kommune, fylke, count, obs, radius in kept:
         lok, hoved = split_name(name)
         key = (lok.lower(), round(lat, 3), round(lon, 3))
         if key in seen:
@@ -377,13 +381,14 @@ def main() -> int:
             # Keep the original *qualified* name ("Lok, Hovedlok, Kommune, Fylke") as
             # `fullname` - that exact string is what the import matches on; the bare
             # `lokalitet` does not link to a public locality (it only matches your own).
-            seen[key] = [lid, lok, hoved, kommune, fylke, lat, lon, count, set(obs), name]
+            # `radius` is the locality's coordinateUncertaintyInMeters (its map footprint).
+            seen[key] = [lid, lok, hoved, kommune, fylke, lat, lon, count, set(obs), name, radius]
     merged = drop_name_collisions(list(seen.values()), args.public_min, args.cluster_km)
-    rows = [r[:8] + [len(r[8]), r[9]] for r in sorted(merged, key=lambda r: -r[7])]
+    rows = [r[:8] + [len(r[8]), r[9], round(r[10])] for r in sorted(merged, key=lambda r: -r[7])]
     with open(args.output, "w", newline="", encoding="utf-8") as f:
         w = csv.writer(f)
         w.writerow(["id", "lokalitet", "hovedlokalitet", "kommune", "fylke",
-                    "lat", "lon", "count", "observers", "fullname"])
+                    "lat", "lon", "count", "observers", "fullname", "radius"])
         w.writerows(rows)
     print(f"Wrote {len(rows)} public localities (>= {args.min_observers} observers, "
           f">= {args.min_count} records, name-collisions dropped) to {args.output}, "
