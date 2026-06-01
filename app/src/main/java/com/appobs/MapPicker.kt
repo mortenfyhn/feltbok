@@ -68,8 +68,6 @@ fun LocalityScreen(vm: MainViewModel) {
         LocalityOverlay(vm.localities) { picked = it; mapView.invalidate() }
             .also { mapView.overlays.add(it) }
     }
-    overlay.picked = picked
-    overlay.fix = vm.fix?.let { GeoPoint(it.lat, it.lon) }
 
     DisposableEffect(Unit) {
         mapView.onResume()
@@ -85,7 +83,17 @@ fun LocalityScreen(vm: MainViewModel) {
                 modifier = Modifier.weight(1f))
             TextButton(onClick = { vm.backToDetail() }) { Text("Avbryt", color = Color.White) }
         }
-        AndroidView(factory = { mapView }, modifier = Modifier.weight(1f).fillMaxWidth()) { it.invalidate() }
+        AndroidView(
+            factory = { mapView },
+            modifier = Modifier.weight(1f).fillMaxWidth(),
+            update = { m ->
+                // Read live state here so the overlay redraws on selection and fix changes.
+                overlay.picked = picked
+                overlay.fix = vm.fix?.let { GeoPoint(it.lat, it.lon) }
+                overlay.accuracyM = vm.fix?.accuracyM?.toFloat() ?: Float.NaN
+                m.invalidate()
+            },
+        )
         Row(
             Modifier.fillMaxWidth().background(cs.surface).padding(horizontal = 14.dp, vertical = 10.dp),
             verticalAlignment = Alignment.CenterVertically,
@@ -213,13 +221,19 @@ private class LocalityOverlay(
     private val defaultRadiusM = 40.0
     var picked: Locality? = null
     var fix: GeoPoint? = null
+    var accuracyM: Float = Float.NaN
 
     private val fill = Paint().apply { style = Paint.Style.FILL; color = 0x553C8C28.toInt(); isAntiAlias = true }
     private val stroke = Paint().apply { style = Paint.Style.STROKE; color = 0xFF2E7D32.toInt(); strokeWidth = 2f; isAntiAlias = true }
-    private val pickedFill = Paint().apply { style = Paint.Style.FILL; color = 0x993C8C28.toInt(); isAntiAlias = true }
-    private val pickedStroke = Paint().apply { style = Paint.Style.STROKE; color = 0xFF1B5E20.toInt(); strokeWidth = 4f; isAntiAlias = true }
+    private val badgeFill = Paint().apply { style = Paint.Style.FILL; color = 0xFFFFFFFF.toInt(); isAntiAlias = true }
+    private val badgeRing = Paint().apply { style = Paint.Style.STROKE; color = 0xFF1B5E20.toInt(); strokeWidth = 3f; isAntiAlias = true }
+    private val check = Paint().apply { style = Paint.Style.STROKE; color = 0xFF1B5E20.toInt(); strokeWidth = 5f; strokeCap = Paint.Cap.ROUND; isAntiAlias = true }
+    private val accFill = Paint().apply { style = Paint.Style.FILL; color = 0x222962FF.toInt(); isAntiAlias = true }
+    private val accStroke = Paint().apply { style = Paint.Style.STROKE; color = 0x882962FF.toInt(); strokeWidth = 2f; isAntiAlias = true }
     private val gps = Paint().apply { style = Paint.Style.FILL; color = 0xFF2962FF.toInt(); isAntiAlias = true }
     private val gpsRing = Paint().apply { style = Paint.Style.STROKE; color = 0xFFFFFFFF.toInt(); strokeWidth = 3f; isAntiAlias = true }
+    private val labelFill = Paint().apply { color = 0xFF18250F.toInt(); textSize = 28f; textAlign = Paint.Align.CENTER; isAntiAlias = true }
+    private val labelHalo = Paint().apply { color = 0xF2FFFFFF.toInt(); textSize = 28f; textAlign = Paint.Align.CENTER; isAntiAlias = true; style = Paint.Style.STROKE; strokeWidth = 4f }
     private val p = Point()
 
     /** Pixels per metre at the current zoom, from projecting a 100 m north step. */
@@ -241,20 +255,37 @@ private class LocalityOverlay(
         val ppm = pxPerMeter(map)
         val bb = map.boundingBox
         val w = map.width; val h = map.height
+        var pickX = 0f; var pickY = 0f; var pickShown = false
         for (loc in localities) {
             if (bb != null && (loc.lat > bb.latNorth || loc.lat < bb.latSouth ||
                     loc.lon < bb.lonWest || loc.lon > bb.lonEast)) continue
             proj.toPixels(GeoPoint(loc.lat, loc.lon), p)
             val rPx = radiusPx(loc, ppm)
             if (p.x < -rPx || p.x > w + rPx || p.y < -rPx || p.y > h + rPx) continue
-            val isPick = loc === picked
-            c.drawCircle(p.x.toFloat(), p.y.toFloat(), rPx, if (isPick) pickedFill else fill)
-            c.drawCircle(p.x.toFloat(), p.y.toFloat(), rPx, if (isPick) pickedStroke else stroke)
+            val px = p.x.toFloat(); val py = p.y.toFloat()
+            c.drawCircle(px, py, rPx, fill)
+            c.drawCircle(px, py, rPx, stroke)
+            val ly = py + rPx + 30f                  // name just below the disk
+            c.drawText(loc.lokalitet, px, ly, labelHalo)
+            c.drawText(loc.lokalitet, px, ly, labelFill)
+            if (loc === picked) { pickX = px; pickY = py; pickShown = true }
+        }
+        if (pickShown) {                              // selected: a checkmark badge
+            c.drawCircle(pickX, pickY, 18f, badgeFill)
+            c.drawCircle(pickX, pickY, 18f, badgeRing)
+            c.drawLine(pickX - 8f, pickY + 1f, pickX - 2f, pickY + 9f, check)
+            c.drawLine(pickX - 2f, pickY + 9f, pickX + 10f, pickY - 8f, check)
         }
         fix?.let {
             proj.toPixels(it, p)
-            c.drawCircle(p.x.toFloat(), p.y.toFloat(), 9f, gps)
-            c.drawCircle(p.x.toFloat(), p.y.toFloat(), 9f, gpsRing)
+            val px = p.x.toFloat(); val py = p.y.toFloat()
+            if (!accuracyM.isNaN() && accuracyM > 0f) {
+                val rAcc = (accuracyM * ppm).toFloat().coerceIn(8f, 600f)
+                c.drawCircle(px, py, rAcc, accFill)
+                c.drawCircle(px, py, rAcc, accStroke)
+            }
+            c.drawCircle(px, py, 11f, gps)            // bigger GPS dot
+            c.drawCircle(px, py, 11f, gpsRing)
         }
     }
 
