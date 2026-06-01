@@ -4,13 +4,13 @@
 Source: the Norwegian Species Observation Service Darwin Core Archive, published
 by Artsdatabanken (GBIF dataset b124e1e0-4755-430f-9eab-894f25a9b59c). Every
 record carries the registry's *qualified* locality name, its stable site id
-(`locationID`), the site's canonical coordinates, and kommune/fylke — so one
+(`locationID`), the site's canonical coordinates, and kommune/fylke - so one
 row per `locationID` reconstructs the locality registry itself.
 
 We need the qualified name because that is exactly what Artsobservasjoner's
 name-based import matches on: "Ørndalen, Sistranda, Frøya, Tø", never bare
 "Ørndalen". (Import *with* coordinates instead creates a new locality per point,
-which is the duplicate mess we're avoiding — so the app uploads names only.)
+which is the duplicate mess we're avoiding - so the app uploads names only.)
 
 Usage:
     python process/build_localities.py                  # download + build national table
@@ -27,6 +27,7 @@ new-site import path and for showing context in the picker.
 import argparse
 import csv
 import io
+import math
 import os
 import sys
 import time
@@ -96,7 +97,7 @@ def download(url: str, dest: str) -> None:
                   f"(attempt {attempt})", file=sys.stderr)
             time.sleep(wait)
     else:
-        raise SystemExit("Download kept dropping — try again later.")
+        raise SystemExit("Download kept dropping - try again later.")
     os.replace(part, dest)
 
 
@@ -110,7 +111,7 @@ def wkt_box(minlon, minlat, maxlon, maxlat) -> str:
 
 
 def observers(recorded_by):
-    """Distinct people from a recordedBy value — GBIF joins co-observers with '|'."""
+    """Distinct people from a recordedBy value - GBIF joins co-observers with '|'."""
     if isinstance(recorded_by, list):
         parts = [str(x) for x in recorded_by]
     elif recorded_by:
@@ -139,7 +140,7 @@ def _gbif_page(params):
 
 def api_harvest(bbox, taxon_key=212, max_records=99_900):
     """Build the locality table from the GBIF occurrence API instead of the bulk
-    archive — many small paged requests, reliable on flaky links. One row per
+    archive - many small paged requests, reliable on flaky links. One row per
     locationID, restricted to `taxon_key` (default Aves) so we get bird localities.
     GBIF caps paging at a 100k offset window, so within a regional --bbox this
     captures the established (multi-observer, i.e. public) localities."""
@@ -152,7 +153,7 @@ def api_harvest(bbox, taxon_key=212, max_records=99_900):
             params["taxonKey"] = taxon_key
         d = _gbif_page(params)
         if d is None:
-            break  # transient errors exhausted — return the localities we gathered
+            break  # transient errors exhausted - return the localities we gathered
         for o in d.get("results", []):
             lid = str(o.get("locationID") or "").strip()
             name = (o.get("locality") or "").strip()
@@ -178,10 +179,48 @@ def api_harvest(bbox, taxon_key=212, max_records=99_900):
     return sites
 
 
+def haversine(lat1, lon1, lat2, lon2):
+    r1, r2 = math.radians(lat1), math.radians(lat2)
+    dlat, dlon = math.radians(lat2 - lat1), math.radians(lon2 - lon1)
+    a = math.sin(dlat / 2) ** 2 + math.cos(r1) * math.cos(r2) * math.sin(dlon / 2) ** 2
+    return 2 * 6371 * math.asin(math.sqrt(a))
+
+
+def drop_name_collisions(rows, public_min=25, cluster_km=2.0):
+    """Remove private 'route' clusters that the observer-count proxy lets through.
+
+    A real public ("allmenn") locality is one canonical site. But a birder laying
+    out a personal route stamps many same-named points in one sitting (consecutive
+    site ids, a few records each, usually co-observed so they clear --min-observers)
+    - e.g. seven "Sildskjærbugen" within 2 km. These can't be imported by bare name
+    anyway (no public site to match), so they are pure clutter in the picker.
+
+    For each name used at more than one site, keep a point only if it looks public
+    on its own (count >= public_min) AND sits more than cluster_km from every
+    already-kept same-name site (a genuinely distinct place, not a route fragment).
+    A name used at a single site is always kept. rows: the final [id, lok, hoved,
+    kommune, fylke, lat, lon, count] records."""
+    groups: dict[str, list] = {}
+    for r in rows:
+        groups.setdefault(r[1].lower(), []).append(r)
+    kept = []
+    for grp in groups.values():
+        if len(grp) == 1:
+            kept.append(grp[0])
+            continue
+        anchors: list = []
+        for r in sorted(grp, key=lambda r: -r[7]):
+            if r[7] >= public_min and all(
+                    haversine(r[5], r[6], a[5], a[6]) > cluster_km for a in anchors):
+                anchors.append(r)
+        kept.extend(anchors)
+    return kept
+
+
 def split_name(full: str):
     """Split the qualified registry name into (lokalitet, hovedlokalitet).
 
-    The composite is "Lok[, Hovedlok], Kommune, Fylke-abbr" — drop the trailing
+    The composite is "Lok[, Hovedlok], Kommune, Fylke-abbr" - drop the trailing
     kommune + fylke to leave the place part. The bare lokalitet (the most
     specific sublocality) is what the import matches on."""
     parts = [p.strip() for p in full.split(",")]
@@ -263,15 +302,21 @@ def main() -> int:
     ap.add_argument("--bbox", help="minlon,minlat,maxlon,maxlat to clip to a region")
     ap.add_argument("--api", action="store_true",
                     help="harvest from the GBIF occurrence API (needs --bbox) instead "
-                         "of the bulk archive — reliable when the big download won't finish")
+                         "of the bulk archive - reliable when the big download won't finish")
     ap.add_argument("--min-count", type=int, default=2,
                     help="drop sites with fewer records (default: %(default)s)")
     ap.add_argument("--min-observers", type=int, default=2,
                     help="keep only localities used by at least this many distinct "
-                         "observers — a public-vs-private proxy, since private "
+                         "observers - a public-vs-private proxy, since private "
                          "localities have a single owner (default: %(default)s)")
     ap.add_argument("--taxon-key", type=int, default=212,
                     help="GBIF taxonKey for --api (default 212 = Aves/birds; 0 = all taxa)")
+    ap.add_argument("--public-min", type=int, default=25,
+                    help="when a name is used at several sites, the record count a site "
+                         "needs to be kept as a real public locality (default: %(default)s)")
+    ap.add_argument("--cluster-km", type=float, default=2.0,
+                    help="same-name sites within this distance are treated as one place "
+                         "(a private route fragment), keeping only the top one (default: %(default)s)")
     ap.add_argument("-o", "--output", default="localities.csv")
     args = ap.parse_args()
 
@@ -289,25 +334,27 @@ def main() -> int:
         (s for s in sites.values()
          if s[6] >= args.min_count and len(s[7]) >= args.min_observers),
         key=lambda s: -s[6])
-    # Collapse near-duplicate registrations of the same place — the same bare name
-    # within ~100 m — to the most-used one (kept is count-desc, so first wins), so
+    # Collapse near-duplicate registrations of the same place - the same bare name
+    # within ~100 m - to the most-used one (kept is count-desc, so first wins), so
     # the picker lists each place once. Distinct places sharing a name stay separate.
     seen: dict = {}
-    for lid, name, lat, lon, kommune, fylke, count, _observers in kept:
+    for lid, name, lat, lon, kommune, fylke, count, obs in kept:
         lok, hoved = split_name(name)
         key = (lok.lower(), round(lat, 3), round(lon, 3))
         if key in seen:
-            seen[key][-1] += count
+            seen[key][7] += count
+            seen[key][8] |= obs
         else:
-            seen[key] = [lid, lok, hoved, kommune, fylke, lat, lon, count]
-    rows = sorted(seen.values(), key=lambda r: -r[-1])
+            seen[key] = [lid, lok, hoved, kommune, fylke, lat, lon, count, set(obs)]
+    merged = drop_name_collisions(list(seen.values()), args.public_min, args.cluster_km)
+    rows = [r[:8] + [len(r[8])] for r in sorted(merged, key=lambda r: -r[7])]
     with open(args.output, "w", newline="", encoding="utf-8") as f:
         w = csv.writer(f)
         w.writerow(["id", "lokalitet", "hovedlokalitet", "kommune", "fylke",
-                    "lat", "lon", "count"])
+                    "lat", "lon", "count", "observers"])
         w.writerows(rows)
     print(f"Wrote {len(rows)} public localities (>= {args.min_observers} observers, "
-          f">= {args.min_count} records, deduped) to {args.output}, "
+          f">= {args.min_count} records, name-collisions dropped) to {args.output}, "
           f"from {len(sites)} sites seen.", file=sys.stderr)
     return 0
 

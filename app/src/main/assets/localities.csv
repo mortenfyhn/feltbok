@@ -24,10 +24,9 @@ id,lokalitet,hovedlokalitet,kommune,fylke,lat,lon,count
 353341,Aunet,Valslagvågen,Hitra,Trøndelag,63.515505,9.238607,707
 1355213,Ml. Heia og Slettringen,Titran,Frøya,Trøndelag,63.667801,8.278478,700
 437946,Ørndalen,Sistranda,Frøya,Trøndelag,63.728654,8.817288,689
-420832,Strandfjæra,Hitra,Hitra,Trøndelag,63.54074,9.151111,669
+420832,Strandfjæra,Hitra,Hitra,Trøndelag,63.540740,9.151111,669
 3338711,Sistranda gjestehavn,Sistranda,Frøya,Trøndelag,63.736418,8.836934,657
-3338503,Sistrandfjæra,Siholmen sør,Frøya,Trøndelag,63.735142,8.83503,639
-1900710,Yttersian,Sistranda,Frøya,Trøndelag,63.736196,8.82681,596
+1900710,Yttersian,Sistranda,Frøya,Trøndelag,63.736196,8.826810,596
 2191448,Øverveien,Sistranda,Frøya,Trøndelag,63.728046,8.820693,584
 3338579,sjøen utenfor Bekkaskaget,Sistranda,Frøya,Trøndelag,63.726702,8.837895,563
 791108,Ytterneset,Fillingsnes,Frøya,Trøndelag,63.668347,8.479135,542
@@ -48,24 +47,22 @@ id,lokalitet,hovedlokalitet,kommune,fylke,lat,lon,count
 792709,Stutvassdalen,,Frøya,Trøndelag,63.705205,8.700534,402
 353352,Bogøyvær,,Frøya,Trøndelag,63.871343,8.553363,394
 427711,Bustbergvatnet,,Frøya,Trøndelag,63.781956,8.787886,390
-641994,Vassøya,Sula,Frøya,Trøndelag,63.839961,8.45974,376
+641994,Vassøya,Sula,Frøya,Trøndelag,63.839961,8.459740,376
 355026,Ulvan,Ulvøya,Hitra,Trøndelag,63.673897,9.044193,360
 666360,Nyjord,Titran,Frøya,Trøndelag,63.675025,8.325541,360
 3338575,sjøen utenfor Midtsian,Sistranda,Frøya,Trøndelag,63.729497,8.835362,341
 1168450,Kattvalen,Titran,Frøya,Trøndelag,63.668678,8.306964,339
 641992,Følingen,Sula,Frøya,Trøndelag,63.849223,8.469981,339
-450182,Stutvassdalen,nedre del,Frøya,Trøndelag,63.696998,8.698522,332
 2152161,Kreklingveien,Sistranda,Frøya,Trøndelag,63.725151,8.828876,326
 3338791,Rabbatangen sør,Sistranda,Frøya,Trøndelag,63.718211,8.842028,321
 2141990,Skardaveien,Sistranda,Frøya,Trøndelag,63.732801,8.827484,317
 354765,Kya,,Frøya,Trøndelag,63.772024,8.306012,303
 398050,Grindskarvatnet,Ulvøya,Hitra,Trøndelag,63.671228,9.051694,297
 2141682,Sistranda sentrum,Sistranda,Frøya,Trøndelag,63.729262,8.828032,283
-3338778,sjøen utenfor Rabbatangen,Sistranda,Frøya,Trøndelag,63.721914,8.84342,268
-439470,Ervikvatnet,Ervika (Frøya),Frøya,Trøndelag,63.742674,8.81515,262
+3338778,sjøen utenfor Rabbatangen,Sistranda,Frøya,Trøndelag,63.721914,8.843420,268
+439470,Ervikvatnet,Ervika (Frøya),Frøya,Trøndelag,63.742674,8.815150,262
 2141988,Lærarbyen,Sistranda,Frøya,Trøndelag,63.727079,8.829164,252
 1087582,Bustbergvannet,Strømøya,Frøya,Trøndelag,63.781507,8.787563,240
-352411,Stutvassdalen,øvre del,Frøya,Trøndelag,63.709677,8.699267,239
 2141986,dyrket mark v/Myran,Sistranda,Frøya,Trøndelag,63.725517,8.831993,239
 2142969,Nordfrøyveien 330-336,Sistranda,Frøya,Trøndelag,63.724367,8.833925,236
 352394,Sistranda,,Frøya,Trøndelag,63.727624,8.832407,235
@@ -77,19 +74,18 @@ id,lokalitet,hovedlokalitet,kommune,fylke,lat,lon,count
 398052,Kjevikan,Ulvøya,Hitra,Trøndelag,63.667522,9.053123,208
 693421,Sørfrøyveien 1555,Nordskaget,Frøya,Trøndelag,63.701532,8.567152,207
 1654920,Litlvatnet,Sistranda,Frøya,Trøndelag,63.730403,8.803355,206
-352424,Litle Hammarvatnet,,Frøya,Trøndelag,63.707513,8.82098,205
-641987,Lomsøya,Sula,Frøya,Trøndelag,63.850407,8.4987,203
+352424,Litle Hammarvatnet,,Frøya,Trøndelag,63.707513,8.820980,205
+641987,Lomsøya,Sula,Frøya,Trøndelag,63.850407,8.498700,203
 379544,Bekkamyran,Bekken,Frøya,Trøndelag,63.676893,8.575902,193
 2425210,Ytter Holmbukta,Sistranda,Frøya,Trøndelag,63.738414,8.837644,193
 2152095,Rabben,Sistranda,Frøya,Trøndelag,63.721063,8.837823,193
-2152248,Ørndalen,Sistranda,Frøya,Trøndelag,63.728169,8.815725,190
-352397,Ervika (Frøya),,Frøya,Trøndelag,63.74875,8.832649,189
+352397,Ervika (Frøya),,Frøya,Trøndelag,63.748750,8.832649,189
 3131452,fjære ved Saltnesvågen,Uttian,Frøya,Trøndelag,63.766974,8.861611,188
 1845365,Nordfrøyveien 603,Ervika (Frøya),Frøya,Trøndelag,63.747173,8.836045,187
 423266,Strandskjæra,,Hitra,Trøndelag,63.532874,9.167721,186
 2431632,Ervikveien,Ervika (Frøya),Frøya,Trøndelag,63.746446,8.828445,186
 452279,Gunnarvassdalen,Titran,Frøya,Trøndelag,63.671168,8.347703,181
-352367,Kvisten,,Frøya,Trøndelag,63.696154,8.45436,180
+352367,Kvisten,,Frøya,Trøndelag,63.696154,8.454360,180
 2398790,Hammarvasskogen,,Frøya,Trøndelag,63.725473,8.808107,178
 352396,Siholmen,Sistranda,Frøya,Trøndelag,63.737253,8.838614,171
 2269484,Vikaskaget,Ervika (Frøya),Frøya,Trøndelag,63.742289,8.837383,169
@@ -99,10 +95,9 @@ id,lokalitet,hovedlokalitet,kommune,fylke,lat,lon,count
 2269483,Fredagsvika,Ervika (Frøya),Frøya,Trøndelag,63.744153,8.837976,160
 2448968,dyrket mark v/Kongensberget,Ervika (Frøya),Frøya,Trøndelag,63.746632,8.820351,160
 1857115,Skjøttholmen,Sula,Frøya,Trøndelag,63.843692,8.445763,157
-666359,Stortjønna,Titran,Frøya,Trøndelag,63.670602,8.32131,149
+666359,Stortjønna,Titran,Frøya,Trøndelag,63.670602,8.321310,149
 452707,Øra,Straum (Hitra),Hitra,Trøndelag,63.560802,8.748504,145
 442676,Innersia vest,Titran,Frøya,Trøndelag,63.667654,8.306838,144
-2193850,Litlvatnet,Sistranda,Frøya,Trøndelag,63.730519,8.803427,143
 2430754,Kolskjæra,Sistranda,Frøya,Trøndelag,63.739674,8.855502,142
 1473356,Fillingsneset,Frøya,Frøya,Trøndelag,63.667435,8.540571,137
 659893,Mekanikerhagen,Titran,Frøya,Trøndelag,63.671204,8.328524,136
@@ -110,9 +105,9 @@ id,lokalitet,hovedlokalitet,kommune,fylke,lat,lon,count
 946849,vann S for veien ved Veisan,Kvisten,Frøya,Trøndelag,63.691373,8.463657,130
 2155275,dyrket mark v/Ervika,Ervika (Frøya),Frøya,Trøndelag,63.746926,8.830745,129
 1938081,myr N av Myramarka,Sistranda,Frøya,Trøndelag,63.735906,8.812554,129
-646072,Dammen,Steinvika,Hitra,Trøndelag,63.64147,8.989872,126
-1168457,Holmskogen,Titran,Frøya,Trøndelag,63.67216,8.306892,122
-2155167,beite langs Ervikvatnet,Ervika (Frøya),Frøya,Trøndelag,63.743867,8.82328,121
+646072,Dammen,Steinvika,Hitra,Trøndelag,63.641470,8.989872,126
+1168457,Holmskogen,Titran,Frøya,Trøndelag,63.672160,8.306892,122
+2155167,beite langs Ervikvatnet,Ervika (Frøya),Frøya,Trøndelag,63.743867,8.823280,121
 3338793,sjøen utenfor Rabbatangen sør,Sistranda,Frøya,Trøndelag,63.716775,8.843824,120
 3338715,dyrket mark v/Langrumpa,Uttian,Frøya,Trøndelag,63.768411,8.868914,111
 364992,Kvisten lykt,Kvisten,Frøya,Trøndelag,63.703661,8.442322,111
@@ -120,12 +115,11 @@ id,lokalitet,hovedlokalitet,kommune,fylke,lat,lon,count
 642008,Lille Aursøy,Mausundvær,Frøya,Trøndelag,63.868977,8.635388,109
 827820,kulturmark ved Smågevatnet,Smågevatnet,Hitra,Trøndelag,63.604805,8.624941,107
 362417,Skolen,Titran,Frøya,Trøndelag,63.669921,8.319738,106
-352377,Håvika,,Frøya,Trøndelag,63.66853,8.361186,105
+352377,Håvika,,Frøya,Trøndelag,63.668530,8.361186,105
 2430334,Ervika øst,Ervika (Frøya),Frøya,Trøndelag,63.746477,8.833826,104
 426756,Neverlivatnet,,Hitra,Trøndelag,63.562606,9.045918,103
 641997,Gårdsøya,Mausundvær,Frøya,Trøndelag,63.870021,8.671878,103
 3339549,Meliaunskjæret,Uttian,Frøya,Trøndelag,63.771889,8.851945,102
-3338785,dyrket mark,Siholmen nord,Frøya,Trøndelag,63.73719,8.835066,102
 1894066,Korsheiveien øst,Daløya,Frøya,Trøndelag,63.680079,8.391271,102
 2431620,Fredagsvik  sør,Ervika (Frøya),Frøya,Trøndelag,63.743239,8.832559,100
 662857,Skybuvatnet,Titran,Frøya,Trøndelag,63.673742,8.313333,100
@@ -138,79 +132,77 @@ id,lokalitet,hovedlokalitet,kommune,fylke,lat,lon,count
 401560,Leirvågen,Fillan,Hitra,Trøndelag,63.592954,8.973271,94
 436755,Sørøyan,Uttian,Frøya,Trøndelag,63.767852,8.839503,93
 355047,Melandsjø,,Hitra,Trøndelag,63.628325,8.731768,92
-3338796,Starrberget,Sistranda,Frøya,Trøndelag,63.715311,8.84209,89
+3338796,Starrberget,Sistranda,Frøya,Trøndelag,63.715311,8.842090,89
 2158799,Frøya renovasjon,Kvisten,Frøya,Trøndelag,63.696162,8.431668,88
-1845731,sjøområdene sør for Hammarvika,Hammarvika,Frøya,Trøndelag,63.69453,8.837006,88
+1845731,sjøområdene sør for Hammarvika,Hammarvika,Frøya,Trøndelag,63.694530,8.837006,88
 2447789,Seterdalen,,Frøya,Trøndelag,63.743962,8.676091,88
-355054,Straum (Hitra),,Hitra,Trøndelag,63.56319,8.75331,87
+355054,Straum (Hitra),,Hitra,Trøndelag,63.563190,8.753310,87
 2155172,vest for Fredagsvika,Ervika (Frøya),Frøya,Trøndelag,63.744248,8.827843,87
-874921,FFK-senter,Sistranda,Frøya,Trøndelag,63.73098,8.831167,86
+874921,FFK-senter,Sistranda,Frøya,Trøndelag,63.730980,8.831167,86
 2269482,Tuvneset,Ervika (Frøya),Frøya,Trøndelag,63.745448,8.839566,86
 2144840,Strømøybotnen,,Frøya,Trøndelag,63.779043,8.783278,85
-643190,Svantjønna,Nabeita,Frøya,Trøndelag,63.697189,8.78414,85
+643190,Svantjønna,Nabeita,Frøya,Trøndelag,63.697189,8.784140,85
 724113,Vikanveien 22,Fillan,Hitra,Trøndelag,63.600272,8.983512,85
-355043,Knutshaug,Dolmøya,Hitra,Trøndelag,63.659321,8.84112,84
+355043,Knutshaug,Dolmøya,Hitra,Trøndelag,63.659321,8.841120,84
 2385622,Frøyhavet nord for Kjervågsund,Titran,Frøya,Trøndelag,63.709642,8.324912,84
-423621,Rabben,Sistranda,Frøya,Trøndelag,63.72072,8.841453,83
 636569,Titran Canning,Titran,Frøya,Trøndelag,63.668889,8.300775,81
-355063,Kvenvær,,Hitra,Trøndelag,63.535661,8.40435,81
+355063,Kvenvær,,Hitra,Trøndelag,63.535661,8.404350,81
 355024,Fjellvær,Fjellværsøya,Hitra,Trøndelag,63.633141,9.143224,81
 2444559,Ø av sti langs Ervikvatnet,Ervika (Frøya),Frøya,Trøndelag,63.740556,8.823693,81
 514435,Fausland,Barmfjorden,Hitra,Trøndelag,63.608231,8.848522,80
 437243,Innersia,Titran,Frøya,Trøndelag,63.668168,8.307997,79
-662831,Klevatnet,Bustvika,Frøya,Trøndelag,63.673961,8.37723,79
-436421,Ellingsundet,Uttian,Frøya,Trøndelag,63.76564,8.826855,78
+662831,Klevatnet,Bustvika,Frøya,Trøndelag,63.673961,8.377230,79
+436421,Ellingsundet,Uttian,Frøya,Trøndelag,63.765640,8.826855,78
 641989,Smaløya,Sula,Frøya,Trøndelag,63.850946,8.485441,78
 704702,Sørfrøyveien 1563,Nordskaget,Frøya,Trøndelag,63.702264,8.567089,78
 3339580,Nordhaug,Kvisten,Frøya,Trøndelag,63.699016,8.451674,77
-355023,Knarrlagsund,Ulvøya,Hitra,Trøndelag,63.66431,9.087726,76
+355023,Knarrlagsund,Ulvøya,Hitra,Trøndelag,63.664310,9.087726,76
 352410,Grasdalsvatnet,Stutvassdalen,Frøya,Trøndelag,63.704469,8.702663,76
 662850,Lundskogen,Titran,Frøya,Trøndelag,63.675782,8.312327,76
 2137596,Moltstien,Sistranda,Frøya,Trøndelag,63.725751,8.827708,75
 3339541,sund mellom Litlsørøya og Sørøya,Uttian,Frøya,Trøndelag,63.763583,8.830574,73
-356962,Leirvika,Kvaløya,Frøya,Trøndelag,63.76373,8.676064,73
+356962,Leirvika,Kvaløya,Frøya,Trøndelag,63.763730,8.676064,73
 1942736,myr v/Litlhammarvatnet,Litle Hammarvatnet,Frøya,Trøndelag,63.707278,8.824618,73
 662837,Langbergvatnet,Titran,Frøya,Trøndelag,63.670885,8.351997,72
-689552,kulturmark,Malmmyran,Frøya,Trøndelag,63.698459,8.48121,72
+689552,kulturmark,Malmmyran,Frøya,Trøndelag,63.698459,8.481210,72
 351720,Bustvika,,Frøya,Trøndelag,63.675837,8.385099,70
 2136429,Sistranda kystbarnehage,Sistranda,Frøya,Trøndelag,63.727942,8.833134,70
 2144044,Storholmbukta,,Frøya,Trøndelag,63.790229,8.742521,70
-1954762,Korsan,Daløya,Frøya,Trøndelag,63.683608,8.39278,70
+1954762,Korsan,Daløya,Frøya,Trøndelag,63.683608,8.392780,70
 642103,Inntian,,Frøya,Trøndelag,63.731978,8.897256,69
 440395,Mastadsvaet,Fjellværsøya,Hitra,Trøndelag,63.655099,9.032327,68
 398048,Bekkvika,Fjellværsøya,Hitra,Trøndelag,63.656184,9.114127,68
 659891,Kirkegården,Titran,Frøya,Trøndelag,63.673467,8.323924,68
 3339560,Saltnesvågen,Uttian,Frøya,Trøndelag,63.765155,8.851963,67
-352395,Yttersian,Sistranda,Frøya,Trøndelag,63.735202,8.818132,67
 2158800,Ø av veg til Frøya renovasjon,Kvisten,Frøya,Trøndelag,63.691835,8.437462,67
 3339573,Kvistmyra vest,Kvisten,Frøya,Trøndelag,63.695434,8.451503,67
 2074564,Flatvalsundet,Flatval,Frøya,Trøndelag,63.687045,8.757775,66
 643198,Sveabakken gravsted,Nordskaget,Frøya,Trøndelag,63.693212,8.570736,66
 372624,Hellesvika,,Frøya,Trøndelag,63.780019,8.810245,66
-371445,Øverskarsvågen,Skardsvågen,Frøya,Trøndelag,63.6916,8.689826,65
+371445,Øverskarsvågen,Skardsvågen,Frøya,Trøndelag,63.691600,8.689826,65
 355081,Strand,,Hitra,Trøndelag,63.543258,9.152755,65
 444823,Kjerkvaler v/Sletta kirke,Svellingen,Frøya,Trøndelag,63.795323,8.804631,64
-1896753,kulturmark v/Pilbakkan,Uttian,Frøya,Trøndelag,63.7716,8.868097,64
+1896753,kulturmark v/Pilbakkan,Uttian,Frøya,Trøndelag,63.771600,8.868097,64
 642923,Blåskogsvatnet,,Hitra,Trøndelag,63.573874,8.901289,63
 797055,gamle renovasjonsveien,Høgset,Frøya,Trøndelag,63.693399,8.434731,63
 2290250,Fjølværet,,Frøya,Trøndelag,63.817037,8.617053,62
 2448976,dyrket mark Ø av Storvika,Ervika (Frøya),Frøya,Trøndelag,63.741212,8.826523,62
 1168448,Pilehagen,Titran,Frøya,Trøndelag,63.669467,8.311357,62
 353339,Steinsvatnet,Nordskaget,Frøya,Trøndelag,63.697707,8.578156,61
-1897303,bukt Ø for Kalvholman,Uttian,Frøya,Trøndelag,63.77285,8.837428,61
+1897303,bukt Ø for Kalvholman,Uttian,Frøya,Trøndelag,63.772850,8.837428,61
 1853659,kulturmark v/Leirvikveien,Kvaløya,Frøya,Trøndelag,63.764846,8.678911,61
 1897302,bukt SV av Svansøya,Uttian,Frøya,Trøndelag,63.774212,8.842351,61
 2152425,S av Nordhammarvika gravplass,Nordhammaren,Frøya,Trøndelag,63.709904,8.832218,60
-2413878,sjøområdene N av Uttian,Uttian,Frøya,Trøndelag,63.783865,8.85685,60
+2413878,sjøområdene N av Uttian,Uttian,Frøya,Trøndelag,63.783865,8.856850,60
 435499,Bakkeli,Ervika (Frøya),Frøya,Trøndelag,63.748357,8.829801,60
 2142184,dyrka mark v/Skjelsøyveien,Uttian,Frøya,Trøndelag,63.772243,8.840276,59
-2154753,Nordhaug øvre,Kvisten,Frøya,Trøndelag,63.69777,8.452204,59
+2154753,Nordhaug øvre,Kvisten,Frøya,Trøndelag,63.697770,8.452204,59
 356946,Veisan syd,Kvisten,Frøya,Trøndelag,63.692675,8.464241,59
 384555,Fergeleiet,Norddyrøya,Frøya,Trøndelag,63.799123,8.681615,59
 2126857,Nordskagsvaet,Nordskaget,Frøya,Trøndelag,63.712065,8.560343,59
-1930531,Rabbaheia,Sistranda,Frøya,Trøndelag,63.71432,8.835811,59
-1117419,Toppen,Sistranda,Frøya,Trøndelag,63.735941,8.81957,59
-2290251,Sulfjorden,,Frøya,Trøndelag,63.829543,8.55348,58
+1930531,Rabbaheia,Sistranda,Frøya,Trøndelag,63.714320,8.835811,59
+1117419,Toppen,Sistranda,Frøya,Trøndelag,63.735941,8.819570,59
+2290251,Sulfjorden,,Frøya,Trøndelag,63.829543,8.553480,58
 359053,Gauklivatnet,,Hitra,Trøndelag,63.549288,9.054542,58
 355036,Fillan,,Hitra,Trøndelag,63.602149,8.976299,57
 2430748,Nordfrøyveien 465,Sistranda,Frøya,Trøndelag,63.735762,8.833323,56
@@ -218,7 +210,7 @@ id,lokalitet,hovedlokalitet,kommune,fylke,lat,lon,count
 1894010,Vollavatnet,Kvernøya,Frøya,Trøndelag,63.776014,8.694866,56
 3339567,Nordstaulvika,Uttian,Frøya,Trøndelag,63.779237,8.877044,55
 3339572,Kvistmyra,Kvisten,Frøya,Trøndelag,63.694594,8.458276,55
-2517168,Vavika øst,Neset (Frøya),Frøya,Trøndelag,63.76427,8.809724,55
+2517168,Vavika øst,Neset (Frøya),Frøya,Trøndelag,63.764270,8.809724,55
 2448982,N av Rognlauvholmen,Ervika (Frøya),Frøya,Trøndelag,63.745528,8.814207,54
 2425211,Siholmen-Vikaskaget,Sistranda,Frøya,Trøndelag,63.739825,8.837006,54
 1894039,dyrket mark V av Innersetra,Kvaløya,Frøya,Trøndelag,63.775363,8.701477,54
@@ -226,27 +218,25 @@ id,lokalitet,hovedlokalitet,kommune,fylke,lat,lon,count
 2448980,høyde S av Storvika,Ervika (Frøya),Frøya,Trøndelag,63.741872,8.821555,53
 2448587,myr S av Ervikvatnet,Ervika (Frøya),Frøya,Trøndelag,63.738418,8.809895,53
 2501808,skog v/Krokskardveien,Ervika (Frøya),Frøya,Trøndelag,63.748063,8.825948,53
-2864136,Sula,,Frøya,Trøndelag,63.843981,8.461052,52
-1897296,Gåsvika,Uttian,Frøya,Trøndelag,63.76963,8.863201,51
+1897296,Gåsvika,Uttian,Frøya,Trøndelag,63.769630,8.863201,51
 426564,Småbåthavna,Sandstad,Hitra,Trøndelag,63.523292,9.107507,50
-2126856,sund v/Hjertøyholmen,Nordskaget,Frøya,Trøndelag,63.715844,8.55489,50
+2126856,sund v/Hjertøyholmen,Nordskaget,Frøya,Trøndelag,63.715844,8.554890,50
 420833,Åkervikdalen,Strand,Hitra,Trøndelag,63.546732,9.156537,50
 435496,Einvika,Fjellværsøya,Hitra,Trøndelag,63.629235,9.119337,50
 352398,Dyrvik,,Frøya,Trøndelag,63.757041,8.821267,49
 437248,Draget,Titran,Frøya,Trøndelag,63.672192,8.295987,49
 1094454,Barmfjorden utenfor Aunestrømmen,Barmfjorden,Hitra,Trøndelag,63.619589,8.853643,49
-364991,Nordhaug,Kvisten,Frøya,Trøndelag,63.699637,8.449958,49
 360427,sump ved hotellet,Kvernhusvik,Hitra,Trøndelag,63.635678,8.819327,49
 2120587,holmer og skjær øst av Skagan,,Frøya,Trøndelag,63.797548,8.845782,48
 642105,Sump Ø for Høgset,Høgset,Frøya,Trøndelag,63.691859,8.449302,48
-2142186,sjøen øst av Hestøya,Uttian,Frøya,Trøndelag,63.76265,8.862177,47
+2142186,sjøen øst av Hestøya,Uttian,Frøya,Trøndelag,63.762650,8.862177,47
 3339550,Båthamna,Uttian,Frøya,Trøndelag,63.768495,8.853813,47
 2155170,dyrket mark v/Staulan,Uttian,Frøya,Trøndelag,63.774307,8.869363,47
-2413538,V av Kjerka,Ervika (Frøya),Frøya,Trøndelag,63.74604,8.836314,47
+2413538,V av Kjerka,Ervika (Frøya),Frøya,Trøndelag,63.746040,8.836314,47
 476667,Lunde,Hammarvika,Frøya,Trøndelag,63.703335,8.807263,47
 362990,Krabbsundet,Ansnes,Hitra,Trøndelag,63.642631,9.004164,47
-2159007,Nordhammarvika N av fylkesveg,Nordhammaren,Frøya,Trøndelag,63.708026,8.83043,47
-384504,Sandstadsundet,Sandstad,Hitra,Trøndelag,63.51728,9.094014,46
+2159007,Nordhammarvika N av fylkesveg,Nordhammaren,Frøya,Trøndelag,63.708026,8.830430,47
+384504,Sandstadsundet,Sandstad,Hitra,Trøndelag,63.517280,9.094014,46
 2868311,Grindskardhaugen,Hammarvika,Frøya,Trøndelag,63.703235,8.811108,46
 548315,Innervågen,Titran,Frøya,Trøndelag,63.668598,8.321624,46
 2152160,Frøya helsehus,Sistranda,Frøya,Trøndelag,63.724268,8.831993,46
@@ -256,7 +246,6 @@ id,lokalitet,hovedlokalitet,kommune,fylke,lat,lon,count
 1094421,Hestøya,Uttian,Frøya,Trøndelag,63.763158,8.857056,45
 3339558,Storbåtbukta øst,Uttian,Frøya,Trøndelag,63.767534,8.843429,45
 643205,Middagstjørna,,Frøya,Trøndelag,63.769507,8.774798,45
-425155,Strømøybotnen,Strømøya,Frøya,Trøndelag,63.776963,8.782209,44
 2448969,Vardhaugen,Ervika (Frøya),Frøya,Trøndelag,63.746756,8.825067,44
 418230,Yttervågen,Titran,Frøya,Trøndelag,63.671547,8.322496,44
 1887063,Botnviktjørna,Fjellværsøya,Hitra,Trøndelag,63.646363,9.134187,44
@@ -266,21 +255,21 @@ id,lokalitet,hovedlokalitet,kommune,fylke,lat,lon,count
 428395,Ervikvatnet øst,Ervika (Frøya),Frøya,Trøndelag,63.745345,8.827232,43
 354311,Helgebostadøya,,Hitra,Trøndelag,63.571263,8.548485,43
 909214,Staulan,jorde ved krysset,Frøya,Trøndelag,63.790475,8.805538,43
-1887054,kulturmark v/Korsvatnet,Fjellværsøya,Hitra,Trøndelag,63.65612,9.096421,43
+1887054,kulturmark v/Korsvatnet,Fjellværsøya,Hitra,Trøndelag,63.656120,9.096421,43
 1849337,Humlingsvær IBA,,Frøya,Trøndelag,63.758217,8.415633,43
+646069,Litlvatnet,Jevika,Hitra,Trøndelag,63.630827,8.971618,42
 646045,Børøysundet,Hestvika,Hitra,Trøndelag,63.572171,9.193457,42
 2151418,Madsvågen øst,Dyrvik,Frøya,Trøndelag,63.763059,8.814341,42
 352425,Hammarvatnet,,Frøya,Trøndelag,63.718951,8.804262,42
-646069,Litlvatnet,Jevika,Hitra,Trøndelag,63.630827,8.971618,42
 424688,Sætra,Hestvika,Hitra,Trøndelag,63.557026,9.196161,41
-2120588,sjøområdene utenfor Husøyvalen,Uttian,Frøya,Trøndelag,63.76284,8.898981,41
+2120588,sjøområdene utenfor Husøyvalen,Uttian,Frøya,Trøndelag,63.762840,8.898981,41
 2269488,Kjerka,Ervika (Frøya),Frøya,Trøndelag,63.746577,8.839395,41
 437244,Yttersia,Titran,Frøya,Trøndelag,63.669296,8.305922,41
 2228406,Purkholmen,Nordhammaren,Frøya,Trøndelag,63.698873,8.825013,41
-2397064,Sørfrøyveien 291,Flatval,Frøya,Trøndelag,63.693252,8.76453,40
+2397064,Sørfrøyveien 291,Flatval,Frøya,Trøndelag,63.693252,8.764530,40
 3169489,Tellesone 5,berget sørvest,Frøya,Trøndelag,63.766382,8.304413,40
 352455,Sandstad,,Hitra,Trøndelag,63.522699,9.097445,40
-2449457,Fredagsvika nord,Ervika (Frøya),Frøya,Trøndelag,63.745174,8.83273,40
+2449457,Fredagsvika nord,Ervika (Frøya),Frøya,Trøndelag,63.745174,8.832730,40
 2503589,V av Bremnestuva,Bremnesstuva,Frøya,Trøndelag,63.745174,8.665814,40
 662833,Håvika kirkegård,Håvika,Frøya,Trøndelag,63.671148,8.359237,40
 2501809,V av Erviksvingen,Ervika (Frøya),Frøya,Trøndelag,63.748862,8.825921,40
@@ -288,62 +277,60 @@ id,lokalitet,hovedlokalitet,kommune,fylke,lat,lon,count
 689554,midtre vann,Malmmyran,Frøya,Trøndelag,63.695171,8.484184,39
 2144847,Gåsvika sør,Uttian,Frøya,Trøndelag,63.768963,8.859563,39
 2464128,Holmakeila,Titran,Frøya,Trøndelag,63.667235,8.301358,39
-2154775,Hammarberget,Nordhammaren,Frøya,Trøndelag,63.70466,8.833925,39
+2154775,Hammarberget,Nordhammaren,Frøya,Trøndelag,63.704660,8.833925,39
 434871,Aurebon,Fjellværsøya,Hitra,Trøndelag,63.655729,9.103276,38
 356972,Setra,Norddyrøya,Frøya,Trøndelag,63.797021,8.684822,38
 428314,Reksa,Fjellværsøya,Hitra,Trøndelag,63.645386,9.172634,38
-1951728,myr v/varehandel,Litle Hammarvatnet,Frøya,Trøndelag,63.70735,8.816363,38
+1951728,myr v/varehandel,Litle Hammarvatnet,Frøya,Trøndelag,63.707350,8.816363,38
 3339590,Storklingertjønna,Neset (Frøya),Frøya,Trøndelag,63.762638,8.789243,37
 1857120,holmer vest for Sula,Sula,Frøya,Trøndelag,63.839759,8.421661,37
-1094456,Barmfjorden utenfor Aunet,Barmfjorden,Hitra,Trøndelag,63.61434,8.851595,36
+1094456,Barmfjorden utenfor Aunet,Barmfjorden,Hitra,Trøndelag,63.614340,8.851595,36
 356964,Norddyrøya,,Frøya,Trøndelag,63.798437,8.699231,36
 2144253,Fjellvær midtre,Fjellværsøya,Hitra,Trøndelag,63.634322,9.147365,36
 1097368,Barman,,Hitra,Trøndelag,63.627874,8.854667,36
 441254,Nordhammer gravplass,Sistranda,Frøya,Trøndelag,63.710191,8.834877,35
 813486,kulturmark ved Badstuvik,Badstuvik,Hitra,Trøndelag,63.537958,9.127341,35
 399056,Seterholmen,Norddyrøya,Frøya,Trøndelag,63.799746,8.681984,35
-439565,Breivika,Sørdyrøya,Frøya,Trøndelag,63.79357,8.662841,35
+439565,Breivika,Sørdyrøya,Frøya,Trøndelag,63.793570,8.662841,35
 635828,Sauefjøset,Titran,Frøya,Trøndelag,63.672013,8.309919,35
 2448979,høyde Ø av Storvika,Ervika (Frøya),Frøya,Trøndelag,63.742782,8.826073,35
-2139920,Jamnungsskjæra,,Frøya,Trøndelag,63.80824,8.644003,35
+2139920,Jamnungsskjæra,,Frøya,Trøndelag,63.808240,8.644003,35
 2027635,Skarsvågvatnet,Grubba,Frøya,Trøndelag,63.682959,8.658556,35
 2144249,Fjellværvågen,Fjellværsøya,Hitra,Trøndelag,63.631218,9.134034,35
 355666,Valslagvågen,,Hitra,Trøndelag,63.509523,9.250599,35
 398008,Sørbotn,Fjellværsøya,Hitra,Trøndelag,63.647125,9.104219,34
-379543,Fjære ved Stakstuvollan,Kvaløya,Frøya,Trøndelag,63.782035,8.72972,34
+379543,Fjære ved Stakstuvollan,Kvaløya,Frøya,Trøndelag,63.782035,8.729720,34
 430373,Flatøysand,Flatval,Frøya,Trøndelag,63.691624,8.776343,34
-2144478,Knarrlagsundet,Ulvøya,Hitra,Trøndelag,63.662832,9.0876,34
+2144478,Knarrlagsundet,Ulvøya,Hitra,Trøndelag,63.662832,9.087600,34
+641999,Vassøya,Mausundvær,Frøya,Trøndelag,63.854263,8.646500,33
 2158794,myr Ø av Nabeita oppvekstsenter,Nabeita,Frøya,Trøndelag,63.698742,8.796384,33
-641999,Vassøya,Mausundvær,Frøya,Trøndelag,63.854263,8.6465,33
-1020801,Merradalen,,Frøya,Trøndelag,63.698077,8.56514,33
+1020801,Merradalen,,Frøya,Trøndelag,63.698077,8.565140,33
 366837,Aunvågen,Fillingsnes,Frøya,Trøndelag,63.666813,8.481138,33
 448619,Norddolm,Dolmøya,Hitra,Trøndelag,63.652504,8.817737,32
 2151395,dyrket mark v/Høgberget,Ervika (Frøya),Frøya,Trøndelag,63.747856,8.836656,32
-424775,Ytter Børøyneset,Hestvika,Hitra,Trøndelag,63.577368,9.19255,32
+424775,Ytter Børøyneset,Hestvika,Hitra,Trøndelag,63.577368,9.192550,32
 1896743,Nordpilen,Uttian,Frøya,Trøndelag,63.772362,8.872741,32
 2155180,beiteareal v/Klubben,Klubben,Frøya,Trøndelag,63.755997,8.702735,32
 355073,Øverdalsvatnet,,Hitra,Trøndelag,63.586369,8.837275,32
-360428,Fausland,Barmfjorden,Hitra,Trøndelag,63.606482,8.856643,32
 1951725,Nordhammarvika A1,Sistranda,Frøya,Trøndelag,63.716536,8.841524,32
 2148765,sjøområdene utenfor fergeleiet,Norddyrøya,Frøya,Trøndelag,63.802363,8.680951,32
-2142245,Ml. Heia og Slettringen,Titran,Frøya,Trøndelag,63.667897,8.286635,32
+641983,kirkegården,Sula,Frøya,Trøndelag,63.847188,8.455743,31
 3169485,Tellesone 3,molo nord,Frøya,Trøndelag,63.778114,8.318229,31
 2149210,dyrket mark S av fylkesveg,Daløya,Frøya,Trøndelag,63.679032,8.392843,31
 352370,Nordskaget,,Frøya,Trøndelag,63.705782,8.563586,31
 2158801,V av veg til Frøya renovasjon,Kvisten,Frøya,Trøndelag,63.690955,8.434201,31
 666352,Bringebærhagen,Titran,Frøya,Trøndelag,63.669064,8.311932,31
-641983,kirkegården,Sula,Frøya,Trøndelag,63.847188,8.455743,31
 439798,Hopsjø,Melandsjø,Hitra,Trøndelag,63.627356,8.719524,31
 454926,Langstraumen,Aukøya,Frøya,Trøndelag,63.777733,8.755906,30
 427063,Krabbefabrikken,Kuøya,Hitra,Trøndelag,63.651758,9.028024,30
 2268261,Pila,Uttian,Frøya,Trøndelag,63.771754,8.870423,30
-659888,dam Kjervågsund øst,Titran,Frøya,Trøndelag,63.685468,8.34667,30
+659888,dam Kjervågsund øst,Titran,Frøya,Trøndelag,63.685468,8.346670,30
 2151406,bukt v/Viksvaet sør,Aukaøya,Frøya,Trøndelag,63.777697,8.748441,30
 2404529,Skardet,Sistranda,Frøya,Trøndelag,63.738732,8.829532,30
-1356250,Melkestadvatnet,Hammarstaddalen,Hitra,Trøndelag,63.606131,8.89024,30
+1356250,Melkestadvatnet,Hammarstaddalen,Hitra,Trøndelag,63.606131,8.890240,30
 356970,Dragsneset,Kvaløya,Frøya,Trøndelag,63.788836,8.744255,30
 2447778,Norddal,Sandvika (Frøya),Frøya,Trøndelag,63.745611,8.687859,30
-2149209,Daløya øst,Daløya,Frøya,Trøndelag,63.68131,8.398511,30
+2149209,Daløya øst,Daløya,Frøya,Trøndelag,63.681310,8.398511,30
 2144041,dyrket mark v/Sjønhalsen,Kvernøya,Frøya,Trøndelag,63.788749,8.713362,30
 2154772,Øvervågen,Skardsvågen,Frøya,Trøndelag,63.689291,8.685352,30
 455790,Nesa,Nordbotn,Hitra,Trøndelag,63.653704,9.133315,30
@@ -351,7 +338,6 @@ id,lokalitet,hovedlokalitet,kommune,fylke,lat,lon,count
 1874792,Staulvågen,Uttian,Frøya,Trøndelag,63.778288,8.870603,30
 2502799,V av Kongenstjønna,,Frøya,Trøndelag,63.749259,8.814279,29
 666361,Haugen,Titran,Frøya,Trøndelag,63.671602,8.312983,29
-3307530,Kya,Kya,Frøya,Trøndelag,63.773727,8.31203,29
 2144057,bekkedal v/Ulvan,Ulvøya,Hitra,Trøndelag,63.673961,9.039567,29
 1834838,Grønnlandsskjæret,Jensøya,Hitra,Trøndelag,63.644713,9.018699,29
 2459989,Dyrvik nord,Dyrvik,Frøya,Trøndelag,63.759127,8.811655,29
@@ -363,28 +349,27 @@ id,lokalitet,hovedlokalitet,kommune,fylke,lat,lon,count
 2155173,skog v/avkjøring Vikasund,,Frøya,Trøndelag,63.792483,8.786727,29
 2397051,Nordskaget NØ,Nordskaget,Frøya,Trøndelag,63.706888,8.564843,28
 3169508,Tellesone 2,molo sør,Frøya,Trøndelag,63.768797,8.324912,28
-2142193,Østheim,,Frøya,Trøndelag,63.68689,8.448754,28
+2142193,Østheim,,Frøya,Trøndelag,63.686890,8.448754,28
 2154748,Stormyra,,Frøya,Trøndelag,63.694634,8.726971,28
 418649,Litlsandvatnet,Grefsnes,Hitra,Trøndelag,63.550073,8.473664,28
 2154763,skog v/Daløya,Håvika,Frøya,Trøndelag,63.680163,8.393427,28
 352366,Høgset,,Frøya,Trøndelag,63.690047,8.447865,28
 2149230,sjøområdene utenfor Lomsøya,Sula,Frøya,Trøndelag,63.848744,8.510253,28
 2447774,Innersetra,Kvaløya,Frøya,Trøndelag,63.773946,8.706732,28
-2144061,Ulvan,Ulvøya,Hitra,Trøndelag,63.674937,9.039567,28
 2446926,Dragsneset sør,,Frøya,Trøndelag,63.787555,8.746429,27
 431241,Jøsnøya,,Hitra,Trøndelag,63.509395,9.085201,27
-3339564,Gamle minkfarmen,Uttian,Frøya,Trøndelag,63.77732,8.881464,27
+3339564,Gamle minkfarmen,Uttian,Frøya,Trøndelag,63.777320,8.881464,27
 2141160,Gården,Uttian,Frøya,Trøndelag,63.766196,8.865339,27
 2448158,kulturmark langs Hallarelva,Hallarn,Frøya,Trøndelag,63.677837,8.615212,27
 2114008,vest for Vollavatnet,Strømøya,Frøya,Trøndelag,63.779372,8.764171,27
 2154776,Frøya sykehjem,Nordhammaren,Frøya,Trøndelag,63.704628,8.827421,27
-1368062,Kvistaveien mot Nordhaug,,Frøya,Trøndelag,63.697229,8.45497,27
+1368062,Kvistaveien mot Nordhaug,,Frøya,Trøndelag,63.697229,8.454970,27
 2448191,beite v/Strømøya,Strømøya,Frøya,Trøndelag,63.778316,8.774339,27
 2189269,dyrkamark v/Nordhammaren,Nordhammaren,Frøya,Trøndelag,63.706379,8.828499,27
 2413884,sjøområdene v/Nesset kai,,Frøya,Trøndelag,63.769305,8.825004,26
 543132,Rundhaugtjønna,Titran,Frøya,Trøndelag,63.677761,8.334282,26
 782278,Nordhammaren,,Frøya,Trøndelag,63.702889,8.826756,26
-1139299,Lyktsundet,Titran,Frøya,Trøndelag,63.663621,8.29039,26
+1139299,Lyktsundet,Titran,Frøya,Trøndelag,63.663621,8.290390,26
 2142183,Dyrvikveien,Dyrvik,Frøya,Trøndelag,63.756918,8.824762,26
 2155201,myr v/avkjøring Måsøyvalen,Kverva,Frøya,Trøndelag,63.702598,8.521455,26
 646071,Jevikvatnet,Jevik,Hitra,Trøndelag,63.635583,8.979578,26
@@ -392,20 +377,19 @@ id,lokalitet,hovedlokalitet,kommune,fylke,lat,lon,count
 642009,granplantningen,Sula,Frøya,Trøndelag,63.846266,8.450658,26
 433231,Middammen,,Hitra,Trøndelag,63.549056,8.594533,26
 452400,Husvatnet,Flatval,Frøya,Trøndelag,63.691691,8.747507,26
-2116774,sjøområder nord for Sørøyan,Uttian,Frøya,Trøndelag,63.77732,8.829846,26
-1885536,Gaustadbrygga,Titran,Frøya,Trøndelag,63.66645,8.306102,26
+2116774,sjøområder nord for Sørøyan,Uttian,Frøya,Trøndelag,63.777320,8.829846,26
+1885536,Gaustadbrygga,Titran,Frøya,Trøndelag,63.666450,8.306102,26
 2152172,Nordhammarvika industriområde,Sistranda,Frøya,Trøndelag,63.711575,8.841363,25
 383046,Korsholmen,Titran,Frøya,Trøndelag,63.664283,8.304125,25
-643195,Hallaren kirke,Storhallaren,Frøya,Trøndelag,63.6771,8.618617,25
+643195,Hallaren kirke,Storhallaren,Frøya,Trøndelag,63.677100,8.618617,25
 358015,Brattåstjørna,,Hitra,Trøndelag,63.529847,9.059007,25
 646076,Sjømyråsen naturreservat,,Hitra,Trøndelag,63.625959,8.731616,25
 2413881,Sørøyan øst,Uttian,Frøya,Trøndelag,63.770821,8.845648,25
-1368055,Avkjøring mot Avløysa,,Frøya,Trøndelag,63.671802,8.56682,25
+1368055,Avkjøring mot Avløysa,,Frøya,Trøndelag,63.671802,8.566820,25
 2397040,Armen,Dyrvik,Frøya,Trøndelag,63.757876,8.821806,24
 1961587,bukt ved Hylla,,Frøya,Trøndelag,63.774779,8.782721,24
 2149243,bukt v/Fitjan,Kvaløya,Frøya,Trøndelag,63.770551,8.704082,24
 2144842,dyrket mark v/Sletta,Svellingen,Frøya,Trøndelag,63.793808,8.805376,24
-1197892,Korsan,Daløya,Frøya,Trøndelag,63.686822,8.391594,24
 2453724,kulturmark v/Lundeveien,Hammarvika,Frøya,Trøndelag,63.703422,8.809958,24
 397694,Rotthaugen,Akset,Hitra,Trøndelag,63.505789,8.943519,24
 1368051,Flatval fotballbane,,Frøya,Trøndelag,63.691938,8.774133,24
@@ -418,8 +402,7 @@ id,lokalitet,hovedlokalitet,kommune,fylke,lat,lon,count
 2125294,sjøen utenfor Båtvika,Norddyrøya,Frøya,Trøndelag,63.802672,8.697686,23
 2149215,bukt v/Sjønhalsen,,Frøya,Trøndelag,63.786999,8.713541,23
 431124,Ostjønna,,Hitra,Trøndelag,63.543238,9.059483,23
-2277524,Setra,Norddyrøya,Frøya,Trøndelag,63.798786,8.684167,23
-2144257,dyrket mark Fjellvær sør,Fjellværsøya,Hitra,Trøndelag,63.631529,9.14387,23
+2144257,dyrket mark Fjellvær sør,Fjellværsøya,Hitra,Trøndelag,63.631529,9.143870,23
 1904238,Hammarvikbukta boligområde (reguleringsplan),Hammarvika,Frøya,Trøndelag,63.697221,8.814907,23
 855115,Tjern V av Nyjord,Titran,Frøya,Trøndelag,63.674077,8.321274,23
 2438882,Fillingsnesveien 209-217,Bekken,Frøya,Trøndelag,63.673945,8.580133,22
@@ -428,8 +411,7 @@ id,lokalitet,hovedlokalitet,kommune,fylke,lat,lon,count
 358591,Jensøya,,Hitra,Trøndelag,63.648923,9.020523,22
 430370,sandvika. jordene,Sandvika (Frøya),Frøya,Trøndelag,63.752914,8.693949,22
 355072,Snæringstjønna,,Hitra,Trøndelag,63.580646,8.826145,22
-2446929,sjøområdene ved Dragsneset,,Frøya,Trøndelag,63.792713,8.75066,22
-1150033,Bustbergvannet,Strømøya,Frøya,Trøndelag,63.781622,8.784463,22
+2446929,sjøområdene ved Dragsneset,,Frøya,Trøndelag,63.792713,8.750660,22
 2422428,Madsvågveien nord,Dyrvik,Frøya,Trøndelag,63.761903,8.813704,22
 2134583,Hammarvågen,Nordhammaren,Frøya,Trøndelag,63.699538,8.823468,22
 380635,Holmen,Titran,Frøya,Trøndelag,63.666713,8.302194,22
@@ -438,24 +420,21 @@ id,lokalitet,hovedlokalitet,kommune,fylke,lat,lon,count
 2144043,Sørvika,Kvernøya,Frøya,Trøndelag,63.788114,8.736781,22
 767882,Wingan-huset,Esnesbulandet,Frøya,Trøndelag,63.669463,8.322936,22
 2158796,Dalvikern,Grubba,Frøya,Trøndelag,63.682668,8.653193,22
-2144242,Nordbotn,Fjellværsøya,Hitra,Trøndelag,63.652687,9.13318,22
-353347,Norddal,Sandvika (Frøya),Frøya,Trøndelag,63.745385,8.684885,22
 2157561,Hellesvikkrysset øst,Hellesvika,Frøya,Trøndelag,63.780694,8.813048,21
 946851,vågen S for Titran bro,Titran,Frøya,Trøndelag,63.669311,8.313701,21
-355039,Norddolmvågen,Dolmøya,Hitra,Trøndelag,63.65179,8.798495,21
+355039,Norddolmvågen,Dolmøya,Hitra,Trøndelag,63.651790,8.798495,21
 2347743,Hesjan vest,Uttian,Frøya,Trøndelag,63.769479,8.870657,21
 763864,Sula indre havn,Sula,Frøya,Trøndelag,63.846214,8.460387,21
 946856,vågen N for Titran bro,Titran,Frøya,Trøndelag,63.670069,8.312776,21
-2146671,Saltnesvågen/Gården,Uttian,Frøya,Trøndelag,63.76703,8.861242,21
+2146671,Saltnesvågen/Gården,Uttian,Frøya,Trøndelag,63.767030,8.861242,21
 2153912,dyrket mark v/Lyngåsveien,Nordhammaren,Frøya,Trøndelag,63.703533,8.816228,21
 355031,Fjellværsvatnet,Fjellværsøya,Hitra,Trøndelag,63.639288,9.132013,21
-2155253,Nabeita langs Melkåa,Nabeita,Frøya,Trøndelag,63.69582,8.787374,21
-1368056,Fillingsneset,,Frøya,Trøndelag,63.66496,8.499554,21
+2155253,Nabeita langs Melkåa,Nabeita,Frøya,Trøndelag,63.695820,8.787374,21
 3209407,Salatskjæra,,Frøya,Trøndelag,63.899859,8.571536,21
 2523741,Engelskmannsvegen,Akset,Hitra,Trøndelag,63.512056,8.934249,21
 2277284,Seterholmen øst,Norddyrøya,Frøya,Trøndelag,63.799642,8.683681,21
-2438888,Hammarbergskjæret,,Frøya,Trøndelag,63.70645,8.844839,21
-2144806,Litlvarden vest,Ulvøya,Hitra,Trøndelag,63.67118,9.096781,21
+2438888,Hammarbergskjæret,,Frøya,Trøndelag,63.706450,8.844839,21
+2144806,Litlvarden vest,Ulvøya,Hitra,Trøndelag,63.671180,9.096781,21
 1887065,Steinabukta,Fjellværsøya,Hitra,Trøndelag,63.651547,9.138867,21
 1368064,Korsheiveien,,Frøya,Trøndelag,63.679661,8.388576,21
 352420,takrørsumpen,Flatval,Frøya,Trøndelag,63.694685,8.760155,21
@@ -467,49 +446,36 @@ id,lokalitet,hovedlokalitet,kommune,fylke,lat,lon,count
 356969,Sjønhalsen,Kvaløya,Frøya,Trøndelag,63.787511,8.714916,20
 355061,Gryta,,Hitra,Trøndelag,63.545671,8.551953,20
 1900379,Sørøyan sør,Uttian,Frøya,Trøndelag,63.764425,8.836081,20
-2154766,vann N for vegen v/Veisan,,Frøya,Trøndelag,63.692257,8.464654,20
-352404,Aunvatnet,,Frøya,Trøndelag,63.716584,8.617071,20
-371440,Solbakken,Barmfjorden,Hitra,Trøndelag,63.601426,8.861117,20
 467909,Kveldro gravplass,Kvaløya,Frøya,Trøndelag,63.771341,8.701711,20
 2149245,Leirvika sør,Kvaløya,Frøya,Trøndelag,63.763015,8.678372,20
-1368080,Myra,,Frøya,Trøndelag,63.753832,8.69509,20
-1877372,Vågavatnet,,Frøya,Trøndelag,63.75898,8.790824,20
+1877372,Vågavatnet,,Frøya,Trøndelag,63.758980,8.790824,20
 3129832,Frøyfjorden utenfor Hammarvika,Hammarvika,Frøya,Trøndelag,63.686292,8.853688,20
-2879294,sjøområdene utenfor Hitra hurtigbåtterminal,Sandstad,Hitra,Trøndelag,63.5175,9.114666,19
+2879294,sjøområdene utenfor Hitra hurtigbåtterminal,Sandstad,Hitra,Trøndelag,63.517500,9.114666,19
 2278804,Øysanden,Flatval,Frøya,Trøndelag,63.691429,8.775328,19
 3339568,Litlsørøya,Uttian,Frøya,Trøndelag,63.763658,8.827448,19
-1139303,Sjøområdet ml. Heia og Stabben,Titran,Frøya,Trøndelag,63.665127,8.300289,19
-2413870,vest av Skjelsøyveien,Uttian,Frøya,Trøndelag,63.769475,8.83971,19
-2151396,vegkant v/Ryphaugan,Uttian,Frøya,Trøndelag,63.77154,8.841372,19
+2413870,vest av Skjelsøyveien,Uttian,Frøya,Trøndelag,63.769475,8.839710,19
+2151396,vegkant v/Ryphaugan,Uttian,Frøya,Trøndelag,63.771540,8.841372,19
 2144203,Grindskardet,Ulvøya,Hitra,Trøndelag,63.671885,9.049449,19
 2519194,Vavika vest,Neset (Frøya),Frøya,Trøndelag,63.763082,8.800786,19
-352417,Sandvatnet,,Frøya,Trøndelag,63.699406,8.747543,19
 1645100,Vann N av riksveien,Malmmyran,Frøya,Trøndelag,63.696512,8.481426,19
-423591,Tranholmen,Sandstad,Hitra,Trøndelag,63.51603,9.117801,19
+423591,Tranholmen,Sandstad,Hitra,Trøndelag,63.516030,9.117801,19
 1299382,Kulturmark ved Inner Singsvatnet,Inner Singsvatnet,Frøya,Trøndelag,63.684683,8.610684,19
 2144233,Botnvika,Fjellværsøya,Hitra,Trøndelag,63.645622,9.127288,19
 2144817,Tuvik,Fjellværsøya,Hitra,Trøndelag,63.649378,9.105962,19
-2921430,Hitra kirke,Melandsjø,Hitra,Trøndelag,63.628301,8.726971,19
 3169497,Tellesone 1,Kya indre,Frøya,Trøndelag,63.773533,8.311653,18
 2154230,bukt S av Kalvøya,Sandstad,Hitra,Trøndelag,63.520336,9.105261,18
 372957,Laksvatnet,,Hitra,Trøndelag,63.577228,8.957632,18
 2154773,dyrket mark S av Hamarvik holdeplass,Nordhammaren,Frøya,Trøndelag,63.702837,8.819462,18
-643206,Slettaskogen,,Frøya,Trøndelag,63.771318,8.780816,18
-1360503,Hammaren,Hammarvika,Frøya,Trøndelag,63.701221,8.815213,18
-2155202,ved Kverva nr. 90,Kverva,Frøya,Trøndelag,63.70429,8.53157,18
+2155202,ved Kverva nr. 90,Kverva,Frøya,Trøndelag,63.704290,8.531570,18
 1368087,Leirvika jorde,,Frøya,Trøndelag,63.764238,8.679334,18
-1367971,Krysset mot Kystbarnehage,,Frøya,Trøndelag,63.72869,8.830592,18
+1367971,Krysset mot Kystbarnehage,,Frøya,Trøndelag,63.728690,8.830592,18
 450958,Viksvaet,Strømøya,Frøya,Trøndelag,63.780789,8.756409,18
-2144037,dyrket mark v/Klovasskardet,Kvernøya,Frøya,Trøndelag,63.76915,8.690158,18
-2144213,Solbakken,Fjellværsøya,Hitra,Trøndelag,63.650678,9.114513,18
+2144037,dyrket mark v/Klovasskardet,Kvernøya,Frøya,Trøndelag,63.769150,8.690158,18
 2144200,jorder Ø av Vikavatnet,Ulvøya,Hitra,Trøndelag,63.665873,9.066615,18
 1368097,Innerst i Saltnesvågen,,Frøya,Trøndelag,63.767411,8.865474,18
 874906,havet V for Kya,,Frøya,Trøndelag,63.802859,8.201044,18
 642350,Havmyran naturreservat,,Hitra,Trøndelag,63.504106,8.628121,18
-1362822,Korsholmen,Titran,Frøya,Trøndelag,63.666108,8.295025,18
-423986,Bukta,Hestvika,Hitra,Trøndelag,63.550557,9.1763,17
-580495,Moldhaugen,Titran,Frøya,Trøndelag,63.667977,8.312884,17
-2397055,Måsøyvalveien øst,Måsøyvalen,Frøya,Trøndelag,63.70497,8.518338,17
+2397055,Måsøyvalveien øst,Måsøyvalen,Frøya,Trøndelag,63.704970,8.518338,17
 2413546,Kåvika,Nordskaget,Frøya,Trøndelag,63.708337,8.552536,17
 439686,Bårbukta,Dolmsundet vest,Hitra,Trøndelag,63.623756,8.691551,17
 2447777,Sandvika,Sandvika (Frøya),Frøya,Trøndelag,63.747622,8.685613,17
@@ -517,109 +483,96 @@ id,lokalitet,hovedlokalitet,kommune,fylke,lat,lon,count
 2448193,dyrket mark S av Vollavatnet,,Frøya,Trøndelag,63.780682,8.774295,17
 428138,Moa,Sandstad,Hitra,Trøndelag,63.531653,9.113337,17
 2413886,Nordfrøyveien 975,Neset (Frøya),Frøya,Trøndelag,63.772529,8.815734,17
-2517827,Stakstuvollan,Kvaløya,Frøya,Trøndelag,63.784353,8.724285,17
 2144801,Selvågan sør,,Hitra,Trøndelag,63.667893,9.092253,17
 1887043,Laurdagsvatnet,Ulvøya,Hitra,Trøndelag,63.671431,9.063022,17
-1368060,Avkjøring mot Veisan,,Frøya,Trøndelag,63.6925,8.465076,17
+1368060,Avkjøring mot Veisan,,Frøya,Trøndelag,63.692500,8.465076,17
 1877715,innmark øst av Storklingertjønna,,Frøya,Trøndelag,63.763146,8.795369,17
-3071023,havområdene vest for Sula - Sula pelagic 2025,,Frøya,Trøndelag,63.831584,8.04789,17
-2435056,Stølan nord,Svellingen,Frøya,Trøndelag,63.791352,8.80366,16
+2435056,Stølan nord,Svellingen,Frøya,Trøndelag,63.791352,8.803660,16
 2413869,Breimyrringen 3-5,Dyrvik,Frøya,Trøndelag,63.756442,8.821205,16
-2151402,skog v/Svellingen,Svellingen,Frøya,Trøndelag,63.79585,8.801513,16
+2151402,skog v/Svellingen,Svellingen,Frøya,Trøndelag,63.795850,8.801513,16
 2792078,Valaveien 6,Valen,Frøya,Trøndelag,63.721496,8.613164,16
 3000689,Staulan øst,Uttian,Frøya,Trøndelag,63.775419,8.872139,16
 357651,Engdal,,Frøya,Trøndelag,63.691325,8.595251,16
-2797542,sjøområdet ml. Heia og Stabben,,Frøya,Trøndelag,63.665052,8.299086,16
 418081,Rambjøra,Svellingen,Frøya,Trøndelag,63.792836,8.805403,16
 2523747,Hifjellvatnet,,Hitra,Trøndelag,63.521025,8.915132,16
 352422,Nabeita,,Frøya,Trøndelag,63.695788,8.785595,16
-355074,Vollavatnet,,Hitra,Trøndelag,63.592758,8.845091,16
 2823884,Vollavågen v/Solbakken,Barmfjorden,Hitra,Trøndelag,63.601243,8.864153,16
 2152905,Skjelsøya vest,Uttian,Frøya,Trøndelag,63.774021,8.843105,16
 2153891,Hopavatnet,Melandsjø,Hitra,Trøndelag,63.625452,8.718806,16
 2151397,Meliheia,Uttian,Frøya,Trøndelag,63.768407,8.846959,16
 2422429,Åkervika,Dyrvik,Frøya,Trøndelag,63.756636,8.828544,16
-2402801,Grindvika,Dyrvik,Frøya,Trøndelag,63.759222,8.820612,16
-443833,Vollavatnet,Strømøya,Frøya,Trøndelag,63.782662,8.771914,16
-1884662,Bekkaskaget,Sistranda,Frøya,Trøndelag,63.727799,8.83556,16
 2158809,dyrket mark S av Nabeita oppvekstsenter,Nabeita,Frøya,Trøndelag,63.696405,8.791327,16
 642108,Skagavatnet,,Frøya,Trøndelag,63.681501,8.411591,16
 2352982,Grønnhaugvågen,Stabben,Frøya,Trøndelag,63.664231,8.320025,16
 2413890,Grønnholman,Hammarvika,Frøya,Trøndelag,63.689223,8.823414,16
 1897108,vanndammene,Sula,Frøya,Trøndelag,63.841538,8.459309,16
-1168447,Otersundet,Titran,Frøya,Trøndelag,63.66384,8.282467,16
+1168447,Otersundet,Titran,Frøya,Trøndelag,63.663840,8.282467,16
 3209412,Store Skarvholmen,,Frøya,Trøndelag,63.883137,8.511681,16
 3209410,Kjuka,,Frøya,Trøndelag,63.890594,8.541029,16
 2144042,Urdbergmyra langs Dragsnesveien,Kvernøya,Frøya,Trøndelag,63.789011,8.728202,16
-2149213,Sørvika vest,,Frøya,Trøndelag,63.78736,8.732577,16
+2149213,Sørvika vest,,Frøya,Trøndelag,63.787360,8.732577,16
 1835081,sjøområdene utenfor Fjellvær,Fjellværsøya,Hitra,Trøndelag,63.616212,9.143924,16
 398046,Fotballbane,Fjellværsøya,Hitra,Trøndelag,63.640609,9.127279,16
 2133882,Purkskaget,Mausundvær,Frøya,Trøndelag,63.870793,8.658951,16
-1367977,Nordhammarvik gravsted,,Frøya,Trøndelag,63.710628,8.83291,16
+1367977,Nordhammarvik gravsted,,Frøya,Trøndelag,63.710628,8.832910,16
 1368054,Ner Nesadalen ved Fossen,,Frøya,Trøndelag,63.683628,8.648279,16
 433230,Håvikvatnet nord,,Hitra,Trøndelag,63.543574,8.615733,16
 951837,Svartbergvatnet øst,,Hitra,Trøndelag,63.601263,8.679432,16
 636610,Krysset,Kvisten,Frøya,Trøndelag,63.690139,8.456291,16
 435728,Terningsmoen,,Hitra,Trøndelag,63.515818,9.051649,16
-1516443,bekk fra Tungvågvatnet,,Frøya,Trøndelag,63.738024,8.67283,15
-689553,vestre vann,Malmmyran,Frøya,Trøndelag,63.69377,8.480249,15
-3268693,sjøområdene utenfor Nordhammarvika,Nordhammaren,Frøya,Trøndelag,63.70725,8.860533,15
+1516443,bekk fra Tungvågvatnet,,Frøya,Trøndelag,63.738024,8.672830,15
+689553,vestre vann,Malmmyran,Frøya,Trøndelag,63.693770,8.480249,15
+3268693,sjøområdene utenfor Nordhammarvika,Nordhammaren,Frøya,Trøndelag,63.707250,8.860533,15
 352399,Madsvågen,Dyrvik,Frøya,Trøndelag,63.762411,8.806814,15
 2152264,Åburden,Uttian,Frøya,Trøndelag,63.765548,8.864584,15
-662840,Grasbergvatnet,Titran,Frøya,Trøndelag,63.674949,8.33571,15
+662840,Grasbergvatnet,Titran,Frøya,Trøndelag,63.674949,8.335710,15
 380665,Grefsnes,,Hitra,Trøndelag,63.555682,8.483267,15
 1853668,Ørnflaugvågen nord,Sørdyrøya,Frøya,Trøndelag,63.791189,8.648027,15
 1130999,Kråkreirmyra,Margrethes Minde,Hitra,Trøndelag,63.614212,8.720971,15
 646049,Drågavatnet,,Hitra,Trøndelag,63.568928,9.129839,15
-2152257,Nygård (Sørøyan),Uttian,Frøya,Trøndelag,63.767081,8.83158,15
-457827,Frøyfjorden,,Frøya,Trøndelag,63.640385,8.331407,15
-2153910,Øra,Straum (Hitra),Hitra,Trøndelag,63.56121,8.746402,15
+2152257,Nygård (Sørøyan),Uttian,Frøya,Trøndelag,63.767081,8.831580,15
 2482942,Skog ved Vikankrysset,Strømøya,Frøya,Trøndelag,63.792649,8.785541,15
 2413872,Staulan vest,Uttian,Frøya,Trøndelag,63.773438,8.867468,15
-2149211,Tuvnesvatnet v/Asplia,Tuvnesvatnet,Frøya,Trøndelag,63.72838,8.641281,15
+2149211,Tuvnesvatnet v/Asplia,Tuvnesvatnet,Frøya,Trøndelag,63.728380,8.641281,15
 352429,Inner Singsvatnet,,Frøya,Trøndelag,63.683445,8.615104,15
 1368067,Fredheim,,Frøya,Trøndelag,63.673989,8.328038,15
-1368078,Sandvika jorde,,Frøya,Trøndelag,63.7508,8.684822,15
+1368078,Sandvika jorde,,Frøya,Trøndelag,63.750800,8.684822,15
 352400,Neset (Frøya),,Frøya,Trøndelag,63.770798,8.818285,15
 3209415,Geitskjæra,,Frøya,Trøndelag,63.885696,8.469829,15
 1894011,kulturmark Ø av Vollavatnet,,Frøya,Trøndelag,63.775768,8.697363,15
 2347739,Storholmbukta sør,Aukaøya,Frøya,Trøndelag,63.789479,8.743249,15
 2823533,vest av Storheia,Fjellværsøya,Hitra,Trøndelag,63.654202,9.112429,15
-2144797,sjøområdene utenfor Ulvan,Ulvøya,Hitra,Trøndelag,63.671953,9.02823,15
+2144797,sjøområdene utenfor Ulvan,Ulvøya,Hitra,Trøndelag,63.671953,9.028230,15
 2144445,skog v/Selvågan,Ulvøya,Hitra,Trøndelag,63.671367,9.104174,15
-2189273,Hammaren,Hammarvika,Frøya,Trøndelag,63.70218,8.817387,15
-355062,Tonningen,,Hitra,Trøndelag,63.51375,8.425928,15
-355030,Nordbotn,Fjellværsøya,Hitra,Trøndelag,63.648549,9.136531,15
+355062,Tonningen,,Hitra,Trøndelag,63.513750,8.425928,15
 1166989,Vest av Fiskarheimen,Titran,Frøya,Trøndelag,63.667945,8.303883,15
-2952029,Skolehavna,Sistranda,Frøya,Trøndelag,63.731159,8.83414,15
+2952029,Skolehavna,Sistranda,Frøya,Trøndelag,63.731159,8.834140,15
 2142192,Valavågen,Valen,Frøya,Trøndelag,63.723982,8.607037,14
 430375,Nordhammervika,Hammarvika,Frøya,Trøndelag,63.704938,8.817243,14
 2422456,Ervikskaget,Ervika (Frøya),Frøya,Trøndelag,63.750995,8.834527,14
 2422386,sjøområdene Ø av Uttian,Uttian,Frøya,Trøndelag,63.783765,8.908557,14
 2151407,sjødam v/Langstraumen,Aukaøya,Frøya,Trøndelag,63.777645,8.754073,14
-2424180,COOP Extra,Siholmen,Frøya,Trøndelag,63.735349,8.83344,14
-353349,Gurvikdalen,,Frøya,Trøndelag,63.765723,8.734939,14
-2448970,Auriklakken,Ervika (Frøya),Frøya,Trøndelag,63.745289,8.82469,14
+2424180,COOP Extra,Siholmen,Frøya,Trøndelag,63.735349,8.833440,14
+2448970,Auriklakken,Ervika (Frøya),Frøya,Trøndelag,63.745289,8.824690,14
 361396,Vold-huset,Titran,Frøya,Trøndelag,63.671041,8.309506,14
-356955,Klumpheia,Kverva,Frøya,Trøndelag,63.705332,8.54394,14
+356955,Klumpheia,Kverva,Frøya,Trøndelag,63.705332,8.543940,14
 1368083,Strømøya - Vollavatnet,,Frøya,Trøndelag,63.779642,8.771079,14
 1368070,Høyneset-Hamburglandet,,Frøya,Trøndelag,63.671579,8.303586,14
 418133,Sandholmen,Titran,Frøya,Trøndelag,63.663701,8.294971,14
-1293855,Stormyra,,Frøya,Trøndelag,63.69332,8.72813,14
-427340,Lysløypa Sandstad,Hitra,Hitra,Trøndelag,63.523548,9.06843,14
+427340,Lysløypa Sandstad,Hitra,Hitra,Trøndelag,63.523548,9.068430,14
 2825104,dyrket mark ved Reksa,Fjellværsøya,Hitra,Trøndelag,63.645307,9.166319,14
-2144262,dyrket mark v/Rotvikvarden,Fjellværsøya,Hitra,Trøndelag,63.637537,9.16623,14
-1368089,Kvernøystrømmen - Holet,,Frøya,Trøndelag,63.78665,8.682343,14
+2144262,dyrket mark v/Rotvikvarden,Fjellværsøya,Hitra,Trøndelag,63.637537,9.166230,14
+1368089,Kvernøystrømmen - Holet,,Frøya,Trøndelag,63.786650,8.682343,14
 1368096,Hellesvikakrysset,,Frøya,Trøndelag,63.780571,8.810209,14
 1368059,dyrket mark ved Singsvannet,,Frøya,Trøndelag,63.684719,8.611017,14
 355045,Kvernhusvika,Dolmsundet,Hitra,Trøndelag,63.637813,8.804918,14
 1139275,Sjøområdet ml. Sandholmen og Stabben,Titran,Frøya,Trøndelag,63.661927,8.300047,14
 2144038,Tangskjæret,Kvernøya,Frøya,Trøndelag,63.760473,8.674635,14
-2144034,myr v/Dyrøy grendahus,,Frøya,Trøndelag,63.790935,8.66585,14
-2155186,Husvika SV,Nordskaget,Frøya,Trøndelag,63.707612,8.57645,14
+2144034,myr v/Dyrøy grendahus,,Frøya,Trøndelag,63.790935,8.665850,14
+2155186,Husvika SV,Nordskaget,Frøya,Trøndelag,63.707612,8.576450,14
 355059,Hestnes,,Hitra,Trøndelag,63.585789,8.608996,14
 2189288,Nabeita øst,Nabeita,Frøya,Trøndelag,63.693993,8.796285,14
-2413550,Haustnatta,Nordskaget,Frøya,Trøndelag,63.70813,8.558825,13
+2413550,Haustnatta,Nordskaget,Frøya,Trøndelag,63.708130,8.558825,13
 3268690,sjøområdene utenfor Nabeita,Nabeita,Frøya,Trøndelag,63.679988,8.791443,13
 2347744,ved Staulveien 93,Uttian,Frøya,Trøndelag,63.774621,8.867279,13
 2442106,Fiskarheimen,Titran,Frøya,Trøndelag,63.667877,8.305437,13
@@ -630,18 +583,14 @@ id,lokalitet,hovedlokalitet,kommune,fylke,lat,lon,count
 911644,Berget,,Hitra,Trøndelag,63.664721,9.077754,13
 2518884,V av Neset grendahus,Neset (Frøya),Frøya,Trøndelag,63.766029,8.810937,13
 2253918,Jakthaugen vest,Uttian,Frøya,Trøndelag,63.766569,8.871645,13
-2268286,Nordsvaveien allé,Uttian,Frøya,Trøndelag,63.774966,8.87893,13
+2268286,Nordsvaveien allé,Uttian,Frøya,Trøndelag,63.774966,8.878930,13
 1961556,Strømøyvågen øst,Strømøya,Frøya,Trøndelag,63.776994,8.788632,13
 2189272,Hammarvollen,Nordhammaren,Frøya,Trøndelag,63.704477,8.823343,13
-1368090,Innerst i Staulsvågen,,Frøya,Trøndelag,63.78415,8.788263,13
+1368090,Innerst i Staulsvågen,,Frøya,Trøndelag,63.784150,8.788263,13
 580500,Langberget,Titran,Frøya,Trøndelag,63.669303,8.352401,13
 1368102,V for Nordpilen,,Frøya,Trøndelag,63.772632,8.868932,13
 2144036,Kutjønnmyra,Kvernøya,Frøya,Trøndelag,63.770913,8.694398,13
-1368076,Seterdalen,,Frøya,Trøndelag,63.74432,8.681876,13
 641984,Fyrskogen,Sula,Frøya,Trøndelag,63.846705,8.455033,13
-2144837,Stabbursdalen,Gurvikdalen,Frøya,Trøndelag,63.760505,8.722156,13
-2503981,Kvistaveien 218-232,Kvisten,Frøya,Trøndelag,63.702801,8.449859,13
-2487010,Gurvikdalen,,Frøya,Trøndelag,63.769781,8.729837,13
 2144798,dyrket mark langs Grøndalsveien,Ulvøya,Hitra,Trøndelag,63.665143,9.068385,13
 2144256,Litlevågen,Fjellværsøya,Hitra,Trøndelag,63.632583,9.150653,13
 2144215,Kastvika,Fjellværsøya,Hitra,Trøndelag,63.649211,9.110291,13
@@ -650,23 +599,21 @@ id,lokalitet,hovedlokalitet,kommune,fylke,lat,lon,count
 1368082,Middagstjønna,,Frøya,Trøndelag,63.770111,8.774618,13
 2397065,Grønnberget,Flatval,Frøya,Trøndelag,63.693113,8.759859,13
 643199,Vassbukta,Kverva,Frøya,Trøndelag,63.702156,8.531749,13
-403255,Flesa,Fjellværøya øst,Hitra,Trøndelag,63.64409,9.225635,13
-643196,Hallarvatnet,Storhallaren,Frøya,Trøndelag,63.67843,8.606606,13
+403255,Flesa,Fjellværøya øst,Hitra,Trøndelag,63.644090,9.225635,13
+643196,Hallarvatnet,Storhallaren,Frøya,Trøndelag,63.678430,8.606606,13
 2664716,Svankilen,,Hitra,Trøndelag,63.525979,8.434004,13
 1728726,Kreklingveien 4B (virvelløse),Sistranda,Frøya,Trøndelag,63.724801,8.829182,13
-1769233,Staulan,Uttian,Frøya,Trøndelag,63.773446,8.871124,13
-2518563,Stutvassdalen,øvre del,Frøya,Trøndelag,63.71181,8.699357,12
 352431,Storhallaren,,Frøya,Trøndelag,63.674594,8.602492,12
 2518885,Vavika,Neset (Frøya),Frøya,Trøndelag,63.763877,8.806014,12
-2789474,Slåttavik,Sunde,Hitra,Trøndelag,63.504178,9.19529,12
+2789474,Slåttavik,Sunde,Hitra,Trøndelag,63.504178,9.195290,12
 2820777,sjøen nært Ellingsholmen og Litlsørøya,Uttian,Frøya,Trøndelag,63.763376,8.825445,12
 3339569,Ellingsholmen,Uttian,Frøya,Trøndelag,63.763682,8.823226,12
 2503648,dyrket mark langs Bremnesveien,Bremnesstuva,Frøya,Trøndelag,63.748099,8.671231,12
-438624,Dørviksvaet,Dyrvik,Frøya,Trøndelag,63.76062,8.829074,12
+438624,Dørviksvaet,Dyrvik,Frøya,Trøndelag,63.760620,8.829074,12
 2157559,Lia,Strømøya,Frøya,Trøndelag,63.777106,8.772372,12
 356980,Fredly,Melandsjø,Hitra,Trøndelag,63.623884,8.705924,12
 862443,moloen,Sula,Frøya,Trøndelag,63.848495,8.456992,12
-424121,Langvatnet nord,Langevatn,Hitra,Trøndelag,63.5407,9.061477,12
+424121,Langvatnet nord,Langevatn,Hitra,Trøndelag,63.540700,9.061477,12
 3304365,Leirvika nett hans,,Frøya,Trøndelag,63.765533,8.672497,12
 2144062,bukt v/Hjellskjærholmen,Ulvøya,Hitra,Trøndelag,63.674455,9.035264,12
 2253919,bukt v/Bakkan,Uttian,Frøya,Trøndelag,63.767085,8.881365,12
@@ -674,44 +621,40 @@ id,lokalitet,hovedlokalitet,kommune,fylke,lat,lon,count
 1368085,Krysset mellom Fitjan og innersetra,,Frøya,Trøndelag,63.773839,8.702187,12
 352419,Flatval,,Frøya,Trøndelag,63.688665,8.757433,12
 3209472,Maursetskoltan,,Frøya,Trøndelag,63.897429,8.504315,12
-2154229,bukt v/Sjåtåa,Sandstad,Hitra,Trøndelag,63.52169,9.10147,12
+2154229,bukt v/Sjåtåa,Sandstad,Hitra,Trøndelag,63.521690,9.101470,12
 2317135,Nesset grendahus,Neset (Frøya),Frøya,Trøndelag,63.765413,8.814314,12
 2144823,vest av Fjellværøyveien,Fjellværsøya,Hitra,Trøndelag,63.632618,9.141193,12
 355034,Ansnes,,Hitra,Trøndelag,63.637645,8.992199,12
 2144260,dyrket mark v/Storvågen,Fjellværsøya,Hitra,Trøndelag,63.637362,9.156851,12
-1887049,Kjerbusdalen,Fjellværsøya,Hitra,Trøndelag,63.66001,9.090519,12
+1887049,Kjerbusdalen,Fjellværsøya,Hitra,Trøndelag,63.660010,9.090519,12
 2823537,Trollaheia øst,Fjellværsøya,Hitra,Trøndelag,63.659484,9.088381,12
 2144251,Fjellvær vest,Fjellværsøya,Hitra,Trøndelag,63.633564,9.143349,12
-2144825,N av Fjellvær gjestegård,Fjellværsøya,Hitra,Trøndelag,63.63591,9.153366,12
+2144825,N av Fjellvær gjestegård,Fjellværsøya,Hitra,Trøndelag,63.635910,9.153366,12
 2825135,Flatmannskardet,Fjellværsøya,Hitra,Trøndelag,63.620272,9.056366,12
-2144246,dyrket mark Ø av Storskardet,Fjellværsøya,Hitra,Trøndelag,63.63423,9.131159,12
+2144246,dyrket mark Ø av Storskardet,Fjellværsøya,Hitra,Trøndelag,63.634230,9.131159,12
 2144240,bukt V av Moltholmene,Fjellværsøya,Hitra,Trøndelag,63.653062,9.134779,12
 2153889,dyrket mark v/Kråkreirmyra,,Hitra,Trøndelag,63.614548,8.722264,12
 2503768,Ø av Sørdalen,Gurvikdalen,Frøya,Trøndelag,63.765509,8.729648,12
 3060295,Havet NV av Slettringen,,Frøya,Trøndelag,63.739447,8.061014,12
 389784,Bergli,,Frøya,Trøndelag,63.714806,8.590921,12
-2144045,dyrket mark N av Aukaveien,Aukaøya,Frøya,Trøndelag,63.77335,8.739224,12
-1196856,Gudmundskaget(Omnaholman),,Frøya,Trøndelag,63.691281,8.36319,12
+2144045,dyrket mark N av Aukaveien,Aukaøya,Frøya,Trøndelag,63.773350,8.739224,12
+1196856,Gudmundskaget(Omnaholman),,Frøya,Trøndelag,63.691281,8.363190,12
 2487039,Langstraumen sør,Aukaøya,Frøya,Trøndelag,63.776979,8.755789,12
-2503973,Kvistvågen v/Kvistaveien,Kvisten,Frøya,Trøndelag,63.70335,8.459453,12
+2503973,Kvistvågen v/Kvistaveien,Kvisten,Frøya,Trøndelag,63.703350,8.459453,12
 2448161,Aune sør,Svellingen,Frøya,Trøndelag,63.792855,8.793563,11
 2133486,Tjuvholet,Nordskaget,Frøya,Trøndelag,63.718103,8.603812,11
 2152262,Saltneset,Uttian,Frøya,Trøndelag,63.766517,8.862743,11
-2459991,Dyrvik vestre,Dyrvik,Frøya,Trøndelag,63.75695,8.81559,11
-3268692,sjøområdene utenfor Purkholmen,Hammarvika,Frøya,Trøndelag,63.6908,8.835344,11
+2459991,Dyrvik vestre,Dyrvik,Frøya,Trøndelag,63.756950,8.815590,11
+3268692,sjøområdene utenfor Purkholmen,Hammarvika,Frøya,Trøndelag,63.690800,8.835344,11
 2831404,vest av Bustbergvatnet,,Frøya,Trøndelag,63.783083,8.785047,11
 451758,Årlidalsvatnet,,Frøya,Trøndelag,63.734641,8.789305,11
-443970,Korsvatnet,,Frøya,Trøndelag,63.728801,8.786736,11
 2162679,Litlstraumen,,Frøya,Trøndelag,63.781595,8.738083,11
-355075,Storvatnet,,Hitra,Trøndelag,63.5699,8.798217,11
 2459999,Åkervikhauan,Dyrvik,Frøya,Trøndelag,63.754293,8.828723,11
 362723,Gurvikdalen sør,Gurvikdalen,Frøya,Trøndelag,63.763146,8.742943,11
 2461486,Malmmyran østre,Malmmyran,Frøya,Trøndelag,63.702141,8.505016,11
 2437479,Bustvika sørvest,Bustvika,Frøya,Trøndelag,63.674734,8.382108,11
 653631,Grytelva naturreservat,,Hitra,Trøndelag,63.535889,8.530402,11
 2446925,Sjønhalsbotnen,Kvaløya,Frøya,Trøndelag,63.786166,8.718321,11
-361630,Aune,Svellingen,Frøya,Trøndelag,63.794446,8.798109,11
-745107,Skjelvika,,Frøya,Trøndelag,63.781896,8.697695,11
 2449164,Ottervika,Hellesvika,Frøya,Trøndelag,63.783745,8.812509,11
 2461362,Sørhaugan,Grubba,Frøya,Trøndelag,63.681633,8.656013,11
 425354,Storfjordkastet,,Frøya,Trøndelag,63.684217,8.566281,11
@@ -719,31 +662,28 @@ id,lokalitet,hovedlokalitet,kommune,fylke,lat,lon,count
 2144827,vest av Harraneset,Fjellværsøya,Hitra,Trøndelag,63.642798,9.166445,11
 2449168,Strømøya øst,Strømøya,Frøya,Trøndelag,63.778348,8.777843,11
 2277344,Bogaskjærflua,,Frøya,Trøndelag,63.819217,8.642584,11
-2853885,Setervatnvegen,Setervatnet,Hitra,Trøndelag,63.549477,8.74403,11
+2853885,Setervatnvegen,Setervatnet,Hitra,Trøndelag,63.549477,8.744030,11
 2189324,Lynghei N av Mekanikerhagen,Titran,Frøya,Trøndelag,63.672136,8.329368,11
 636567,Lund-huset,Titran,Frøya,Trøndelag,63.668331,8.304772,11
 2126040,Singstadvatn,Sætermyran,Frøya,Trøndelag,63.690314,8.440858,11
 440192,Vedøya,Hestvika,Hitra,Trøndelag,63.548364,9.202081,11
 441048,Klungervika,Sørdyrøya,Frøya,Trøndelag,63.784341,8.653597,11
 2125295,Kalvøyflua,Sørdyrøya,Frøya,Trøndelag,63.797207,8.647551,11
-636606,Ø av Haugen,Titran,Frøya,Trøndelag,63.67218,8.315812,11
+636606,Ø av Haugen,Titran,Frøya,Trøndelag,63.672180,8.315812,11
 2388614,Karivågen,Sørdyrøya,Frøya,Trøndelag,63.795894,8.669246,11
 2149334,Åsheim/Barman,Barman,Hitra,Trøndelag,63.629498,8.848441,11
 2183865,Eldsfjellv.,begynnelsen,Hitra,Trøndelag,63.562686,8.770585,11
-2448160,Aune,Svellingen,Frøya,Trøndelag,63.795648,8.792611,10
 429358,Utset,Hitra,Hitra,Trøndelag,63.582061,9.135615,10
-2810855,sjøen mellom Kya og Langflesa,Kya,Frøya,Trøndelag,63.77607,8.30267,10
+2810855,sjøen mellom Kya og Langflesa,Kya,Frøya,Trøndelag,63.776070,8.302670,10
 2515811,Flatøya,Uttian,Frøya,Trøndelag,63.759977,8.864081,10
 391054,Eidsvatn,,Hitra,Trøndelag,63.607505,8.923595,10
 2402626,Sætervågen havn,Norddyrøya,Frøya,Trøndelag,63.798806,8.679684,10
-2828100,Vikan,Svellingen,Frøya,Trøndelag,63.792693,8.783835,10
 381451,Bondenget,Kvaløya,Frøya,Trøndelag,63.764977,8.686529,10
 1134617,S av Stormyra,Jevik,Hitra,Trøndelag,63.625963,8.955278,10
 2197364,Smågevatnet nord,Smågevatnet,Hitra,Trøndelag,63.607792,8.631992,10
 2459987,S av Madsvågen,,Frøya,Trøndelag,63.760433,8.805143,10
 2992450,bukt mlm. Hestøya og Åburden,Uttian,Frøya,Trøndelag,63.765096,8.861332,10
 2269506,Nordøya,Uttian,Frøya,Trøndelag,63.779729,8.885236,10
-398608,Haugen,Dolmøya,Hitra,Trøndelag,63.654585,8.797947,10
 2155196,Malmmyran SV,Malmmyran,Frøya,Trøndelag,63.696405,8.492358,10
 2461422,øst av avkj. Stabben,Titran,Frøya,Trøndelag,63.669869,8.331632,10
 811799,Sætermyran,,Frøya,Trøndelag,63.681589,8.441226,10
@@ -751,9 +691,8 @@ id,lokalitet,hovedlokalitet,kommune,fylke,lat,lon,count
 636568,Scientologihagen,Titran,Frøya,Trøndelag,63.668534,8.303748,10
 2447671,Skarpneset,Grubba,Frøya,Trøndelag,63.677455,8.640401,10
 2820092,Klubben østre,Klubben,Frøya,Trøndelag,63.759937,8.710281,10
-2029074,Breivika,Svellingen,Frøya,Trøndelag,63.787071,8.812563,10
 2820395,Nesset høydebasseng,Neset (Frøya),Frøya,Trøndelag,63.775688,8.811736,10
-2133475,Nordskaget vest,Nordskaget,Frøya,Trøndelag,63.706598,8.5525,10
+2133475,Nordskaget vest,Nordskaget,Frøya,Trøndelag,63.706598,8.552500,10
 2825074,øst av Bakken,Ulvøya,Hitra,Trøndelag,63.678893,9.074997,10
 2144822,vest av Myrafjellet,Fjellværsøya,Hitra,Trøndelag,63.637462,9.132381,10
 355033,Gjertrudvatnet,Fjellværsøya,Hitra,Trøndelag,63.621441,9.091624,10
@@ -764,168 +703,132 @@ id,lokalitet,hovedlokalitet,kommune,fylke,lat,lon,count
 458961,Vamyra,Kvaløya,Frøya,Trøndelag,63.784781,8.715482,10
 2151414,Grøttingsøya,Bogøyvær,Frøya,Trøndelag,63.876525,8.551899,10
 1368092,Jordene på Vikan,,Frøya,Trøndelag,63.791788,8.783466,10
-2144025,Fjøshaugen,Norddyrøya,Frøya,Trøndelag,63.797195,8.6738,10
+2144025,Fjøshaugen,Norddyrøya,Frøya,Trøndelag,63.797195,8.673800,10
 2151404,Staulvågen sør,,Frøya,Trøndelag,63.786523,8.790949,10
 429617,Innerdalen,Kaldklov,Hitra,Trøndelag,63.573175,8.996951,10
-2462619,Synnkya,Kya,Frøya,Trøndelag,63.760346,8.310431,10
-2931623,Eidsmo,Eid,Hitra,Trøndelag,63.6204,8.926155,10
+2931623,Eidsmo,Eid,Hitra,Trøndelag,63.620400,8.926155,10
 2910883,Hatlandsveien,,Hitra,Trøndelag,63.523909,9.065995,10
 2444646,Hammerskardet,,Hitra,Trøndelag,63.500959,8.951748,10
 946831,dal mellom Aunhesten og Toreheia,,Hitra,Trøndelag,63.508149,9.225842,10
-2437483,ved Myranveien 357-359,,Frøya,Trøndelag,63.684202,8.43651,9
+2437483,ved Myranveien 357-359,,Frøya,Trøndelag,63.684202,8.436510,9
 423985,Vikahalten,Sandstad,Hitra,Trøndelag,63.526159,9.110884,9
 1896750,Staulholmbukta,Uttian,Frøya,Trøndelag,63.780372,8.866004,9
 2228408,dyrket mark v/rundkjøring Hammarvika,Hammarvika,Frøya,Trøndelag,63.701942,8.813758,9
 2152259,Storbåtbukta,Uttian,Frøya,Trøndelag,63.766509,8.841444,9
-3282770,Kjerkdalsvatnet,bekk fra Tungvågvatnet,Frøya,Trøndelag,63.733389,8.676234,9
 2501810,S av Kongenstjønna,Ervika (Frøya),Frøya,Trøndelag,63.749179,8.821663,9
 440485,sør for sykehjem,Hammarvika,Frøya,Trøndelag,63.702885,8.826666,9
 2149236,skjær N av Stranda,Norddyrøya,Frøya,Trøndelag,63.800662,8.674815,9
-2157563,Breivika,,Frøya,Trøndelag,63.787091,8.717108,9
-779037,Skjulsvika,,Hitra,Trøndelag,63.61654,8.656777,9
-434953,Jevik,,Hitra,Trøndelag,63.629526,8.96463,9
-358435,Vingan,Vingvågen,Hitra,Trøndelag,63.514988,9.28628,9
-2999778,øst av Nordpilen,Uttian,Frøya,Trøndelag,63.77179,8.874996,9
+779037,Skjulsvika,,Hitra,Trøndelag,63.616540,8.656777,9
+434953,Jevik,,Hitra,Trøndelag,63.629526,8.964630,9
+358435,Vingan,Vingvågen,Hitra,Trøndelag,63.514988,9.286280,9
+2999778,øst av Nordpilen,Uttian,Frøya,Trøndelag,63.771790,8.874996,9
 2153897,dyrket mark N av Vestergården,Straum (Hitra),Hitra,Trøndelag,63.565213,8.744228,9
 427062,Sildvågen,Fjellværsøya,Hitra,Trøndelag,63.656176,9.041561,9
 457053,Vågsenden,Titran,Frøya,Trøndelag,63.679072,8.324472,9
 2810715,Grognflesa,Kya,Frøya,Trøndelag,63.777411,8.354835,9
-2116782,Kobbskjæret,Nordskaget,Frøya,Trøndelag,63.71101,8.573844,9
-2016636,Havgløtt,Ervika (Frøya),Frøya,Trøndelag,63.751535,8.83361,9
+2116782,Kobbskjæret,Nordskaget,Frøya,Trøndelag,63.711010,8.573844,9
 2133859,Svinholman,,Frøya,Trøndelag,63.760763,8.681031,9
 1850703,Kulturmark Malmyran,,Frøya,Trøndelag,63.697742,8.482126,9
-2457820,Staulstraumen,Svellingen,Frøya,Trøndelag,63.795025,8.80004,9
+2457820,Staulstraumen,Svellingen,Frøya,Trøndelag,63.795025,8.800040,9
 793619,Håvikfjellet,,Hitra,Trøndelag,63.551445,8.643338,9
 1390918,myr langs Fjellværsøyveien,Fjellværsøya,Hitra,Trøndelag,63.643205,9.119391,9
 2823543,Berge,Ulvøya,Hitra,Trøndelag,63.664785,9.072841,9
 2144258,dyrket mark v/Nordheim,Fjellværsøya,Hitra,Trøndelag,63.637158,9.151039,9
 2144239,Nordbotn 13-15,Fjellværsøya,Hitra,Trøndelag,63.647851,9.137789,9
-636579,Lite tjern S av Vågsenden,Titran,Frøya,Trøndelag,63.679936,8.33924,9
+636579,Lite tjern S av Vågsenden,Titran,Frøya,Trøndelag,63.679936,8.339240,9
 2660823,Ml. Vågsenden og Grasbergvatnet,Titran,Frøya,Trøndelag,63.679426,8.341935,9
-2144278,Notvollbukta,Ansnes,Hitra,Trøndelag,63.641737,8.994283,9
-427266,Hammarstaddalen,,Hitra,Trøndelag,63.60778,8.887536,9
+427266,Hammarstaddalen,,Hitra,Trøndelag,63.607780,8.887536,9
 352427,Bekken,,Frøya,Trøndelag,63.673328,8.576935,9
 2144844,sund v/Sletta kirke,Svellingen,Frøya,Trøndelag,63.796116,8.806373,9
 2451872,Stølan (heier),Svellingen,Frøya,Trøndelag,63.786341,8.805484,9
 2162692,fotballbane langs Utfrøyveien,Hellesvika,Frøya,Trøndelag,63.778058,8.805197,9
-2154823,Østenden Innervågen,Titran,Frøya,Trøndelag,63.669782,8.330877,9
-358009,Stutvatnet,,Frøya,Trøndelag,63.702678,8.688182,9
 2635641,Singstad,Kvisten,Frøya,Trøndelag,63.688271,8.444757,9
-437246,Gården,Titran,Frøya,Trøndelag,63.670061,8.308967,9
-352390,Bukta,Strømøya,Frøya,Trøndelag,63.80178,8.773504,9
-2331152,Ml. Heia og Slettringen,Titran,Frøya,Trøndelag,63.667698,8.28005,9
 666354,Venåsbusken,Titran,Frøya,Trøndelag,63.668507,8.311078,9
-452402,Kvistmyran sør,Kvisten,Frøya,Trøndelag,63.692559,8.454,9
+452402,Kvistmyran sør,Kvisten,Frøya,Trøndelag,63.692559,8.454000,9
 1363044,Dam vest av Mekanikerhagen,Titran,Frøya,Trøndelag,63.671037,8.323753,9
 2199765,dyrket mark v/Hammarvikbakkan,Hammarvika,Frøya,Trøndelag,63.696863,8.804729,9
-2461360,Lavdalen (tjønn),Lavdalen,Frøya,Trøndelag,63.670184,8.53219,9
-2633894,havområdene vest for Sula - Sula pelagic 2024,Havet utenfor Sula,Frøya,Trøndelag,63.882979,8.195806,9
-2765590,Staulan,Svellingen,Frøya,Trøndelag,63.789241,8.800013,9
+2461360,Lavdalen (tjønn),Lavdalen,Frøya,Trøndelag,63.670184,8.532190,9
 372657,Valen,,Frøya,Trøndelag,63.722331,8.601629,9
-2183864,Øverdalsvatnet,,Hitra,Trøndelag,63.590185,8.836701,9
-2189283,naturbeitemark v/Nabeita,Nabeita,Frøya,Trøndelag,63.69164,8.791255,9
+2189283,naturbeitemark v/Nabeita,Nabeita,Frøya,Trøndelag,63.691640,8.791255,9
 397136,Hansbrygga,Nordskaget,Frøya,Trøndelag,63.707234,8.566056,9
 2773835,Flatvalveien 42-44,Flatval,Frøya,Trøndelag,63.689585,8.759248,8
-792305,Trøan,Fillingsnes,Frøya,Trøndelag,63.667395,8.514331,8
-439507,Langåsen,Flatval,Frøya,Trøndelag,63.693073,8.76912,8
+439507,Langåsen,Flatval,Frøya,Trøndelag,63.693073,8.769120,8
 643208,Nord-Frøya kirkegård,Svellingen,Frøya,Trøndelag,63.795454,8.807092,8
 356963,Holet,Norddyrøya,Frøya,Trøndelag,63.788979,8.682819,8
-662832,Dalsvikvatnet,Dalsvik,Frøya,Trøndelag,63.672244,8.37264,8
+662832,Dalsvikvatnet,Dalsvik,Frøya,Trøndelag,63.672244,8.372640,8
 2831416,øst av Oshøgda,Aukaøya,Frøya,Trøndelag,63.788138,8.720405,8
 2402609,Kvaløyvågen,,Frøya,Trøndelag,63.778979,8.730672,8
 2823885,Vollavågen v/Fausland,Barmfjorden,Hitra,Trøndelag,63.605923,8.860596,8
 791099,Nabeita oppvekstsenter,Nabeita,Frøya,Trøndelag,63.698332,8.791785,8
 1810312,vest for Hestnes,,Hitra,Trøndelag,63.590257,8.588676,8
 2352980,Grønnhaugen,Stabben,Frøya,Trøndelag,63.665259,8.317717,8
-642109,Valavatnet,,Frøya,Trøndelag,63.683274,8.405842,8
-2155188,vanntank Ø av Flatmyra,,Frøya,Trøndelag,63.69871,8.511573,8
+2155188,vanntank Ø av Flatmyra,,Frøya,Trøndelag,63.698710,8.511573,8
 2820118,øst av Bremnestuva,Bremnesstuva,Frøya,Trøndelag,63.747006,8.675264,8
 2447690,Kvernøystraumen,Kvernøya,Frøya,Trøndelag,63.782944,8.683834,8
-2155176,Postvika SV,,Frøya,Trøndelag,63.786218,8.78706,8
+2155176,Postvika SV,,Frøya,Trøndelag,63.786218,8.787060,8
 2479884,barskog v/Aunvika,,Hitra,Trøndelag,63.510321,9.236729,8
 353337,Måsøyvalen,,Frøya,Trøndelag,63.708368,8.509202,8
-352387,Staulan,Svellingen,Frøya,Trøndelag,63.78719,8.797507,8
 1870061,Svingen,Kjervågsund,Frøya,Trøndelag,63.682541,8.345843,8
 441368,Lisbu,Hammarvatnet,Frøya,Trøndelag,63.716934,8.804541,8
 2144265,Einvikvågen,Fjellværsøya,Hitra,Trøndelag,63.625879,9.123227,8
 2144273,Mastad vest,Fjellværsøya,Hitra,Trøndelag,63.645363,9.050482,8
 2144267,Langlia,Fjellværsøya,Hitra,Trøndelag,63.620168,9.074206,8
-2144830,Ramberget sør,,Hitra,Trøndelag,63.62465,8.94404,8
-2153888,skog v/Grindbakkan,Dolmøya,Hitra,Trøndelag,63.628641,8.73352,8
-2144261,dyrket mark V av Båtsvika,Fjellværsøya,Hitra,Trøndelag,63.638,9.162484,8
+2144830,Ramberget sør,,Hitra,Trøndelag,63.624650,8.944040,8
+2153888,skog v/Grindbakkan,Dolmøya,Hitra,Trøndelag,63.628641,8.733520,8
+2144261,dyrket mark V av Båtsvika,Fjellværsøya,Hitra,Trøndelag,63.638000,9.162484,8
 2151412,dyrket mark v/avkjøring Kveldro,,Frøya,Trøndelag,63.774605,8.696797,8
-2402670,sjøområder v/Teistholmen,Mausundvær,Frøya,Trøndelag,63.867461,8.640041,8
-2177991,sjøområdene sør av Langholmen,,Frøya,Trøndelag,63.848372,8.53775,8
-349599,Fillingsnes,,Frøya,Trøndelag,63.665064,8.49817,8
-348698,Asmundvåg,Hitra,Hitra,Trøndelag,63.583004,8.654468,8
+349599,Fillingsnes,,Frøya,Trøndelag,63.665064,8.498170,8
 2821869,N av Husvatnet,Flatval,Frøya,Trøndelag,63.694176,8.748845,8
 895043,sjøområdet nord for Kvisten,Kvisten,Frøya,Trøndelag,63.723747,8.449383,8
 356512,Veisan,Kvisten,Frøya,Trøndelag,63.701146,8.463459,8
-2317753,Sikla,Grubba,Frøya,Trøndelag,63.684604,8.66603,8
-1877374,Klauva,,Frøya,Trøndelag,63.763948,8.801711,8
+2317753,Sikla,Grubba,Frøya,Trøndelag,63.684604,8.666030,8
 352368,Kverva,,Frøya,Trøndelag,63.705456,8.531264,8
-2747390,Frøyfjorden,Lokknes,Frøya,Trøndelag,63.675128,8.727151,8
 2158803,Fjellheia,Daløya,Frøya,Trøndelag,63.687973,8.383581,8
 418134,Sildholmen,Titran,Frøya,Trøndelag,63.664099,8.286788,8
 1870388,Svalbalen,Titran,Frøya,Trøndelag,63.684245,8.304323,8
-3255664,sjøområdet ml. Heia og Stabben,Titran,Frøya,Trøndelag,63.665139,8.302463,8
 2142195,Holahaugen,Kverva,Frøya,Trøndelag,63.708006,8.546158,7
 2810717,Langflesa,Kya,Frøya,Trøndelag,63.780209,8.303452,7
-3275663,Gåsøya,,Frøya,Trøndelag,63.773076,8.54447,7
+3275663,Gåsøya,,Frøya,Trøndelag,63.773076,8.544470,7
 352392,Vikasundet,Strømøya,Frøya,Trøndelag,63.802078,8.767934,7
 2815125,Bukt,Skjellsøyveien,Frøya,Trøndelag,63.773469,8.839674,7
 3114792,S for Nordhammarvika gravplass,Nordhammaren,Frøya,Trøndelag,63.710016,8.832308,7
 2825663,Asmundvåg øst,,Hitra,Trøndelag,63.582592,8.657451,7
 2144201,høyde N av Vikavatnet,Ulvøya,Hitra,Trøndelag,63.667622,9.067487,7
 2397042,Innerklauva,Neset (Frøya),Frøya,Trøndelag,63.764353,8.815626,7
-2402802,Melkvika,Dyrvik,Frøya,Trøndelag,63.760211,8.819857,7
-542825,Moldhaugen,Titran,Frøya,Trøndelag,63.686463,8.336662,7
 3311708,Skolen Titran,,Frøya,Trøndelag,63.669985,8.319639,7
 398005,Eid,,Hitra,Trøndelag,63.621737,8.930233,7
 2189287,myr v/Sørfrøyveien,Nabeita,Frøya,Trøndelag,63.696696,8.795917,7
 2347733,øst av Lomsmyra,Bergli,Frøya,Trøndelag,63.713724,8.586627,7
 2490275,Storblokktjønna,Ervika (Frøya),Frøya,Trøndelag,63.741709,8.799861,7
 440102,Aunvatnet-Grytelva,Grytelva naturreservat,Hitra,Trøndelag,63.535629,8.521706,7
-2155182,dyrket mark v/Sandvika vest,Sandvika (Frøya),Frøya,Trøndelag,63.75003,8.684867,7
+2155182,dyrket mark v/Sandvika vest,Sandvika (Frøya),Frøya,Trøndelag,63.750030,8.684867,7
 2413892,Svalbardskjæra,Hammarvika,Frøya,Trøndelag,63.695923,8.818752,7
 355082,Hestvika,,Hitra,Trøndelag,63.564398,9.198793,7
 1904162,vest for Frøya Havbruksservice,Hammarvika,Frøya,Trøndelag,63.696031,8.808323,7
-2472873,Synnkya,Kya,Frøya,Trøndelag,63.760914,8.311932,7
-2832765,Solheim,Kverva,Frøya,Trøndelag,63.7038,8.527545,7
-2456837,Merradalen,Hammarvika,Frøya,Trøndelag,63.70148,8.80446,7
+2832765,Solheim,Kverva,Frøya,Trøndelag,63.703800,8.527545,7
 2435055,Aune v/Staulstraumen,,Frøya,Trøndelag,63.794918,8.796285,7
-2510792,Myra,Bremneset,Frøya,Trøndelag,63.741244,8.644236,7
 2144282,vest av Myra,Ansnes,Hitra,Trøndelag,63.631449,8.975975,7
 2144796,dyrket mark langs Ulvøyveien 2,Ulvøya,Hitra,Trøndelag,63.674013,9.046062,7
 2144795,Berget vest,Ulvøya,Hitra,Trøndelag,63.665901,9.072562,7
 2823526,Harraneset,Fjellværsøya,Hitra,Trøndelag,63.642551,9.170038,7
 2825076,Grindskarheia,Ulvøya,Hitra,Trøndelag,63.672746,9.044669,7
 2823545,Storvarden,Ulvøya,Hitra,Trøndelag,63.667475,9.096197,7
-2153890,Dolmsundet ved Hopsjøen,Melandsjø,Hitra,Trøndelag,63.630528,8.72345,7
+2153890,Dolmsundet ved Hopsjøen,Melandsjø,Hitra,Trøndelag,63.630528,8.723450,7
 2823529,Botnvikfjellet,Fjellværsøya,Hitra,Trøndelag,63.643456,9.127557,7
-2438878,Haugen,Storhallaren,Frøya,Trøndelag,63.676029,8.59226,7
 2118755,Melkåa v/Nabeita,Nabeita,Frøya,Trøndelag,63.695609,8.786844,7
 785423,Beitemark Ø av sauefjøset,Titran,Frøya,Trøndelag,63.672272,8.312776,7
 428384,Kaldklov,,Hitra,Trøndelag,63.574086,8.982811,7
-2413885,Kaibakkan nord,Neset (Frøya),Frøya,Trøndelag,63.769571,8.81603,7
+2413885,Kaibakkan nord,Neset (Frøya),Frøya,Trøndelag,63.769571,8.816030,7
 364989,Valvåg,Kvisten,Frøya,Trøndelag,63.697392,8.445161,7
-2413895,Melkheia sør,Hammarvika,Frøya,Trøndelag,63.704298,8.80561,7
+2413895,Melkheia sør,Hammarvika,Frøya,Trøndelag,63.704298,8.805610,7
 2154770,skog v/Merradalen øst,Nordskaget,Frøya,Trøndelag,63.700166,8.564798,7
-2475752,Ulvøya,,Hitra,Trøndelag,63.682824,9.07956,7
-2144028,Melkvika,Norddyrøya,Frøya,Trøndelag,63.79612,8.672848,7
-2633888,havområdene vest for Sula - Sula pelagic 2024,Havet utenfor Sula,Frøya,Trøndelag,63.872339,8.213961,7
-2120586,Uttikrysset,Dyrvik,Frøya,Trøndelag,63.76085,8.81515,7
+2475752,Ulvøya,,Hitra,Trøndelag,63.682824,9.079560,7
+2120586,Uttikrysset,Dyrvik,Frøya,Trøndelag,63.760850,8.815150,7
 540113,Mausundfjorden,,Frøya,Trøndelag,63.837894,8.665715,7
 2144212,Leirvikveien 2-4,Fjellværsøya,Hitra,Trøndelag,63.653863,9.117361,7
-2149229,Kvalskreia,,Frøya,Trøndelag,63.849742,8.520601,7
-2197340,Vollaelva v/Leikvamsveien,,Hitra,Trøndelag,63.600316,8.70331,7
-440488,Staulvågen,Svellingen,Frøya,Trøndelag,63.788717,8.796357,6
+2197340,Vollaelva v/Leikvamsveien,,Hitra,Trøndelag,63.600316,8.703310,7
 2228407,ved Hammarveien,Hammarvika,Frøya,Trøndelag,63.700334,8.814323,6
-2154759,Lasset,Håvika,Frøya,Trøndelag,63.669519,8.35965,6
-2422458,Havgløtt,Ervika (Frøya),Frøya,Trøndelag,63.751031,8.830592,6
-2469827,Innersundet,Titran,Frøya,Trøndelag,63.666367,8.309749,6
-3261957,Frøyhavet,,Frøya,Trøndelag,63.793169,8.197486,6
-2810750,sjøen mellom Kya og Sønnkya,Kya,Frøya,Trøndelag,63.763722,8.313881,6
+2154759,Lasset,Håvika,Frøya,Trøndelag,63.669519,8.359650,6
 3268696,sjøområdene utenfor Ervika,,Frøya,Trøndelag,63.751416,8.858458,6
 2422311,Tisundet,Uttian,Frøya,Trøndelag,63.765604,8.873379,6
 2269502,Jakthaugen,Uttian,Frøya,Trøndelag,63.767713,8.876163,6
@@ -934,76 +837,65 @@ id,lokalitet,hovedlokalitet,kommune,fylke,lat,lon,count
 2154768,vann Ø for kulturmark,Malmmyran,Frøya,Trøndelag,63.697145,8.488343,6
 2149220,Bogøya,Bogøyvær,Frøya,Trøndelag,63.872015,8.549168,6
 2830491,NØ av Storholmbukta,Aukaøya,Frøya,Trøndelag,63.790773,8.740428,6
-355055,Storvatnet,,Hitra,Trøndelag,63.608451,8.744048,6
-476377,Saltnesvågfjæra,Uttian,Frøya,Trøndelag,63.76757,8.863928,6
-2824626,jorder ved Storstuggu,Straum (Hitra),Hitra,Trøndelag,63.56251,8.750813,6
+476377,Saltnesvågfjæra,Uttian,Frøya,Trøndelag,63.767570,8.863928,6
+2824626,jorder ved Storstuggu,Straum (Hitra),Hitra,Trøndelag,63.562510,8.750813,6
 2825661,Sveheia,,Hitra,Trøndelag,63.581037,8.669021,6
 1896745,Vest av Nordsvalveien,Uttian,Frøya,Trøndelag,63.774724,8.876208,6
 3338728,Staulberget,Uttian,Frøya,Trøndelag,63.769781,8.866471,6
-2503643,høyde V av Nordskag oppvekstsenter,Nordskaget,Frøya,Trøndelag,63.70585,8.549383,6
+2503643,høyde V av Nordskag oppvekstsenter,Nordskaget,Frøya,Trøndelag,63.705850,8.549383,6
 382705,Daløysundet,Daløya,Frøya,Trøndelag,63.677534,8.397047,6
 2144836,Utfrøyveien 839-864,,Frøya,Trøndelag,63.742432,8.682154,6
-2448175,høyder V av Fitjan,Kvaløya,Frøya,Trøndelag,63.771977,8.69783,6
+2448175,høyder V av Fitjan,Kvaløya,Frøya,Trøndelag,63.771977,8.697830,6
 436674,Fagerstranda,Strømøya,Frøya,Trøndelag,63.776629,8.763721,6
 2413900,Kvernhuselva nord,Hammarvika,Frøya,Trøndelag,63.705257,8.824582,6
 427104,Kuøya,Hitra,Hitra,Trøndelag,63.650395,9.025967,6
-2447683,Notskagvågen,Norddyrøya,Frøya,Trøndelag,63.797596,8.69103,6
-2151410,Oshøgda vest,,Frøya,Trøndelag,63.78792,8.715608,6
+2447683,Notskagvågen,Norddyrøya,Frøya,Trøndelag,63.797596,8.691030,6
 2177988,Døggersøya,,Frøya,Trøndelag,63.806031,8.665625,6
-355029,Mastad,Fjellværsøya,Hitra,Trøndelag,63.64486,9.052431,6
+355029,Mastad,Fjellværsøya,Hitra,Trøndelag,63.644860,9.052431,6
 2155183,skog v/Krutvik øst,Krutvik,Frøya,Trøndelag,63.734319,8.651773,6
 2820109,V av Dalvikern,Grubba,Frøya,Trøndelag,63.682911,8.650444,6
-1894008,Skjelvika,Kvaløya,Frøya,Trøndelag,63.784194,8.709041,6
 2448162,Postvika øst,Strømøya,Frøya,Trøndelag,63.788499,8.789584,6
 2153885,Dolmøy industripark,Dolmøya,Hitra,Trøndelag,63.651001,8.821025,6
 2824885,Sveen,,Hitra,Trøndelag,63.621501,8.692377,6
 2825664,øst av Bårfjellet,,Hitra,Trøndelag,63.624634,8.705807,6
 2197327,kulturmark v/Meland,Melandsjø,Hitra,Trøndelag,63.622583,8.733754,6
-1168459,Høyneset,Titran,Frøya,Trøndelag,63.67116,8.30108,6
+1168459,Høyneset,Titran,Frøya,Trøndelag,63.671160,8.301080,6
 2144056,Lamøyvågen,,Hitra,Trøndelag,63.652719,9.046852,6
 2144269,Vågan,Fjellværsøya,Hitra,Trøndelag,63.636492,9.050697,6
 2158807,Kuhaugen,Skardsvågen,Frøya,Trøndelag,63.685663,8.661969,6
 2174518,Auka nord,Aukaøya,Frøya,Trøndelag,63.778721,8.744623,6
-2446921,Holmatjønna,Bekken,Frøya,Trøndelag,63.678024,8.57556,6
+2446921,Holmatjønna,Bekken,Frøya,Trøndelag,63.678024,8.575560,6
 2144035,Kalvtrøa,Kvernøya,Frøya,Trøndelag,63.782245,8.690706,6
 356951,Klubben,,Frøya,Trøndelag,63.758273,8.705573,6
-2153894,Bjørdalsmoa,,Hitra,Trøndelag,63.59565,8.630232,6
-2907068,Hitra Kirke,,Hitra,Trøndelag,63.628533,8.727295,6
-440154,Aunøya,Sandstad,Hitra,Trøndelag,63.523468,9.1255,6
-2951154,Hola,Sistranda,Frøya,Trøndelag,63.739598,8.835443,6
+2153894,Bjørdalsmoa,,Hitra,Trøndelag,63.595650,8.630232,6
+440154,Aunøya,Sandstad,Hitra,Trøndelag,63.523468,9.125500,6
 1615585,turbin A01 (5),Frøya vindkraftverk,Frøya,Trøndelag,63.696688,8.634966,6
 2456838,Djupmyra boligfelt,Hammarvika,Frøya,Trøndelag,63.701667,8.808664,6
 3001736,blandingsskog v/Dalenveien,Fjellværsøya,Hitra,Trøndelag,63.662473,9.090025,6
-603140,Granplanting NØ av kapell,Titran,Frøya,Trøndelag,63.6703,8.311761,6
+603140,Granplanting NØ av kapell,Titran,Frøya,Trøndelag,63.670300,8.311761,6
 2813318,Sjøområdet nord av Kjervågsund,Titran,Frøya,Trøndelag,63.696485,8.321714,6
-2426762,Jamnungsskjæra,Fjølværet,Frøya,Trøndelag,63.808347,8.643185,6
 2435052,sjøområdene ved Kuøya,Mausundvær,Frøya,Trøndelag,63.865772,8.641227,6
-2461427,Myr ml. Kirkegården og Yttersundet,Titran,Frøya,Trøndelag,63.672475,8.320394,6
-2487011,Stabbursdalen,,Frøya,Trøndelag,63.769122,8.725202,6
 2158802,parkeringsplass v/Frøya renovasjon,Kvisten,Frøya,Trøndelag,63.686631,8.443894,6
 811705,Eidsøya,Barmfjorden,Hitra,Trøndelag,63.618607,8.892387,6
 2277346,Klovningen,Mausundvær,Frøya,Trøndelag,63.865396,8.621347,6
-3261920,Innersundet,,Frøya,Trøndelag,63.66665,8.310503,6
-3255660,Vikflua-Svartskjæret,Titran,Frøya,Trøndelag,63.672539,8.260225,6
 2422455,Kuppulvika,Ervika (Frøya),Frøya,Trøndelag,63.754483,8.832874,5
 2810740,havområdene N av Langflesa,Kya,Frøya,Trøndelag,63.786003,8.308949,5
-3261992,Sildskjærbugen,,Frøya,Trøndelag,63.833461,8.395313,5
 3268722,sjøen vest for Skagan,Svellingen,Frøya,Trøndelag,63.800594,8.811871,5
 381424,Norddalen,,Frøya,Trøndelag,63.768403,8.749115,5
 353348,Bremnesstuva,,Frøya,Trøndelag,63.744975,8.671554,5
 3288435,Mannbruholmen,,Frøya,Trøndelag,63.848103,8.553704,5
 3288437,skjær V av Singsøya,Bogøyvær,Frøya,Trøndelag,63.870041,8.561502,5
-360426,Langevatn,,Hitra,Trøndelag,63.53715,9.063534,5
+360426,Langevatn,,Hitra,Trøndelag,63.537150,9.063534,5
 3293654,Gressplenen ved Skaga,Nordhammaren,Frøya,Trøndelag,63.701181,8.828616,5
 2233901,Fillaunet sør,Fillan,Hitra,Trøndelag,63.606267,8.966013,5
 2825253,Sildevågveien,Fjellværsøya,Hitra,Trøndelag,63.658133,9.062115,5
-439468,Kongenstjønna,Ervika (Frøya),Frøya,Trøndelag,63.75003,8.821977,5
+439468,Kongenstjønna,Ervika (Frøya),Frøya,Trøndelag,63.750030,8.821977,5
 2919670,Lunheim,Frøya,Frøya,Trøndelag,63.690525,8.454369,5
 2149240,Innersetra-Fitjan,Norddyrøya,Frøya,Trøndelag,63.772783,8.704199,5
 2162680,avkjøring Auka,Aukaøya,Frøya,Trøndelag,63.775815,8.744291,5
 1363074,Bustvik fiskeoppdrett,Titran,Frøya,Trøndelag,63.664283,8.343615,5
 2482359,Draget (vipe),Titran,Frøya,Trøndelag,63.672395,8.293139,5
-2437481,Bustvika vest,Bustvika,Frøya,Trøndelag,63.675511,8.38103,5
+2437481,Bustvika vest,Bustvika,Frøya,Trøndelag,63.675511,8.381030,5
 2155185,bukt v/Espneset,Espneset,Frøya,Trøndelag,63.716763,8.591245,5
 2413544,Myrvarden,Haugen (Frøya),Frøya,Trøndelag,63.683238,8.427563,5
 441928,Hærnesbrua,Hernes,Hitra,Trøndelag,63.501821,8.361725,5
@@ -1012,201 +904,158 @@ id,lokalitet,hovedlokalitet,kommune,fylke,lat,lon,count
 2402618,Sjønhalsen kretshus,,Frøya,Trøndelag,63.783543,8.702429,5
 2155195,ved tjern V av avkj. Veita,Malmmyran,Frøya,Trøndelag,63.697802,8.491478,5
 2446927,bukt v/Dragsneset,,Frøya,Trøndelag,63.787285,8.740177,5
-2286746,Fjellværsøyveien 144,,Hitra,Trøndelag,63.63368,9.127665,5
-428400,Utsikten,Fillan,Hitra,Trøndelag,63.596313,8.97505,5
-855491,Lyngheiene SØ av Skibuvatnet,Titran,Frøya,Trøndelag,63.67328,8.318822,5
+2286746,Fjellværsøyveien 144,,Hitra,Trøndelag,63.633680,9.127665,5
+428400,Utsikten,Fillan,Hitra,Trøndelag,63.596313,8.975050,5
+855491,Lyngheiene SØ av Skibuvatnet,Titran,Frøya,Trøndelag,63.673280,8.318822,5
 2825380,høyde mlm. Litlvatnet og Litlvågen,,Hitra,Trøndelag,63.617095,8.949933,5
 2825147,Søraunet,,Hitra,Trøndelag,63.572271,8.799043,5
-2144814,Breidvika,Fjellværsøya,Hitra,Trøndelag,63.651655,9.11834,5
+2144814,Breidvika,Fjellværsøya,Hitra,Trøndelag,63.651655,9.118340,5
 2825073,Snæringen øst,,Hitra,Trøndelag,63.581077,8.823208,5
-2144831,Vågen,Dolmøya,Hitra,Trøndelag,63.655649,8.823891,5
 2825643,Sageidet,,Hitra,Trøndelag,63.564801,8.779622,5
 355042,Åsvang,Dolmøya,Hitra,Trøndelag,63.648892,8.823693,5
-2144268,Vågen,Fjellværsøya,Hitra,Trøndelag,63.632192,9.056887,5
 2503963,Lyngheier V av Vikan,,Frøya,Trøndelag,63.794228,8.777115,5
-2447663,Uggsteinøya,,Frøya,Trøndelag,63.841779,8.557989,5
-2162686,Vikan,Svellingen,Frøya,Trøndelag,63.794502,8.784086,5
-2483651,Slettaskogen,,Frøya,Trøndelag,63.773259,8.782703,5
 2867412,jorde ved Straum,Straum (Hitra),Hitra,Trøndelag,63.565197,8.744336,5
-355076,Husvatnet,Straum (Hitra),Hitra,Trøndelag,63.560666,8.763569,5
 426429,Volnestjønna,,Hitra,Trøndelag,63.571123,8.707002,5
 2430557,skog v/Kverva,Kverva,Frøya,Trøndelag,63.705901,8.528884,5
 1363058,Sund N-NØ av Slettringen,Titran,Frøya,Trøndelag,63.669977,8.262596,5
-2919674,Kvisten,,Frøya,Trøndelag,63.703358,8.453488,5
 3091164,Storjamnungen,,Frøya,Trøndelag,63.804029,8.645009,5
-2638676,holme N av Uggsteinen,,Frøya,Trøndelag,63.842191,8.544559,5
 642106,Kystadvatnet,,Frøya,Trøndelag,63.688411,8.429027,5
 355037,Jektvika,Dolmøya,Hitra,Trøndelag,63.648305,8.800175,5
-2144443,Prestvikbukta,Ulvøya,Hitra,Trøndelag,63.66773,9.10916,5
+2144443,Prestvikbukta,Ulvøya,Hitra,Trøndelag,63.667730,9.109160,5
 2447662,Uggsteinen,,Frøya,Trøndelag,63.838967,8.553704,5
-1514129,Sulfjorden sør,,Frøya,Trøndelag,63.806896,8.62786,5
+1514129,Sulfjorden sør,,Frøya,Trøndelag,63.806896,8.627860,5
 2447672,Skarvskjæret,Fjølværet,Frøya,Trøndelag,63.810159,8.619569,5
 425461,Litjvatnet,Sandstad,Hitra,Trøndelag,63.528946,9.083782,5
-792854,Sankthansvalen,Fillingsnes,Frøya,Trøndelag,63.666084,8.500003,5
 356973,Garnvika,Kvaløya,Frøya,Trøndelag,63.795101,8.719111,5
-3288998,Dragsnesveien,Kvaløya,Frøya,Trøndelag,63.7894,8.746626,5
-2504968,Stormyra,,Frøya,Trøndelag,63.692392,8.722794,5
-2518545,Trøan,,Frøya,Trøndelag,63.666869,8.51222,5
+3288998,Dragsnesveien,Kvaløya,Frøya,Trøndelag,63.789400,8.746626,5
 1747685,Ml. Holmskogen og Lundskogen,Titran,Frøya,Trøndelag,63.673758,8.308365,5
-2121639,Nesseet,,Frøya,Trøndelag,63.768276,8.81391,5
+2121639,Nesseet,,Frøya,Trøndelag,63.768276,8.813910,5
 2149232,sjøområdene v/Mannbruholmen,,Frøya,Trøndelag,63.848321,8.558879,5
 627227,Straum,Straum (Hitra),Hitra,Trøndelag,63.561538,8.748711,5
 451036,Lokknes,,Frøya,Trøndelag,63.683114,8.693096,5
-2921457,Mindestien,,Hitra,Trøndelag,63.604873,8.725309,5
 2126855,Hjertøyholmen,Nordskaget,Frøya,Trøndelag,63.716126,8.559292,4
-3261998,Sildskjærbugen,,Frøya,Trøndelag,63.824012,8.40497,4
-777813,Hallarvika,Dolmøya,Hitra,Trøndelag,63.64159,8.694524,4
-3261999,Sildskjærbugen,,Frøya,Trøndelag,63.822221,8.404773,4
+777813,Hallarvika,Dolmøya,Hitra,Trøndelag,63.641590,8.694524,4
 793213,Lyngværet,,Frøya,Trøndelag,63.802375,8.548251,4
 1896752,Staulholmen,Uttian,Frøya,Trøndelag,63.777185,8.863901,4
 724758,Heiavalen,Titran,Frøya,Trøndelag,63.667439,8.297433,4
-2834166,Træsåa nedre,,Frøya,Trøndelag,63.685595,8.67088,4
-636580,Stort tjern S av Vågsenden,Titran,Frøya,Trøndelag,63.67947,8.337686,4
+2834166,Træsåa nedre,,Frøya,Trøndelag,63.685595,8.670880,4
+636580,Stort tjern S av Vågsenden,Titran,Frøya,Trøndelag,63.679470,8.337686,4
 542827,Vågsvågtjønnin,Titran,Frøya,Trøndelag,63.681565,8.347819,4
 2447723,Trøastraumen,Kvernøya,Frøya,Trøndelag,63.781702,8.688784,4
 3283590,Skjervøya,,Frøya,Trøndelag,63.858862,8.542781,4
-2435054,Øyaveien 87-90,Norddyrøya,Frøya,Trøndelag,63.799805,8.69483,4
+2435054,Øyaveien 87-90,Norddyrøya,Frøya,Trøndelag,63.799805,8.694830,4
 356974,Krutvik,,Frøya,Trøndelag,63.732089,8.649384,4
-423634,Ø av Laksvatnet,Laksvatnet,Hitra,Trøndelag,63.57437,8.961153,4
+423634,Ø av Laksvatnet,Laksvatnet,Hitra,Trøndelag,63.574370,8.961153,4
 2422312,Madsvågveien 21-27,Dyrvik,Frøya,Trøndelag,63.761863,8.820127,4
 2834172,Øver Nesadalen,,Frøya,Trøndelag,63.686185,8.657343,4
 2469816,Lyngheia,Titran,Frøya,Trøndelag,63.670156,8.325703,4
-3313348,Langrumpa,Uttian,Frøya,Trøndelag,63.767804,8.8678,4
+3313348,Langrumpa,Uttian,Frøya,Trøndelag,63.767804,8.867800,4
 2158806,myr Ø av Daløya,Daløya,Frøya,Trøndelag,63.680462,8.402922,4
 3316953,Håvika østre,Håvika,Frøya,Trøndelag,63.668232,8.363118,4
-2856817,Saltnesvågen,Uttian,Frøya,Trøndelag,63.767621,8.864018,4
 2426770,Hokkøya - Remingen,Sulfjorden,Frøya,Trøndelag,63.846163,8.600812,4
-3169592,Innersundet,Titran,Frøya,Trøndelag,63.665789,8.304826,4
 911642,Ø av Litlvatnet,,Hitra,Trøndelag,63.614252,8.953239,4
-2810233,Nordjamnungen,,Frøya,Trøndelag,63.803608,8.65065,4
+2810233,Nordjamnungen,,Frøya,Trøndelag,63.803608,8.650650,4
 2446931,Åmanngjortheia,Aukaøya,Frøya,Trøndelag,63.777669,8.736251,4
 2126859,Svellingsundet,,Frøya,Trøndelag,63.802379,8.800831,4
-2809869,Leirvikveien ved Skjønhalsen,,Frøya,Trøndelag,63.777431,8.69633,4
+2809869,Leirvikveien ved Skjønhalsen,,Frøya,Trøndelag,63.777431,8.696330,4
 1961569,mlm Bustbergvatnet og Staulvågen,Strømøya,Frøya,Trøndelag,63.783495,8.788901,4
 2448710,Vann ved renovasjonsplassen,,Frøya,Trøndelag,63.694765,8.436205,4
 1615595,turbin C03 (13),Frøya vindkraftverk,Frøya,Trøndelag,63.706339,8.678471,4
-2825162,Hestøya,Ulvan,Hitra,Trøndelag,63.673618,9.025832,4
-1887050,Korsvatnet,Fjellværsøya,Hitra,Trøndelag,63.652739,9.093439,4
 2441705,Eidsdalen,Eid,Hitra,Trøndelag,63.618751,8.932784,4
 2825141,Heggvika,,Hitra,Trøndelag,63.615011,9.034563,4
-2825250,Sætra,Fjellværsøya,Hitra,Trøndelag,63.621665,9.101138,4
 2824583,Sjøbakken,,Hitra,Trøndelag,63.609769,8.632127,4
 2144270,Mastad øst,Fjellværsøya,Hitra,Trøndelag,63.647133,9.056518,4
-440779,Herøysvaet,Fjellværsøya,Hitra,Trøndelag,63.656,9.137789,4
+440779,Herøysvaet,Fjellværsøya,Hitra,Trøndelag,63.656000,9.137789,4
 2825532,Nordaunet,,Hitra,Trøndelag,63.573858,8.801972,4
 2823530,sør av Botnvågveien,Fjellværsøya,Hitra,Trøndelag,63.644645,9.119122,4
 2825219,Nordøverdalen,,Hitra,Trøndelag,63.589086,8.833727,4
 2825378,Langs Knarrlagsundveien ved Naustbakken,,Hitra,Trøndelag,63.617813,8.937096,4
 2427548,sør av Vetan,Fjellværsøya,Hitra,Trøndelag,63.657009,9.098452,4
 2825388,ved Melandsjøveien 79,Dolmsundet,Hitra,Trøndelag,63.634773,8.772642,4
-2427552,Ørnheia,Fjellværsøya,Hitra,Trøndelag,63.646511,9.1141,4
+2427552,Ørnheia,Fjellværsøya,Hitra,Trøndelag,63.646511,9.114100,4
 2153886,dyrket mark v/Vikstrøm,Dolmøya,Hitra,Trøndelag,63.635323,8.805116,4
 2823546,Litlvarden,Ulvøya,Hitra,Trøndelag,63.669917,9.099368,4
 1887045,Trovågveien,Ulvøya,Hitra,Trøndelag,63.668861,9.057075,4
 2144206,N av Aurebon,Ulvøya,Hitra,Trøndelag,63.656184,9.106069,4
 2144274,V av Skottsgrindan,Fjellværsøya,Hitra,Trøndelag,63.650291,9.064154,4
 2825224,N av Skottsgrindan,Fjellværsøya,Hitra,Trøndelag,63.653289,9.062456,4
-2825254,Storvågfjellet,Fjellværsøya,Hitra,Trøndelag,63.640381,9.16402,4
+2825254,Storvågfjellet,Fjellværsøya,Hitra,Trøndelag,63.640381,9.164020,4
 2133582,Tjern V for Mekanikerhagen,Titran,Frøya,Trøndelag,63.671033,8.323771,4
 2814662,Auka,Aukaøya,Frøya,Trøndelag,63.772568,8.742315,4
 2402620,Dyrøyveien 524,,Frøya,Trøndelag,63.782226,8.700992,4
 2356157,kirkegård v/Vågan,,Frøya,Trøndelag,63.792169,8.685658,4
-2397047,sør av Tuvnes settefisk,Tuvnes,Frøya,Trøndelag,63.72772,8.631759,4
+2397047,sør av Tuvnes settefisk,Tuvnes,Frøya,Trøndelag,63.727720,8.631759,4
 2149217,Skjerdingen,,Frøya,Trøndelag,63.873586,8.600614,4
 2845889,Dyrøyveien 1003,Sørdyrøya,Frøya,Trøndelag,63.786876,8.656193,4
 2852296,Faksvågmyra,Grefsnes,Hitra,Trøndelag,63.547916,8.450245,4
 642001,Skogsøya,Mausundvær,Frøya,Trøndelag,63.845941,8.628255,4
 2910690,Hatland,Barman,Hitra,Trøndelag,63.613194,8.843303,4
-388343,Sørvågen,,Hitra,Trøndelag,63.632718,8.75216,4
+388343,Sørvågen,,Hitra,Trøndelag,63.632718,8.752160,4
 2268280,dam v/Staulvågen,Uttian,Frøya,Trøndelag,63.777832,8.872804,4
 3002172,Fjorden utafor Sveneset,Barmfjorden,Hitra,Trøndelag,63.610539,8.860686,4
 3002199,Sandstad fergekai,Sandstad,Hitra,Trøndelag,63.517821,9.111863,4
 911636,Straumsvika,,Hitra,Trøndelag,63.621397,8.846726,4
 460903,Heimerøya,Ulvøya,Hitra,Trøndelag,63.673917,9.113337,4
 2153878,dyrket mark v/tunnelinnslag,Dolmøya,Hitra,Trøndelag,63.654035,8.819875,4
-3152191,Sulfjorden,,Frøya,Trøndelag,63.824281,8.65737,4
-3152194,sjøområder v/Teistholmen,,Frøya,Trøndelag,63.86572,8.64138,4
 3226923,Måsøyvalveien,Måsøyvalen,Frøya,Trøndelag,63.705269,8.516056,4
-3226934,Skyberget,,Frøya,Trøndelag,63.674618,8.595278,4
-3226941,vann N for vegen v/Veisan,,Frøya,Trøndelag,63.692038,8.464313,4
-3169590,sjøområdene N av Slettringen,,Frøya,Trøndelag,63.676642,8.263459,4
 793226,Skognesvatnet,,Hitra,Trøndelag,63.603767,8.649078,4
 2356158,Dyrøy,Norddyrøya,Frøya,Trøndelag,63.796636,8.681876,4
 792306,Besselvassheia,,Frøya,Trøndelag,63.714519,8.739647,4
 2277522,Vassøysvaet,Mausundvær,Frøya,Trøndelag,63.858645,8.631534,4
 643201,Litldola,,Frøya,Trøndelag,63.668244,8.382674,4
-2447667,Hamnøyan,,Frøya,Trøndelag,63.83358,8.537148,4
 1129683,Sjøområdet utenfor Otersundet,Titran,Frøya,Trøndelag,63.663043,8.273807,4
 356952,Postvika,Strømøya,Frøya,Trøndelag,63.787841,8.788973,4
 2459030,skog v/Kattugltjønna,,Frøya,Trøndelag,63.688665,8.558914,4
-2459014,Ytre Rosaberget,,Frøya,Trøndelag,63.68718,8.579836,4
 2157332,Skagamyran,,Hitra,Trøndelag,63.583531,8.959563,4
 370204,Tunnelinnslag,Dolmøya,Hitra,Trøndelag,63.653871,8.821429,4
 2144024,Fjøshaugen sør,Norddyrøya,Frøya,Trøndelag,63.796128,8.675156,4
-641993,skolen,Sula,Frøya,Trøndelag,63.845331,8.456084,4
-2633885,havområdene vest for Sula - Sula pelagic 2024,Havet utenfor Sula,Frøya,Trøndelag,63.858039,8.215012,4
 1892453,Bogøyvær til Sula,,Frøya,Trøndelag,63.864114,8.515167,4
 2658973,Tetjønna,Titran,Frøya,Trøndelag,63.672802,8.307144,4
 1364282,Ml. Mekanikerhagen og Nyjord,Titran,Frøya,Trøndelag,63.672782,8.328775,4
 2142917,Åker ved utfrøyvegen 691,,Frøya,Trøndelag,63.753693,8.696033,4
 1615586,turbin B03 (7),Frøya vindkraftverk,Frøya,Trøndelag,63.699227,8.647129,4
-2238174,Ternekoloni v Holahaugen,Nordskaget,Frøya,Trøndelag,63.70622,8.54959,4
-2266808,Sørdyrøya,,Frøya,Trøndelag,63.784464,8.633016,4
+2238174,Ternekoloni v Holahaugen,Nordskaget,Frøya,Trøndelag,63.706220,8.549590,4
 2330011,Havet mellom Kya og Sula,,Frøya,Trøndelag,63.814896,8.341172,4
 3246483,Flatvalveien,Flatval,Frøya,Trøndelag,63.690668,8.761422,3
-2513448,Skyberget,Storhallaren,Frøya,Trøndelag,63.672814,8.590122,3
-3255633,sjøområdene N av Slettringen,,Frøya,Trøndelag,63.677741,8.259093,3
-3261932,sjøen ml. Slettringen og Vikleiholman,,Frøya,Trøndelag,63.670069,8.26415,3
-3261963,Frøyhavet,,Frøya,Trøndelag,63.815931,8.248079,3
 3268691,Seibalen,,Hitra,Trøndelag,63.665598,8.823055,3
-3261934,sjøområdene N av Slettringen,,Frøya,Trøndelag,63.673718,8.259353,3
 2576069,Melkvika - Ytterbarman,Barman,Hitra,Trøndelag,63.634107,8.838515,3
 3279981,Klubbamyran,,Frøya,Trøndelag,63.752652,8.694012,3
-425156,Skagan,Svellingen,Frøya,Trøndelag,63.802367,8.82142,3
-2277348,Hamnøyan,Bogøyvær,Frøya,Trøndelag,63.858732,8.562382,3
 2149221,skjær Ø av Vardøya,Bogøyvær,Frøya,Trøndelag,63.874978,8.544631,3
-2426957,bukt langs Øyaveien,Norddyrøya,Frøya,Trøndelag,63.794958,8.686628,3
 3294494,Skogholt ved Børaunet,,Frøya,Trøndelag,63.715339,8.841785,3
 3293657,Karvika,Nordhammaren,Frøya,Trøndelag,63.700839,8.831877,3
 2153909,dyrket mark v/Mittistua,Straum (Hitra),Hitra,Trøndelag,63.562966,8.745827,3
 3308939,Trillheia,Fjellværsøya,Hitra,Trøndelag,63.654744,9.073308,3
 2825222,myr S av Skjulsvika,,Hitra,Trøndelag,63.613909,8.657271,3
 2833105,Malmmyran - vanntank,Malmmyran,Frøya,Trøndelag,63.696966,8.502985,3
-1137717,Vidarbakken,,Frøya,Trøndelag,63.74916,8.824088,3
+1137717,Vidarbakken,,Frøya,Trøndelag,63.749160,8.824088,3
 3316257,Holt i Ervika,Ervika (Frøya),Frøya,Trøndelag,63.746132,8.827484,3
-2228404,Skaga,Nordhammaren,Frøya,Trøndelag,63.70105,8.828714,3
-352402,Valavatnet,,Frøya,Trøndelag,63.72261,8.625974,3
+2228404,Skaga,Nordhammaren,Frøya,Trøndelag,63.701050,8.828714,3
 2487083,N av Vollavatnet,,Frøya,Trøndelag,63.777792,8.695584,3
 2831415,vest av Holbekken,Aukaøya,Frøya,Trøndelag,63.790209,8.719893,3
-3317816,Østenden Innervågen,Titran,Frøya,Trøndelag,63.669798,8.330096,3
 2488444,Panna,,Frøya,Trøndelag,63.780372,8.730897,3
-2447665,Austre Dallskjæret,,Frøya,Trøndelag,63.841637,8.534193,3
 3323846,Ytterst Sulsveien,Sula,Frøya,Trøndelag,63.848534,8.455006,3
 2132252,Hammarvika gjestehavn,Hammarvika,Frøya,Trøndelag,63.695975,8.813982,3
 2430333,Hammarvikbakkan,Hammarvika,Frøya,Trøndelag,63.697687,8.801361,3
-2459082,Lomsmyrhaugan,,Frøya,Trøndelag,63.711484,8.59067,3
+2459082,Lomsmyrhaugan,,Frøya,Trøndelag,63.711484,8.590670,3
 2413539,høyde v/Strømøybotnen,,Frøya,Trøndelag,63.778824,8.790913,3
 2430625,Salmar,Nordskaget,Frøya,Trøndelag,63.709912,8.560352,3
-661086,Ml. Grasberget og Melkstadheia,Titran,Frøya,Trøndelag,63.674383,8.34711,3
+661086,Ml. Grasberget og Melkstadheia,Titran,Frøya,Trøndelag,63.674383,8.347110,3
 456270,Aukaøya,,Frøya,Trøndelag,63.777304,8.738955,3
-2810245,Austre Dallskjæret,,Frøya,Trøndelag,63.84364,8.53802,3
-2810236,Fjølværet,,Frøya,Trøndelag,63.80956,8.608699,3
 2810752,Kya havn,Kya,Frøya,Trøndelag,63.772953,8.314061,3
 2447674,Dyrøyskjæra,Norddyrøya,Frøya,Trøndelag,63.801875,8.667422,3
-646077,Dolm kirke,Dolmøya,Hitra,Trøndelag,63.633133,8.70808,3
-2402631,Synstøya,,Frøya,Trøndelag,63.805984,8.68944,3
+646077,Dolm kirke,Dolmøya,Hitra,Trøndelag,63.633133,8.708080,3
+2402631,Synstøya,,Frøya,Trøndelag,63.805984,8.689440,3
 2608530,Kvalværet,,Frøya,Trøndelag,63.809691,8.712724,3
-2447601,Storvika,,Frøya,Trøndelag,63.67898,8.646464,3
+2447601,Storvika,,Frøya,Trøndelag,63.678980,8.646464,3
 2116780,dyrkamark v/Auna,,Frøya,Trøndelag,63.718799,8.614799,3
 2488421,Fagerstranda vest,,Frøya,Trøndelag,63.774077,8.752825,3
 2397044,V av Ladalsheia,,Frøya,Trøndelag,63.764178,8.755259,3
-2825158,Stormyra,,Hitra,Trøndelag,63.628848,8.957183,3
 2824608,innmark S av Naseterheia,,Hitra,Trøndelag,63.592239,8.640607,3
 2825654,N av Hofstadhalten,,Hitra,Trøndelag,63.571523,8.699663,3
 2824586,dyrket mark S av Hamn,,Hitra,Trøndelag,63.610807,8.634499,3
 2825257,sørøst av Ingeborgvika,Fjellværsøya,Hitra,Trøndelag,63.659608,9.064136,3
 2825114,Nordsætra,Fjellværsøya,Hitra,Trøndelag,63.623924,9.111378,3
-2825096,Fjellværøyveien,Fjellværsøya,Hitra,Trøndelag,63.633668,9.12921,3
+2825096,Fjellværøyveien,Fjellværsøya,Hitra,Trøndelag,63.633668,9.129210,3
 2153893,Valmyra,,Hitra,Trøndelag,63.621038,8.668293,3
 2825117,Kammen,Fjellværsøya,Hitra,Trøndelag,63.625165,9.104309,3
 2825372,Vollavatnet vest av Vesthitterveien,,Hitra,Trøndelag,63.595766,8.840626,3
@@ -1217,159 +1066,93 @@ id,lokalitet,hovedlokalitet,kommune,fylke,lat,lon,count
 2825110,Stranda,Fjellværsøya,Hitra,Trøndelag,63.631629,9.123721,3
 2823536,skogkledd høyde v/snuplass,Ulvøya,Hitra,Trøndelag,63.671774,9.107084,3
 2825295,nord av Merkesåa,,Hitra,Trøndelag,63.569408,8.718042,3
-2448219,Brønnøya,,Hitra,Trøndelag,63.64482,9.010587,3
-1455464,Slettaskogen,Melkervannet,Frøya,Trøndelag,63.770671,8.782766,3
-2831438,Store Hattøya,,Frøya,Trøndelag,63.85053,8.623414,3
+2448219,Brønnøya,,Hitra,Trøndelag,63.644820,9.010587,3
+2831438,Store Hattøya,,Frøya,Trøndelag,63.850530,8.623414,3
 2513440,Hallaren,Hallarn,Frøya,Trøndelag,63.675068,8.611744,3
 2447668,Gildklakken,Sula,Frøya,Trøndelag,63.864332,8.486555,3
-2831437,Fjølværet,,Frøya,Trøndelag,63.811681,8.604441,3
-2831821,Avløysa nord,Avløysa,Frøya,Trøndelag,63.6731,8.554504,3
-759722,Svantjønna,Nabeita,Frøya,Trøndelag,63.697058,8.783242,3
+2831821,Avløysa nord,Avløysa,Frøya,Trøndelag,63.673100,8.554504,3
 2830047,Gullmundsvågen,,Frøya,Trøndelag,63.686384,8.352419,3
-372625,Husvika,Nordskaget,Frøya,Trøndelag,63.707847,8.579926,3
 2402668,sjøområdene vest av Litle-Aursøya,Mausundvær,Frøya,Trøndelag,63.869194,8.623387,3
-352391,Vikan,Strømøya,Frøya,Trøndelag,63.79802,8.782388,3
-2155184,Aunet,,Frøya,Trøndelag,63.71977,8.613092,3
-2832743,Gurvikdalen sørøst,Gurvikdalen,Frøya,Trøndelag,63.76458,8.747318,3
+2832743,Gurvikdalen sørøst,Gurvikdalen,Frøya,Trøndelag,63.764580,8.747318,3
 769644,Lynghei S av Mekanikerhagen,Titran,Frøya,Trøndelag,63.670104,8.327158,3
-2797537,Kjervågsundveien,Titran,Frøya,Trøndelag,63.67808,8.337183,3
 2871140,Dalsvika,,Frøya,Trøndelag,63.670431,8.373709,3
 769641,Vindmøllene,,Frøya,Trøndelag,63.667889,8.345502,3
-2919681,Kvisten lykt,,Frøya,Trøndelag,63.70312,8.443328,3
 440320,Espneset,,Frøya,Trøndelag,63.718195,8.591532,3
-2921438,Mindestien,,Hitra,Trøndelag,63.614208,8.71841,3
 2430335,Valaveien,,Frøya,Trøndelag,63.722387,8.617619,3
-2921458,Mindestien,,Hitra,Trøndelag,63.603371,8.729118,3
 2958068,Uttiveien,,Frøya,Trøndelag,63.768324,8.837823,3
 2834161,Halten,Skardsvågen,Frøya,Trøndelag,63.691843,8.687436,3
 2269495,Staulvågen øst,Uttian,Frøya,Trøndelag,63.779416,8.873163,3
-3031928,Sistranda gjestehavn,Sistranda,Frøya,Trøndelag,63.736577,8.83706,3
 1651668,Ml. Gunnarvassdalen og Storgropa,Titran,Frøya,Trøndelag,63.669499,8.342232,3
 2189480,Sør av Vågsenden,Titran,Frøya,Trøndelag,63.678793,8.336078,3
 3018367,Kultrumark,Lunde,Frøya,Trøndelag,63.703852,8.809517,3
-355566,Veltheian,Titran,Frøya,Trøndelag,63.679335,8.3555,3
-355077,Barmfjorden,,Hitra,Trøndelag,63.61925,8.875714,3
-853227,Brua ved skolen,Titran,Frøya,Trøndelag,63.66971,8.31318,3
-3070290,havområdene vest for Sula - Sula pelagic 2025,,Frøya,Trøndelag,63.833953,8.069566,3
-1870489,Nord av Valmovatnet,Titran,Frøya,Trøndelag,63.683923,8.31893,3
-2197323,myr v/Grasdalsvatnet,Stutvassdalen,Frøya,Trøndelag,63.70618,8.703373,3
+355566,Veltheian,Titran,Frøya,Trøndelag,63.679335,8.355500,3
+355077,Barmfjorden,,Hitra,Trøndelag,63.619250,8.875714,3
+853227,Brua ved skolen,Titran,Frøya,Trøndelag,63.669710,8.313180,3
+1870489,Nord av Valmovatnet,Titran,Frøya,Trøndelag,63.683923,8.318930,3
+2197323,myr v/Grasdalsvatnet,Stutvassdalen,Frøya,Trøndelag,63.706180,8.703373,3
 2413542,Utfrøyveien 1095-1103,Krutvik,Frøya,Trøndelag,63.730797,8.646141,3
-3164539,Store Burøya,,Frøya,Trøndelag,63.87122,8.682352,3
-2144833,dyrket mark S av Krutvika,Krutvik,Frøya,Trøndelag,63.730531,8.64853,3
-2678148,Ørndalsvågen,Hammarvatnet,Frøya,Trøndelag,63.727,8.807586,3
-3169155,Telllerute 6 - båt,,Frøya,Trøndelag,63.783118,8.302149,3
-3169158,Telllerute 6 - båt,,Frøya,Trøndelag,63.772461,8.276439,3
-2441710,Aukneshoman,Ulvøya,Hitra,Trøndelag,63.666331,9.11454,3
-2444756,Setra,,Frøya,Trøndelag,63.79831,8.684724,3
-2447664,holme N av Uggsteinen,,Frøya,Trøndelag,63.842246,8.547569,3
-2450003,Knarrlagsund,,Hitra,Trøndelag,63.663191,9.088858,3
-2459016,Sveabakken gravsted,,Frøya,Trøndelag,63.686412,8.576638,3
+3164539,Store Burøya,,Frøya,Trøndelag,63.871220,8.682352,3
+2144833,dyrket mark S av Krutvika,Krutvik,Frøya,Trøndelag,63.730531,8.648530,3
+2678148,Ørndalsvågen,Hammarvatnet,Frøya,Trøndelag,63.727000,8.807586,3
+2441710,Aukneshoman,Ulvøya,Hitra,Trøndelag,63.666331,9.114540,3
 2459035,mlm Talvikvatnet og Halsholman,Storfjordkastet,Frøya,Trøndelag,63.686256,8.549329,3
-2459012,Ytre Rosaberget,,Frøya,Trøndelag,63.688419,8.582172,3
 439910,Dalasundet,Gurvikdalen,Frøya,Trøndelag,63.768026,8.733637,3
 2162685,bukt v/Vikan,Svellingen,Frøya,Trøndelag,63.793752,8.784993,3
 2461417,Avløysa vest,Avløysa,Frøya,Trøndelag,63.672264,8.550111,3
 2347730,Rasteplass langs Kvervaveien,Malmmyran,Frøya,Trøndelag,63.698698,8.500344,3
-2475759,Reksa,,Hitra,Trøndelag,63.640313,9.168008,3
 2278931,Langåsen øst,Flatval,Frøya,Trøndelag,63.693033,8.775013,3
-2487055,Nordhammaren,,Frøya,Trøndelag,63.706116,8.829622,3
-2487030,Oshøgda vest,,Frøya,Trøndelag,63.791669,8.718033,3
 2518553,dyrket mark v/Bekken,Bekken,Frøya,Trøndelag,63.673439,8.578228,3
 2513730,Storheia,Stororta,Frøya,Trøndelag,63.668188,8.539511,3
-2518560,Stutvatnet,,Frøya,Trøndelag,63.705678,8.685047,3
 2528724,Båthavna Melandsjøen,Melandsjø,Hitra,Trøndelag,63.628772,8.725094,3
-2591566,Fillan gjenvinningsstasjoin,,Hitra,Trøndelag,63.597068,8.97355,3
+2591566,Fillan gjenvinningsstasjoin,,Hitra,Trøndelag,63.597068,8.973550,3
 2597837,bukt langs Buaveien,,Frøya,Trøndelag,63.688741,8.481327,3
 352389,Strømøya,,Frøya,Trøndelag,63.786825,8.780682,3
-2605395,Sulfjorden,Sulfjorden,Frøya,Trøndelag,63.82967,8.553722,3
 371446,Skardsvågen,,Frøya,Trøndelag,63.684265,8.672587,3
-356948,Tuvnes,,Frøya,Trøndelag,63.72739,8.624258,3
-356949,Tungvågen,,Frøya,Trøndelag,63.73719,8.664538,3
+356948,Tuvnes,,Frøya,Trøndelag,63.727390,8.624258,3
+356949,Tungvågen,,Frøya,Trøndelag,63.737190,8.664538,3
 2155164,Vikasund,,Frøya,Trøndelag,63.802363,8.775507,3
 2153896,Hestnes øst,Hestnes,Hitra,Trøndelag,63.587751,8.619928,3
-430378,Nordpilen,Uttian,Frøya,Trøndelag,63.772648,8.874448,3
 2162684,myr v/Vikasund snuplass,,Frøya,Trøndelag,63.799753,8.776486,3
 352414,Klumpan,,Frøya,Trøndelag,63.709093,8.709553,3
 368504,Rundmåsklakken - Sørkråka,,Frøya,Trøndelag,63.896342,8.862428,3
 380412,Kjerringvågen,Fillingsnes,Frøya,Trøndelag,63.664681,8.491712,3
-355048,Asmundvåg,,Hitra,Trøndelag,63.582928,8.657783,3
 2183868,Nedre straumfjordveien,krysset,Hitra,Trøndelag,63.575065,8.669901,3
 767880,Våg SØ for Hjellholmen,Titran,Frøya,Trøndelag,63.670363,8.316477,3
 2195421,Håla,,Frøya,Trøndelag,63.739356,8.836835,3
 2257302,Skardsvågsdalen,,Frøya,Trøndelag,63.695696,8.695009,3
-2330006,Frøyhavet,,Frøya,Trøndelag,63.723294,8.382485,3
-646046,Grindvika,Hestvika,Hitra,Trøndelag,63.563218,9.200087,3
 1890158,Ottersøla,,Frøya,Trøndelag,63.782622,8.636331,3
 3339563,tjønn ved Staulan,Uttian,Frøya,Trøndelag,63.776582,8.874672,3
-3255629,sjøen ml. Slettringen og Vikleiholman,Titran,Frøya,Trøndelag,63.670519,8.262884,2
-3255653,sjøen mellom Kya og Sønnkya,Kya,Frøya,Trøndelag,63.76884,8.305841,2
-3255663,Frøyfjorden v/Sandholmen,Titran,Frøya,Trøndelag,63.661038,8.294459,2
-3255636,Frøyhavet,Titran-Kya,Frøya,Trøndelag,63.689502,8.265579,2
-3261501,skjær utenfor Avløysa,Avløysa,Frøya,Trøndelag,63.66816,8.566478,2
-3255665,Sørneset,Titran,Frøya,Trøndelag,63.66651,8.304889,2
+3261501,skjær utenfor Avløysa,Avløysa,Frøya,Trøndelag,63.668160,8.566478,2
+3255665,Sørneset,Titran,Frøya,Trøndelag,63.666510,8.304889,2
 3255652,sjøen melllom Kya og Synnkya,Kya,Frøya,Trøndelag,63.769182,8.308689,2
 2832761,øst av Bergli,Bergli,Frøya,Trøndelag,63.715565,8.596949,2
 3261509,Hamnavågen,Flatval,Frøya,Trøndelag,63.689717,8.767809,2
-3255661,Ml. Heia og Slettringen,,Frøya,Trøndelag,63.664111,8.270232,2
-3255631,sjøområdene N av Slettringen,Titran,Frøya,Trøndelag,63.67332,8.258751,2
-3255623,Innersundet,Titran,Frøya,Trøndelag,63.666749,8.310422,2
-3255626,Frøyfjorden v/Sildholmen,Titran,Frøya,Trøndelag,63.660859,8.290013,2
-3255630,Vikflua-Svartskjæret,Titran,Frøya,Trøndelag,63.672439,8.260108,2
-3255624,Innersundet,Titran,Frøya,Trøndelag,63.666431,8.30859,2
-3255646,sjøen mellom Kya og Sønnkya,Kya,Frøya,Trøndelag,63.761128,8.32343,2
-3262013,sjøen mellom Kya og Sønnkya,Kya,Frøya,Trøndelag,63.762141,8.323376,2
-3261974,Frøyhavet,,Frøya,Trøndelag,63.84547,8.315902,2
-3262015,Mlm. Slettringen og Kya,,Frøya,Trøndelag,63.697599,8.267187,2
-3261925,Frøyfjorden v/Sildholmen,,Frøya,Trøndelag,63.660229,8.283698,2
-3261938,Mlm. Slettringen og Kya,,Frøya,Trøndelag,63.679418,8.253415,2
-3262024,sjøområdet ml. Heia og Stabben,,Frøya,Trøndelag,63.664239,8.300038,2
-3261993,Sildskjærbugen,,Frøya,Trøndelag,63.830732,8.397999,2
-3261921,Innersundet,,Frøya,Trøndelag,63.665801,8.304458,2
-3261941,Mlm. Slettringen og Kya,,Frøya,Trøndelag,63.694622,8.238979,2
-3262005,sjøen mellom Kovaskjæret og Grognflesa,,Frøya,Trøndelag,63.777709,8.32811,2
-3261989,Sildskjærbugen,,Frøya,Trøndelag,63.841122,8.387714,2
-3261942,Mlm. Slettringen og Kya,,Frøya,Trøndelag,63.69787,8.238539,2
+3262005,sjøen mellom Kovaskjæret og Grognflesa,,Frøya,Trøndelag,63.777709,8.328110,2
 3261983,Andholmleia,,Frøya,Trøndelag,63.886308,8.399652,2
-3261990,Sildskjærbugen,,Frøya,Trøndelag,63.840041,8.387543,2
-3262018,Ml. Heia og Slettringen,,Frøya,Trøndelag,63.664522,8.270196,2
-3261949,Frøyhavet,,Frøya,Trøndelag,63.7336,8.21124,2
-3261996,Sildskjærbugen,,Frøya,Trøndelag,63.827309,8.401619,2
-441747,Dolmsundet vest,,Hitra,Trøndelag,63.625795,8.67265,2
+441747,Dolmsundet vest,,Hitra,Trøndelag,63.625795,8.672650,2
 3283350,Vardhaugan,Hammarvatnet,Frøya,Trøndelag,63.717531,8.816695,2
 3283345,Vadet,Hammarvatnet,Frøya,Trøndelag,63.727986,8.803355,2
 3288174,Litlsingøya,,Frøya,Trøndelag,63.873661,8.563352,2
-2141415,Notvollbukta,Ansnes,Hitra,Trøndelag,63.642052,8.99457,2
 3289228,Håholmen,,Frøya,Trøndelag,63.748659,8.549006,2
-3288876,Dyrka mark v/Skjelsøyveien,Uttian,Frøya,Trøndelag,63.772493,8.840617,2
 646061,Fillvatnet,Fillan,Hitra,Trøndelag,63.607481,8.951865,2
 551398,uttiankrysset,Dyrvik,Frøya,Trøndelag,63.760815,8.815285,2
-3295560,Sjøområdet utenfor Innersundet,Titran,Frøya,Trøndelag,63.66496,8.300128,2
-2978030,Storvikskaget,Ervika (Frøya),Frøya,Trøndelag,63.74335,8.821034,2
+3295560,Sjøområdet utenfor Innersundet,Titran,Frøya,Trøndelag,63.664960,8.300128,2
+2978030,Storvikskaget,Ervika (Frøya),Frøya,Trøndelag,63.743350,8.821034,2
 3308998,skog S av Øra,Straum (Hitra),Hitra,Trøndelag,63.560026,8.745522,2
-2153908,dyrket mark v/Haugen,Straum (Hitra),Hitra,Trøndelag,63.562382,8.75472,2
-3311077,Valavatnet vest,Valavatnet,Frøya,Trøndelag,63.72144,8.617799,2
-3017481,Lunde,,Frøya,Trøndelag,63.703036,8.809392,2
+2153908,dyrket mark v/Haugen,Straum (Hitra),Hitra,Trøndelag,63.562382,8.754720,2
+3311077,Valavatnet vest,Valavatnet,Frøya,Trøndelag,63.721440,8.617799,2
 2833189,Stabbenveien i Innervågen,Titran,Frøya,Trøndelag,63.669825,8.331218,2
-2839419,Avløysan,Nordskaget,Frøya,Trøndelag,63.70608,8.571742,2
+2839419,Avløysan,Nordskaget,Frøya,Trøndelag,63.706080,8.571742,2
 3313358,Jorder ved Leirvika,,Frøya,Trøndelag,63.764913,8.678849,2
-2197343,Sandvatnet,,Hitra,Trøndelag,63.606059,8.700381,2
-3313360,Husvika,,Frøya,Trøndelag,63.713708,8.586861,2
-3317831,Aunvatnet,,Frøya,Trøndelag,63.716361,8.615526,2
 3316956,Håvika vestre,Håvika,Frøya,Trøndelag,63.668268,8.359515,2
-3319587,Frøyfjorden v/Sildholmen,,Frøya,Trøndelag,63.660799,8.275038,2
 2517805,Brennskaget,Kvaløya,Frøya,Trøndelag,63.782737,8.735613,2
-3319586,Frøyfjorden v/Sandholmen,,Frøya,Trøndelag,63.661561,8.296121,2
-2456964,Langåsen (høyde),Nabeita,Frøya,Trøndelag,63.694562,8.7776,2
+2456964,Langåsen (høyde),Nabeita,Frøya,Trøndelag,63.694562,8.777600,2
 2773836,sjøen øst for Vikasundet,,Frøya,Trøndelag,63.796176,8.786682,2
 2513726,Balsmyra,,Frøya,Trøndelag,63.680044,8.630537,2
 2445037,høyde v/Fillheiveien,Fillan,Hitra,Trøndelag,63.607441,8.969489,2
 2513724,Omnheia,,Frøya,Trøndelag,63.676674,8.624483,2
 2356168,mellom Bustbergvatnet og Langvatnet,Strømøya,Frøya,Trøndelag,63.781579,8.792243,2
 398368,Andsteinen,Rottingen,Frøya,Trøndelag,63.831754,8.770405,2
-2810242,Kvalskreia,,Frøya,Trøndelag,63.851611,8.522326,2
-2810241,sjøområdene sør av Langholmen,,Frøya,Trøndelag,63.850439,8.542547,2
-2810239,Uggsteinøya,,Frøya,Trøndelag,63.83873,8.562077,2
-356966,Sørdyrøya,,Frøya,Trøndelag,63.785892,8.649501,2
 2397043,Nordfrøyveien 1197-1201,Svellingen,Frøya,Trøndelag,63.791979,8.806032,2
 2824614,myr ved Kuberget,,Hitra,Trøndelag,63.575901,8.672776,2
 2825152,Bergan,,Hitra,Trøndelag,63.618384,8.663838,2
@@ -1379,20 +1162,19 @@ id,lokalitet,hovedlokalitet,kommune,fylke,lat,lon,count
 2825382,sørvest av Øverdalsvatnet,,Hitra,Trøndelag,63.583336,8.830206,2
 2441707,Knarrlagsundveien 379,,Hitra,Trøndelag,63.660349,9.065492,2
 2144272,Mastad SØ,Fjellværsøya,Hitra,Trøndelag,63.644481,9.056527,2
-2825656,N av Svendstrøa,,Hitra,Trøndelag,63.566129,8.73538,2
-2451021,Asmundvåg skytebane,Asmundvåg,Hitra,Trøndelag,63.578947,8.67309,2
+2825656,N av Svendstrøa,,Hitra,Trøndelag,63.566129,8.735380,2
+2451021,Asmundvåg skytebane,Asmundvåg,Hitra,Trøndelag,63.578947,8.673090,2
 2825621,Melandsjø fotballbane,Melandsjø,Hitra,Trøndelag,63.631366,8.741641,2
 2826211,Hammarberget boligfelt,,Frøya,Trøndelag,63.704111,8.830601,2
 590998,Sørfjellet,Fjellværsøya,Hitra,Trøndelag,63.624478,9.060049,2
 2825079,mlm. Vikavatnet og Kjevikan,Ulvøya,Hitra,Trøndelag,63.666462,9.058773,2
 2823525,Båtsvikbukta,Fjellværsøya,Hitra,Trøndelag,63.640361,9.169715,2
 2825386,Storvågen,Dolmsundet,Hitra,Trøndelag,63.634111,8.763137,2
-2825113,høyde ved Fjellværsøyveien,Fjellværsøya,Hitra,Trøndelag,63.625839,9.11516,2
+2825113,høyde ved Fjellværsøyveien,Fjellværsøya,Hitra,Trøndelag,63.625839,9.115160,2
 2823535,Storvågfjellet sør,Fjellværsøya,Hitra,Trøndelag,63.638917,9.158477,2
 2441708,Kvalvika,Ulvøya,Hitra,Trøndelag,63.665386,9.094176,2
 2824887,Mortensvik,,Hitra,Trøndelag,63.621489,8.672363,2
 2824877,vest av Asmundvåg skytebane,,Hitra,Trøndelag,63.579982,8.664601,2
-2825097,Myra,Fjellvær,Hitra,Trøndelag,63.635164,9.138175,2
 792304,Lavdalsheia,Lavdalen,Frøya,Trøndelag,63.669268,8.521284,2
 2830046,Gullmundskaget,,Frøya,Trøndelag,63.690131,8.355105,2
 2829111,Steinholman,,Frøya,Trøndelag,63.874432,8.589556,2
@@ -1400,104 +1182,60 @@ id,lokalitet,hovedlokalitet,kommune,fylke,lat,lon,count
 2402669,holmer mlm Skjerdingen og Roparøya,Mausundvær,Frøya,Trøndelag,63.871679,8.608672,2
 792853,Klevollen,Fillingsnes,Frøya,Trøndelag,63.666263,8.497766,2
 2448063,Valen-Tuvnes,Tuvnes,Frøya,Trøndelag,63.725401,8.622955,2
-2831394,Kjerkdalsvatnet,,Frøya,Trøndelag,63.735631,8.689898,2
-792852,Myra,Fillingsnes,Frøya,Trøndelag,63.666833,8.496005,2
 2448062,Espnesdalen,Espnesdalen,Frøya,Trøndelag,63.709662,8.603399,2
 851236,Happuholman,Titran,Frøya,Trøndelag,63.670204,8.293058,2
 430775,Dolm,Dolmøya,Hitra,Trøndelag,63.632255,8.706777,2
 442979,Skålhaugberget,Melandsjø,Hitra,Trøndelag,63.629873,8.731732,2
 2845938,N av Dyrøygården,Sørdyrøya,Frøya,Trøndelag,63.785634,8.657397,2
-591943,Kvernelva,Straum (Hitra),Hitra,Trøndelag,63.558822,8.73617,2
+591943,Kvernelva,Straum (Hitra),Hitra,Trøndelag,63.558822,8.736170,2
 2852218,Furuvikvatnet,Grefsnes,Hitra,Trøndelag,63.553926,8.502348,2
 2852302,Faksvåg,Grefsnes,Hitra,Trøndelag,63.545531,8.447191,2
-2906232,Anetjønna,Titran,Frøya,Trøndelag,63.68556,8.339402,2
+2906232,Anetjønna,Titran,Frøya,Trøndelag,63.685560,8.339402,2
 2447957,Steinvikhaugan,Neset (Frøya),Frøya,Trøndelag,63.770794,8.812832,2
-2919676,Kvistaveien 218-232,,Frøya,Trøndelag,63.702519,8.446679,2
-2919678,Kvisten lykt,,Frøya,Trøndelag,63.705149,8.442358,2
-2919677,Kvisten lykt,,Frøya,Trøndelag,63.702781,8.443768,2
-2921464,Mindestien,,Hitra,Trøndelag,63.599649,8.730097,2
-2921452,Mindestien,,Hitra,Trøndelag,63.608511,8.721411,2
-2919679,Kvisten lykt,,Frøya,Trøndelag,63.703629,8.441127,2
-2921463,Mindestien,,Hitra,Trøndelag,63.600072,8.730933,2
 3003903,Skoleveien,Nordskaget,Frøya,Trøndelag,63.707095,8.555546,2
-3003898,Postvika vest,,Frøya,Trøndelag,63.78911,8.78573,2
+3003898,Postvika vest,,Frøya,Trøndelag,63.789110,8.785730,2
 442984,Hopsjøen sør,Melandsjø,Hitra,Trøndelag,63.625779,8.717485,2
 785065,Stabben øst,Titran,Frøya,Trøndelag,63.668837,8.327598,2
-3071267,Austre Dallskjæret,,Frøya,Trøndelag,63.844112,8.53731,2
-3070274,havområdene vest for Sula - Sula pelagic 2025,,Frøya,Trøndelag,63.840868,8.105157,2
 688998,Yttersundet,Titran,Frøya,Trøndelag,63.670535,8.309749,2
-3071270,holme N av Uggsteinen,,Frøya,Trøndelag,63.841019,8.551584,2
-3070272,havområdene vest for Sula - Sula pelagic 2024,Havet utenfor Sula,Frøya,Trøndelag,63.84979,8.30408,2
-2402664,sjøområdene SV av Korsvaløya,,Frøya,Trøndelag,63.86743,8.529504,2
-3070273,havområdene vest for Sula - Sula pelagic 2025,,Frøya,Trøndelag,63.844238,8.122621,2
-3114967,sjøområdene sør av Langholmen,,Frøya,Trøndelag,63.851112,8.537606,2
-3114969,Uggsteinøya,,Frøya,Trøndelag,63.843038,8.561232,2
-3089858,Austre Dallskjæret,,Frøya,Trøndelag,63.845399,8.530519,2
+2402664,sjøområdene SV av Korsvaløya,,Frøya,Trøndelag,63.867430,8.529504,2
 3129752,Beite S av Rørvassmyra,,Frøya,Trøndelag,63.676471,8.377437,2
-3129792,Bondenget nord,,Frøya,Trøndelag,63.768189,8.689691,2
-2430336,Husvika,,Frøya,Trøndelag,63.710668,8.579279,2
 3145373,Ferge Dyrøya-Sula,,Frøya,Trøndelag,63.807681,8.616487,2
-3169160,Telllerute 6 - båt,,Frøya,Trøndelag,63.7784,8.283707,2
-3226942,Østenden Innervågen,,Frøya,Trøndelag,63.669491,8.330724,2
-3226935,Skyberget,,Frøya,Trøndelag,63.674722,8.591236,2
 2189276,Hammarneset,Hammarvika,Frøya,Trøndelag,63.698192,8.818087,2
 352376,Dørvik,Haugen (Frøya),Frøya,Trøndelag,63.679574,8.427698,2
 643193,Innerhallarvågen,Storhallaren,Frøya,Trøndelag,63.675993,8.620009,2
 2430296,Kleivaveien,,Frøya,Trøndelag,63.753252,8.692431,2
 2438867,Sjønhalsensundet sør,,Frøya,Trøndelag,63.786047,8.697192,2
-2441709,Osholmen,Ulvøya,Hitra,Trøndelag,63.66274,9.139882,2
-2444752,bukt langs Øyaveien,,Frøya,Trøndelag,63.797881,8.688452,2
+2441709,Osholmen,Ulvøya,Hitra,Trøndelag,63.662740,9.139882,2
 2447965,Nordfrøyv. 986,Neset (Frøya),Frøya,Trøndelag,63.773156,8.813165,2
-1364300,Myr ml. Kirkegården og Yttersundet,Titran,Frøya,Trøndelag,63.67261,8.322154,2
 2448159,Storhjertøya,Bekken,Frøya,Trøndelag,63.667777,8.582001,2
 2447112,Tjern S av veien,Malmmyran,Frøya,Trøndelag,63.696604,8.491999,2
 767862,Dam N av Persberget,,Frøya,Trøndelag,63.670204,8.343445,2
 428129,Fleinskallen,Sandstad,Hitra,Trøndelag,63.519142,9.061154,2
 2450931,Knarrlagsund sør 2,,Hitra,Trøndelag,63.662525,9.089846,2
 2459031,Halsholmen,Storfjordkastet,Frøya,Trøndelag,63.684548,8.557172,2
-2459009,Sveabakken gravsted,,Frøya,Trøndelag,63.688869,8.5753,2
 2461366,Steinsøya,Fillingsnes,Frøya,Trøndelag,63.666303,8.486223,2
 792303,Lavdalen,,Frøya,Trøndelag,63.668706,8.523341,2
-792855,Engvollhaugen,Fillingsnes,Frøya,Trøndelag,63.665813,8.503075,2
 2461420,skog v/Avløysskaget,Bekken,Frøya,Trøndelag,63.672168,8.568014,2
 2154765,tjern V av Ørnheia,Håvika,Frøya,Trøndelag,63.684034,8.421589,2
-2490257,mellom Ervikvatnet og Storblokktjønna,,Frøya,Trøndelag,63.744912,8.80119,2
-2487029,Oshøgda vest,,Frøya,Trøndelag,63.790241,8.71682,2
-2490262,mellom Ervikvatnet og Storblokktjønna,,Frøya,Trøndelag,63.744248,8.795135,2
-2486971,Nordhammaren,,Frøya,Trøndelag,63.70811,8.830646,2
-2490260,mellom Ervikvatnet og Storblokktjønna,,Frøya,Trøndelag,63.742102,8.797381,2
-2487019,Oshøgda vest,,Frøya,Trøndelag,63.788729,8.718563,2
-2487050,Storklingertjønna,,Frøya,Trøndelag,63.76224,8.792557,2
-381792,Stakstuvollan,Kvaløya,Frøya,Trøndelag,63.782245,8.72442,2
-2518546,Engvollhaugen,,Frøya,Trøndelag,63.665251,8.502042,2
-2518547,Sankthansvalen,,Frøya,Trøndelag,63.664992,8.498359,2
-2518559,Stutvatnet,,Frøya,Trøndelag,63.7054,8.688389,2
 3254681,mlm. Stutvatnet og Grasdalsvatnet,Stutvassdalen,Frøya,Trøndelag,63.704485,8.695827,2
 1129695,Bro til Hamburglandet,Titran,Frøya,Trøndelag,63.670335,8.308311,2
 2628477,Kulturmark ved Brattåstjørna,Brattåstjørna,Hitra,Trøndelag,63.531457,9.057264,2
-2633879,havområdene vest for Sula - Sula pelagic 2024,Havet utenfor Sula,Frøya,Trøndelag,63.855039,8.234362,2
 2675999,NØ av Skagavatnet,Skagavatnet,Frøya,Trøndelag,63.682903,8.419747,2
 1843931,Langaunet,,Hitra,Trøndelag,63.553302,9.179857,2
 2116777,Grøftekanal v/Tuvnes,,Frøya,Trøndelag,63.730503,8.647614,2
-2126851,Skagan,Svellingen,Frøya,Trøndelag,63.798512,8.818941,2
 1615589,turbin D01 (9),Frøya vindkraftverk,Frøya,Trøndelag,63.694303,8.661493,2
 2144244,bukt V av Nordbotn,Fjellværsøya,Hitra,Trøndelag,63.653058,9.132318,2
 352418,Frøya småflyplass,,Frøya,Trøndelag,63.699434,8.756472,2
-2144030,Melkvikbukta,Norddyrøya,Frøya,Trøndelag,63.795327,8.67407,2
-355032,Sætra,Fjellværsøya,Hitra,Trøndelag,63.621697,9.105441,2
+2144030,Melkvikbukta,Norddyrøya,Frøya,Trøndelag,63.795327,8.674070,2
 1961077,Krysset Nordfrøyveien/Jakobskaget,Neset (Frøya),Frøya,Trøndelag,63.765803,8.812904,2
 2153882,Rinnarmyra,Dolmøya,Hitra,Trøndelag,63.655271,8.827295,2
 2157557,sjøområdene Ø av Måøya,Mausundvær,Frøya,Trøndelag,63.863077,8.679891,2
 2162668,dyrket mark langs Leirvikveien,Kvaløya,Frøya,Trøndelag,63.774196,8.699177,2
 419358,Hopsjøvatnet,Melandsjø,Hitra,Trøndelag,63.626386,8.720432,2
-2228307,Kjerkdalsvatnet vest Måsheia,,Frøya,Trøndelag,63.73554,8.693707,2
-2257456,Kjervågsundveien,,Frøya,Trøndelag,63.68231,8.34472,2
-1890164,Sørdyrøya,,Frøya,Trøndelag,63.783285,8.641407,2
-737567,Nordskaget,Nordskaget,Frøya,Trøndelag,63.700592,8.565266,2
+2228307,Kjerkdalsvatnet vest Måsheia,,Frøya,Trøndelag,63.735540,8.693707,2
 856613,Nordskag,Hamburglandet,Frøya,Trøndelag,63.671475,8.310719,2
 580499,Gamle gravplassen,Titran,Frøya,Trøndelag,63.669774,8.310539,2
-1134628,Melkvika,,Hitra,Trøndelag,63.635172,8.830403,2
-2402662,sjøområdene SV av Brattholmen,,Frøya,Trøndelag,63.868462,8.51664,2
+2402662,sjøområdene SV av Brattholmen,,Frøya,Trøndelag,63.868462,8.516640,2
 2402630,mlm Døggersøya og Nordjamnungen,Norddyrøya,Frøya,Trøndelag,63.805547,8.656633,2
 1824860,Veisfjorden,,Frøya,Trøndelag,63.687061,8.476018,2
 1883563,Storspovereir 2022,Sula,Frøya,Trøndelag,63.843783,8.450623,2

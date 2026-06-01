@@ -18,7 +18,7 @@ DATASET = "b124e1e0-4755-430f-9eab-894f25a9b59c"
 AVES = 212
 NORTAXA = "a6c6cead-b5ce-4a4e-8cf5-1542ba708dec"  # Artsdatabanken's Norwegian name base
 
-# Manual Bokmål names for species the lookups miss — mostly where this dataset
+# Manual Bokmål names for species the lookups miss - mostly where this dataset
 # files a bird under an old genus (Sylvia) that Artsnavnebasen only lists under
 # the current one (Curruca), so the name-match fails. Only confident regulars;
 # genuine rare vagrants are left as their scientific name.
@@ -33,7 +33,7 @@ OVERRIDES = {
 
 
 def nortaxa_name(latin):
-    """Norwegian name from Artsnavnebasen — Artsobservasjoner uses the same base.
+    """Norwegian name from Artsnavnebasen - Artsobservasjoner uses the same base.
     Prefer Bokmål (nob, what Artsobs reports) over Nynorsk (nno)."""
     d = get("https://api.gbif.org/v1/species/search",
             {"datasetKey": NORTAXA, "q": latin, "qField": "SCIENTIFIC", "limit": 30}) or {}
@@ -79,7 +79,7 @@ def resolve(key):
     latin = sp.get("canonicalName") or sp.get("scientificName")
     if not latin:
         return None
-    # Artsnavnebasen (Bokmål) first — it matches Artsobservasjoner. The GBIF
+    # Artsnavnebasen (Bokmål) first - it matches Artsobservasjoner. The GBIF
     # backbone vernacular is an inconsistent Bokmål/Nynorsk mix, so use it only
     # for species Artsnavnebasen doesn't cover.
     norsk = nortaxa_name(latin)
