@@ -109,6 +109,17 @@ def wkt_box(minlon, minlat, maxlon, maxlat) -> str:
             f"{minlon} {maxlat},{minlon} {minlat}))")
 
 
+def observers(recorded_by):
+    """Distinct people from a recordedBy value — GBIF joins co-observers with '|'."""
+    if isinstance(recorded_by, list):
+        parts = [str(x) for x in recorded_by]
+    elif recorded_by:
+        parts = str(recorded_by).split("|")
+    else:
+        parts = []
+    return {p.strip() for p in parts if p.strip()} or {"?"}
+
+
 def _gbif_page(params):
     """Fetch one page, retrying transient GBIF errors (503 backend hiccups,
     dropped connections). Returns the JSON, or None if it should stop."""
@@ -126,16 +137,19 @@ def _gbif_page(params):
             time.sleep(min(3 * attempt, 20))
 
 
-def api_harvest(bbox, max_records=99_900):
+def api_harvest(bbox, taxon_key=212, max_records=99_900):
     """Build the locality table from the GBIF occurrence API instead of the bulk
     archive — many small paged requests, reliable on flaky links. One row per
-    locationID. GBIF caps paging at a 100k offset window, so within a regional
-    --bbox this captures the established (multi-record, i.e. public) localities."""
+    locationID, restricted to `taxon_key` (default Aves) so we get bird localities.
+    GBIF caps paging at a 100k offset window, so within a regional --bbox this
+    captures the established (multi-observer, i.e. public) localities."""
     sites: dict[str, list] = {}
     offset = 0
     while offset < max_records and offset + 300 <= 100_000:
         params = {"datasetKey": GBIF_DATASET, "limit": 300, "offset": offset,
                   "hasCoordinate": "true", "geometry": wkt_box(*bbox)}
+        if taxon_key:
+            params["taxonKey"] = taxon_key
         d = _gbif_page(params)
         if d is None:
             break  # transient errors exhausted — return the localities we gathered
@@ -144,11 +158,10 @@ def api_harvest(bbox, max_records=99_900):
             name = (o.get("locality") or "").strip()
             if not (lid and name):
                 continue
-            rb = o.get("recordedBy")
-            who = ", ".join(rb) if isinstance(rb, list) else (rb or "?")
+            who = observers(o.get("recordedBy"))
             if lid in sites:
                 sites[lid][6] += 1
-                sites[lid][7].add(who)
+                sites[lid][7] |= who
                 continue
             try:
                 lat, lon = float(o["decimalLatitude"]), float(o["decimalLongitude"])
@@ -156,7 +169,7 @@ def api_harvest(bbox, max_records=99_900):
                 continue
             sites[lid] = [lid, name, round(lat, 6), round(lon, 6),
                           (o.get("municipality") or "").strip(),
-                          (o.get("county") or "").strip(), 1, {who}]
+                          (o.get("county") or "").strip(), 1, set(who)]
         offset += 300
         print(f"\r  {offset} records, {len(sites)} sites", end="", file=sys.stderr)
         if d.get("endOfRecords") or not d.get("results"):
@@ -220,10 +233,10 @@ def aggregate(zf: zipfile.ZipFile, county: str | None, bbox):
             name = row[idx["locality"]].strip()
             if not (lid and name):
                 continue
-            who = row[idx["observer"]].strip()
+            who = observers(row[idx["observer"]])
             if lid in sites:
                 sites[lid][6] += 1
-                sites[lid][7].add(who)
+                sites[lid][7] |= who
                 continue
             try:
                 lat, lon = float(row[idx["lat"]]), float(row[idx["lon"]])
@@ -235,7 +248,7 @@ def aggregate(zf: zipfile.ZipFile, county: str | None, bbox):
             if bbox and not (bbox[0] <= lon <= bbox[2] and bbox[1] <= lat <= bbox[3]):
                 continue
             sites[lid] = [lid, name, round(lat, 6), round(lon, 6),
-                          row[idx["kommune"]].strip(), fylke, 1, {who}]
+                          row[idx["kommune"]].strip(), fylke, 1, set(who)]
     print(file=sys.stderr)
     return sites
 
@@ -257,6 +270,8 @@ def main() -> int:
                     help="keep only localities used by at least this many distinct "
                          "observers — a public-vs-private proxy, since private "
                          "localities have a single owner (default: %(default)s)")
+    ap.add_argument("--taxon-key", type=int, default=212,
+                    help="GBIF taxonKey for --api (default 212 = Aves/birds; 0 = all taxa)")
     ap.add_argument("-o", "--output", default="localities.csv")
     args = ap.parse_args()
 
@@ -264,7 +279,7 @@ def main() -> int:
     if args.api:
         if not bbox:
             raise SystemExit("--api needs --bbox minlon,minlat,maxlon,maxlat")
-        sites = api_harvest(bbox)
+        sites = api_harvest(bbox, args.taxon_key or None)
     else:
         download(ARCHIVE_URL, args.archive)
         with zipfile.ZipFile(args.archive) as zf:
