@@ -95,8 +95,8 @@ fun ListScreen(vm: MainViewModel) {
                 }
             }
         }
-        // Round minimap on the left of the top bar, nudged up so it clips the screen top.
-        LocalityPreview(vm, Modifier.align(Alignment.TopStart).offset(x = 8.dp, y = (-10).dp))
+        // Round minimap on the left of the top bar, clipping the top and left edges equally.
+        LocalityPreview(vm, Modifier.align(Alignment.TopStart).offset(x = (-6).dp, y = (-6).dp))
         FloatingActionButton(
             onClick = { vm.startAdd() },
             containerColor = cs.primary, contentColor = Color.White,
