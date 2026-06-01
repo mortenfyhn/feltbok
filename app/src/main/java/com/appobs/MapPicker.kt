@@ -86,11 +86,17 @@ fun LocalityScreen(vm: MainViewModel) {
             factory = { mapView },
             modifier = Modifier.weight(1f).fillMaxWidth(),
             update = { m ->
-                // Read live state here so the overlay redraws on the fix changing.
-                overlay.picked = vm.dLoc        // the current pick, shown with a checkmark
-                overlay.fix = vm.fix?.let { GeoPoint(it.lat, it.lon) }
-                overlay.accuracyM = vm.fix?.accuracyM?.toFloat() ?: Float.NaN
-                m.invalidate()
+                // Only touch the overlay when something actually changed, so a GPS tick
+                // mid-gesture doesn't force a redraw (which flickers the view).
+                val newFix = vm.fix?.let { GeoPoint(it.lat, it.lon) }
+                val newAcc = vm.fix?.accuracyM?.toFloat() ?: Float.NaN
+                if (overlay.picked !== vm.dLoc || overlay.fix != newFix ||
+                    overlay.accuracyM.toRawBits() != newAcc.toRawBits()) {
+                    overlay.picked = vm.dLoc
+                    overlay.fix = newFix
+                    overlay.accuracyM = newAcc
+                    m.invalidate()
+                }
             },
         )
     }
@@ -277,12 +283,13 @@ private class LocalityOverlay(
             if (showLabels) drawLabel(c, loc.lokalitet, px, py)   // name on top of the disk, wrapped
             if (loc === picked) { pickX = px; pickY = py; pickR = rPx; pickShown = true }
         }
-        if (pickShown) {                              // selected: a checkmark badge above the disk
-            val by = pickY - pickR - 30f
-            c.drawCircle(pickX, by, 26f, badgeFill)
-            c.drawCircle(pickX, by, 26f, badgeRing)
-            c.drawLine(pickX - 12f, by + 2f, pickX - 3f, by + 13f, check)
-            c.drawLine(pickX - 3f, by + 13f, pickX + 15f, by - 12f, check)
+        if (pickShown) {                              // selected: a checkmark badge at the lower-right
+            val bx = pickX + pickR * 0.7f + 6f
+            val by = pickY + pickR * 0.7f + 6f
+            c.drawCircle(bx, by, 24f, badgeFill)
+            c.drawCircle(bx, by, 24f, badgeRing)
+            c.drawLine(bx - 11f, by + 1f, bx - 3f, by + 12f, check)
+            c.drawLine(bx - 3f, by + 12f, bx + 13f, by - 11f, check)
         }
         fix?.let {
             proj.toPixels(it, p)
@@ -297,7 +304,9 @@ private class LocalityOverlay(
         }
     }
 
-    override fun onSingleTapConfirmed(e: MotionEvent, map: MapView): Boolean {
+    // onSingleTapUp (not ...Confirmed) so selection is instant instead of waiting out
+    // the double-tap timeout. Double-tap-to-zoom is sacrificed; pinch still zooms.
+    override fun onSingleTapUp(e: MotionEvent, map: MapView): Boolean {
         val proj = map.projection
         val ppm = pxPerMeter(map)
         var best: Locality? = null
