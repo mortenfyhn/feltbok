@@ -38,6 +38,14 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
     private val uses = mutableStateMapOf<String, Int>().apply { putAll(loadUses(app)) }
     fun useCount(norsk: String): Int = uses[norsk] ?: 0
 
+    /** Per-activity use counts, so each user's most-used activities rise to the top. */
+    private val actUses = mutableStateMapOf<String, Int>().apply { putAll(loadActUses(app)) }
+    /** Aktivitet options with your most-used first, then the rest in the default order. */
+    fun activityOptions(): List<String> {
+        val (used, rest) = Options.activities.partition { (actUses[it] ?: 0) > 0 }
+        return used.sortedByDescending { actUses[it] ?: 0 } + rest
+    }
+
     /** Last non-empty comments entered, offered as "som forrige" on a new note -
      *  handy when the same remark applies to a run of observations. */
     var lastPub by mutableStateOf(""); private set
@@ -163,6 +171,10 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
         } else notes.add(0, n)
         if (dPub.isNotBlank()) lastPub = dPub
         if (dPriv.isNotBlank()) lastPriv = dPriv
+        if (dAct.isNotBlank()) {
+            actUses[dAct] = (actUses[dAct] ?: 0) + 1
+            saveActUses(ctx, actUses)
+        }
         persist()
         screen = Screen.LIST
     }

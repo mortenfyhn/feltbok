@@ -4,6 +4,7 @@ import android.Manifest
 import android.content.pm.PackageManager
 import android.os.Bundle
 import androidx.activity.ComponentActivity
+import androidx.activity.compose.BackHandler
 import androidx.activity.compose.setContent
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.viewModels
@@ -61,6 +62,16 @@ class MainActivity : ComponentActivity() {
 fun App(vm: MainViewModel) {
     MaterialTheme(colorScheme = MossColors) {
         Surface(color = MaterialTheme.colorScheme.background) {
+            // System back navigates within the app instead of exiting (except on the list).
+            BackHandler(enabled = vm.showExport || vm.screen != Screen.LIST) {
+                when {
+                    vm.showExport -> vm.closeExport()
+                    vm.screen == Screen.LOCALITY -> vm.backToDetail()
+                    vm.screen == Screen.SEARCH -> vm.cancelSearch()
+                    vm.screen == Screen.DETAIL -> vm.cancel()
+                    else -> {}
+                }
+            }
             when (vm.screen) {
                 Screen.LIST -> ListScreen(vm)
                 Screen.SEARCH -> SearchScreen(vm)

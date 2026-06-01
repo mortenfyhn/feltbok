@@ -51,7 +51,6 @@ import kotlin.math.hypot
 fun LocalityScreen(vm: MainViewModel) {
     val cs = MaterialTheme.colorScheme
     val ctx = LocalContext.current
-    var picked by remember { mutableStateOf(vm.dLoc) }
 
     val mapView = remember {
         configureOsmdroid(ctx)
@@ -59,13 +58,13 @@ fun LocalityScreen(vm: MainViewModel) {
             setTileSource(TileSourceFactory.MAPNIK)
             setMultiTouchControls(true)
             val start = vm.dLoc ?: vm.nearest()
-            controller.setZoom(15.0)
+            controller.setZoom(16.0)
             controller.setCenter(GeoPoint(start?.lat ?: vm.fix?.lat ?: 63.7,
                                           start?.lon ?: vm.fix?.lon ?: 8.7))
         }
     }
     val overlay = remember {
-        LocalityOverlay(vm.localities) { picked = it; mapView.invalidate() }
+        LocalityOverlay(vm.localities) { vm.pickLocality(it) }   // tap selects and returns
             .also { mapView.overlays.add(it) }
     }
 
@@ -87,33 +86,13 @@ fun LocalityScreen(vm: MainViewModel) {
             factory = { mapView },
             modifier = Modifier.weight(1f).fillMaxWidth(),
             update = { m ->
-                // Read live state here so the overlay redraws on selection and fix changes.
-                overlay.picked = picked
+                // Read live state here so the overlay redraws on the fix changing.
+                overlay.picked = vm.dLoc        // the current pick, shown with a checkmark
                 overlay.fix = vm.fix?.let { GeoPoint(it.lat, it.lon) }
                 overlay.accuracyM = vm.fix?.accuracyM?.toFloat() ?: Float.NaN
                 m.invalidate()
             },
         )
-        Row(
-            Modifier.fillMaxWidth().background(cs.surface).padding(horizontal = 14.dp, vertical = 10.dp),
-            verticalAlignment = Alignment.CenterVertically,
-        ) {
-            val p = picked
-            if (p == null) {
-                Text("Trykk på en lokalitet i kartet", color = cs.onSurfaceVariant,
-                    modifier = Modifier.weight(1f))
-            } else {
-                Column(Modifier.weight(1f)) {
-                    Text(p.lokalitet, fontWeight = FontWeight.SemiBold)
-                    val sub = listOfNotNull(
-                        p.context.ifBlank { null },
-                        vm.distanceTo(p)?.let { formatDistance(it) },
-                    ).joinToString(" · ")
-                    if (sub.isNotBlank()) Text(sub, color = cs.onSurfaceVariant, fontSize = 12.sp)
-                }
-                Button(onClick = { vm.pickLocality(p) }) { Text("Velg") }
-            }
-        }
     }
 }
 
@@ -249,13 +228,43 @@ private class LocalityOverlay(
         return (m * ppm).toFloat().coerceIn(3f, 260f)
     }
 
+    private val lineH = 32f
+
+    /** Draw [name] centred on (cx, cy), wrapped so it doesn't get too wide. */
+    private fun drawLabel(c: Canvas, name: String, cx: Float, cy: Float) {
+        val lines = wrapLabel(name, 210f)
+        var ty = cy - (lines.size - 1) * lineH / 2f + 10f
+        for (line in lines) {
+            c.drawText(line, cx, ty, labelHalo)
+            c.drawText(line, cx, ty, labelFill)
+            ty += lineH
+        }
+    }
+
+    private fun wrapLabel(name: String, maxW: Float): List<String> {
+        if (labelFill.measureText(name) <= maxW) return listOf(name)
+        val out = ArrayList<String>()
+        val sb = StringBuilder()
+        for (word in name.split(" ")) {
+            val trial = if (sb.isEmpty()) word else "$sb $word"
+            if (sb.isEmpty() || labelFill.measureText(trial) <= maxW) {
+                sb.setLength(0); sb.append(trial)
+            } else {
+                out.add(sb.toString()); sb.setLength(0); sb.append(word)
+            }
+        }
+        if (sb.isNotEmpty()) out.add(sb.toString())
+        return out
+    }
+
     override fun draw(c: Canvas, map: MapView, shadow: Boolean) {
         if (shadow) return
         val proj = map.projection
         val ppm = pxPerMeter(map)
         val bb = map.boundingBox
         val w = map.width; val h = map.height
-        var pickX = 0f; var pickY = 0f; var pickShown = false
+        val showLabels = map.zoomLevelDouble >= 15.5     // names only when zoomed in enough to read them
+        var pickX = 0f; var pickY = 0f; var pickR = 0f; var pickShown = false
         for (loc in localities) {
             if (bb != null && (loc.lat > bb.latNorth || loc.lat < bb.latSouth ||
                     loc.lon < bb.lonWest || loc.lon > bb.lonEast)) continue
@@ -265,16 +274,15 @@ private class LocalityOverlay(
             val px = p.x.toFloat(); val py = p.y.toFloat()
             c.drawCircle(px, py, rPx, fill)
             c.drawCircle(px, py, rPx, stroke)
-            val ly = py + rPx + 30f                  // name just below the disk
-            c.drawText(loc.lokalitet, px, ly, labelHalo)
-            c.drawText(loc.lokalitet, px, ly, labelFill)
-            if (loc === picked) { pickX = px; pickY = py; pickShown = true }
+            if (showLabels) drawLabel(c, loc.lokalitet, px, py)   // name on top of the disk, wrapped
+            if (loc === picked) { pickX = px; pickY = py; pickR = rPx; pickShown = true }
         }
-        if (pickShown) {                              // selected: a checkmark badge
-            c.drawCircle(pickX, pickY, 18f, badgeFill)
-            c.drawCircle(pickX, pickY, 18f, badgeRing)
-            c.drawLine(pickX - 8f, pickY + 1f, pickX - 2f, pickY + 9f, check)
-            c.drawLine(pickX - 2f, pickY + 9f, pickX + 10f, pickY - 8f, check)
+        if (pickShown) {                              // selected: a checkmark badge above the disk
+            val by = pickY - pickR - 30f
+            c.drawCircle(pickX, by, 26f, badgeFill)
+            c.drawCircle(pickX, by, 26f, badgeRing)
+            c.drawLine(pickX - 12f, by + 2f, pickX - 3f, by + 13f, check)
+            c.drawLine(pickX - 3f, by + 13f, pickX + 15f, by - 12f, check)
         }
         fix?.let {
             proj.toPixels(it, p)

@@ -9,6 +9,7 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -118,11 +119,14 @@ private fun StatusStrip(vm: MainViewModel) {
     ) {
         Text(if (near != null) "${near.lokalitet}, ${near.kommune}" else "Finner posisjon…",
             color = Color.White, fontWeight = FontWeight.SemiBold, modifier = Modifier.weight(1f),
-            maxLines = 1, overflow = TextOverflow.Ellipsis)
+            maxLines = 2, overflow = TextOverflow.Ellipsis)
         if (vm.notes.isNotEmpty()) {
-            Spacer(Modifier.width(6.dp))
-            TextButton(onClick = { vm.openExport() }) {
-                Text("Eksporter", color = Color.White, fontWeight = FontWeight.SemiBold)
+            Spacer(Modifier.width(10.dp))
+            Box(
+                Modifier.clip(RoundedCornerShape(8.dp)).background(Color.White)
+                    .clickable { vm.openExport() }.padding(horizontal = 14.dp, vertical = 8.dp),
+            ) {
+                Text("Eksporter", color = cs.primary, fontWeight = FontWeight.Bold, fontSize = 14.sp)
             }
         }
     }
@@ -205,7 +209,6 @@ fun SearchScreen(vm: MainViewModel) {
                 keyboardActions = KeyboardActions(onSearch = { results.firstOrNull()?.let { vm.pickSpecies(it) } }))
             TextButton(onClick = { vm.cancelSearch() }) { Text("Avbryt") }
         }
-        if (q.isBlank()) SectionLabel("Nylig brukt")
         LazyColumn(Modifier.weight(1f)) {
             items(results, key = { it.norsk }) { s ->
                 Row(
@@ -246,21 +249,24 @@ fun DetailScreen(vm: MainViewModel) {
                 if (loc == null) {
                     Text("Finner posisjon…", color = cs.onSurfaceVariant)
                 } else {
-                    Text(loc.lokalitet, fontWeight = FontWeight.Medium)
+                    Text(loc.lokalitet, fontWeight = FontWeight.Medium, maxLines = 1,
+                        overflow = TextOverflow.Ellipsis, modifier = Modifier.weight(1f, fill = false))
                     vm.distanceTo(loc)?.let {
-                        Text("  ${formatDistance(it)}", color = cs.onSurfaceVariant, fontSize = 13.sp)
+                        Text("  ${formatDistance(it)}", color = cs.onSurfaceVariant, fontSize = 13.sp, maxLines = 1)
                     }
                 }
             }
             // Species
             FieldRow("Art", onClick = { vm.changeSpecies() }) {
-                Text(vm.dSpecies, fontWeight = FontWeight.Medium)
+                Text(vm.dSpecies, fontWeight = FontWeight.Medium, maxLines = 1,
+                    overflow = TextOverflow.Ellipsis, modifier = Modifier.weight(1f, fill = false))
                 if (vm.dLatin.isNotBlank())
-                    Text("  ${vm.dLatin}", color = cs.onSurfaceVariant, fontStyle = FontStyle.Italic, fontSize = 13.sp)
+                    Text("  ${vm.dLatin}", color = cs.onSurfaceVariant, fontStyle = FontStyle.Italic,
+                        fontSize = 13.sp, maxLines = 1, overflow = TextOverflow.Ellipsis)
             }
             AntallRow(vm)
             DropdownRow("Alder", vm.dAge, Options.ages) { vm.dAge = it }
-            DropdownRow("Aktivitet", vm.dAct, Options.activities) { vm.dAct = it }
+            DropdownRow("Aktivitet", vm.dAct, vm.activityOptions()) { vm.dAct = it }
             DropdownRow("Kjønn", vm.dSex, Options.sexes) { vm.dSex = it }
             CommentField("Åpen kommentar", vm.dPub, vm.lastPub) { vm.dPub = it }
             CommentField("Privat kommentar", vm.dPriv, vm.lastPriv) { vm.dPriv = it }
@@ -294,6 +300,7 @@ private fun AntallRow(vm: MainViewModel) {
     // Local field value; reset when the draft changes. Tapping selects all so a
     // new number replaces the old one instead of appending.
     var tfv by remember(vm.dTime, vm.isEditing) { mutableStateOf(TextFieldValue(vm.dCount.toString())) }
+    var justFocused by remember { mutableStateOf(false) }
     fun set(n: Int) {
         val c = n.coerceAtLeast(1); vm.setCount(c)
         tfv = TextFieldValue(c.toString(), selection = TextRange(c.toString().length))
@@ -314,11 +321,22 @@ private fun AntallRow(vm: MainViewModel) {
                 value = tfv,
                 onValueChange = { v ->
                     val digits = v.text.filter { it.isDigit() }.take(4)
-                    tfv = v.copy(text = digits)
-                    digits.toIntOrNull()?.let { vm.setCount(it) }
+                    if (justFocused && digits == tfv.text) {
+                        // First event after focusing is the tap placing the cursor;
+                        // ignore it and keep everything selected so typing replaces.
+                        justFocused = false
+                        tfv = tfv.copy(selection = TextRange(0, tfv.text.length))
+                    } else {
+                        justFocused = false
+                        tfv = v.copy(text = digits)
+                        digits.toIntOrNull()?.let { vm.setCount(it) }
+                    }
                 },
                 modifier = Modifier.width(64.dp).padding(vertical = 10.dp)
-                    .onFocusChanged { if (it.isFocused) tfv = tfv.copy(selection = TextRange(0, tfv.text.length)) },
+                    .onFocusChanged { f ->
+                        justFocused = f.isFocused
+                        if (f.isFocused) tfv = tfv.copy(selection = TextRange(0, tfv.text.length))
+                    },
                 singleLine = true,
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                 textStyle = androidx.compose.ui.text.TextStyle(
@@ -386,7 +404,7 @@ private fun CommentField(label: String, value: String, previous: String, onChang
 }
 
 @Composable
-private fun FieldRow(label: String, onClick: (() -> Unit)? = null, content: @Composable () -> Unit) {
+private fun FieldRow(label: String, onClick: (() -> Unit)? = null, content: @Composable RowScope.() -> Unit) {
     val cs = MaterialTheme.colorScheme
     val base = Modifier.fillMaxWidth()
         .let { if (onClick != null) it.clickable(onClick = onClick) else it }
@@ -419,7 +437,7 @@ fun ExportDialog(vm: MainViewModel) {
                 OutlinedTextField(text, {}, Modifier.fillMaxWidth().height(170.dp), readOnly = true,
                     textStyle = androidx.compose.ui.text.TextStyle(fontSize = 11.sp))
                 TextButton(onClick = { confirmClear = true }) {
-                    Text("Tøm alle notater", color = cs.error)
+                    Text("Slett alle notater", color = cs.error)
                 }
             }
         },
@@ -431,7 +449,7 @@ fun ExportDialog(vm: MainViewModel) {
     if (confirmClear) {
         AlertDialog(
             onDismissRequest = { confirmClear = false },
-            title = { Text("Tøm alle notater?") },
+            title = { Text("Slett alle notater?") },
             text = {
                 Text("Sletter alle ${vm.notes.size} notatene. Gjør dette først når du har "
                     + "importert og publisert på Artsobservasjoner.")
