@@ -24,9 +24,13 @@ uninstall:
     adb uninstall com.appobs
 
 # Build the official locality table from the Artsdatabanken/GBIF dump.
-# Pass extra args, e.g.: just localities --county Trøndelag
+# Pass extra args, e.g.: just localities --api --bbox 8.0,63.5,9.3,63.9
 localities *args:
     .venv/bin/python process/build_localities.py {{args}}
+
+# Build the Norwegian bird checklist (norsk,latin) from GBIF -> species.csv
+species:
+    .venv/bin/python process/build_species.py
 
 # Push the generated locality/species CSVs to the device (overrides the bundled
 # assets — no rebuild needed). Run after `just localities`.
