@@ -2,7 +2,6 @@
 
 package com.appobs
 
-import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -47,8 +46,6 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.geometry.Offset
-import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.focus.onFocusChanged
@@ -68,8 +65,6 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import kotlin.math.abs
-import kotlin.math.cos
 
 // ============================ LIST ============================
 
@@ -254,7 +249,6 @@ fun DetailScreen(vm: MainViewModel) {
                     }
                 }
             }
-            vm.dLoc?.let { LocalityMinimap(vm, it) }
             // Species
             FieldRow("Art", onClick = { vm.changeSpecies() }) {
                 Text(vm.dSpecies, fontWeight = FontWeight.Medium)
@@ -290,65 +284,6 @@ fun DetailScreen(vm: MainViewModel) {
     }
 }
 
-/**
- * A tiny offline minimap previewing the picked locality and your position, so you
- * can sanity-check the GPS auto-pick without opening the full picker. We have no
- * locality polygons yet, so each locality is drawn as a circle (a stand-in for the
- * real footprint). Centred on [sel]; nearby localities and the GPS fix are plotted
- * with a simple equirectangular projection. Tap to open the locality picker.
- */
-@Composable
-private fun LocalityMinimap(vm: MainViewModel, sel: Locality) {
-    val cs = MaterialTheme.colorScheme
-    if (sel.lat == 0.0 && sel.lon == 0.0) return   // no real coordinate to centre on
-    val fix = vm.fix
-    Canvas(
-        Modifier.fillMaxWidth().height(120.dp).padding(horizontal = 16.dp, vertical = 6.dp)
-            .clip(RoundedCornerShape(12.dp)).background(Color(0xFFEDF1E6))
-            .border(1.dp, cs.outline.copy(alpha = 0.5f), RoundedCornerShape(12.dp))
-            .clickable { vm.openLocalityPicker() },
-    ) {
-        val mPerDegLat = 111_320.0
-        val mPerDegLon = 111_320.0 * cos(Math.toRadians(sel.lat))
-        // east/north metres from the selected locality
-        fun east(lon: Double) = (lon - sel.lon) * mPerDegLon
-        fun north(lat: Double) = (lat - sel.lat) * mPerDegLat
-
-        // Fit the view to include the selected locality and the GPS fix, with a floor
-        // so a lone point still gets a sensible ~300 m window.
-        val fixE = fix?.let { east(it.lon) }
-        val fixN = fix?.let { north(it.lat) }
-        val span = maxOf(300.0, abs(fixE ?: 0.0), abs(fixN ?: 0.0)) * 1.35
-        val pad = 14f
-        val scale = ((minOf(size.width, size.height) / 2f) - pad) / span.toFloat()
-        val cx = size.width / 2f
-        val cy = size.height / 2f
-        fun pt(e: Double, n: Double) = Offset(cx + e.toFloat() * scale, cy - n.toFloat() * scale)
-
-        // Nearby localities as faint circles (the polygon stand-ins).
-        vm.localities.forEach { loc ->
-            if (loc.lat == sel.lat && loc.lon == sel.lon) return@forEach
-            val e = east(loc.lon); val n = north(loc.lat)
-            if (abs(e) <= span && abs(n) <= span) {
-                drawCircle(cs.primary.copy(alpha = 0.5f), radius = 6f, center = pt(e, n),
-                    style = Stroke(width = 2f))
-            }
-        }
-        // Selected locality: filled circle as the footprint stand-in.
-        val centre = pt(0.0, 0.0)
-        drawCircle(cs.primary.copy(alpha = 0.18f), radius = 20f, center = centre)
-        drawCircle(cs.primary, radius = 6f, center = centre)
-        // GPS position with an accuracy ring.
-        if (fixE != null && fixN != null) {
-            val you = pt(fixE, fixN)
-            fix?.accuracyM?.takeIf { !it.isNaN() }?.let { acc ->
-                drawCircle(Color(0x222962FF), radius = (acc * scale).coerceIn(4f, minOf(cx, cy)), center = you)
-            }
-            drawCircle(Color(0xFF2962FF), radius = 6f, center = you)
-            drawCircle(Color.White, radius = 6f, center = you, style = Stroke(width = 2f))
-        }
-    }
-}
 
 @Composable
 private fun AntallRow(vm: MainViewModel) {
@@ -463,51 +398,7 @@ private fun FieldRow(label: String, onClick: (() -> Unit)? = null, content: @Com
     HorizontalDivider(color = cs.outline.copy(alpha = 0.4f))
 }
 
-// ============================ LOCALITY ============================
-
-@Composable
-fun LocalityScreen(vm: MainViewModel) {
-    val cs = MaterialTheme.colorScheme
-    var q by remember { mutableStateOf("") }
-    val sorted = vm.localities
-        .map { it to (vm.distanceTo(it) ?: Double.MAX_VALUE) }
-        .filter { q.isBlank() || it.first.lokalitet.contains(q, true) }
-        .sortedBy { it.second }
-    Column(Modifier.fillMaxSize()) {
-        Row(
-            Modifier.fillMaxWidth().background(cs.surface).padding(start = 12.dp, end = 4.dp, top = 10.dp, bottom = 10.dp),
-            verticalAlignment = Alignment.CenterVertically,
-        ) {
-            OutlinedTextField(q, { q = it }, Modifier.weight(1f), singleLine = true,
-                placeholder = { Text("Søk lokalitet…") })
-            TextButton(onClick = { vm.backToDetail() }) { Text("Avbryt") }
-        }
-        LazyColumn(Modifier.weight(1f)) {
-            items(sorted, key = { it.first.id.ifBlank { it.first.lokalitet } }) { (loc, d) ->
-                val selected = loc == vm.dLoc
-                Row(
-                    Modifier.fillMaxWidth().clickable { vm.pickLocality(loc) }
-                        .background(if (selected) cs.primaryContainer else cs.surface)
-                        .padding(horizontal = 16.dp, vertical = 13.dp),
-                    verticalAlignment = Alignment.CenterVertically,
-                ) {
-                    Column(Modifier.weight(1f)) {
-                        Text(loc.lokalitet, fontWeight = FontWeight.SemiBold,
-                            color = if (selected) cs.onPrimaryContainer else cs.onSurface)
-                        if (loc.context.isNotBlank())
-                            Text(loc.context, color = cs.onSurfaceVariant, fontSize = 12.5.sp)
-                    }
-                    Column(horizontalAlignment = Alignment.End) {
-                        if (selected) Text("✓ valgt", color = cs.primary, fontWeight = FontWeight.Bold, fontSize = 12.sp)
-                        if (d != Double.MAX_VALUE)
-                            Text(formatDistance(d), color = cs.onSurfaceVariant, fontSize = 13.sp)
-                    }
-                }
-                HorizontalDivider(color = cs.outline.copy(alpha = 0.4f))
-            }
-        }
-    }
-}
+// LocalityScreen (the map-based locality picker) lives in MapPicker.kt.
 
 // ============================ EXPORT ============================
 

@@ -68,6 +68,7 @@ data class Locality(
     val lat: Double,
     val lon: Double,
     val fullname: String,         // qualified "Lok, Hovedlok, Kommune, Fylke" - what the import matches
+    val observers: Int,           // distinct observers - a public-establishedness signal for the map
 ) {
     val context: String get() = listOf(hovedlokalitet, kommune).filter { it.isNotBlank() }.joinToString(", ")
 }
@@ -181,7 +182,8 @@ fun loadLocalities(ctx: Context): List<Locality> =
         val lat = c[5].toDoubleOrNull() ?: return@mapNotNull null
         val lon = c[6].toDoubleOrNull() ?: return@mapNotNull null
         val full = c.getOrElse(9) { "" }.ifBlank { c[1] }   // fall back to bare name pre-fullname
-        Locality(c[0], c[1], c[2], c[3], lat, lon, full)
+        val obs = c.getOrElse(8) { "" }.toIntOrNull() ?: 0
+        Locality(c[0], c[1], c[2], c[3], lat, lon, full, obs)
     }
 
 /** Columns: norsk,latin */
