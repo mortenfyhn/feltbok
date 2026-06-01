@@ -27,6 +27,7 @@ new-site import path and for showing context in the picker.
 import argparse
 import csv
 import io
+import json
 import math
 import os
 import sys
@@ -217,6 +218,23 @@ def drop_name_collisions(rows, public_min=25, cluster_km=2.0):
     return kept
 
 
+def save_raw(sites, path):
+    """Dump the unfiltered harvested sites to JSON, so thresholds can be re-tuned
+    offline without re-downloading. The observer set is stored as a sorted list."""
+    data = {lid: [s[0], s[1], s[2], s[3], s[4], s[5], s[6], sorted(s[7])]
+            for lid, s in sites.items()}
+    with open(path, "w", encoding="utf-8") as f:
+        json.dump(data, f, ensure_ascii=False)
+
+
+def load_raw(path):
+    """Inverse of save_raw: the sites dict, observer lists back to sets."""
+    with open(path, encoding="utf-8") as f:
+        data = json.load(f)
+    return {lid: [s[0], s[1], s[2], s[3], s[4], s[5], s[6], set(s[7])]
+            for lid, s in data.items()}
+
+
 def split_name(full: str):
     """Split the qualified registry name into (lokalitet, hovedlokalitet).
 
@@ -303,6 +321,11 @@ def main() -> int:
     ap.add_argument("--api", action="store_true",
                     help="harvest from the GBIF occurrence API (needs --bbox) instead "
                          "of the bulk archive - reliable when the big download won't finish")
+    ap.add_argument("--save-raw", metavar="FILE",
+                    help="dump the unfiltered harvested sites to FILE (JSON) for reuse")
+    ap.add_argument("--from-raw", metavar="FILE",
+                    help="load unfiltered sites from a --save-raw FILE instead of harvesting, "
+                         "so threshold tuning is instant (no re-download)")
     ap.add_argument("--min-count", type=int, default=2,
                     help="drop sites with fewer records (default: %(default)s)")
     ap.add_argument("--min-observers", type=int, default=2,
@@ -321,7 +344,10 @@ def main() -> int:
     args = ap.parse_args()
 
     bbox = tuple(float(x) for x in args.bbox.split(",")) if args.bbox else None
-    if args.api:
+    if args.from_raw:
+        sites = load_raw(args.from_raw)
+        print(f"Loaded {len(sites)} raw sites from {args.from_raw}", file=sys.stderr)
+    elif args.api:
         if not bbox:
             raise SystemExit("--api needs --bbox minlon,minlat,maxlon,maxlat")
         sites = api_harvest(bbox, args.taxon_key or None)
@@ -329,6 +355,9 @@ def main() -> int:
         download(ARCHIVE_URL, args.archive)
         with zipfile.ZipFile(args.archive) as zf:
             sites = aggregate(zf, args.county, bbox)
+    if args.save_raw:
+        save_raw(sites, args.save_raw)
+        print(f"Saved {len(sites)} raw sites to {args.save_raw}", file=sys.stderr)
 
     kept = sorted(
         (s for s in sites.values()

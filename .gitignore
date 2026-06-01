@@ -15,6 +15,7 @@ process/__pycache__/
 # Official locality table + its source archive (built by build_localities.py)
 /localities.csv
 /localities.new.csv
+/localities-raw*.json
 /harvest.log
 /artsobs-dwca.zip
 # Generated species list (if regenerated locally)
