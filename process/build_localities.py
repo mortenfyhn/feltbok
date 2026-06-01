@@ -48,6 +48,7 @@ TERMS = {
     "lon": "http://rs.tdwg.org/dwc/terms/decimalLongitude",
     "kommune": "http://rs.tdwg.org/dwc/terms/municipality",
     "fylke": "http://rs.tdwg.org/dwc/terms/county",
+    "observer": "http://rs.tdwg.org/dwc/terms/recordedBy",
 }
 
 
@@ -143,8 +144,11 @@ def api_harvest(bbox, max_records=99_900):
             name = (o.get("locality") or "").strip()
             if not (lid and name):
                 continue
+            rb = o.get("recordedBy")
+            who = ", ".join(rb) if isinstance(rb, list) else (rb or "?")
             if lid in sites:
-                sites[lid][-1] += 1
+                sites[lid][6] += 1
+                sites[lid][7].add(who)
                 continue
             try:
                 lat, lon = float(o["decimalLatitude"]), float(o["decimalLongitude"])
@@ -152,7 +156,7 @@ def api_harvest(bbox, max_records=99_900):
                 continue
             sites[lid] = [lid, name, round(lat, 6), round(lon, 6),
                           (o.get("municipality") or "").strip(),
-                          (o.get("county") or "").strip(), 1]
+                          (o.get("county") or "").strip(), 1, {who}]
         offset += 300
         print(f"\r  {offset} records, {len(sites)} sites", end="", file=sys.stderr)
         if d.get("endOfRecords") or not d.get("results"):
@@ -216,8 +220,10 @@ def aggregate(zf: zipfile.ZipFile, county: str | None, bbox):
             name = row[idx["locality"]].strip()
             if not (lid and name):
                 continue
+            who = row[idx["observer"]].strip()
             if lid in sites:
-                sites[lid][-1] += 1
+                sites[lid][6] += 1
+                sites[lid][7].add(who)
                 continue
             try:
                 lat, lon = float(row[idx["lat"]]), float(row[idx["lon"]])
@@ -229,7 +235,7 @@ def aggregate(zf: zipfile.ZipFile, county: str | None, bbox):
             if bbox and not (bbox[0] <= lon <= bbox[2] and bbox[1] <= lat <= bbox[3]):
                 continue
             sites[lid] = [lid, name, round(lat, 6), round(lon, 6),
-                          row[idx["kommune"]].strip(), fylke, 1]
+                          row[idx["kommune"]].strip(), fylke, 1, {who}]
     print(file=sys.stderr)
     return sites
 
@@ -246,9 +252,11 @@ def main() -> int:
                     help="harvest from the GBIF occurrence API (needs --bbox) instead "
                          "of the bulk archive — reliable when the big download won't finish")
     ap.add_argument("--min-count", type=int, default=2,
-                    help="drop sites referenced fewer times — rarely-used sites "
-                         "are usually private and won't match on import "
-                         "(default: %(default)s)")
+                    help="drop sites with fewer records (default: %(default)s)")
+    ap.add_argument("--min-observers", type=int, default=2,
+                    help="keep only localities used by at least this many distinct "
+                         "observers — a public-vs-private proxy, since private "
+                         "localities have a single owner (default: %(default)s)")
     ap.add_argument("-o", "--output", default="localities.csv")
     args = ap.parse_args()
 
@@ -262,13 +270,15 @@ def main() -> int:
         with zipfile.ZipFile(args.archive) as zf:
             sites = aggregate(zf, args.county, bbox)
 
-    kept = sorted((s for s in sites.values() if s[-1] >= args.min_count),
-                  key=lambda s: -s[-1])
+    kept = sorted(
+        (s for s in sites.values()
+         if s[6] >= args.min_count and len(s[7]) >= args.min_observers),
+        key=lambda s: -s[6])
     # Collapse near-duplicate registrations of the same place — the same bare name
     # within ~100 m — to the most-used one (kept is count-desc, so first wins), so
     # the picker lists each place once. Distinct places sharing a name stay separate.
     seen: dict = {}
-    for lid, name, lat, lon, kommune, fylke, count in kept:
+    for lid, name, lat, lon, kommune, fylke, count, _observers in kept:
         lok, hoved = split_name(name)
         key = (lok.lower(), round(lat, 3), round(lon, 3))
         if key in seen:
@@ -281,8 +291,9 @@ def main() -> int:
         w.writerow(["id", "lokalitet", "hovedlokalitet", "kommune", "fylke",
                     "lat", "lon", "count"])
         w.writerows(rows)
-    print(f"Wrote {len(rows)} localities (>= {args.min_count} records, deduped) to "
-          f"{args.output}, from {len(sites)} sites seen.", file=sys.stderr)
+    print(f"Wrote {len(rows)} public localities (>= {args.min_observers} observers, "
+          f">= {args.min_count} records, deduped) to {args.output}, "
+          f"from {len(sites)} sites seen.", file=sys.stderr)
     return 0
 
 
