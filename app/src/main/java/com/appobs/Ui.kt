@@ -191,7 +191,7 @@ fun DetailScreen(vm: MainViewModel) {
             if (vm.isEditing) "Endre observasjon" else "Ny observasjon",
             color = Color.White, fontWeight = FontWeight.SemiBold, fontSize = 16.sp,
             textAlign = TextAlign.Center,
-            modifier = Modifier.fillMaxWidth().background(cs.primary).padding(13.dp),
+            modifier = Modifier.fillMaxWidth().background(cs.primary).padding(vertical = 9.dp),
         )
         Column(Modifier.weight(1f).verticalScroll(rememberScrollState())) {
             // Locality
@@ -250,7 +250,7 @@ private fun AntallRow(vm: MainViewModel) {
         tfv = TextFieldValue(c.toString(), selection = TextRange(c.toString().length))
     }
     Row(
-        Modifier.fillMaxWidth().background(cs.surface).padding(horizontal = 16.dp, vertical = 10.dp),
+        Modifier.fillMaxWidth().background(cs.surface).padding(horizontal = 16.dp, vertical = 7.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Text("Antall", color = cs.onSurfaceVariant, fontSize = 14.sp, modifier = Modifier.weight(1f))
@@ -322,9 +322,9 @@ private fun OptionItem(text: String, selected: Boolean, onClick: () -> Unit) {
 @Composable
 private fun CommentField(label: String, value: String, onChange: (String) -> Unit) {
     val cs = MaterialTheme.colorScheme
-    Column(Modifier.background(cs.surface).padding(horizontal = 16.dp, vertical = 8.dp)) {
-        Text(label, color = cs.onSurfaceVariant, fontSize = 13.sp, modifier = Modifier.padding(bottom = 4.dp))
-        OutlinedTextField(value, onChange, Modifier.fillMaxWidth(), minLines = 2)
+    Column(Modifier.background(cs.surface).padding(horizontal = 16.dp, vertical = 5.dp)) {
+        Text(label, color = cs.onSurfaceVariant, fontSize = 13.sp, modifier = Modifier.padding(bottom = 2.dp))
+        OutlinedTextField(value, onChange, Modifier.fillMaxWidth(), minLines = 1)
     }
     HorizontalDivider(color = cs.outline.copy(alpha = 0.4f))
 }
@@ -334,7 +334,7 @@ private fun FieldRow(label: String, onClick: (() -> Unit)? = null, content: @Com
     val cs = MaterialTheme.colorScheme
     val base = Modifier.fillMaxWidth()
         .let { if (onClick != null) it.clickable(onClick = onClick) else it }
-        .background(cs.surface).padding(horizontal = 16.dp, vertical = 14.dp)
+        .background(cs.surface).padding(horizontal = 16.dp, vertical = 10.dp)
     Row(base, verticalAlignment = Alignment.CenterVertically) {
         Text(label, color = cs.onSurfaceVariant, fontSize = 14.sp, modifier = Modifier.width(84.dp))
         Spacer(Modifier.width(12.dp))
