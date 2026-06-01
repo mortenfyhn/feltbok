@@ -14,7 +14,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.draw.clip
 import androidx.compose.material3.Button
 import androidx.compose.material3.MaterialTheme
@@ -110,7 +109,7 @@ fun LocalityScreen(vm: MainViewModel) {
     }
 }
 
-private fun configureOsmdroid(ctx: Context) {
+internal fun configureOsmdroid(ctx: Context) {
     Configuration.getInstance().apply {
         userAgentValue = ctx.packageName               // required by the OSM tile policy
         osmdroidBasePath = File(ctx.cacheDir, "osmdroid")
@@ -125,10 +124,9 @@ private fun configureOsmdroid(ctx: Context) {
  */
 @Composable
 fun LocalityPreview(vm: MainViewModel, modifier: Modifier = Modifier) {
-    val near = vm.nearest() ?: return
+    vm.nearest() ?: return                       // nothing to preview until GPS settles
     val ctx = LocalContext.current
     val cs = MaterialTheme.colorScheme
-    val fix = vm.fix
     val map = remember {
         configureOsmdroid(ctx)
         MapView(ctx).apply {
@@ -139,13 +137,6 @@ fun LocalityPreview(vm: MainViewModel, modifier: Modifier = Modifier) {
         }
     }
     val overlay = remember { PreviewOverlay().also { map.overlays.add(it) } }
-    overlay.loc = near
-    overlay.fix = fix?.let { GeoPoint(it.lat, it.lon) }
-    overlay.accuracyM = fix?.accuracyM?.toFloat() ?: Float.NaN
-    // Centre on the GPS fix (where you are) when available, else the locality.
-    val cLat = fix?.lat ?: near.lat
-    val cLon = fix?.lon ?: near.lon
-    LaunchedEffect(cLat, cLon) { map.controller.setCenter(GeoPoint(cLat, cLon)) }
     DisposableEffect(Unit) {
         map.onResume()
         onDispose { map.onPause(); map.onDetach() }
@@ -153,7 +144,20 @@ fun LocalityPreview(vm: MainViewModel, modifier: Modifier = Modifier) {
     AndroidView(
         factory = { map },
         modifier = modifier.size(96.dp).clip(CircleShape).border(2.dp, cs.outline, CircleShape),
-    ) { it.invalidate() }
+        update = { m ->
+            // Read live state HERE so the view redraws when the fix (incl. accuracy) changes.
+            val f = vm.fix
+            val n = vm.nearest()
+            overlay.loc = n
+            overlay.fix = f?.let { GeoPoint(it.lat, it.lon) }
+            overlay.accuracyM = f?.accuracyM?.toFloat() ?: Float.NaN
+            // Centre on the GPS fix (where you are) when available, else the locality.
+            val cLat = f?.lat ?: n?.lat
+            val cLon = f?.lon ?: n?.lon
+            if (cLat != null && cLon != null) m.controller.setCenter(GeoPoint(cLat, cLon))
+            m.invalidate()
+        },
+    )
 }
 
 /** Draws a single locality disk plus the GPS pin, for the main-screen minimap. */

@@ -76,21 +76,30 @@ class ModelTest {
     }
 
     @Test
-    fun fuzzyRanksPrefixThenSubstringThenSubsequence() {
-        assertEquals(0, fuzzyScore("rødv", "Rødvingetrost"))   // prefix
-        assertEquals(1, fuzzyScore("trost", "Rødvingetrost"))  // substring
-        assertEquals(2, fuzzyScore("rvt", "Rødvingetrost"))    // subsequence
-        assertEquals(null, fuzzyScore("xyz", "Rødvingetrost")) // no match
+    fun fuzzyRanksByMatchQuality() {
+        assertEquals(0, fuzzyScore("rødv", "Rødvingetrost"))    // prefix
+        assertEquals(1, fuzzyScore("rvt", "Rødvingetrost"))     // first letter + subsequence
+        assertEquals(2, fuzzyScore("trost", "Rødvingetrost"))   // mid-word substring
+        assertEquals(null, fuzzyScore("xyz", "Rødvingetrost"))  // no match
+    }
+
+    @Test
+    fun fuzzyWeightsFirstLetterMatchAboveMidWord() {
+        // "pf": Pilfink starts with p (rank 1), Lappfiskand only has p/f mid-word.
+        val pilfink = fuzzyScore("pf", "Pilfink")!!
+        val lappfiskand = fuzzyScore("pf", "Lappfiskand")!!
+        assertTrue("Pilfink ($pilfink) should outrank Lappfiskand ($lappfiskand)",
+            pilfink < lappfiskand)
     }
 
     @Test
     fun fuzzyFoldsNorwegianLettersSoAsciiMatches() {
         assertEquals(0, fuzzyScore("rodvinge", "Rødvingetrost"))
-        assertEquals(2, fuzzyScore("blmeis", "Blåmeis"))
+        assertEquals(1, fuzzyScore("blmeis", "Blåmeis"))   // first letter b + subsequence
     }
 
     @Test
     fun fuzzyIgnoresSpacesAndCase() {
-        assertEquals(2, fuzzyScore("R V T", "Rødvingetrost"))
+        assertEquals(1, fuzzyScore("R V T", "Rødvingetrost"))
     }
 }

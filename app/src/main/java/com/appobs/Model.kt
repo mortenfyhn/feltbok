@@ -119,21 +119,30 @@ fun foldQuery(query: String) = fold(query).filterNot { it.isWhitespace() }
 
 /**
  * Rank an already-folded [q] (see [foldQuery]) against an already-folded [t]
- * (see [fold]). Lower is better, or null for no match: 0 = prefix, 1 = substring,
- * 2 = subsequence (letters in order but not adjacent, so "fm" matches "fiskemake").
+ * (see [fold]). Lower is better, or null for no match:
+ *  0 = prefix (name starts with the query)
+ *  1 = name's first letter matches and the rest is a subsequence - the "initials"
+ *      case, so "pf" -> Pilfink beats a mid-word match like Lappfiskand
+ *  2 = the query is a contiguous substring elsewhere in the name
+ *  3 = the query is a scattered subsequence elsewhere
  * Pre-folding the names once keeps this hot per-keystroke loop allocation-free.
  */
 fun fuzzyRank(q: String, t: String): Int? {
     if (q.isEmpty()) return 0
-    val idx = t.indexOf(q)
-    if (idx == 0) return 0
-    if (idx > 0) return 1
+    if (t.startsWith(q)) return 0
     var qi = 0
     for (c in t) {
         if (c == q[qi]) qi++
-        if (qi == q.length) return 2
+        if (qi == q.length) break
     }
-    return null
+    val isSubseq = qi == q.length
+    val anchored = q[0] == t.firstOrNull()
+    return when {
+        anchored && isSubseq -> 1
+        t.contains(q) -> 2
+        isSubseq -> 3
+        else -> null
+    }
 }
 
 /** Convenience that folds both sides; used in tests. */

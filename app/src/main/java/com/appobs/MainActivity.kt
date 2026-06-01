@@ -44,6 +44,7 @@ class MainActivity : ComponentActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        configureOsmdroid(applicationContext)   // one-time map init, off the first map's path
         setContent { App(vm) }
         if (!hasLocation()) askLocation.launch(Manifest.permission.ACCESS_FINE_LOCATION)
     }

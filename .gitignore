@@ -13,11 +13,13 @@ process/__pycache__/
 .venv/
 
 # Official locality table + its source archive (built by build_localities.py)
-/localities.csv
-/localities.new.csv
+/localities*.csv
 /localities-raw*.json
 /harvest.log
+/raw-harvest.log
 /artsobs-dwca.zip
+# Artsobservasjoner export/error spreadsheets (personal observation data)
+/ExcelExport*.xlsx
 # Generated species list (if regenerated locally)
 /species.csv
 # Locality import-matching test sheets
