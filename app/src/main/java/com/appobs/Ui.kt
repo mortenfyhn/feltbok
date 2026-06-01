@@ -258,8 +258,8 @@ fun DetailScreen(vm: MainViewModel) {
             DropdownRow("Alder", vm.dAge, Options.ages) { vm.dAge = it }
             DropdownRow("Aktivitet", vm.dAct, Options.activities) { vm.dAct = it }
             DropdownRow("Kjønn", vm.dSex, Options.sexes) { vm.dSex = it }
-            CommentField("Åpen kommentar", vm.dPub) { vm.dPub = it }
-            CommentField("Privat kommentar", vm.dPriv) { vm.dPriv = it }
+            CommentField("Åpen kommentar", vm.dPub, vm.lastPub) { vm.dPub = it }
+            CommentField("Privat kommentar", vm.dPriv, vm.lastPriv) { vm.dPriv = it }
             FieldRow("Tidspunkt") {
                 Text(displayTime(if (vm.dTime > 0) vm.dTime else System.currentTimeMillis()))
             }
@@ -364,10 +364,17 @@ private fun OptionItem(text: String, selected: Boolean, onClick: () -> Unit) {
 }
 
 @Composable
-private fun CommentField(label: String, value: String, onChange: (String) -> Unit) {
+private fun CommentField(label: String, value: String, previous: String, onChange: (String) -> Unit) {
     val cs = MaterialTheme.colorScheme
     Column(Modifier.background(cs.surface).padding(horizontal = 16.dp, vertical = 5.dp)) {
-        Text(label, color = cs.onSurfaceVariant, fontSize = 13.sp, modifier = Modifier.padding(bottom = 2.dp))
+        Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+            Text(label, color = cs.onSurfaceVariant, fontSize = 13.sp,
+                modifier = Modifier.weight(1f).padding(bottom = 2.dp))
+            if (value.isBlank() && previous.isNotBlank()) {
+                Text("som forrige", color = cs.primary, fontSize = 13.sp,
+                    modifier = Modifier.clickable { onChange(previous) }.padding(bottom = 2.dp))
+            }
+        }
         OutlinedTextField(value, onChange, Modifier.fillMaxWidth(), minLines = 1)
     }
     HorizontalDivider(color = cs.outline.copy(alpha = 0.4f))

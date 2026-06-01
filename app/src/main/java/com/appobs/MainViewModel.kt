@@ -36,6 +36,11 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
     private val uses = mutableStateMapOf<String, Int>().apply { putAll(loadUses(app)) }
     fun useCount(norsk: String): Int = uses[norsk] ?: 0
 
+    /** Last non-empty comments entered, offered as "som forrige" on a new note -
+     *  handy when the same remark applies to a run of observations. */
+    var lastPub by mutableStateOf(""); private set
+    var lastPriv by mutableStateOf(""); private set
+
     var screen by mutableStateOf(Screen.LIST); private set
     var showExport by mutableStateOf(false); private set
     var fix by mutableStateOf<GpsFix?>(null); private set
@@ -56,6 +61,9 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
     val isEditing: Boolean get() = editingId != null
 
     init {
+        // Seed "som forrige" from the most recent note that carried a comment.
+        notes.firstOrNull { it.publicComment.isNotBlank() }?.let { lastPub = it.publicComment }
+        notes.firstOrNull { it.privateComment.isNotBlank() }?.let { lastPriv = it.privateComment }
         viewModelScope.launch {
             tracker.fix.collect { f ->
                 fix = f
@@ -138,6 +146,8 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
             val i = notes.indexOfFirst { it.id == n.id }
             if (i >= 0) notes[i] = n else notes.add(0, n)
         } else notes.add(0, n)
+        if (dPub.isNotBlank()) lastPub = dPub
+        if (dPriv.isNotBlank()) lastPriv = dPriv
         persist()
         screen = Screen.LIST
     }
