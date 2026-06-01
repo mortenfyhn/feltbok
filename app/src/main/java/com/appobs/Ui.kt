@@ -74,7 +74,6 @@ fun ListScreen(vm: MainViewModel) {
     Box(Modifier.fillMaxSize()) {
         Column(Modifier.fillMaxSize()) {
             StatusStrip(vm)
-            LocalityPreview(vm)
             if (vm.notes.isEmpty()) {
                 Box(Modifier.weight(1f).fillMaxWidth(), Alignment.Center) {
                     Text(
@@ -95,6 +94,8 @@ fun ListScreen(vm: MainViewModel) {
                 }
             }
         }
+        // Round minimap sitting on the right of the top bar, hanging a bit below it.
+        LocalityPreview(vm, Modifier.align(Alignment.TopEnd).padding(end = 8.dp, top = 4.dp))
         FloatingActionButton(
             onClick = { vm.startAdd() },
             containerColor = cs.primary, contentColor = Color.White,
@@ -107,21 +108,15 @@ fun ListScreen(vm: MainViewModel) {
 private fun StatusStrip(vm: MainViewModel) {
     val cs = MaterialTheme.colorScheme
     val near = vm.nearest()
-    val fix = vm.fix
-    val acc = when {
-        fix == null -> "søker"
-        fix.accuracyM.isNaN() -> "GPS"
-        else -> "±${fix.accuracyM.toInt()} m"
-    }
     Row(
-        Modifier.fillMaxWidth().background(cs.primary).padding(horizontal = 14.dp, vertical = 11.dp),
+        // end padding leaves room for the round minimap overlaid on the right.
+        Modifier.fillMaxWidth().background(cs.primary)
+            .padding(start = 14.dp, end = 104.dp, top = 11.dp, bottom = 11.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        Text(if (near != null) "📍 ${near.lokalitet}, ${near.kommune}" else "📍 Finner posisjon…",
-            color = Color.White, fontWeight = FontWeight.SemiBold, modifier = Modifier.weight(1f))
-        Text(acc, color = Color.White, fontSize = 12.sp,
-            modifier = Modifier.background(Color(0x33FFFFFF), RoundedCornerShape(10.dp))
-                .padding(horizontal = 8.dp, vertical = 1.dp))
+        Text(if (near != null) "${near.lokalitet}, ${near.kommune}" else "Finner posisjon…",
+            color = Color.White, fontWeight = FontWeight.SemiBold, modifier = Modifier.weight(1f),
+            maxLines = 1, overflow = TextOverflow.Ellipsis)
         if (vm.notes.isNotEmpty()) {
             Spacer(Modifier.width(6.dp))
             TextButton(onClick = { vm.openExport() }) {

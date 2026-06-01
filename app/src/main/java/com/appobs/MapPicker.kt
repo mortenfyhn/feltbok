@@ -124,10 +124,11 @@ private fun configureOsmdroid(ctx: Context) {
  * non-interactive; tiles are the same cached OSM ones as the picker.
  */
 @Composable
-fun LocalityPreview(vm: MainViewModel) {
+fun LocalityPreview(vm: MainViewModel, modifier: Modifier = Modifier) {
     val near = vm.nearest() ?: return
     val ctx = LocalContext.current
     val cs = MaterialTheme.colorScheme
+    val fix = vm.fix
     val map = remember {
         configureOsmdroid(ctx)
         MapView(ctx).apply {
@@ -139,16 +140,19 @@ fun LocalityPreview(vm: MainViewModel) {
     }
     val overlay = remember { PreviewOverlay().also { map.overlays.add(it) } }
     overlay.loc = near
-    overlay.fix = vm.fix?.let { GeoPoint(it.lat, it.lon) }
-    LaunchedEffect(near.lat, near.lon) { map.controller.setCenter(GeoPoint(near.lat, near.lon)) }
+    overlay.fix = fix?.let { GeoPoint(it.lat, it.lon) }
+    overlay.accuracyM = fix?.accuracyM?.toFloat() ?: Float.NaN
+    // Centre on the GPS fix (where you are) when available, else the locality.
+    val cLat = fix?.lat ?: near.lat
+    val cLon = fix?.lon ?: near.lon
+    LaunchedEffect(cLat, cLon) { map.controller.setCenter(GeoPoint(cLat, cLon)) }
     DisposableEffect(Unit) {
         map.onResume()
         onDispose { map.onPause(); map.onDetach() }
     }
     AndroidView(
         factory = { map },
-        modifier = Modifier.padding(10.dp).size(96.dp).clip(CircleShape)
-            .border(2.dp, cs.outline, CircleShape),
+        modifier = modifier.size(96.dp).clip(CircleShape).border(2.dp, cs.outline, CircleShape),
     ) { it.invalidate() }
 }
 
@@ -156,9 +160,12 @@ fun LocalityPreview(vm: MainViewModel) {
 private class PreviewOverlay : Overlay() {
     var loc: Locality? = null
     var fix: GeoPoint? = null
+    var accuracyM: Float = Float.NaN
 
     private val fill = Paint().apply { style = Paint.Style.FILL; color = 0x553C8C28.toInt(); isAntiAlias = true }
     private val stroke = Paint().apply { style = Paint.Style.STROKE; color = 0xFF2E7D32.toInt(); strokeWidth = 3f; isAntiAlias = true }
+    private val accFill = Paint().apply { style = Paint.Style.FILL; color = 0x222962FF.toInt(); isAntiAlias = true }
+    private val accStroke = Paint().apply { style = Paint.Style.STROKE; color = 0x552962FF.toInt(); strokeWidth = 2f; isAntiAlias = true }
     private val gps = Paint().apply { style = Paint.Style.FILL; color = 0xFF2962FF.toInt(); isAntiAlias = true }
     private val gpsRing = Paint().apply { style = Paint.Style.STROKE; color = 0xFFFFFFFF.toInt(); strokeWidth = 3f; isAntiAlias = true }
     private val p = Point()
@@ -166,11 +173,11 @@ private class PreviewOverlay : Overlay() {
     override fun draw(c: Canvas, map: MapView, shadow: Boolean) {
         if (shadow) return
         val proj = map.projection
+        val center = map.mapCenter
+        val a = proj.toPixels(GeoPoint(center.latitude, center.longitude), null)
+        val b = proj.toPixels(GeoPoint(center.latitude + 100.0 / 111_320.0, center.longitude), null)
+        val ppm = abs(a.y - b.y) / 100.0
         loc?.let {
-            val center = map.mapCenter
-            val a = proj.toPixels(GeoPoint(center.latitude, center.longitude), null)
-            val b = proj.toPixels(GeoPoint(center.latitude + 100.0 / 111_320.0, center.longitude), null)
-            val ppm = abs(a.y - b.y) / 100.0
             val m = if (it.radius > 0) it.radius else 40.0
             val rPx = (m * ppm).toFloat().coerceIn(4f, 200f)
             proj.toPixels(GeoPoint(it.lat, it.lon), p)
@@ -179,8 +186,14 @@ private class PreviewOverlay : Overlay() {
         }
         fix?.let {
             proj.toPixels(it, p)
-            c.drawCircle(p.x.toFloat(), p.y.toFloat(), 8f, gps)
-            c.drawCircle(p.x.toFloat(), p.y.toFloat(), 8f, gpsRing)
+            val px = p.x.toFloat(); val py = p.y.toFloat()
+            if (!accuracyM.isNaN() && accuracyM > 0f) {
+                val rAcc = (accuracyM * ppm).toFloat().coerceIn(6f, 400f)
+                c.drawCircle(px, py, rAcc, accFill)
+                c.drawCircle(px, py, rAcc, accStroke)
+            }
+            c.drawCircle(px, py, 7f, gps)
+            c.drawCircle(px, py, 7f, gpsRing)
         }
     }
 }
