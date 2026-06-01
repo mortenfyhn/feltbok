@@ -23,6 +23,8 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
 
     val localities: List<Locality> = loadLocalities(app)
     val species: List<Species> = loadSpecies(app)
+    /** Norwegian names pre-folded for search, parallel to [species] (folded once, not per keystroke). */
+    val foldedNorsk: List<String> = species.map { fold(it.norsk) }
 
     val notes = mutableStateListOf<Note>().apply { addAll(loadNotes(app)) }
     /** Recently chosen species (norsk), most-recent first - the quick list when search is empty.

@@ -110,20 +110,21 @@ fun formatDistance(m: Double): String =
 // ---- species search ----
 
 /** Fold Norwegian/diacritic letters so typing plain ASCII still matches. */
-private fun fold(s: String) = s.lowercase()
+fun fold(s: String) = s.lowercase()
     .replace("æ", "ae").replace("ø", "o").replace("å", "a")
     .replace("ô", "o").replace("é", "e").replace("è", "e").replace("ü", "u")
 
+/** Fold a search query and drop its spaces, so "f m" == "fm". */
+fun foldQuery(query: String) = fold(query).filterNot { it.isWhitespace() }
+
 /**
- * Fuzzy match a query against a name. Returns a rank (lower is better) or null
- * for no match: 0 = prefix, 1 = substring, 2 = subsequence (letters in order
- * but not adjacent, so "rvt" matches "Rødvingetrost"). Spaces in the query are
- * ignored. Caller keeps the list's frequency order within an equal rank.
+ * Rank an already-folded [q] (see [foldQuery]) against an already-folded [t]
+ * (see [fold]). Lower is better, or null for no match: 0 = prefix, 1 = substring,
+ * 2 = subsequence (letters in order but not adjacent, so "fm" matches "fiskemake").
+ * Pre-folding the names once keeps this hot per-keystroke loop allocation-free.
  */
-fun fuzzyScore(query: String, target: String): Int? {
-    val q = fold(query).filterNot { it.isWhitespace() }
+fun fuzzyRank(q: String, t: String): Int? {
     if (q.isEmpty()) return 0
-    val t = fold(target)
     val idx = t.indexOf(q)
     if (idx == 0) return 0
     if (idx > 0) return 1
@@ -134,6 +135,9 @@ fun fuzzyScore(query: String, target: String): Int? {
     }
     return null
 }
+
+/** Convenience that folds both sides; used in tests. */
+fun fuzzyScore(query: String, target: String): Int? = fuzzyRank(foldQuery(query), fold(target))
 
 // ---- date/time formatting ----
 

@@ -170,21 +170,16 @@ fun SearchScreen(vm: MainViewModel) {
             .filter { it.norsk !in recentNames && vm.useCount(it.norsk) > 0 }
             .sortedByDescending { vm.useCount(it.norsk) }
         (recentList + frequent).take(12)
-    } else
-        vm.species
-            .mapNotNull { s ->
-                val n = fuzzyScore(q, s.norsk)
-                val l = fuzzyScore(q, s.latin)
-                val score = when {
-                    n == null -> l
-                    l == null -> n
-                    else -> minOf(n, l)
-                }
-                score?.let { s to it }
-            }
-            // best fuzzy rank first, then your most-used; Norway-wide frequency breaks ties (stable)
-            .sortedWith(compareBy({ it.second }, { -vm.useCount(it.first.norsk) }))
-            .map { it.first }
+    } else {
+        // Match the Norwegian name only (Latin added too much noise). Fold the query
+        // once; the names are pre-folded. Best fuzzy rank first, then your most-used;
+        // Norway-wide frequency breaks ties (stable sort).
+        val fq = foldQuery(q)
+        vm.species.indices
+            .mapNotNull { i -> fuzzyRank(fq, vm.foldedNorsk[i])?.let { i to it } }
+            .sortedWith(compareBy({ it.second }, { -vm.useCount(vm.species[it.first].norsk) }))
+            .map { vm.species[it.first] }
+    }
     // Auto-focus with the keyboard up so you can type the moment the screen opens.
     val focus = remember { FocusRequester() }
     LaunchedEffect(Unit) { focus.requestFocus() }
