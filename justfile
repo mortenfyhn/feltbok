@@ -7,6 +7,11 @@ data_dir := "/sdcard/Android/data/com.appobs/files"
 build:
     ./gradlew assembleDebug
 
+# Run all tests: Python locality heuristics + Kotlin units
+test:
+    .venv/bin/python -m unittest discover -s process -p 'test_*.py'
+    ./gradlew testDebugUnitTest
+
 # Install on connected device
 install: build
     adb install -r {{apk}}
