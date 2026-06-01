@@ -18,6 +18,19 @@ DATASET = "b124e1e0-4755-430f-9eab-894f25a9b59c"
 AVES = 212
 NORTAXA = "a6c6cead-b5ce-4a4e-8cf5-1542ba708dec"  # Artsdatabanken's Norwegian name base
 
+# Manual Bokmål names for species the lookups miss — mostly where this dataset
+# files a bird under an old genus (Sylvia) that Artsnavnebasen only lists under
+# the current one (Curruca), so the name-match fails. Only confident regulars;
+# genuine rare vagrants are left as their scientific name.
+OVERRIDES = {
+    "Sylvia communis": "Tornsanger",
+    "Sylvia curruca": "Møller",
+    "Sylvia nana": "Dvergsanger",
+    "Sylvia crassirostris": "Østsanger",
+    "Corvus corone": "Svartkråke",
+    "Acanthis hornemanni": "Polarsisik",
+}
+
 
 def nortaxa_name(latin):
     """Norwegian name from Artsnavnebasen — Artsobservasjoner uses the same base.
@@ -104,7 +117,8 @@ def main() -> int:
         if latin in seen:
             continue
         seen.add(latin)
-        out.append((norsk or latin, latin))   # fall back to latin if no Norwegian name
+        # override > resolved name > scientific name
+        out.append((OVERRIDES.get(latin) or norsk or latin, latin))
     with open("species.csv", "w", newline="", encoding="utf-8") as f:
         w = csv.writer(f)
         w.writerow(["norsk", "latin"])
