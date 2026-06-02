@@ -39,6 +39,17 @@ class SplitName(unittest.TestCase):
     def test_three_parts_keeps_only_lokalitet(self):
         self.assertEqual(bl.split_name("Sula, Frøya, Tø"), ("Sula", ""))
 
+    def test_doubled_superlok_is_part_of_the_name(self):
+        # Sørøyan's registered name literally ends in its superlokalitet, so GBIF
+        # repeats it; the match key is the full "Sørøyan, Uttian" (verified live).
+        self.assertEqual(bl.split_name("Sørøyan, Uttian, Uttian, Frøya, Tø"),
+                         ("Sørøyan, Uttian", "Uttian"))
+
+    def test_deeper_hierarchy_keeps_plain_name(self):
+        # No doubled tail -> we can't tell name from extra levels; keep first token.
+        self.assertEqual(bl.split_name("Sistrandfjæra, Sistranda bedehus, Sistranda, Frøya, Tø"),
+                         ("Sistrandfjæra", "Sistranda bedehus"))
+
     def test_two_parts_keeps_first(self):
         self.assertEqual(bl.split_name("Titran, Tø"), ("Titran", ""))
 

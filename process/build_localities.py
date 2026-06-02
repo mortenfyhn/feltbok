@@ -243,13 +243,22 @@ def split_name(full: str):
     """Split the qualified registry name into (lokalitet, hovedlokalitet).
 
     The composite is "Lok[, Hovedlok], Kommune, Fylke-abbr" - drop the trailing
-    kommune + fylke to leave the place part. The bare lokalitet (the most
-    specific sublocality) is what the import matches on."""
+    kommune + fylke to leave the place part. The import matches the *exact
+    registered* lokalitet, which can itself contain commas: when a locality's name
+    already ends in its superlokalitet (a stuck data-entry quirk), GBIF repeats the
+    token, e.g. Sørøyan's name is literally "Sørøyan, Uttian" with superlok "Uttian"
+    -> "Sørøyan, Uttian, Uttian, Frøya, Tø". That doubled tail (place[-1] == place[-2])
+    is the only multi-token shape we can resolve confidently, so we merge the name
+    there; other 3+-token strings (deeper hierarchies, duplicated kommune) stay as the
+    plain first token until canonical names are available."""
     parts = [p.strip() for p in full.split(",")]
     place = parts[:-2] if len(parts) >= 3 else parts[:1]
-    lok = place[0] if place else full.strip()
+    if not place:
+        return full.strip(), ""
+    if len(place) >= 2 and place[-1] == place[-2]:
+        return ", ".join(place[:-1]), place[-1]
     hoved = place[1] if len(place) > 1 else ""
-    return lok, hoved
+    return place[0], hoved
 
 
 def parse_meta(zf: zipfile.ZipFile):
