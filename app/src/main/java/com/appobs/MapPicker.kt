@@ -158,9 +158,9 @@ fun LocalityPreview(vm: MainViewModel, modifier: Modifier = Modifier) {
             overlay.loc = n
             overlay.fix = f?.let { GeoPoint(it.lat, it.lon) }
             overlay.accuracyM = f?.accuracyM?.toFloat() ?: Float.NaN
-            // Centre on the GPS fix (where you are) when available, else the locality.
-            val cLat = f?.lat ?: n?.lat
-            val cLon = f?.lon ?: n?.lon
+            // Centre on the locality so it's always shown, with your GPS pin beside it.
+            val cLat = n?.lat ?: f?.lat
+            val cLon = n?.lon ?: f?.lon
             if (cLat != null && cLon != null) m.controller.setCenter(GeoPoint(cLat, cLon))
             m.invalidate()
         },
@@ -180,6 +180,7 @@ private class PreviewOverlay : Overlay() {
     private val gps = Paint().apply { style = Paint.Style.FILL; color = 0xFF2962FF.toInt(); isAntiAlias = true }
     private val gpsRing = Paint().apply { style = Paint.Style.STROKE; color = 0xFFFFFFFF.toInt(); strokeWidth = 3f; isAntiAlias = true }
     private val p = Point()
+    private val path = Path()
 
     override fun draw(c: Canvas, map: MapView, shadow: Boolean) {
         if (shadow) return
@@ -189,11 +190,23 @@ private class PreviewOverlay : Overlay() {
         val b = proj.toPixels(GeoPoint(center.latitude + 100.0 / 111_320.0, center.longitude), null)
         val ppm = abs(a.y - b.y) / 100.0
         loc?.let {
-            val m = if (it.radius > 0) it.radius else 40.0
-            val rPx = (m * ppm).toFloat().coerceIn(4f, 200f)
-            proj.toPixels(GeoPoint(it.lat, it.lon), p)
-            c.drawCircle(p.x.toFloat(), p.y.toFloat(), rPx, fill)
-            c.drawCircle(p.x.toFloat(), p.y.toFloat(), rPx, stroke)
+            if (it.polygon.isNotEmpty()) {            // real footprint
+                path.rewind()
+                for ((j, v) in it.polygon.withIndex()) {
+                    proj.toPixels(GeoPoint(v[0], v[1]), p)
+                    if (j == 0) path.moveTo(p.x.toFloat(), p.y.toFloat())
+                    else path.lineTo(p.x.toFloat(), p.y.toFloat())
+                }
+                path.close()
+                c.drawPath(path, fill)
+                c.drawPath(path, stroke)
+            } else {
+                val m = if (it.radius > 0) it.radius else 40.0
+                val rPx = (m * ppm).toFloat().coerceIn(4f, 200f)
+                proj.toPixels(GeoPoint(it.lat, it.lon), p)
+                c.drawCircle(p.x.toFloat(), p.y.toFloat(), rPx, fill)
+                c.drawCircle(p.x.toFloat(), p.y.toFloat(), rPx, stroke)
+            }
         }
         fix?.let {
             proj.toPixels(it, p)
