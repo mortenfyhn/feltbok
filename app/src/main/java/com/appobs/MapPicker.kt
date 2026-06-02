@@ -39,6 +39,7 @@ import org.osmdroid.config.Configuration
 import org.osmdroid.tileprovider.tilesource.TileSourceFactory
 import org.osmdroid.util.GeoPoint
 import org.osmdroid.views.MapView
+import org.osmdroid.views.Projection
 import org.osmdroid.views.overlay.Overlay
 import java.io.File
 import kotlin.math.abs
@@ -237,6 +238,8 @@ private class LocalityOverlay(
 
     private val fill = Paint().apply { style = Paint.Style.FILL; color = 0x553C8C28.toInt(); isAntiAlias = true }
     private val stroke = Paint().apply { style = Paint.Style.STROKE; color = 0xFF2E7D32.toInt(); strokeWidth = 2f; isAntiAlias = true }
+    private val selFill = Paint().apply { style = Paint.Style.FILL; color = 0xDD4CAF50.toInt(); isAntiAlias = true }
+    private val selStroke = Paint().apply { style = Paint.Style.STROKE; color = 0xFF1B5E20.toInt(); strokeWidth = 5f; isAntiAlias = true }
     private val badgeFill = Paint().apply { style = Paint.Style.FILL; color = 0xFFFFFFFF.toInt(); isAntiAlias = true }
     private val badgeRing = Paint().apply { style = Paint.Style.STROKE; color = 0xFF1B5E20.toInt(); strokeWidth = 3f; isAntiAlias = true }
     private val check = Paint().apply { style = Paint.Style.STROKE; color = 0xFF1B5E20.toInt(); strokeWidth = 5f; strokeCap = Paint.Cap.ROUND; isAntiAlias = true }
@@ -260,6 +263,25 @@ private class LocalityOverlay(
     private fun radiusPx(loc: Locality, ppm: Double): Float {
         val m = if (loc.radius > 0) loc.radius else defaultRadiusM
         return (m * ppm).toFloat().coerceAtLeast(3f)   // no upper cap, so disks scale with zoom
+    }
+
+    /** Draw a locality's real polygon, or its radius circle if it's a point locality. */
+    private fun drawShape(c: Canvas, proj: Projection, loc: Locality,
+                          cx: Float, cy: Float, rPx: Float, fp: Paint, sp: Paint) {
+        if (loc.polygon.isNotEmpty()) {
+            path.rewind()
+            for ((j, v) in loc.polygon.withIndex()) {
+                proj.toPixels(GeoPoint(v[0], v[1]), p)
+                if (j == 0) path.moveTo(p.x.toFloat(), p.y.toFloat())
+                else path.lineTo(p.x.toFloat(), p.y.toFloat())
+            }
+            path.close()
+            c.drawPath(path, fp)
+            c.drawPath(path, sp)
+        } else {
+            c.drawCircle(cx, cy, rPx, fp)
+            c.drawCircle(cx, cy, rPx, sp)
+        }
     }
 
     private val lineH = 32f
@@ -298,40 +320,27 @@ private class LocalityOverlay(
         val bb = map.boundingBox
         val w = map.width; val h = map.height
         val showLabels = map.zoomLevelDouble >= 15.5     // names only when zoomed in enough to read them
-        var pickX = 0f; var pickY = 0f; var pickR = 0f; var pickShown = false
         for (loc in localities) {
+            if (loc === picked) continue              // drawn highlighted on top, after the loop
             if (bb != null && (loc.lat > bb.latNorth || loc.lat < bb.latSouth ||
                     loc.lon < bb.lonWest || loc.lon > bb.lonEast)) continue
             proj.toPixels(GeoPoint(loc.lat, loc.lon), p)
             val rPx = radiusPx(loc, ppm)
             if (p.x < -rPx || p.x > w + rPx || p.y < -rPx || p.y > h + rPx) continue
             val px = p.x.toFloat(); val py = p.y.toFloat()
-            // Fade the fill as the footprint grows, so big areas don't wash out the map.
-            fill.alpha = (95f - (rPx - 40f) * 0.32f).toInt().coerceIn(12, 95)
-            if (loc.polygon.isNotEmpty()) {           // real footprint -> draw the polygon
-                path.rewind()
-                for ((j, v) in loc.polygon.withIndex()) {
-                    proj.toPixels(GeoPoint(v[0], v[1]), p)
-                    if (j == 0) path.moveTo(p.x.toFloat(), p.y.toFloat())
-                    else path.lineTo(p.x.toFloat(), p.y.toFloat())
-                }
-                path.close()
-                c.drawPath(path, fill)
-                c.drawPath(path, stroke)
-            } else {                                  // point locality -> its radius circle (dot when tiny)
-                c.drawCircle(px, py, rPx, fill)
-                c.drawCircle(px, py, rPx, stroke)
-            }
+            drawShape(c, proj, loc, px, py, rPx, fill, stroke)
             if (showLabels) drawLabel(c, loc.lokalitet, px, py)   // name at the locality point, wrapped
-            if (loc === picked) { pickX = px; pickY = py; pickR = rPx; pickShown = true }
         }
-        if (pickShown) {                              // selected: a checkmark badge at the lower-right
-            val bx = pickX + pickR * 0.7f + 6f
-            val by = pickY + pickR * 0.7f + 6f
-            c.drawCircle(bx, by, 24f, badgeFill)
-            c.drawCircle(bx, by, 24f, badgeRing)
-            c.drawLine(bx - 11f, by + 1f, bx - 3f, by + 12f, check)
-            c.drawLine(bx - 3f, by + 12f, bx + 13f, by - 11f, check)
+        picked?.let { pl ->                           // selected: opaque + bold, on top, with a checkmark
+            proj.toPixels(GeoPoint(pl.lat, pl.lon), p)
+            val cx = p.x.toFloat(); val cy = p.y.toFloat()
+            drawShape(c, proj, pl, cx, cy, radiusPx(pl, ppm), selFill, selStroke)
+            if (showLabels) drawLabel(c, pl.lokalitet, cx, cy)
+            val bx = cx + 13f; val by = cy - 13f      // checkmark near the centre, fixed at any zoom
+            c.drawCircle(bx, by, 17f, badgeFill)
+            c.drawCircle(bx, by, 17f, badgeRing)
+            c.drawLine(bx - 8f, by + 1f, bx - 2f, by + 9f, check)
+            c.drawLine(bx - 2f, by + 9f, bx + 10f, by - 8f, check)
         }
         fix?.let {
             proj.toPixels(it, p)
