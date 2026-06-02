@@ -51,6 +51,13 @@ footprints:
 mark-public *args:
     .venv/bin/python process/mark_public.py {{args}}
 
+# Set the AUTHORITATIVE public/private flag from Artsobservasjoner's own allmenn flag
+# (POST /ViewSighting/FindSitesByName, public/no-auth). Run after mark-public — it
+# replaces the heuristic guess where Artsobs confirms, and keeps it where a lookup is
+# capped/failed. The real source of truth; supersedes the observer/polygon heuristic.
+public-flags:
+    .venv/bin/python process/fetch_public_flags.py
+
 # Push the generated locality/species CSVs to the device (overrides the bundled
 # assets — no rebuild needed). Run after `just localities`.
 push-data:
