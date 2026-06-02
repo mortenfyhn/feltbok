@@ -41,6 +41,7 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.ui.viewinterop.AndroidView
 import org.osmdroid.config.Configuration
 import org.osmdroid.tileprovider.tilesource.TileSourceFactory
+import org.osmdroid.util.BoundingBox
 import org.osmdroid.util.GeoPoint
 import org.osmdroid.views.CustomZoomButtonsController
 import org.osmdroid.views.MapView
@@ -49,7 +50,10 @@ import org.osmdroid.views.overlay.Overlay
 import kotlinx.coroutines.delay
 import java.io.File
 import kotlin.math.abs
+import kotlin.math.cos
 import kotlin.math.hypot
+import kotlin.math.max
+import kotlin.math.min
 
 /**
  * The locality picker, as a map. Localities are drawn as green disks at their real
@@ -311,6 +315,28 @@ private class LocalityOverlay(
         return (loc.radius * ppm).toFloat().coerceAtLeast(POINT_DOT_PX)  // circle: scales with zoom
     }
 
+    /** Does the locality's geographic footprint overlap the visible map bounds? Uses the
+     *  polygon's vertex extent (or the circle's radius), so a large shape whose centre is
+     *  off-screen still draws while it covers the view. */
+    private fun boundsVisible(loc: Locality, bb: BoundingBox): Boolean {
+        val latMin: Double; val latMax: Double; val lonMin: Double; val lonMax: Double
+        if (loc.polygon.isNotEmpty()) {
+            var laMin = 90.0; var laMax = -90.0; var loMin = 180.0; var loMax = -180.0
+            for (v in loc.polygon) {
+                laMin = min(laMin, v[0]); laMax = max(laMax, v[0])
+                loMin = min(loMin, v[1]); loMax = max(loMax, v[1])
+            }
+            latMin = laMin; latMax = laMax; lonMin = loMin; lonMax = loMax
+        } else {
+            val dLat = loc.radius / 111_320.0
+            val dLon = loc.radius / (111_320.0 * cos(Math.toRadians(loc.lat)))
+            latMin = loc.lat - dLat; latMax = loc.lat + dLat
+            lonMin = loc.lon - dLon; lonMax = loc.lon + dLon
+        }
+        return !(latMax < bb.latSouth || latMin > bb.latNorth ||
+                 lonMax < bb.lonWest || lonMin > bb.lonEast)
+    }
+
     /** Draw a locality's real polygon, or its radius circle if it's a point locality. */
     private fun drawShape(c: Canvas, proj: Projection, loc: Locality,
                           cx: Float, cy: Float, rPx: Float, fp: Paint, sp: Paint) {
@@ -364,15 +390,14 @@ private class LocalityOverlay(
         val proj = map.projection
         val ppm = pxPerMeter(map)
         val bb = map.boundingBox
-        val w = map.width; val h = map.height
         val showLabels = map.zoomLevelDouble >= 15.5     // names only when zoomed in enough to read them
         for (loc in localities) {
             if (loc === picked) continue              // drawn highlighted on top, after the loop
-            if (bb != null && (loc.lat > bb.latNorth || loc.lat < bb.latSouth ||
-                    loc.lon < bb.lonWest || loc.lon > bb.lonEast)) continue
+            // Cull by the locality's geographic bounds, not just its centre: a big polygon
+            // (or wide circle) can fill the view while its centre point sits off-screen.
+            if (bb != null && !boundsVisible(loc, bb)) continue
             proj.toPixels(GeoPoint(loc.lat, loc.lon), p)
             val rPx = radiusPx(loc, ppm)
-            if (p.x < -rPx || p.x > w + rPx || p.y < -rPx || p.y > h + rPx) continue
             val px = p.x.toFloat(); val py = p.y.toFloat()
             if (loc.public) drawShape(c, proj, loc, px, py, rPx, fill, stroke)
             else drawShape(c, proj, loc, px, py, rPx, privFill, privStroke)   // private -> yellow
