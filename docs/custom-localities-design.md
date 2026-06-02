@@ -55,6 +55,16 @@ this is a sure thing.
 - Brand-new (created in-app, not yet on Artsobs) → **name + coords** (mints). After the next
   pull it becomes a known "mine".
 
+### B2. Copy *someone else's* custom localities (user-requested 2026-06-02)
+The bundled list already surfaces other people's nicely-drawn custom localities (e.g.
+many around Frøya appear to belong to **Emil Krokan**). They're great spots, but you
+can't report at one directly - on Artsobservasjoner you must **copy** it into your own
+localities first, manually. So: let the user name a person (Collector), pull that
+person's custom localities (same Artskart/GBIF client-side-by-Collector pull as A), and
+offer to **adopt/copy** chosen ones into the user's own set. "Copy" = mint it as the
+user's own on export (name + coords), after which bare-name matches it like any of your
+own. Needs the geometry (we have it now from `footprintWKT`) to show what you're copying.
+
 ### C. Create a new custom locality in-app
 - "Ny lokalitet her" → drop a pin (or use GPS), give it a name. Store as a pending custom
   locally; show it on the map in a distinct colour (**yellow**, like the website).
