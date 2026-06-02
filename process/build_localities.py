@@ -376,13 +376,17 @@ def main() -> int:
         (s for s in sites.values()
          if s[6] >= args.min_count and len(s[7]) >= args.min_observers),
         key=lambda s: -s[6])
-    # Collapse near-duplicate registrations of the same place - the same bare name
-    # within ~100 m - to the most-used one (kept is count-desc, so first wins), so
-    # the picker lists each place once. Distinct places sharing a name stay separate.
+    # Collapse registrations of the *same registry locality* - one Artsobservasjoner
+    # site is sometimes split across several GBIF locationIDs (e.g. "Hammaren,
+    # Hammarvika" or "Myra, Sistranda" with 835 records over two ids). The exact
+    # qualified `fullname` IS the registry identity, so merge on it: sum the counts
+    # and union the observers, keeping the most-used id's coords (kept is count-desc,
+    # so the first row of each name wins). Without this, each half can fall under
+    # --public-min and drop_name_collisions deletes a real public locality.
     seen: dict = {}
     for lid, name, lat, lon, kommune, fylke, count, obs, radius in kept:
         lok, hoved = split_name(name)
-        key = (lok.lower(), round(lat, 3), round(lon, 3))
+        key = name           # the exact qualified registry name
         if key in seen:
             seen[key][7] += count
             seen[key][8] |= obs
