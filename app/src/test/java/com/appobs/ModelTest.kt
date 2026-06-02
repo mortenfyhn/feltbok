@@ -39,8 +39,8 @@ class ModelTest {
         assertEquals("Adult", c[2])
         assertEquals("Hann", c[3])
         assertEquals("Næringssøk", c[4])
-        assertEquals("Titran, Frøya, Tø", c[5])   // qualified name, what the import matches
-        // Coordinates are deliberately omitted so paste links the name to the public locality.
+        assertEquals("Titran", c[5])   // bare name: a qualified name hard-fails paste validation
+        // Coordinates are deliberately omitted (name+coords mints a private duplicate).
         assertEquals("", c[6])
         assertEquals("", c[7])
         assertEquals("", c[8])

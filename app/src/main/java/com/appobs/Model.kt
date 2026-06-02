@@ -316,13 +316,16 @@ private val EXPORT_COLS = listOf(
 )
 
 fun exportTsv(notes: List<Note>): String {
-    // Emit the *qualified* Lokalitetsnavn ("Lok, Hovedlok, Kommune, Fylke") with no
-    // coordinates: that exact string links to the public locality, while the bare
-    // name only matches your own localities (see docs/artsobs-import.md).
-    // Nord/Øst/Nøyaktighet are left blank.
+    // Emit the *bare* Lokalitetsnavn with no coordinates. Paste-import behaviour
+    // (tested against the live v2.20 site, see docs/artsobs-import.md):
+    //  - a comma-qualified name ("Lok, Hovedlok, Kommune, Fylke") HARD-FAILS validation.
+    //  - name / name+coords each validate but MINT a private duplicate - paste never
+    //    links to a public locality. Only manual selection on the site links to public.
+    // So we emit the bare name and let the user scope the import form to the kommune to
+    // disambiguate, fixing the rest by hand. Nord/Øst/Nøyaktighet are left blank.
     val rows = notes.sortedBy { it.id }.map { n ->
         val d = exportDate(n.id); val t = exportTime(n.id)
-        val loc = n.locFull.ifBlank { n.locName }
+        val loc = n.locName.ifBlank { n.locFull }
         listOf(
             n.species, n.count.toString(), n.age, n.sex, n.activity, loc,
             "", "", "", d, t, d, t, n.publicComment, n.privateComment,

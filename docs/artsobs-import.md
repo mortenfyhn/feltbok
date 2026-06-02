@@ -28,38 +28,52 @@ But see below: **we normally export without coordinates**, so this rarely matter
 
 ## Locality matching — the make-or-break
 
-The app exports the **qualified `Lokalitetsnavn`** and **no coordinates**. Observed
-matching rules for the **paste** flow on the old site:
+The app exports the **bare `Lokalitetsnavn`** and **no coordinates**. A controlled
+6-row matrix paste-tested against the live old site (2026-06-02) settled the rules —
+and overturned two earlier theories. Same dummy observation on every row, only the
+locality columns varied:
 
-| What you paste | Result |
-|---|---|
-| **Qualified** name `"Lok, Hovedlok, Kommune, Fylke"` (e.g. `"Meliaunskjæret, Uttian, Frøya, Tø"`) | ✅ Links to the existing **public** (allmenn) locality. This is the match key. *(verified 2026-06-01 across a full day's upload)* |
-| **Bare** name (`"Frøya sykehjem"`) | ❌ `LOKALITET: Kunne ikke validere lokalitet., Feltet er obligatorisk` — even for a clearly public locality. The bare name only matches **your own** localities ("Mine lokaliteter"), **not** the public registry. *(verified: a whole batch failed, incl. known-public sites)* |
-| Bare name **+ coordinates** | ❌ Mints a new custom locality at those coords — the duplicate mess. |
-| A name that is only a **private** locality | ❌ same `Kunne ikke validere lokalitet` — no public locality to match. *(e.g. "Skogholt ved Børaunet")* |
+| What you paste | Validates? | Links to public? |
+|---|---|---|
+| **Bare** name, no coords (`Uttian`) | ✅ | ❌ mints a private duplicate |
+| Bare name **+ coords** (centroid, `100 m`) | ✅ | ❌ mints a private duplicate |
+| Bare name **+ `Superlokalitet`** column | ✅ | ❌ mints a private duplicate |
+| Bare + Superlokalitet **+ coords** | ✅ | ❌ mints a private duplicate |
+| **Comma-qualified** `"Lok, Hovedlok, Kommune, Fylke"` | ❌ `Kunne ikke validere lokalitet` | — |
 
-**This corrects an earlier wrong conclusion** (that the *bare* name links and the
-*qualified* name fails). The earlier "bare name works" cases — "Lundeveien 9" etc. —
-were the tester's **own** localities, which the bare name *does* match. For public
-localities you must send the **full qualified name**, and the earlier qualified-name
-failure ("Ørndalen, Frøya, Tø") was a **malformed** qualification that dropped the
-hovedlokalitet — the real name is "Ørndalen, **Sistranda**, Frøya, Tø". Send the exact
-registered string.
+Two firm conclusions:
 
-**Conclusion:** export the qualified name (`fullname` in `localities.csv`), no
-coordinates. The qualified name must be exact — sublocality, hovedlokalitet (when the
-locality has one), kommune, and the **fylke abbreviation** ("Tø" for Trøndelag), e.g.
-`"Neset (Frøya), Frøya, Tø"` (no hovedlokalitet) vs `"Gåsvika, Uttian, Frøya, Tø"`.
-`build_localities.py` preserves this exact string from the GBIF `locality` field as the
-`fullname` column; the app emits it verbatim. Coordinates stay in the table only for
-GPS-nearest picking, never exported.
+1. **The comma-qualified single-column name hard-fails validation.** Commas in
+   `Lokalitetsnavn` break it outright. (The earlier "qualified name is the match key"
+   note was wrong — it was never actually paste-tested in isolation; a whole day's
+   *bare-name* upload had failed for a different reason and qualification was assumed to
+   be the fix.)
+2. **Paste never links an observation to a public locality.** Every form that validates
+   instead **mints a new private duplicate** in "Mine lokaliteter" — name alone,
+   name+coords, name+superlokalitet, all of them. Only **manual selection on the site**
+   links to a public (allmenn) locality.
+
+**Consequence:** there is no paste format that lands an observation on a public
+locality, so we stop trying to encode one. The app exports the **bare name** (the only
+clean, lowest-friction thing that validates). The user **scopes the import form to the
+kommune** so the site disambiguates same-named localities as best it can, then fixes the
+residual by hand on the site (re-selecting the public locality). `localities.csv` keeps
+both the bare `lokalitet` (exported) and the qualified `fullname` (display only);
+coordinates stay for GPS-nearest picking, never exported (they only mint duplicates).
+
+> Open question: how does **iGoTerra** export to this same old site and land on public
+> localities? If it genuinely does, a working format exists that name/coords paste does
+> not reach (a locality **id**, or the **v3.0** template). Inspecting a real iGoTerra
+> export is the next lead. See `docs/custom-localities-design.md`.
 
 ## Why the locality list still needs filtering
 
-Matching only works against **public** localities, but the GBIF export Feltbok builds
-its list from (`build_localities.py`) carries **no public/private flag** — that lives
-only in Artsobservasjoner's own DB. So we approximate "public" with heuristics, each
-covering a failure mode seen in the data:
+Paste can't link to public localities (see above), but the list should still be mostly
+**public, established** sites — that's what the user recognises in the picker and what
+the kommune-scoped import is most likely to resolve. The GBIF export Feltbok builds its
+list from (`build_localities.py`) carries **no public/private flag** — that lives only in
+Artsobservasjoner's own DB — so we approximate "public" with heuristics (also used for
+the map's green/yellow colouring), each covering a failure mode seen in the data:
 
 1. **Distinct-observer count** (`--min-observers`, default 2): a private locality has a
    single owner. Drops the long tail of one-person sites.
