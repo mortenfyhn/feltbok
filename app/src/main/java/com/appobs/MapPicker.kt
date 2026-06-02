@@ -207,7 +207,7 @@ fun LocalityPreview(vm: MainViewModel, modifier: Modifier = Modifier) {
 private val CIRCLE_RADII_M = setOf(1, 5, 10, 25, 50, 75, 100, 125, 150, 200, 250, 400, 500,
     750, 1000, 1500, 2000, 2500, 3000, 5000)
 private fun isCircleLocality(radiusM: Double) = radiusM.toInt() in CIRCLE_RADII_M
-private const val POINT_DOT_PX = 6f
+private const val POINT_DOT_PX = 11f
 
 private class PreviewOverlay : Overlay() {
     var loc: Locality? = null
@@ -293,8 +293,8 @@ private class LocalityOverlay(
     private val accStroke = Paint().apply { style = Paint.Style.STROKE; color = 0x882962FF.toInt(); strokeWidth = 2f; isAntiAlias = true }
     private val gps = Paint().apply { style = Paint.Style.FILL; color = 0xFF2962FF.toInt(); isAntiAlias = true }
     private val gpsRing = Paint().apply { style = Paint.Style.STROKE; color = 0xFFFFFFFF.toInt(); strokeWidth = 3f; isAntiAlias = true }
-    private val labelFill = Paint().apply { color = 0xFF18250F.toInt(); textSize = 28f; textAlign = Paint.Align.CENTER; isAntiAlias = true }
-    private val labelHalo = Paint().apply { color = 0xF2FFFFFF.toInt(); textSize = 28f; textAlign = Paint.Align.CENTER; isAntiAlias = true; style = Paint.Style.STROKE; strokeWidth = 4f }
+    private val labelFill = Paint().apply { color = 0xFF18250F.toInt(); textSize = 38f; textAlign = Paint.Align.CENTER; isAntiAlias = true }
+    private val labelHalo = Paint().apply { color = 0xF2FFFFFF.toInt(); textSize = 38f; textAlign = Paint.Align.CENTER; isAntiAlias = true; style = Paint.Style.STROKE; strokeWidth = 5f }
     private val p = Point()
     private val path = Path()
 

@@ -514,7 +514,7 @@ id,lokalitet,hovedlokalitet,kommune,fylke,lat,lon,count,observers,fullname,radiu
 1835081,sjøområdene utenfor Fjellvær,Fjellværsøya,Hitra,Trøndelag,63.616212,9.143924,16,2,"sjøområdene utenfor Fjellvær, Fjellværsøya, Hitra, Tø",1500,,0
 398046,Fotballbane,Fjellværsøya,Hitra,Trøndelag,63.640609,9.127279,16,2,"Fotballbane, Fjellværsøya, Hitra, Tø",213,,0
 2133882,Purkskaget,Mausundvær,Frøya,Trøndelag,63.870793,8.658951,16,8,"Purkskaget, Mausundvær, Frøya, Tø",780,"POLYGON ((8.648226 63.866818, 8.646700 63.868417, 8.652640 63.869336, 8.658932 63.873397, 8.668694 63.873502, 8.670271 63.872580, 8.663560 63.870457, 8.648226 63.866818))",0
-1367977,Nordhammarvik gravsted,,Frøya,Trøndelag,63.710628,8.83291,16,2,"Nordhammarvik gravsted, Frøya, Tø",250,,1
+1367977,Nordhammarvik gravsted,,Frøya,Trøndelag,63.710628,8.83291,16,2,"Nordhammarvik gravsted, Frøya, Tø",250,,0
 1368054,Ner Nesadalen ved Fossen,,Frøya,Trøndelag,63.683628,8.648279,16,2,"Ner Nesadalen ved Fossen, Frøya, Tø",200,,1
 433230,Håvikvatnet nord,,Hitra,Trøndelag,63.543574,8.615733,16,2,"Håvikvatnet nord, Hitra, Tø",300,,1
 951837,Svartbergvatnet øst,,Hitra,Trøndelag,63.601263,8.679432,16,2,"Svartbergvatnet øst, Hitra, Tø",242,"POLYGON ((8.675687 63.601853, 8.682905 63.601965, 8.682901 63.600442, 8.675180 63.600858, 8.675687 63.601853))",1
