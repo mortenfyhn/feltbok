@@ -28,6 +28,7 @@ OVERRIDES = {
     "Sylvia nana": "Dvergsanger",
     "Sylvia crassirostris": "Sultansanger",
     "Corvus corone": "Svartkråke",
+    "Lanius isabellinus": "Isabellavarsler",
     "Acanthis hornemanni": "Polarsisik",
 }
 
