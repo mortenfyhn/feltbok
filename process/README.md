@@ -26,17 +26,18 @@ just localities --county Trøndelag   # one fylke only (same download, smaller o
 python process/build_localities.py [--archive a.zip] [--bbox minlon,minlat,maxlon,maxlat] [--min-count 2]
 ```
 
-Output `localities.csv`: `id,lokalitet,hovedlokalitet,kommune,fylke,lat,lon,count`.
-`--min-count` drops rarely-referenced sites (usually private, won't match on
-import). Push it onto the device with `just push-data` — it overrides the bundled
-asset, no rebuild.
+Output `localities.csv`:
+`id,lokalitet,hovedlokalitet,kommune,fylke,lat,lon,count,observers,fullname,radius,geometry,public`.
+Then `just footprints` (adds `geometry`) and `just mark-public` (adds `public`).
+Push onto the device with `just push-data` — it overrides the bundled asset, no
+rebuild.
 
-**Why this shape:** the import links a row when `Lokalitetsnavn` is the **bare**
-name *and* the row carries the locality's **exact registry coordinate** — the
-coordinate disambiguates duplicate names and rescues otherwise-unfound ones. The
-app emits exactly that (WGS 84 geographic, the old import page's coordinate
-setting). Importing *with an approximate* coordinate instead mints a duplicate
-locality — which is the mess this avoids.
+**Why the bare name, no coordinates:** verified live (see
+`docs/artsobs-import.md`), the paste import matches the **exact registered
+`Lokalitetsnavn`** verbatim and links it to the public locality; appending
+kommune/fylke hard-fails, and **any coordinate mints a private duplicate**. So the
+app emits the bare registered name and no coordinates. Coordinates stay in the
+table only for GPS-nearest picking.
 
 ## `make_locality_test.py` — import-matching probes
 
