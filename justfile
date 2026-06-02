@@ -45,6 +45,12 @@ species:
 footprints:
     .venv/bin/python process/add_footprints.py
 
+# Flag each locality public/private by distinct reporters; add a `public` column.
+# Streams the full raw harvest to localities-occurrences.jsonl. Pass --from-raw to
+# re-derive from that cache in seconds (no re-harvest):  just mark-public --from-raw
+mark-public *args:
+    .venv/bin/python process/mark_public.py {{args}}
+
 # Push the generated locality/species CSVs to the device (overrides the bundled
 # assets — no rebuild needed). Run after `just localities`.
 push-data:

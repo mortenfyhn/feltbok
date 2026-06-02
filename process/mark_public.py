@@ -48,14 +48,17 @@ def write(path, rows, reporters):
     shutil.copy(path, "localities.csv")
 
 
-def main() -> int:
-    path = "app/src/main/assets/localities.csv"
-    rows = list(csv.DictReader(open(path)))
-    want = {r["id"] for r in rows}
-    reporters: dict[str, set] = collections.defaultdict(set)
+def occurrences(from_raw: bool):
+    """Yield occurrence dicts: from the cached JSONL (instant) or a fresh GBIF harvest
+    (which also writes the cache)."""
+    if from_raw:
+        with open(RAW, encoding="utf-8") as f:
+            for line in f:
+                yield json.loads(line)
+        return
     bbox = (8.0, 63.5, 9.3, 63.9)
     raw = open(RAW, "w", encoding="utf-8")
-    offset, page = 0, 0
+    offset = 0
     while offset + 300 <= 100_000:
         d = bl._gbif_page({"datasetKey": bl.GBIF_DATASET, "limit": 300, "offset": offset,
                            "hasCoordinate": "true", "taxonKey": 212,
@@ -64,20 +67,26 @@ def main() -> int:
             break
         for o in d.get("results", []):
             raw.write(json.dumps(o, ensure_ascii=False) + "\n")   # full unmodified record
-            lid = str(o.get("locationID") or "").strip()
-            rb = o.get("recordedBy") or ""
-            if lid in want and rb:
-                reporters[lid].add(reporter(rb))
+            yield o
         offset += 300
-        page += 1
-        if page % 15 == 0:
-            write(path, rows, reporters)
-        pub = sum(1 for v in reporters.values() if len(v) >= 2)
-        priv = sum(1 for v in reporters.values() if len(v) == 1)
-        print(f"\r  {offset} records, {pub} public / {priv} private so far", end="", file=sys.stderr)
+        print(f"\r  harvested {offset} records", end="", file=sys.stderr)
         if d.get("endOfRecords") or not d.get("results"):
             break
     raw.close()
+    print(file=sys.stderr)
+
+
+def main() -> int:
+    from_raw = "--from-raw" in sys.argv
+    path = "app/src/main/assets/localities.csv"
+    rows = list(csv.DictReader(open(path)))
+    want = {r["id"] for r in rows}
+    reporters: dict[str, set] = collections.defaultdict(set)
+    for o in occurrences(from_raw):
+        lid = str(o.get("locationID") or "").strip()
+        rb = o.get("recordedBy") or ""
+        if lid in want and rb:
+            reporters[lid].add(reporter(rb))
     write(path, rows, reporters)
     npriv = sum(1 for r in rows if r["public"] == "0")
     print(f"\nMarked {npriv}/{len(rows)} localities private. Raw harvest -> {RAW}", file=sys.stderr)
