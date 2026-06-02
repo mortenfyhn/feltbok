@@ -37,3 +37,4 @@ process/__pycache__/
 /bird_species.csv
 /localities-occurrences.jsonl
 /mark_public.log
+paste-test.tsv
