@@ -23,6 +23,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -41,6 +42,7 @@ import org.osmdroid.util.GeoPoint
 import org.osmdroid.views.MapView
 import org.osmdroid.views.Projection
 import org.osmdroid.views.overlay.Overlay
+import kotlinx.coroutines.delay
 import java.io.File
 import kotlin.math.abs
 import kotlin.math.hypot
@@ -54,6 +56,7 @@ import kotlin.math.hypot
 fun LocalityScreen(vm: MainViewModel) {
     val cs = MaterialTheme.colorScheme
     val ctx = LocalContext.current
+    var tapped by remember { mutableStateOf<Locality?>(null) }
 
     val mapView = remember {
         configureOsmdroid(ctx)
@@ -72,9 +75,11 @@ fun LocalityScreen(vm: MainViewModel) {
         }
     }
     val overlay = remember {
-        LocalityOverlay(vm.localities) { vm.pickLocality(it) }   // tap selects and returns
+        LocalityOverlay(vm.localities) { tapped = it; mapView.invalidate() }   // highlight, then go
             .also { mapView.overlays.add(it) }
     }
+    // Flash the tapped locality highlighted, then return to the entry screen.
+    LaunchedEffect(tapped) { tapped?.let { delay(300); vm.pickLocality(it) } }
 
     DisposableEffect(Unit) {
         mapView.onResume()
@@ -101,11 +106,12 @@ fun LocalityScreen(vm: MainViewModel) {
             update = { m ->
                 // Only touch the overlay when something actually changed, so a GPS tick
                 // mid-gesture doesn't force a redraw (which flickers the view).
+                val sel = tapped ?: vm.dLoc          // highlight the just-tapped one, else the current pick
                 val newFix = vm.fix?.let { GeoPoint(it.lat, it.lon) }
                 val newAcc = vm.fix?.accuracyM?.toFloat() ?: Float.NaN
-                if (overlay.picked !== vm.dLoc || overlay.fix != newFix ||
+                if (overlay.picked !== sel || overlay.fix != newFix ||
                     overlay.accuracyM.toRawBits() != newAcc.toRawBits()) {
-                    overlay.picked = vm.dLoc
+                    overlay.picked = sel
                     overlay.fix = newFix
                     overlay.accuracyM = newAcc
                     m.invalidate()
@@ -240,9 +246,6 @@ private class LocalityOverlay(
     private val stroke = Paint().apply { style = Paint.Style.STROKE; color = 0xFF2E7D32.toInt(); strokeWidth = 2f; isAntiAlias = true }
     private val selFill = Paint().apply { style = Paint.Style.FILL; color = 0xDD4CAF50.toInt(); isAntiAlias = true }
     private val selStroke = Paint().apply { style = Paint.Style.STROKE; color = 0xFF1B5E20.toInt(); strokeWidth = 5f; isAntiAlias = true }
-    private val badgeFill = Paint().apply { style = Paint.Style.FILL; color = 0xFFFFFFFF.toInt(); isAntiAlias = true }
-    private val badgeRing = Paint().apply { style = Paint.Style.STROKE; color = 0xFF1B5E20.toInt(); strokeWidth = 3f; isAntiAlias = true }
-    private val check = Paint().apply { style = Paint.Style.STROKE; color = 0xFF1B5E20.toInt(); strokeWidth = 5f; strokeCap = Paint.Cap.ROUND; isAntiAlias = true }
     private val accFill = Paint().apply { style = Paint.Style.FILL; color = 0x222962FF.toInt(); isAntiAlias = true }
     private val accStroke = Paint().apply { style = Paint.Style.STROKE; color = 0x882962FF.toInt(); strokeWidth = 2f; isAntiAlias = true }
     private val gps = Paint().apply { style = Paint.Style.FILL; color = 0xFF2962FF.toInt(); isAntiAlias = true }
@@ -331,16 +334,11 @@ private class LocalityOverlay(
             drawShape(c, proj, loc, px, py, rPx, fill, stroke)
             if (showLabels) drawLabel(c, loc.lokalitet, px, py)   // name at the locality point, wrapped
         }
-        picked?.let { pl ->                           // selected: opaque + bold, on top, with a checkmark
+        picked?.let { pl ->                           // selected: opaque + bold, drawn on top
             proj.toPixels(GeoPoint(pl.lat, pl.lon), p)
             val cx = p.x.toFloat(); val cy = p.y.toFloat()
             drawShape(c, proj, pl, cx, cy, radiusPx(pl, ppm), selFill, selStroke)
             if (showLabels) drawLabel(c, pl.lokalitet, cx, cy)
-            val bx = cx + 13f; val by = cy - 13f      // checkmark near the centre, fixed at any zoom
-            c.drawCircle(bx, by, 17f, badgeFill)
-            c.drawCircle(bx, by, 17f, badgeRing)
-            c.drawLine(bx - 8f, by + 1f, bx - 2f, by + 9f, check)
-            c.drawLine(bx - 2f, by + 9f, bx + 10f, by - 8f, check)
         }
         fix?.let {
             proj.toPixels(it, p)
