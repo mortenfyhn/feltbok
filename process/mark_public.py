@@ -56,7 +56,12 @@ def write(path, rows, reporters):
         fields.append("public")
     overrides = load_overrides()
     for r in rows:
-        r["public"] = "1" if len(reporters.get(r["id"], ())) >= 2 else "0"
+        # >=2 distinct reporters = public. But a prolific local birder reports at many
+        # public sites alone (tagging co-observers), so the reporter test wrongly hides
+        # them. A drawn polygon footprint + heavy use (>=50 records) is a strong
+        # established-public signal, so treat that as public too.
+        established = r.get("geometry", "").startswith("POLYGON") and int(float(r.get("count") or 0)) >= 50
+        r["public"] = "1" if (len(reporters.get(r["id"], ())) >= 2 or established) else "0"
         r["public"] = overrides.get(r["id"], r["public"])   # manual correction wins
     with open(path, "w", newline="") as f:
         w = csv.DictWriter(f, fieldnames=fields)
