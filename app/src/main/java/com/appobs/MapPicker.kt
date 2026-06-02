@@ -291,6 +291,8 @@ private class LocalityOverlay(
             val rPx = radiusPx(loc, ppm)
             if (p.x < -rPx || p.x > w + rPx || p.y < -rPx || p.y > h + rPx) continue
             val px = p.x.toFloat(); val py = p.y.toFloat()
+            // Fade the fill as the disk grows, so big area-localities don't wash out the map.
+            fill.alpha = (95f - (rPx - 40f) * 0.32f).toInt().coerceIn(12, 95)
             c.drawCircle(px, py, rPx, fill)
             c.drawCircle(px, py, rPx, stroke)
             if (showLabels) drawLabel(c, loc.lokalitet, px, py)   // name on top of the disk, wrapped
