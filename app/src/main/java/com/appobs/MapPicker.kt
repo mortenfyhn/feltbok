@@ -276,7 +276,8 @@ private class LocalityOverlay(
     private val privFill = Paint().apply { style = Paint.Style.FILL; color = 0x55E0A100.toInt(); isAntiAlias = true }    // private = yellow
     private val privStroke = Paint().apply { style = Paint.Style.STROKE; color = 0xFFB8860B.toInt(); strokeWidth = 2f; isAntiAlias = true }
     private val selFill = Paint().apply { style = Paint.Style.FILL; color = 0xDD4CAF50.toInt(); isAntiAlias = true }
-    private val selStroke = Paint().apply { style = Paint.Style.STROKE; color = 0xFF1B5E20.toInt(); strokeWidth = 5f; isAntiAlias = true }
+    private val selFillFaint = Paint().apply { style = Paint.Style.FILL; color = 0x224CAF50.toInt(); isAntiAlias = true }
+    private val selStroke = Paint().apply { style = Paint.Style.STROKE; color = 0xFF1B5E20.toInt(); strokeWidth = 6f; isAntiAlias = true }
     private val accFill = Paint().apply { style = Paint.Style.FILL; color = 0x222962FF.toInt(); isAntiAlias = true }
     private val accStroke = Paint().apply { style = Paint.Style.STROKE; color = 0x882962FF.toInt(); strokeWidth = 2f; isAntiAlias = true }
     private val gps = Paint().apply { style = Paint.Style.FILL; color = 0xFF2962FF.toInt(); isAntiAlias = true }
@@ -366,10 +367,13 @@ private class LocalityOverlay(
             else drawShape(c, proj, loc, px, py, rPx, privFill, privStroke)   // private -> yellow
             if (showLabels) drawLabel(c, loc.lokalitet, px, py)   // name at the locality point, wrapped
         }
-        picked?.let { pl ->                           // selected: opaque + bold, drawn on top
+        picked?.let { pl ->                           // selected: bold outline, drawn on top
             proj.toPixels(GeoPoint(pl.lat, pl.lon), p)
             val cx = p.x.toFloat(); val cy = p.y.toFloat()
-            drawShape(c, proj, pl, cx, cy, radiusPx(pl, ppm), selFill, selStroke)
+            // Areas get a faint fill (so localities inside stay visible) + a bold outline;
+            // small points get a solid fill so the dot stands out.
+            val fp = if (pl.polygon.isNotEmpty()) selFillFaint else selFill
+            drawShape(c, proj, pl, cx, cy, radiusPx(pl, ppm), fp, selStroke)
             if (showLabels) drawLabel(c, pl.lokalitet, cx, cy)
         }
         fix?.let {
