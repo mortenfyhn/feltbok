@@ -212,7 +212,7 @@ fun SearchScreen(vm: MainViewModel) {
             TextButton(onClick = { vm.cancelSearch() }) { Text("Avbryt") }
         }
         LazyColumn(Modifier.weight(1f)) {
-            items(results, key = { it.norsk }) { s ->
+            items(results, key = { it.latin }) { s ->   // norsk has homonyms (e.g. Rødhalevarsler); latin is unique
                 Row(
                     Modifier.fillMaxWidth().clickable { vm.pickSpecies(s) }.background(cs.surface)
                         .padding(horizontal = 16.dp, vertical = 9.dp),
