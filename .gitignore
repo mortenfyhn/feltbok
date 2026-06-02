@@ -37,4 +37,6 @@ process/__pycache__/
 /bird_species.csv
 /localities-occurrences.jsonl
 /mark_public.log
-paste-test.tsv
+# Scratch import paste-tests (regenerate ad hoc; make_locality_test.py is the kept one)
+/paste-test*.tsv
+/verify.tsv
