@@ -205,7 +205,9 @@ fun SearchScreen(vm: MainViewModel) {
         ) {
             OutlinedTextField(q, { q = it }, Modifier.weight(1f).focusRequester(focus), singleLine = true,
                 placeholder = { Text("Søk art…") },
-                keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
+                // autoCorrect off: don't want the IME "correcting" species names, and the
+                // gesture/compose path it drives is what crashes on swipe-typing.
+                keyboardOptions = KeyboardOptions(autoCorrect = false, imeAction = ImeAction.Search),
                 keyboardActions = KeyboardActions(onSearch = { results.firstOrNull()?.let { vm.pickSpecies(it) } }))
             TextButton(onClick = { vm.cancelSearch() }) { Text("Avbryt") }
         }
