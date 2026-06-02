@@ -5,17 +5,39 @@ while keeping the app offline-in-field and zero-login. Notes from an evening of 
 probing — treat the Artskart specifics as "promising, needs one more reverse-engineering
 pass", not settled.
 
-## The import-matching constraint (recap, verified)
+## ✅ SOLVED (2026-06-02): the authoritative allmenn flag — `FindSitesByName`
 
-The export must classify every picked locality, because the import matches differently:
+The public observation-search page (`/ViewSighting/SearchSighting`, no login) drives its
+locality autocomplete with:
+
+    POST https://www.artsobservasjoner.no/ViewSighting/FindSitesByName
+    Header: X-Requested-With: XMLHttpRequest          (required; no auth, no antiforgery token)
+    Body (JSON): {"Term":"Uttian","IncludePublicBirdSites":true,
+                  "IncludeOthersPrivateSites":false,"InAreas":[],"ForProject":null}
+    -> [{"Id":352401,"Name":"Uttian","ParentName":"","Region":"Tø","IsPublicSite":true,...}]
+
+- **`Id` == our `locationID`**, and **`IsPublicSite`** is the real allmenn flag.
+- An **empty 200 body = no public match = private** (a valid answer, not an error).
+- At most **15 results** per term, so for a generic name our site may be public yet not in
+  the top 15 — only demote when a name is fully enumerated (<15 hits).
+- `process/fetch_public_flags.py` (`just public-flags`) queries every locality name and sets
+  the real flag, retiring the observer/polygon heuristic (kept only as a capped/failed
+  fallback). A periodic "Uttian" canary aborts the run if the server starts throttling.
+
+This **supersedes the Artskart `List` dead-end below** for the public/private question.
+
+## The import-matching constraint (recap)
+
+⚠️ The table below is the OLD, disproven model. The verified rule is in
+`docs/artsobs-import.md`: paste matches the **exact registered `Lokalitetsnavn`** verbatim
+(a qualified "Lok, Hovedlok, Kommune, Fylke" *hard-fails*; coordinates mint a private
+duplicate). Kept here only for history.
 
 | Kind | What to export | Why |
 |---|---|---|
-| **Public** (allmenn) | qualified name `"Lok, Hovedlok, Kommune, Fylke"`, no coords | links to the public registry |
-| **My own custom** | **bare** name, no coords | bare name matches *your own* localities (this is why "Lundeveien 9" worked) |
+| **Public** (allmenn) | ~~qualified~~ exact registered name, no coords | links to the public registry |
+| **My own custom** | **bare** name, no coords | bare name matches *your own* localities |
 | **Brand-new spot** | name **+ coordinates** | mints a new custom locality on Artsobs |
-
-So the app needs to know, per locality: is it public, one of *mine*, or new.
 
 ## Data source for "my localities": Artskart PublicApi (public, no auth)
 
