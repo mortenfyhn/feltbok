@@ -200,6 +200,15 @@ fun LocalityPreview(vm: MainViewModel, modifier: Modifier = Modifier) {
 }
 
 /** Draws a single locality disk plus the GPS pin, for the main-screen minimap. */
+/** Artsobservasjoner only lets a locality's radius be one of these fixed values, so any
+ *  other number is a computed coordinateUncertaintyInMeters - i.e. a point locality, not a
+ *  circle. 300 m is GBIF's "unknown" default (a third of all points), so it's a point too.
+ *  Points draw as a small fixed dot; only these values draw a real radius circle. */
+private val CIRCLE_RADII_M = setOf(1, 5, 10, 25, 50, 75, 100, 125, 150, 200, 250, 400, 500,
+    750, 1000, 1500, 2000, 2500, 3000, 5000)
+private fun isCircleLocality(radiusM: Double) = radiusM.toInt() in CIRCLE_RADII_M
+private const val POINT_DOT_PX = 6f
+
 private class PreviewOverlay : Overlay() {
     var loc: Locality? = null
     var fix: GeoPoint? = null
@@ -237,8 +246,8 @@ private class PreviewOverlay : Overlay() {
                 c.drawPath(path, fp)
                 c.drawPath(path, sp)
             } else {
-                val m = if (it.radius > 0) it.radius else 40.0
-                val rPx = (m * ppm).toFloat().coerceIn(4f, 200f)
+                val rPx = if (isCircleLocality(it.radius)) (it.radius * ppm).toFloat().coerceIn(POINT_DOT_PX, 200f)
+                          else POINT_DOT_PX
                 proj.toPixels(GeoPoint(it.lat, it.lon), p)
                 c.drawCircle(p.x.toFloat(), p.y.toFloat(), rPx, fp)
                 c.drawCircle(p.x.toFloat(), p.y.toFloat(), rPx, sp)
@@ -265,8 +274,6 @@ private class LocalityOverlay(
     private val localities: List<Locality>,
     private val onTap: (Locality) -> Unit,
 ) : Overlay() {
-    // Fallback radius for localities whose footprint is unknown (radius == 0).
-    private val defaultRadiusM = 40.0
     var picked: Locality? = null
     var fix: GeoPoint? = null
     var accuracyM: Float = Float.NaN
@@ -300,8 +307,8 @@ private class LocalityOverlay(
     }
 
     private fun radiusPx(loc: Locality, ppm: Double): Float {
-        val m = if (loc.radius > 0) loc.radius else defaultRadiusM
-        return (m * ppm).toFloat().coerceAtLeast(3f)   // no upper cap, so disks scale with zoom
+        if (!isCircleLocality(loc.radius)) return POINT_DOT_PX   // point locality: small fixed dot
+        return (loc.radius * ppm).toFloat().coerceAtLeast(POINT_DOT_PX)  // circle: scales with zoom
     }
 
     /** Draw a locality's real polygon, or its radius circle if it's a point locality. */
