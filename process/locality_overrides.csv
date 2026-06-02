@@ -1,0 +1,7 @@
+id,public,note
+# Manual public/private corrections, applied by mark_public.py AFTER the
+# reporter-count heuristic (which is imperfect). One row per locality:
+#   id     = the locationID (stable site id) from localities.csv
+#   public = 1 to force public (show + matchable), 0 to force private (hidden)
+#   note   = the locality name, for humans
+# Verified against the manual reporting form on artsobservasjoner.no.

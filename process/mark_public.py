@@ -35,12 +35,29 @@ def reporter(recorded_by: str) -> str:
     return (recorded_by or "").split("|")[0].strip()
 
 
+OVERRIDES = pathlib.Path(__file__).parent / "locality_overrides.csv"
+
+
+def load_overrides() -> dict:
+    """Manual public/private corrections {id: '0'|'1'}, applied after the heuristic."""
+    if not OVERRIDES.exists():
+        return {}
+    out = {}
+    with open(OVERRIDES, newline="") as f:
+        for row in csv.DictReader(r for r in f if not r.lstrip().startswith("#")):
+            if row.get("id"):
+                out[row["id"].strip()] = row["public"].strip()
+    return out
+
+
 def write(path, rows, reporters):
     fields = list(rows[0].keys())
     if "public" not in fields:
         fields.append("public")
+    overrides = load_overrides()
     for r in rows:
         r["public"] = "1" if len(reporters.get(r["id"], ())) >= 2 else "0"
+        r["public"] = overrides.get(r["id"], r["public"])   # manual correction wins
     with open(path, "w", newline="") as f:
         w = csv.DictWriter(f, fieldnames=fields)
         w.writeheader()

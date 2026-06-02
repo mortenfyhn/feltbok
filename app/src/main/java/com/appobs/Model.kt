@@ -213,8 +213,10 @@ fun loadLocalities(ctx: Context): List<Locality> =
         val obs = c.getOrElse(8) { "" }.toIntOrNull() ?: 0
         val radius = c.getOrElse(10) { "" }.toDoubleOrNull() ?: 0.0
         val poly = parsePolygon(c.getOrElse(11) { "" })
-        val public = c.getOrElse(12) { "1" } != "0"
-        Locality(c[0], c[1], c[2], c[3], lat, lon, full, obs, radius, poly, public)
+        // Private localities are someone else's - you can't upload to them - so drop
+        // them entirely for now. (When we can pull *your own* privates, revisit this.)
+        if (c.getOrElse(12) { "1" } == "0") return@mapNotNull null
+        Locality(c[0], c[1], c[2], c[3], lat, lon, full, obs, radius, poly, public = true)
     }
 
 /** Columns: norsk,latin */
