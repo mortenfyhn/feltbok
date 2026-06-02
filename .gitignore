@@ -17,6 +17,7 @@ process/__pycache__/
 /localities-raw*.json
 /harvest.log
 /raw-harvest.log
+/add_footprints.log
 /artsobs-dwca.zip
 # Artsobservasjoner export/error spreadsheets (personal observation data)
 /ExcelExport*.xlsx

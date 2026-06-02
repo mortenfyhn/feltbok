@@ -70,6 +70,7 @@ data class Locality(
     val fullname: String,         // qualified "Lok, Hovedlok, Kommune, Fylke" - what the import matches
     val observers: Int,           // distinct observers - a public-establishedness signal for the map
     val radius: Double,           // the locality's map footprint radius in metres (0 = unknown)
+    val polygon: List<DoubleArray> = emptyList(),  // real footprint as [lat,lon] vertices, when it is an area
 ) {
     val context: String get() = listOf(hovedlokalitet, kommune).filter { it.isNotBlank() }.joinToString(", ")
 }
@@ -189,7 +190,19 @@ private fun readData(ctx: Context, name: String): List<List<String>> {
         .toList()
 }
 
-/** Columns: id,lokalitet,hovedlokalitet,kommune,fylke,lat,lon,count,observers,fullname,radius */
+private val WKT_NUM = Regex("-?\\d+(?:\\.\\d+)?")
+
+/** Parse a "POLYGON((lon lat, ...))" WKT into [lat,lon] vertices (empty if not a polygon). */
+private fun parsePolygon(wkt: String): List<DoubleArray> {
+    if (!wkt.startsWith("POLYGON")) return emptyList()
+    val n = WKT_NUM.findAll(wkt).map { it.value.toDouble() }.toList()
+    val pts = ArrayList<DoubleArray>(n.size / 2)
+    var i = 0
+    while (i + 1 < n.size) { pts.add(doubleArrayOf(n[i + 1], n[i])); i += 2 }  // WKT is lon lat
+    return pts
+}
+
+/** Columns: id,lokalitet,hovedlokalitet,kommune,fylke,lat,lon,count,observers,fullname,radius,geometry */
 fun loadLocalities(ctx: Context): List<Locality> =
     readData(ctx, "localities.csv").mapNotNull { c ->
         if (c.size < 7) return@mapNotNull null
@@ -198,7 +211,8 @@ fun loadLocalities(ctx: Context): List<Locality> =
         val full = c.getOrElse(9) { "" }.ifBlank { c[1] }   // fall back to bare name pre-fullname
         val obs = c.getOrElse(8) { "" }.toIntOrNull() ?: 0
         val radius = c.getOrElse(10) { "" }.toDoubleOrNull() ?: 0.0
-        Locality(c[0], c[1], c[2], c[3], lat, lon, full, obs, radius)
+        val poly = parsePolygon(c.getOrElse(11) { "" })
+        Locality(c[0], c[1], c[2], c[3], lat, lon, full, obs, radius, poly)
     }
 
 /** Columns: norsk,latin */

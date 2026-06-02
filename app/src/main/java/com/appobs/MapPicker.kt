@@ -3,6 +3,7 @@ package com.appobs
 import android.content.Context
 import android.graphics.Canvas
 import android.graphics.Paint
+import android.graphics.Path
 import android.graphics.Point
 import android.view.MotionEvent
 import androidx.compose.foundation.background
@@ -233,6 +234,7 @@ private class LocalityOverlay(
     private val labelFill = Paint().apply { color = 0xFF18250F.toInt(); textSize = 28f; textAlign = Paint.Align.CENTER; isAntiAlias = true }
     private val labelHalo = Paint().apply { color = 0xF2FFFFFF.toInt(); textSize = 28f; textAlign = Paint.Align.CENTER; isAntiAlias = true; style = Paint.Style.STROKE; strokeWidth = 4f }
     private val p = Point()
+    private val path = Path()
 
     /** Pixels per metre at the current zoom, from projecting a 100 m north step. */
     private fun pxPerMeter(map: MapView): Double {
@@ -291,11 +293,23 @@ private class LocalityOverlay(
             val rPx = radiusPx(loc, ppm)
             if (p.x < -rPx || p.x > w + rPx || p.y < -rPx || p.y > h + rPx) continue
             val px = p.x.toFloat(); val py = p.y.toFloat()
-            // Fade the fill as the disk grows, so big area-localities don't wash out the map.
+            // Fade the fill as the footprint grows, so big areas don't wash out the map.
             fill.alpha = (95f - (rPx - 40f) * 0.32f).toInt().coerceIn(12, 95)
-            c.drawCircle(px, py, rPx, fill)
-            c.drawCircle(px, py, rPx, stroke)
-            if (showLabels) drawLabel(c, loc.lokalitet, px, py)   // name on top of the disk, wrapped
+            if (loc.polygon.isNotEmpty()) {           // real footprint -> draw the polygon
+                path.rewind()
+                for ((j, v) in loc.polygon.withIndex()) {
+                    proj.toPixels(GeoPoint(v[0], v[1]), p)
+                    if (j == 0) path.moveTo(p.x.toFloat(), p.y.toFloat())
+                    else path.lineTo(p.x.toFloat(), p.y.toFloat())
+                }
+                path.close()
+                c.drawPath(path, fill)
+                c.drawPath(path, stroke)
+            } else {                                  // point locality -> its radius circle (dot when tiny)
+                c.drawCircle(px, py, rPx, fill)
+                c.drawCircle(px, py, rPx, stroke)
+            }
+            if (showLabels) drawLabel(c, loc.lokalitet, px, py)   // name at the locality point, wrapped
             if (loc === picked) { pickX = px; pickY = py; pickR = rPx; pickShown = true }
         }
         if (pickShown) {                              // selected: a checkmark badge at the lower-right

@@ -40,6 +40,11 @@ localities *args:
 species:
     .venv/bin/python process/build_species.py
 
+# Add real locality polygons (GBIF footprintWKT, reprojected) to localities.csv.
+# Run after `just localities` to enrich the table with a `geometry` column.
+footprints:
+    .venv/bin/python process/add_footprints.py
+
 # Push the generated locality/species CSVs to the device (overrides the bundled
 # assets — no rebuild needed). Run after `just localities`.
 push-data:
