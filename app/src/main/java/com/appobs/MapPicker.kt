@@ -244,7 +244,7 @@ private class LocalityOverlay(
 
     private fun radiusPx(loc: Locality, ppm: Double): Float {
         val m = if (loc.radius > 0) loc.radius else defaultRadiusM
-        return (m * ppm).toFloat().coerceIn(3f, 260f)
+        return (m * ppm).toFloat().coerceAtLeast(3f)   // no upper cap, so disks scale with zoom
     }
 
     private val lineH = 32f
