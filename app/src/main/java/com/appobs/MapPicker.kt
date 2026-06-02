@@ -278,6 +278,10 @@ private class LocalityOverlay(
     private val selFill = Paint().apply { style = Paint.Style.FILL; color = 0xDD4CAF50.toInt(); isAntiAlias = true }
     private val selFillFaint = Paint().apply { style = Paint.Style.FILL; color = 0x224CAF50.toInt(); isAntiAlias = true }
     private val selStroke = Paint().apply { style = Paint.Style.STROKE; color = 0xFF1B5E20.toInt(); strokeWidth = 6f; isAntiAlias = true }
+    // Private picks keep the same bold-highlight shape but in the yellow (privFill) hue.
+    private val selFillPriv = Paint().apply { style = Paint.Style.FILL; color = 0xDDE0A100.toInt(); isAntiAlias = true }
+    private val selFillFaintPriv = Paint().apply { style = Paint.Style.FILL; color = 0x22E0A100.toInt(); isAntiAlias = true }
+    private val selStrokePriv = Paint().apply { style = Paint.Style.STROKE; color = 0xFF6B4F00.toInt(); strokeWidth = 6f; isAntiAlias = true }
     private val accFill = Paint().apply { style = Paint.Style.FILL; color = 0x222962FF.toInt(); isAntiAlias = true }
     private val accStroke = Paint().apply { style = Paint.Style.STROKE; color = 0x882962FF.toInt(); strokeWidth = 2f; isAntiAlias = true }
     private val gps = Paint().apply { style = Paint.Style.FILL; color = 0xFF2962FF.toInt(); isAntiAlias = true }
@@ -372,8 +376,11 @@ private class LocalityOverlay(
             val cx = p.x.toFloat(); val cy = p.y.toFloat()
             // Areas get a faint fill (so localities inside stay visible) + a bold outline;
             // small points get a solid fill so the dot stands out.
-            val fp = if (pl.polygon.isNotEmpty()) selFillFaint else selFill
-            drawShape(c, proj, pl, cx, cy, radiusPx(pl, ppm), fp, selStroke)
+            val area = pl.polygon.isNotEmpty()
+            val fp = if (pl.public) (if (area) selFillFaint else selFill)
+                     else (if (area) selFillFaintPriv else selFillPriv)
+            val sp = if (pl.public) selStroke else selStrokePriv
+            drawShape(c, proj, pl, cx, cy, radiusPx(pl, ppm), fp, sp)
             if (showLabels) drawLabel(c, pl.lokalitet, cx, cy)
         }
         fix?.let {
