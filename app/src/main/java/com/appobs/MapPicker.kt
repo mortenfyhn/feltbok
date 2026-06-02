@@ -8,6 +8,9 @@ import android.graphics.Point
 import android.view.MotionEvent
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
@@ -39,6 +42,7 @@ import androidx.compose.ui.viewinterop.AndroidView
 import org.osmdroid.config.Configuration
 import org.osmdroid.tileprovider.tilesource.TileSourceFactory
 import org.osmdroid.util.GeoPoint
+import org.osmdroid.views.CustomZoomButtonsController
 import org.osmdroid.views.MapView
 import org.osmdroid.views.Projection
 import org.osmdroid.views.overlay.Overlay
@@ -63,6 +67,7 @@ fun LocalityScreen(vm: MainViewModel) {
         MapView(ctx).apply {
             setTileSource(TileSourceFactory.MAPNIK)
             setMultiTouchControls(true)
+            zoomController.setVisibility(CustomZoomButtonsController.Visibility.NEVER)  // use our own buttons
             if (vm.mapLat != 0.0) {                  // restore the last camera if we have one
                 controller.setZoom(vm.mapZoom)
                 controller.setCenter(GeoPoint(vm.mapLat, vm.mapLon))
@@ -100,25 +105,45 @@ fun LocalityScreen(vm: MainViewModel) {
                 modifier = Modifier.weight(1f))
             TextButton(onClick = { vm.backToDetail() }) { Text("Avbryt", color = Color.White) }
         }
-        AndroidView(
-            factory = { mapView },
-            modifier = Modifier.weight(1f).fillMaxWidth().clipToBounds(),  // keep the map off the toolbar
-            update = { m ->
-                // Only touch the overlay when something actually changed, so a GPS tick
-                // mid-gesture doesn't force a redraw (which flickers the view).
-                val sel = tapped ?: vm.dLoc          // highlight the just-tapped one, else the current pick
-                val newFix = vm.fix?.let { GeoPoint(it.lat, it.lon) }
-                val newAcc = vm.fix?.accuracyM?.toFloat() ?: Float.NaN
-                if (overlay.picked !== sel || overlay.fix != newFix ||
-                    overlay.accuracyM.toRawBits() != newAcc.toRawBits()) {
-                    overlay.picked = sel
-                    overlay.fix = newFix
-                    overlay.accuracyM = newAcc
-                    m.invalidate()
-                }
-            },
-        )
+        Box(Modifier.weight(1f).fillMaxWidth()) {
+            AndroidView(
+                factory = { mapView },
+                modifier = Modifier.fillMaxSize().clipToBounds(),  // keep the map off the toolbar
+                update = { m ->
+                    // Only touch the overlay when something actually changed, so a GPS tick
+                    // mid-gesture doesn't force a redraw (which flickers the view).
+                    val sel = tapped ?: vm.dLoc      // highlight the just-tapped one, else the current pick
+                    val newFix = vm.fix?.let { GeoPoint(it.lat, it.lon) }
+                    val newAcc = vm.fix?.accuracyM?.toFloat() ?: Float.NaN
+                    if (overlay.picked !== sel || overlay.fix != newFix ||
+                        overlay.accuracyM.toRawBits() != newAcc.toRawBits()) {
+                        overlay.picked = sel
+                        overlay.fix = newFix
+                        overlay.accuracyM = newAcc
+                        m.invalidate()
+                    }
+                },
+            )
+            // One-handed zoom: thumb-reachable buttons (pinch is awkward one-handed).
+            Column(
+                Modifier.align(Alignment.BottomEnd).padding(16.dp),
+                verticalArrangement = Arrangement.spacedBy(12.dp),
+            ) {
+                ZoomButton("+") { mapView.controller.zoomIn() }
+                ZoomButton("−") { mapView.controller.zoomOut() }
+            }
+        }
     }
+}
+
+@Composable
+private fun ZoomButton(label: String, onClick: () -> Unit) {
+    val cs = MaterialTheme.colorScheme
+    Box(
+        Modifier.size(52.dp).clip(CircleShape).background(Color.White)
+            .border(1.dp, cs.outline, CircleShape).clickable(onClick = onClick),
+        contentAlignment = Alignment.Center,
+    ) { Text(label, color = cs.primary, fontSize = 28.sp, fontWeight = FontWeight.Bold) }
 }
 
 internal fun configureOsmdroid(ctx: Context) {
