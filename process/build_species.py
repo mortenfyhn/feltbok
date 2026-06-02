@@ -26,7 +26,7 @@ OVERRIDES = {
     "Sylvia communis": "Tornsanger",
     "Sylvia curruca": "Møller",
     "Sylvia nana": "Dvergsanger",
-    "Sylvia crassirostris": "Østsanger",
+    "Sylvia crassirostris": "Sultansanger",
     "Corvus corone": "Svartkråke",
     "Acanthis hornemanni": "Polarsisik",
 }
