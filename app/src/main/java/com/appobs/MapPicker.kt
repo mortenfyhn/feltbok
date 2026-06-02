@@ -207,6 +207,8 @@ private class PreviewOverlay : Overlay() {
 
     private val fill = Paint().apply { style = Paint.Style.FILL; color = 0x553C8C28.toInt(); isAntiAlias = true }
     private val stroke = Paint().apply { style = Paint.Style.STROKE; color = 0xFF2E7D32.toInt(); strokeWidth = 3f; isAntiAlias = true }
+    private val privFill = Paint().apply { style = Paint.Style.FILL; color = 0x55E0A100.toInt(); isAntiAlias = true }
+    private val privStroke = Paint().apply { style = Paint.Style.STROKE; color = 0xFFB8860B.toInt(); strokeWidth = 3f; isAntiAlias = true }
     private val accFill = Paint().apply { style = Paint.Style.FILL; color = 0x332962FF.toInt(); isAntiAlias = true }
     private val accStroke = Paint().apply { style = Paint.Style.STROKE; color = 0xAA2962FF.toInt(); strokeWidth = 2.5f; isAntiAlias = true }
     private val gps = Paint().apply { style = Paint.Style.FILL; color = 0xFF2962FF.toInt(); isAntiAlias = true }
@@ -222,6 +224,8 @@ private class PreviewOverlay : Overlay() {
         val b = proj.toPixels(GeoPoint(center.latitude + 100.0 / 111_320.0, center.longitude), null)
         val ppm = abs(a.y - b.y) / 100.0
         loc?.let {
+            val fp = if (it.public) fill else privFill
+            val sp = if (it.public) stroke else privStroke
             if (it.polygon.isNotEmpty()) {            // real footprint
                 path.rewind()
                 for ((j, v) in it.polygon.withIndex()) {
@@ -230,14 +234,14 @@ private class PreviewOverlay : Overlay() {
                     else path.lineTo(p.x.toFloat(), p.y.toFloat())
                 }
                 path.close()
-                c.drawPath(path, fill)
-                c.drawPath(path, stroke)
+                c.drawPath(path, fp)
+                c.drawPath(path, sp)
             } else {
                 val m = if (it.radius > 0) it.radius else 40.0
                 val rPx = (m * ppm).toFloat().coerceIn(4f, 200f)
                 proj.toPixels(GeoPoint(it.lat, it.lon), p)
-                c.drawCircle(p.x.toFloat(), p.y.toFloat(), rPx, fill)
-                c.drawCircle(p.x.toFloat(), p.y.toFloat(), rPx, stroke)
+                c.drawCircle(p.x.toFloat(), p.y.toFloat(), rPx, fp)
+                c.drawCircle(p.x.toFloat(), p.y.toFloat(), rPx, sp)
             }
         }
         fix?.let {
@@ -269,6 +273,8 @@ private class LocalityOverlay(
 
     private val fill = Paint().apply { style = Paint.Style.FILL; color = 0x553C8C28.toInt(); isAntiAlias = true }
     private val stroke = Paint().apply { style = Paint.Style.STROKE; color = 0xFF2E7D32.toInt(); strokeWidth = 2f; isAntiAlias = true }
+    private val privFill = Paint().apply { style = Paint.Style.FILL; color = 0x55E0A100.toInt(); isAntiAlias = true }    // private = yellow
+    private val privStroke = Paint().apply { style = Paint.Style.STROKE; color = 0xFFB8860B.toInt(); strokeWidth = 2f; isAntiAlias = true }
     private val selFill = Paint().apply { style = Paint.Style.FILL; color = 0xDD4CAF50.toInt(); isAntiAlias = true }
     private val selStroke = Paint().apply { style = Paint.Style.STROKE; color = 0xFF1B5E20.toInt(); strokeWidth = 5f; isAntiAlias = true }
     private val accFill = Paint().apply { style = Paint.Style.FILL; color = 0x222962FF.toInt(); isAntiAlias = true }
@@ -356,7 +362,8 @@ private class LocalityOverlay(
             val rPx = radiusPx(loc, ppm)
             if (p.x < -rPx || p.x > w + rPx || p.y < -rPx || p.y > h + rPx) continue
             val px = p.x.toFloat(); val py = p.y.toFloat()
-            drawShape(c, proj, loc, px, py, rPx, fill, stroke)
+            if (loc.public) drawShape(c, proj, loc, px, py, rPx, fill, stroke)
+            else drawShape(c, proj, loc, px, py, rPx, privFill, privStroke)   // private -> yellow
             if (showLabels) drawLabel(c, loc.lokalitet, px, py)   // name at the locality point, wrapped
         }
         picked?.let { pl ->                           // selected: opaque + bold, drawn on top

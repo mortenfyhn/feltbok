@@ -71,6 +71,7 @@ data class Locality(
     val observers: Int,           // distinct observers - a public-establishedness signal for the map
     val radius: Double,           // the locality's map footprint radius in metres (0 = unknown)
     val polygon: List<DoubleArray> = emptyList(),  // real footprint as [lat,lon] vertices, when it is an area
+    val public: Boolean = true,   // >=2 distinct reporters -> public (allmenn); 1 -> someone's private locality
 ) {
     val context: String get() = listOf(hovedlokalitet, kommune).filter { it.isNotBlank() }.joinToString(", ")
 }
@@ -212,7 +213,8 @@ fun loadLocalities(ctx: Context): List<Locality> =
         val obs = c.getOrElse(8) { "" }.toIntOrNull() ?: 0
         val radius = c.getOrElse(10) { "" }.toDoubleOrNull() ?: 0.0
         val poly = parsePolygon(c.getOrElse(11) { "" })
-        Locality(c[0], c[1], c[2], c[3], lat, lon, full, obs, radius, poly)
+        val public = c.getOrElse(12) { "1" } != "0"
+        Locality(c[0], c[1], c[2], c[3], lat, lon, full, obs, radius, poly, public)
     }
 
 /** Columns: norsk,latin */
