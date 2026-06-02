@@ -54,5 +54,5 @@ mark-public *args:
 # Push the generated locality/species CSVs to the device (overrides the bundled
 # assets — no rebuild needed). Run after `just localities`.
 push-data:
-    adb push localities.csv {{data_dir}}/localities.csv
-    -adb push species.csv {{data_dir}}/species.csv
+    adb push app/src/main/assets/localities.csv {{data_dir}}/localities.csv
+    -adb push app/src/main/assets/species.csv {{data_dir}}/species.csv
