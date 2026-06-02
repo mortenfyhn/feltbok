@@ -28,38 +28,45 @@ But see below: **we normally export without coordinates**, so this rarely matter
 
 ## Locality matching — the make-or-break
 
-The app exports the **bare `Lokalitetsnavn`** and **no coordinates**. A controlled
-6-row matrix paste-tested against the live old site (2026-06-02) settled the rules —
-and overturned two earlier theories. Same dummy observation on every row, only the
-locality columns varied:
+The app exports the **registered `Lokalitetsnavn`** and **no coordinates**. Controlled
+matrices paste-tested against the live old site (2026-06-02) settled the rule, after two
+earlier wrong theories:
 
-| What you paste | Validates? | Links to public? |
-|---|---|---|
-| **Bare** name, no coords (`Uttian`) | ✅ | ❌ mints a private duplicate |
-| Bare name **+ coords** (centroid, `100 m`) | ✅ | ❌ mints a private duplicate |
-| Bare name **+ `Superlokalitet`** column | ✅ | ❌ mints a private duplicate |
-| Bare + Superlokalitet **+ coords** | ✅ | ❌ mints a private duplicate |
-| **Comma-qualified** `"Lok, Hovedlok, Kommune, Fylke"` | ❌ `Kunne ikke validere lokalitet` | — |
+**The match key is the *exact registered* `Lokalitetsnavn`, verbatim — with nothing
+appended.** Get that string right and it links to the public (allmenn) locality.
 
-Two firm conclusions:
+| What you paste | Result |
+|---|---|
+| Exact registered name (`Uttian`; `Sørøyan, Uttian`) **+ kommune scoped on the form** | ✅ links to the public locality |
+| Name **+ kommune + fylke appended** (`Uttian, Frøya, Tø`) | ❌ `Kunne ikke validere lokalitet` — appending the geo qualifier breaks it |
+| Name that is only a **private** locality, or one that is **neither public nor yours** (`Uttiveien`) | ❌ `can't find matching locality` |
+| Name **+ coordinates** | mints a new private locality at those coords |
 
-1. **The comma-qualified single-column name hard-fails validation.** Commas in
-   `Lokalitetsnavn` break it outright. (The earlier "qualified name is the match key"
-   note was wrong — it was never actually paste-tested in isolation; a whole day's
-   *bare-name* upload had failed for a different reason and qualification was assumed to
-   be the fix.)
-2. **Paste never links an observation to a public locality.** Every form that validates
-   instead **mints a new private duplicate** in "Mine lokaliteter" — name alone,
-   name+coords, name+superlokalitet, all of them. Only **manual selection on the site**
-   links to a public (allmenn) locality.
+Key nuances learned the hard way:
 
-**Consequence:** there is no paste format that lands an observation on a public
-locality, so we stop trying to encode one. The app exports the **bare name** (the only
-clean, lowest-friction thing that validates). The user **scopes the import form to the
-kommune** so the site disambiguates same-named localities as best it can, then fixes the
-residual by hand on the site (re-selecting the public locality). `localities.csv` keeps
-both the bare `lokalitet` (exported) and the qualified `fullname` (display only);
-coordinates stay for GPS-nearest picking, never exported (they only mint duplicates).
+1. **Commas are not the killer.** A comma that is genuinely *part of the registered
+   name* is fine — e.g. Sørøyan's registered name literally is **"Sørøyan, Uttian"** (the
+   trailing ", Uttian" is a stuck data-entry mistake by whoever created it). Bare
+   "Sørøyan" can't match; "Sørøyan, Uttian" links cleanly. What breaks matching is
+   *appending kommune + fylke* (`, Frøya, Tø`), which is not a disambiguation method.
+2. **Two account-side settings on the import form change everything.** *Kommune scope*
+   narrows the search so the exact name resolves to the public locality. *"Prioriter
+   private lokaliteter og favoritter"* makes the import prefer your own localities first —
+   with it on, names tend to match/create **private** copies instead of the public one.
+   (iGoTerra reportedly uploads cleanly with no kommune scope and that box left on — so it
+   must encode the locality some other way: own established localities, coordinates, or an
+   id. Getting a real iGoTerra export is the open lead; see `custom-localities-design.md`.)
+3. **`build_localities.py` must store the exact registered name.** Its `split_name()`
+   only kept the first comma-token, so it stored `Sørøyan` and dropped ", Uttian". The
+   correct split: the *last* token of the place part is the superlokalitet, everything
+   before it is the (possibly comma-containing) name. The messy doubled-token GBIF strings
+   (`Strandfjæra, Hitra, Strand, Hitra, Tø`, ~12 of them) can't all be recovered cleanly
+   from the flattened string — canonical names from iGoTerra/the API would settle those.
+
+**Consequence:** export the registered name, append nothing, no coordinates. The user
+scopes the import form to the kommune; truly-public names link, the user's own/unknown
+ones still need a manual pick. `localities.csv` keeps the qualified `fullname` for display
+only; coordinates stay for GPS-nearest picking, never exported (they only mint duplicates).
 
 > Open question: how does **iGoTerra** export to this same old site and land on public
 > localities? If it genuinely does, a working format exists that name/coords paste does
