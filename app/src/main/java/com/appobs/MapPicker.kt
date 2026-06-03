@@ -72,15 +72,13 @@ fun LocalityScreen(vm: MainViewModel) {
             setTileSource(TileSourceFactory.MAPNIK)
             setMultiTouchControls(true)
             zoomController.setVisibility(CustomZoomButtonsController.Visibility.NEVER)  // use our own buttons
-            if (vm.mapLat != 0.0) {                  // restore the last camera if we have one
-                controller.setZoom(vm.mapZoom)
-                controller.setCenter(GeoPoint(vm.mapLat, vm.mapLon))
-            } else {
-                val start = vm.dLoc ?: vm.nearest()
-                controller.setZoom(16.0)
-                controller.setCenter(GeoPoint(start?.lat ?: vm.fix?.lat ?: 63.7,
-                                              start?.lon ?: vm.fix?.lon ?: 8.7))
-            }
+            // Keep the last zoom, but always re-centre on the current GPS fix so a new
+            // observation after moving shows where you are now (fall back to the picked/
+            // nearest locality, then a default).
+            controller.setZoom(if (vm.mapZoom >= 1.0) vm.mapZoom else 16.0)
+            val lat = vm.fix?.lat ?: vm.dLoc?.lat ?: vm.nearest()?.lat ?: 63.7
+            val lon = vm.fix?.lon ?: vm.dLoc?.lon ?: vm.nearest()?.lon ?: 8.7
+            controller.setCenter(GeoPoint(lat, lon))
         }
     }
     val overlay = remember {

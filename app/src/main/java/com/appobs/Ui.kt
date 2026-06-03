@@ -71,6 +71,9 @@ import kotlinx.coroutines.delay
 
 // ============================ LIST ============================
 
+/** Round GPS minimap on the main screen — hidden for now; flip to re-enable (code kept). */
+private const val SHOW_MINIMAP = false
+
 @Composable
 fun ListScreen(vm: MainViewModel) {
     val cs = MaterialTheme.colorScheme
@@ -98,7 +101,9 @@ fun ListScreen(vm: MainViewModel) {
             }
         }
         // Round minimap on the left of the top bar, clipping the top and left edges equally.
-        LocalityPreview(vm, Modifier.align(Alignment.TopStart).offset(x = (-6).dp, y = (-6).dp))
+        // Hidden for now (unclear if it's useful); flip SHOW_MINIMAP to bring it back.
+        if (SHOW_MINIMAP)
+            LocalityPreview(vm, Modifier.align(Alignment.TopStart).offset(x = (-6).dp, y = (-6).dp))
         FloatingActionButton(
             onClick = { vm.startAdd() },
             containerColor = cs.primary, contentColor = Color.White,
@@ -112,9 +117,9 @@ private fun StatusStrip(vm: MainViewModel) {
     val cs = MaterialTheme.colorScheme
     val near = vm.nearest()
     Row(
-        // start padding leaves room for the round minimap overlaid on the left.
+        // start padding leaves room for the round minimap overlaid on the left (when shown).
         Modifier.fillMaxWidth().background(cs.primary)
-            .padding(start = 104.dp, end = 14.dp, top = 11.dp, bottom = 11.dp),
+            .padding(start = if (SHOW_MINIMAP) 104.dp else 14.dp, end = 14.dp, top = 11.dp, bottom = 11.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Text(if (near != null) "${near.lokalitet}, ${near.kommune}" else "Finner posisjon…",
