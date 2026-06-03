@@ -67,7 +67,8 @@ def kommune_bbox(name):
     hit = next((a for a in areas if a["value"].lower() == name.lower()
                 and "kommune" in (a.get("subvalue") or "").lower()), None)
     if not hit:
-        raise SystemExit(f"No kommune named {name!r} found (got: {[a['value'] for a in areas][:6]})")
+        print(f"No kommune named {name!r} (got: {[a['value'] for a in areas][:6]})", file=sys.stderr)
+        raise SystemExit(3)                              # 3 = name mismatch -> caller can skip
     x1, y1, x2, y2 = (float(v) for v in hit["bbox"].split(","))
     lon0, lat0 = merc_inv(x1, y1)
     lon1, lat1 = merc_inv(x2, y2)
@@ -100,8 +101,9 @@ def fetch(session, x1, y1, x2, y2, zoom, tries=4):
             if r.status_code == 200 and r.text.lstrip().startswith("{"):
                 return r.json()                  # session auto-keeps any renewed auth cookie
             if r.status_code in (301, 302, 401, 403):
-                raise SystemExit("Session expired (redirect to login). Refresh the cookie in "
-                                 f"{COOKIE_FILE} and rerun - the harvest resumes.")
+                print(f"Session expired (status {r.status_code}). Refresh the cookie in "
+                      f"{COOKIE_FILE} and rerun - the harvest resumes.", file=sys.stderr)
+                raise SystemExit(2)                      # 2 = cookie expired -> caller should stop
         except SystemExit:
             raise
         except Exception:
