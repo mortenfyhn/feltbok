@@ -110,6 +110,8 @@ fun ListScreen(vm: MainViewModel) {
             containerColor = cs.primary, contentColor = Color.White,
             modifier = Modifier.align(Alignment.BottomEnd).padding(18.dp),
         ) { Text("+", fontSize = 28.sp) }
+        Text("v ${BuildConfig.GIT_VERSION}", color = cs.onSurfaceVariant.copy(alpha = 0.6f),
+            fontSize = 11.sp, modifier = Modifier.align(Alignment.BottomStart).padding(8.dp))
     }
 }
 

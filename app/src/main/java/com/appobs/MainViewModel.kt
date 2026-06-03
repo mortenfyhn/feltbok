@@ -99,7 +99,7 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
             tracker.fix.collect { f ->
                 fix = f
                 // Fill the locality once GPS settles, if adding and untouched.
-                if (screen == Screen.DETAIL && editingId == null && dLoc == null) dLoc = nearest()
+                if (screen == Screen.DETAIL && editingId == null && dLoc == null) dLoc = defaultLocality()
             }
         }
     }
@@ -124,6 +124,21 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
 
     fun distanceTo(loc: Locality): Double? =
         fix?.let { haversine(it.lat, it.lon, loc.lat, loc.lon) }
+
+    // The last locality you used + the fix where you used it, so a run of observations from one
+    // spot "sticks" to your chosen locality instead of snapping to whatever you're closest to.
+    private var lastUsedLoc: Locality? = null
+    private var lastUsedFix: GpsFix? = null
+
+    /** Default locality for a new observation: keep the last one used while you're still within
+     *  ~50 m of where you used it; re-snap to the GPS-nearest only after a genuine move (good fix). */
+    private fun defaultLocality(): Locality? {
+        val last = lastUsedLoc ?: return nearest()
+        val from = lastUsedFix; val now = fix
+        val movedAway = from != null && now != null && now.accuracyM <= 35f &&
+            haversine(now.lat, now.lon, from.lat, from.lon) >= 50.0
+        return if (movedAway) nearest() else last
+    }
 
     /** Distance from the current fix to where a note was made, or null if unknown. */
     fun distanceToNote(n: Note): Double? =
@@ -153,7 +168,7 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
         saveUses(ctx, uses)
         if (!changingSpecies && !isEditing) {
             dTime = System.currentTimeMillis()  // stamp the entry time now
-            dLoc = nearest()
+            dLoc = defaultLocality()
         }
         changingSpecies = false
         screen = Screen.DETAIL
@@ -206,6 +221,7 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
             val i = notes.indexOfFirst { it.id == n.id }
             if (i >= 0) notes[i] = n else notes.add(0, n)
         } else notes.add(0, n)
+        if (loc != null && !isEditing) { lastUsedLoc = loc; lastUsedFix = fix }   // stick it for the next obs
         if (dPub.isNotBlank()) lastPub = dPub
         if (dPriv.isNotBlank()) lastPriv = dPriv
         if (dAct.isNotBlank()) {

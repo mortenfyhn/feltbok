@@ -4,6 +4,12 @@ plugins {
     id("org.jetbrains.kotlin.plugin.compose")
 }
 
+// Build version shown in-app, straight from git (e.g. "5240840" or "v0.1-3-gabc-dirty").
+val gitVersion: String = try {
+    ProcessBuilder("git", "describe", "--always", "--dirty")
+        .start().inputStream.bufferedReader().readText().trim().ifEmpty { "dev" }
+} catch (e: Exception) { "dev" }
+
 android {
     namespace = "com.appobs"
     compileSdk = 34
@@ -14,6 +20,7 @@ android {
         targetSdk = 34
         versionCode = 1
         versionName = "0.1"
+        buildConfigField("String", "GIT_VERSION", "\"$gitVersion\"")
     }
 
     buildTypes {
@@ -33,6 +40,7 @@ android {
 
     buildFeatures {
         compose = true
+        buildConfig = true
     }
 }
 
