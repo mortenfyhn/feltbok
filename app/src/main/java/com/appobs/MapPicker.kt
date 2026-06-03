@@ -460,6 +460,7 @@ private class LocalityOverlay(
             val rPx = radiusPx(loc, ppm)
             val px = p.x.toFloat(); val py = p.y.toFloat()
             // Fade large localities (big circles/polygons) so they don't dominate the map.
+            // New spots have public=false, so they draw yellow like the user's own.
             val big = screenSpanPx(loc, rPx, ppm) > 140f
             val fp = if (loc.public) (if (big) fillPale else fill) else (if (big) privFillPale else privFill)
             drawShape(c, proj, loc, px, py, rPx, fp, if (loc.public) stroke else privStroke)

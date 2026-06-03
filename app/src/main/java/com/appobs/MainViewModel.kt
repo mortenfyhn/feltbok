@@ -91,7 +91,7 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
         // across restarts (until it's been uploaded and adjusted on the website).
         for (n in notes) if (n.newLoc && n.locName.isNotBlank())
             addNewLocality(Locality("", n.locName, "", "", n.lat, n.lon, n.locName, 0,
-                n.locRadius.toDouble(), newLoc = true))
+                n.locRadius.toDouble(), public = false, newLoc = true))
         // Seed "som forrige" from the most recent note that carried a comment.
         notes.firstOrNull { it.publicComment.isNotBlank() }?.let { lastPub = it.publicComment }
         notes.firstOrNull { it.privateComment.isNotBlank() }?.let { lastPriv = it.privateComment }
@@ -177,7 +177,7 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
      *  with coordinates, which mints the locality on Artsobservasjoner. */
     fun createNewLocality(lat: Double, lon: Double, radiusM: Int, name: String) {
         val loc = Locality("", name.trim(), "", "", lat, lon, name.trim(), 0, radiusM.toDouble(),
-            newLoc = true)
+            public = false, newLoc = true)
         addNewLocality(loc)        // make it immediately selectable for further observations
         dLoc = loc
         screen = Screen.DETAIL
