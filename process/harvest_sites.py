@@ -32,6 +32,8 @@ import sys
 import time
 import urllib.request
 
+import requests
+
 URL = "https://www.artsobservasjoner.no/Map/GetSitesGeoJson"
 COOKIE_FILE = os.environ.get("ARTSOBS_COOKIE_FILE", "/tmp/aspx_cookie.txt")
 DATA_DIR = "/home/morten/Documents/projects/app-feltbok"
@@ -72,19 +74,34 @@ def kommune_bbox(name):
     return lon0, lat0, lon1, lat1
 
 
-def fetch(cookie, x1, y1, x2, y2, zoom, tries=4):
-    body = json.dumps({"zoomLevel": zoom, "bbox": f"{x1},{y1},{x2},{y2}", "userId": USER_ID,
-                       "coordSyst": 0, "speciesGroupId": "8", "taxonId": None}).encode()
-    req = urllib.request.Request(URL, data=body, headers={
-        "Content-Type": "application/json", "X-Requested-With": "XMLHttpRequest", "Cookie": cookie})
+def make_session(cookie_str):
+    """A Session seeded with the captured cookie. It keeps any renewed auth cookie the
+    server returns (Set-Cookie), so the harvester's own continuous requests renew the
+    sliding session - one capture lasts the whole sweep (unless the site uses absolute
+    expiry, in which case it still eventually dies and needs a fresh cookie)."""
+    s = requests.Session()
+    for part in cookie_str.split(";"):
+        part = part.strip()
+        if "=" in part:
+            k, v = part.split("=", 1)
+            s.cookies.set(k.strip(), v.strip())
+    s.headers.update({
+        "Content-Type": "application/json", "X-Requested-With": "XMLHttpRequest",
+        "User-Agent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0 Safari/537.36"})
+    return s
+
+
+def fetch(session, x1, y1, x2, y2, zoom, tries=4):
+    body = {"zoomLevel": zoom, "bbox": f"{x1},{y1},{x2},{y2}", "userId": USER_ID,
+            "coordSyst": 0, "speciesGroupId": "8", "taxonId": None}
     for attempt in range(tries):
         try:
-            txt = urllib.request.urlopen(req, timeout=60).read().decode("utf-8")
-            if txt.lstrip().startswith("{"):
-                return json.loads(txt)
-            if "LogOn" in txt:
-                raise SystemExit("Session expired (redirected to /LogOn). Refresh the cookie "
-                                 f"in {COOKIE_FILE} and rerun - the harvest resumes.")
+            r = session.post(URL, json=body, timeout=60, allow_redirects=False)
+            if r.status_code == 200 and r.text.lstrip().startswith("{"):
+                return r.json()                  # session auto-keeps any renewed auth cookie
+            if r.status_code in (301, 302, 401, 403):
+                raise SystemExit("Session expired (redirect to login). Refresh the cookie in "
+                                 f"{COOKIE_FILE} and rerun - the harvest resumes.")
         except SystemExit:
             raise
         except Exception:
@@ -107,7 +124,7 @@ def main() -> int:
     else:
         bbox = DEFAULT_BBOX
     lon0, lat0, lon1, lat1 = bbox
-    cookie = pathlib.Path(COOKIE_FILE).read_text().strip()
+    session = make_session(pathlib.Path(COOKIE_FILE).read_text().strip())
 
     feats = {}                                              # the raw ACCUMULATES across areas
     if pathlib.Path(args.out).exists():
@@ -134,7 +151,7 @@ def main() -> int:
                     continue
                 a = lon0 + (lon1 - lon0) * i / nx; b = lon0 + (lon1 - lon0) * (i + 1) / nx
                 c = lat0 + (lat1 - lat0) * j / ny; d = lat0 + (lat1 - lat0) * (j + 1) / ny
-                r = fetch(cookie, *merc(a, c), *merc(b, d), zoom)
+                r = fetch(session, *merc(a, c), *merc(b, d), zoom)
                 if r is not None:
                     for kind in ("points", "polygons"):
                         for f in r[kind]["features"]:

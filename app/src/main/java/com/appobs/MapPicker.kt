@@ -356,10 +356,11 @@ private class LocalityOverlay(
 
     /** Pixels per metre at the current zoom, from projecting a 100 m north step. */
     private fun pxPerMeter(map: MapView): Double {
-        val c = map.mapCenter
-        val a = map.projection.toPixels(GeoPoint(c.latitude, c.longitude), null)
-        val b = map.projection.toPixels(GeoPoint(c.latitude + 100.0 / 111_320.0, c.longitude), null)
-        return abs(a.y - b.y) / 100.0
+        // Derive from zoom + latitude (Web Mercator) instead of projecting two points each
+        // frame - the projected version jitters mid-pan, making big circles (Uttian) flicker.
+        val mpp = 156543.03392 * cos(Math.toRadians(map.mapCenter.latitude)) /
+            Math.pow(2.0, map.zoomLevelDouble)
+        return 1.0 / mpp
     }
 
     private fun radiusPx(loc: Locality, ppm: Double): Float {

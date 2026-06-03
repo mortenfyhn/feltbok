@@ -256,6 +256,14 @@ fun DetailScreen(vm: MainViewModel) {
             modifier = Modifier.fillMaxWidth().background(cs.primary).padding(vertical = 9.dp),
         )
         Column(Modifier.weight(1f).verticalScroll(rememberScrollState())) {
+            // Species first - it's the first thing you choose for a new observation.
+            FieldRow("Art", onClick = { vm.changeSpecies() }) {
+                Text(vm.dSpecies, fontWeight = FontWeight.Medium, maxLines = 1,
+                    overflow = TextOverflow.Ellipsis, modifier = Modifier.weight(1f, fill = false))
+                if (vm.dLatin.isNotBlank())
+                    Text("  ${vm.dLatin}", color = cs.onSurfaceVariant, fontStyle = FontStyle.Italic,
+                        fontSize = 13.sp, maxLines = 1, overflow = TextOverflow.Ellipsis)
+            }
             // Locality
             FieldRow("Lokalitet", onClick = { vm.openLocalityPicker() }) {
                 val loc = vm.dLoc
@@ -268,14 +276,6 @@ fun DetailScreen(vm: MainViewModel) {
                         Text("  ${formatDistance(it)}", color = cs.onSurfaceVariant, fontSize = 13.sp, maxLines = 1)
                     }
                 }
-            }
-            // Species
-            FieldRow("Art", onClick = { vm.changeSpecies() }) {
-                Text(vm.dSpecies, fontWeight = FontWeight.Medium, maxLines = 1,
-                    overflow = TextOverflow.Ellipsis, modifier = Modifier.weight(1f, fill = false))
-                if (vm.dLatin.isNotBlank())
-                    Text("  ${vm.dLatin}", color = cs.onSurfaceVariant, fontStyle = FontStyle.Italic,
-                        fontSize = 13.sp, maxLines = 1, overflow = TextOverflow.Ellipsis)
             }
             AntallRow(vm)
             DropdownRow("Alder", vm.dAge, Options.ages) { vm.dAge = it }
