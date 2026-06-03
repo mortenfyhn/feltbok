@@ -23,16 +23,16 @@
         <!-- spine highlight line -->
         <path android:fillColor="#EADCB8" android:pathData="M40,25 L41.5,25 L41.5,83 L40,83 Z" />
 
-        <!-- bird, centred on the cover -->
-        <path android:fillColor="#4F93C4" android:pathData="M42,54 L35,50 L41,61 Z" />
+        <!-- bird, on the cover (clear of the spine) -->
+        <path android:fillColor="#4F93C4" android:pathData="M47,54 L40,50 L46,61 Z" />
         <path android:fillColor="#4F93C4"
-            android:pathData="M38,57 a11,8 0 1,0 22,0 a11,8 0 1,0 -22,0 Z" />
+            android:pathData="M43,57 a11,8 0 1,0 22,0 a11,8 0 1,0 -22,0 Z" />
         <path android:fillColor="#82B7DD"
-            android:pathData="M43.5,57 a6,3.5 0 1,0 12,0 a6,3.5 0 1,0 -12,0 Z" />
+            android:pathData="M48.5,57 a6,3.5 0 1,0 12,0 a6,3.5 0 1,0 -12,0 Z" />
         <path android:fillColor="#4F93C4"
-            android:pathData="M51,50 a7,7 0 1,0 14,0 a7,7 0 1,0 -14,0 Z" />
-        <path android:fillColor="#F0A23C" android:pathData="M64,48 L71,50 L64,53 Z" />
+            android:pathData="M56,50 a7,7 0 1,0 14,0 a7,7 0 1,0 -14,0 Z" />
+        <path android:fillColor="#F0A23C" android:pathData="M69,48 L75,50 L69,53 Z" />
         <path android:fillColor="#1F2D36"
-            android:pathData="M58.7,48 a1.7,1.7 0 1,0 3.4,0 a1.7,1.7 0 1,0 -3.4,0 Z" />
+            android:pathData="M63.7,48 a1.7,1.7 0 1,0 3.4,0 a1.7,1.7 0 1,0 -3.4,0 Z" />
     </group>
 </vector>

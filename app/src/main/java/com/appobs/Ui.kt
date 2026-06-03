@@ -122,9 +122,15 @@ private fun StatusStrip(vm: MainViewModel) {
             .padding(start = if (SHOW_MINIMAP) 104.dp else 14.dp, end = 14.dp, top = 11.dp, bottom = 11.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        Text(if (near != null) "${near.lokalitet}, ${near.kommune}" else "Finner posisjon…",
-            color = Color.White, fontWeight = FontWeight.SemiBold, modifier = Modifier.weight(1f),
-            maxLines = 2, overflow = TextOverflow.Ellipsis)
+        val edge = near?.let { l -> vm.distanceTo(l)?.let { (it - l.radius).coerceAtLeast(0.0) } }
+        Column(Modifier.weight(1f)) {
+            Text(if (near != null) "${near.lokalitet}, ${near.kommune}" else "Finner posisjon…",
+                color = Color.White, fontWeight = FontWeight.SemiBold,
+                maxLines = 2, overflow = TextOverflow.Ellipsis)
+            if (edge != null)
+                Text(if (edge < 10) "du er her" else "${formatDistance(edge)} unna",
+                    color = Color.White.copy(alpha = 0.82f), fontSize = 12.sp)
+        }
         if (vm.notes.isNotEmpty()) {
             Spacer(Modifier.width(10.dp))
             Box(

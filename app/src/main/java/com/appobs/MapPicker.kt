@@ -35,6 +35,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -69,6 +70,7 @@ fun LocalityScreen(vm: MainViewModel) {
     var newMode by remember { mutableStateOf(false) }      // placing a brand-new spot
     var newRadius by remember { mutableStateOf(100) }
     var newName by remember { mutableStateOf("") }
+    var sheetH by remember { mutableStateOf(0) }           // bottom-panel height (px), to centre the crosshair
 
     val mapView = remember {
         configureOsmdroid(ctx)
@@ -127,53 +129,58 @@ fun LocalityScreen(vm: MainViewModel) {
                     val newFix = vm.fix?.let { GeoPoint(it.lat, it.lon) }
                     val newAcc = vm.fix?.accuracyM?.toFloat() ?: Float.NaN
                     val nr = if (newMode) newRadius.toDouble() else -1.0
+                    val off = if (newMode) sheetH.toFloat() else 0f
                     if (overlay.picked !== sel || overlay.fix != newFix ||
-                        overlay.accuracyM.toRawBits() != newAcc.toRawBits() || overlay.newRadiusM != nr) {
+                        overlay.accuracyM.toRawBits() != newAcc.toRawBits() ||
+                        overlay.newRadiusM != nr || overlay.newOffsetPx != off) {
                         overlay.picked = sel
                         overlay.fix = newFix
                         overlay.accuracyM = newAcc
                         overlay.newRadiusM = nr
+                        overlay.newOffsetPx = off
                         m.invalidate()
                     }
                 },
             )
-            // One-handed zoom: thumb-reachable buttons.
-            Column(
+            // One-handed zoom: thumb-reachable buttons (the new-spot panel covers them).
+            if (!newMode) Column(
                 Modifier.align(Alignment.BottomEnd).padding(16.dp),
                 verticalArrangement = Arrangement.spacedBy(12.dp),
             ) {
                 ZoomButton("+") { mapView.controller.zoomIn() }
                 ZoomButton("−") { mapView.controller.zoomOut() }
             }
-        }
-        // New-spot controls sit BELOW the map (a sibling, not an overlay) so the map
-        // shrinks and the centre crosshair stays in the middle of the *visible* map.
-        if (newMode) Column(
-            Modifier.fillMaxWidth().background(Color.White).padding(14.dp),
-            verticalArrangement = Arrangement.spacedBy(10.dp),
-        ) {
-            Text("Pan kartet så krysset står på stedet.", color = cs.onSurface, fontSize = 13.sp)
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Text("Radius", color = cs.onSurface, modifier = Modifier.weight(1f))
-                TextButton(onClick = { newRadius = RADII.lastOrNull { it < newRadius } ?: RADII.first() }) {
-                    Text("−", fontSize = 22.sp)
+            // New-spot panel OVERLAYS the map (so the map doesn't resize/jump); the overlay
+            // draws the crosshair above it, at the centre of the visible map.
+            if (newMode) Column(
+                Modifier.align(Alignment.BottomCenter).fillMaxWidth()
+                    .background(Color.White).padding(14.dp)
+                    .onSizeChanged { sheetH = it.height },
+                verticalArrangement = Arrangement.spacedBy(10.dp),
+            ) {
+                Text("Pan kartet så krysset står på stedet.", color = cs.onSurface, fontSize = 13.sp)
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Text("Radius", color = cs.onSurface, modifier = Modifier.weight(1f))
+                    TextButton(onClick = { newRadius = RADII.lastOrNull { it < newRadius } ?: RADII.first() }) {
+                        Text("−", fontSize = 22.sp)
+                    }
+                    Text(if (newRadius == 0) "punkt" else "$newRadius m", fontWeight = FontWeight.SemiBold)
+                    TextButton(onClick = { newRadius = RADII.firstOrNull { it > newRadius } ?: RADII.last() }) {
+                        Text("+", fontSize = 22.sp)
+                    }
                 }
-                Text(if (newRadius == 0) "punkt" else "$newRadius m", fontWeight = FontWeight.SemiBold)
-                TextButton(onClick = { newRadius = RADII.firstOrNull { it > newRadius } ?: RADII.last() }) {
-                    Text("+", fontSize = 22.sp)
-                }
+                OutlinedTextField(
+                    value = newName, onValueChange = { newName = it }, singleLine = true,
+                    label = { Text("Navn på lokaliteten") }, modifier = Modifier.fillMaxWidth(),
+                )
+                Button(
+                    onClick = {
+                        val gp = mapView.projection.fromPixels(mapView.width / 2, (mapView.height - sheetH) / 2)
+                        vm.createNewLocality(gp.latitude, gp.longitude, newRadius, newName)
+                    },
+                    enabled = newName.isNotBlank(), modifier = Modifier.fillMaxWidth(),
+                ) { Text("Lagre lokalitet her") }
             }
-            OutlinedTextField(
-                value = newName, onValueChange = { newName = it }, singleLine = true,
-                label = { Text("Navn på lokaliteten") }, modifier = Modifier.fillMaxWidth(),
-            )
-            Button(
-                onClick = {
-                    val c = mapView.mapCenter
-                    vm.createNewLocality(c.latitude, c.longitude, newRadius, newName)
-                },
-                enabled = newName.isNotBlank(), modifier = Modifier.fillMaxWidth(),
-            ) { Text("Lagre lokalitet her") }
         }
     }
 }
@@ -318,7 +325,8 @@ private class LocalityOverlay(
     var picked: Locality? = null
     var fix: GeoPoint? = null
     var accuracyM: Float = Float.NaN
-    var newRadiusM: Double = -1.0    // >= 0: drawing a new-spot crosshair + radius at the map centre
+    var newRadiusM: Double = -1.0    // >= 0: drawing a new-spot crosshair + radius at the visible centre
+    var newOffsetPx: Float = 0f      // bottom-panel height: shifts the crosshair up to the visible centre
     var tapsBlocked = false          // ignore taps (so the map pans) while placing a new spot
 
     // New-spot marker: magenta, distinct from public (green), your own (yellow) and GPS (blue).
@@ -486,10 +494,9 @@ private class LocalityOverlay(
             c.drawCircle(px, py, 11f, gps)            // bigger GPS dot
             c.drawCircle(px, py, 11f, gpsRing)
         }
-        if (newRadiusM >= 0.0) {                      // placing a new spot: crosshair + radius at centre
-            val cen = map.mapCenter
-            proj.toPixels(GeoPoint(cen.latitude, cen.longitude), p)
-            val cx = p.x.toFloat(); val cy = p.y.toFloat()
+        if (newRadiusM >= 0.0) {                      // placing a new spot: crosshair + radius
+            val cx = map.width / 2f                    // fixed screen position = centre of the
+            val cy = (map.height - newOffsetPx) / 2f   // map area visible above the bottom panel
             val r = (newRadiusM * ppm).toFloat().coerceAtLeast(10f)
             c.drawCircle(cx, cy, r, newFill)
             c.drawCircle(cx, cy, r, newStroke)
