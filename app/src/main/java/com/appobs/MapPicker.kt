@@ -324,8 +324,10 @@ private class LocalityOverlay(
     private val newFill = Paint().apply { style = Paint.Style.FILL; color = 0x333F51B5.toInt(); isAntiAlias = true }
     private val newStroke = Paint().apply { style = Paint.Style.STROKE; color = 0xFF3F51B5.toInt(); strokeWidth = 5f; isAntiAlias = true }
     private val fill = Paint().apply { style = Paint.Style.FILL; color = 0x553C8C28.toInt(); isAntiAlias = true }
+    private val fillPale = Paint().apply { style = Paint.Style.FILL; color = 0x1E3C8C28.toInt(); isAntiAlias = true }   // big ones, so they don't dominate
     private val stroke = Paint().apply { style = Paint.Style.STROKE; color = 0xFF2E7D32.toInt(); strokeWidth = 2f; isAntiAlias = true }
-    private val privFill = Paint().apply { style = Paint.Style.FILL; color = 0x55E0A100.toInt(); isAntiAlias = true }    // private = yellow
+    private val privFill = Paint().apply { style = Paint.Style.FILL; color = 0x55E0A100.toInt(); isAntiAlias = true }    // your own = yellow
+    private val privFillPale = Paint().apply { style = Paint.Style.FILL; color = 0x1EE0A100.toInt(); isAntiAlias = true }
     private val privStroke = Paint().apply { style = Paint.Style.STROKE; color = 0xFFB8860B.toInt(); strokeWidth = 2f; isAntiAlias = true }
     private val selFill = Paint().apply { style = Paint.Style.FILL; color = 0xDD4CAF50.toInt(); isAntiAlias = true }
     private val selFillFaint = Paint().apply { style = Paint.Style.FILL; color = 0x224CAF50.toInt(); isAntiAlias = true }
@@ -354,6 +356,19 @@ private class LocalityOverlay(
     private fun radiusPx(loc: Locality, ppm: Double): Float {
         if (loc.radius <= 0.0) return POINT_DOT_PX              // point locality: small fixed dot
         return (loc.radius * ppm).toFloat().coerceAtLeast(POINT_DOT_PX)  // circle of the real radius
+    }
+
+    /** Roughly how big the locality is on screen (px), for fading big ones so they don't dominate. */
+    private fun screenSpanPx(loc: Locality, rPx: Float, ppm: Double): Float {
+        if (loc.polygon.isEmpty()) return rPx
+        var laMin = 90.0; var laMax = -90.0; var loMin = 180.0; var loMax = -180.0
+        for (v in loc.polygon) {
+            laMin = min(laMin, v[0]); laMax = max(laMax, v[0])
+            loMin = min(loMin, v[1]); loMax = max(loMax, v[1])
+        }
+        val mLat = (laMax - laMin) * 111_320.0
+        val mLon = (loMax - loMin) * 111_320.0 * cos(Math.toRadians((laMin + laMax) / 2))
+        return (max(mLat, mLon) / 2.0 * ppm).toFloat()
     }
 
     /** Does the locality's geographic footprint overlap the visible map bounds? Uses the
@@ -441,8 +456,10 @@ private class LocalityOverlay(
             proj.toPixels(GeoPoint(loc.lat, loc.lon), p)
             val rPx = radiusPx(loc, ppm)
             val px = p.x.toFloat(); val py = p.y.toFloat()
-            if (loc.public) drawShape(c, proj, loc, px, py, rPx, fill, stroke)
-            else drawShape(c, proj, loc, px, py, rPx, privFill, privStroke)   // your own locality -> yellow
+            // Fade large localities (big circles/polygons) so they don't dominate the map.
+            val big = screenSpanPx(loc, rPx, ppm) > 140f
+            val fp = if (loc.public) (if (big) fillPale else fill) else (if (big) privFillPale else privFill)
+            drawShape(c, proj, loc, px, py, rPx, fp, if (loc.public) stroke else privStroke)
             if (showLabels) drawLabel(c, loc.lokalitet, px, py, rPx)   // name below the marker, wrapped
         }
         picked?.let { pl ->                           // selected: bold outline, drawn on top

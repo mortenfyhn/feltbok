@@ -50,6 +50,28 @@ def merc(lon, lat):
     return x, y
 
 
+def merc_inv(x, y):
+    lon = x / 20037508.34 * 180
+    lat = math.degrees(2 * math.atan(math.exp((y / 20037508.34 * 180) * math.pi / 180)) - math.pi / 2)
+    return lon, lat
+
+
+def kommune_bbox(name):
+    """Resolve a kommune's lon/lat bbox via the public area-autocomplete (no login)."""
+    body = json.dumps({"Term": name}).encode()
+    req = urllib.request.Request("https://www.artsobservasjoner.no/Map/FindAreasByNameForAutocomplete",
+        data=body, headers={"Content-Type": "application/json", "X-Requested-With": "XMLHttpRequest"})
+    areas = json.loads(urllib.request.urlopen(req, timeout=30).read())
+    hit = next((a for a in areas if a["value"].lower() == name.lower()
+                and "kommune" in (a.get("subvalue") or "").lower()), None)
+    if not hit:
+        raise SystemExit(f"No kommune named {name!r} found (got: {[a['value'] for a in areas][:6]})")
+    x1, y1, x2, y2 = (float(v) for v in hit["bbox"].split(","))
+    lon0, lat0 = merc_inv(x1, y1)
+    lon1, lat1 = merc_inv(x2, y2)
+    return lon0, lat0, lon1, lat1
+
+
 def fetch(cookie, x1, y1, x2, y2, zoom, tries=4):
     body = json.dumps({"zoomLevel": zoom, "bbox": f"{x1},{y1},{x2},{y2}", "userId": USER_ID,
                        "coordSyst": 0, "speciesGroupId": "8", "taxonId": None}).encode()
@@ -73,24 +95,34 @@ def fetch(cookie, x1, y1, x2, y2, zoom, tries=4):
 
 def main() -> int:
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
-    ap.add_argument("--bbox", help="minlon,minlat,maxlon,maxlat (default: Frøya+Hitra)")
+    ap.add_argument("--bbox", help="minlon,minlat,maxlon,maxlat")
+    ap.add_argument("--kommune", help="harvest a whole kommune (bbox resolved via the area autocomplete)")
     ap.add_argument("--out", default=f"{DATA_DIR}/artsobs-sites-raw.json")
     args = ap.parse_args()
-    bbox = tuple(float(x) for x in args.bbox.split(",")) if args.bbox else DEFAULT_BBOX
+    if args.kommune:
+        bbox = kommune_bbox(args.kommune)
+        print(f"  {args.kommune}: bbox {','.join(f'{v:.3f}' for v in bbox)}", file=sys.stderr)
+    elif args.bbox:
+        bbox = tuple(float(x) for x in args.bbox.split(","))
+    else:
+        bbox = DEFAULT_BBOX
     lon0, lat0, lon1, lat1 = bbox
     cookie = pathlib.Path(COOKIE_FILE).read_text().strip()
 
-    feats, done = {}, set()
-    if pathlib.Path(args.out).exists():                      # resume: keep what we have
+    feats = {}                                              # the raw ACCUMULATES across areas
+    if pathlib.Path(args.out).exists():
         for f in json.load(open(args.out)).get("features", []):
             feats[f["properties"]["siteId"]] = f
-    ckpt = args.out + ".tiles"                               # which (zoom,i,j) tiles are done
+    ckpt = args.out + ".tiles"                              # resume an interrupted run (per-bbox)
+    done = set()
     if pathlib.Path(ckpt).exists():
-        done = set(tuple(t) for t in json.load(open(ckpt)))
+        d = json.load(open(ckpt))
+        if d.get("bbox") == list(bbox):                    # same area -> resume; new area -> fresh tiles
+            done = set(tuple(t) for t in d["done"])
 
     def save():
         json.dump({"features": list(feats.values())}, open(args.out, "w"), ensure_ascii=False)
-        json.dump(sorted(done), open(ckpt, "w"))
+        json.dump({"bbox": list(bbox), "done": sorted(done)}, open(ckpt, "w"))
 
     n = 0
     for zoom, span in PASSES:
