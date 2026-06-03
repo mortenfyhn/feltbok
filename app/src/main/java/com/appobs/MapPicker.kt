@@ -395,7 +395,7 @@ private class LocalityOverlay(
             val rPx = radiusPx(loc, ppm)
             val px = p.x.toFloat(); val py = p.y.toFloat()
             if (loc.public) drawShape(c, proj, loc, px, py, rPx, fill, stroke)
-            else drawShape(c, proj, loc, px, py, rPx, privFill, privStroke)   // private -> yellow
+            else drawShape(c, proj, loc, px, py, rPx, privFill, privStroke)   // your own locality -> yellow
             if (showLabels) drawLabel(c, loc.lokalitet, px, py, rPx)   // name below the marker, wrapped
         }
         picked?.let { pl ->                           // selected: bold outline, drawn on top

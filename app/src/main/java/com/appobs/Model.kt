@@ -71,7 +71,8 @@ data class Locality(
     val observers: Int,           // distinct observers - a public-establishedness signal for the map
     val radius: Double,           // the locality's map footprint radius in metres (0 = unknown)
     val polygon: List<DoubleArray> = emptyList(),  // real footprint as [lat,lon] vertices, when it is an area
-    val public: Boolean = true,   // >=2 distinct reporters -> public (allmenn); 1 -> someone's private locality
+    val public: Boolean = true,   // an allmenn (public) locality, vs one of the user's own
+    val mine: Boolean = false,    // the user's own custom locality (private to them; links by bare name)
 ) {
     val context: String get() = listOf(hovedlokalitet, kommune).filter { it.isNotBlank() }.joinToString(", ")
 }
@@ -203,7 +204,7 @@ private fun parsePolygon(wkt: String): List<DoubleArray> {
     return pts
 }
 
-/** Columns: id,lokalitet,hovedlokalitet,kommune,fylke,lat,lon,count,observers,fullname,radius,geometry */
+/** Columns: id,lokalitet,hovedlokalitet,kommune,fylke,lat,lon,count,observers,fullname,radius,geometry,public,mine */
 fun loadLocalities(ctx: Context): List<Locality> =
     readData(ctx, "localities.csv").mapNotNull { c ->
         if (c.size < 7) return@mapNotNull null
@@ -213,10 +214,12 @@ fun loadLocalities(ctx: Context): List<Locality> =
         val obs = c.getOrElse(8) { "" }.toIntOrNull() ?: 0
         val radius = c.getOrElse(10) { "" }.toDoubleOrNull() ?: 0.0
         val poly = parsePolygon(c.getOrElse(11) { "" })
-        // Private localities are someone else's - you can't upload to them - so drop
-        // them entirely for now. (When we can pull *your own* privates, revisit this.)
-        if (c.getOrElse(12) { "1" } == "0") return@mapNotNull null
-        Locality(c[0], c[1], c[2], c[3], lat, lon, full, obs, radius, poly, public = true)
+        val public = c.getOrElse(12) { "1" } != "0"
+        val mine = c.getOrElse(13) { "0" } == "1"
+        // Show public (allmenn) localities and the user's own customs; drop anything else
+        // (someone else's private - shouldn't occur, you can't upload to those anyway).
+        if (!public && !mine) return@mapNotNull null
+        Locality(c[0], c[1], c[2], c[3], lat, lon, full, obs, radius, poly, public = public, mine = mine)
     }
 
 /** Columns: norsk,latin */

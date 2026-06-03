@@ -34,7 +34,7 @@ mp = importlib.util.module_from_spec(_spec)
 _spec.loader.exec_module(mp)
 
 COLS = ["id", "lokalitet", "hovedlokalitet", "kommune", "fylke", "lat", "lon",
-        "count", "observers", "fullname", "radius", "geometry", "public"]
+        "count", "observers", "fullname", "radius", "geometry", "public", "mine"]
 
 
 def wgs(x, y):
@@ -53,10 +53,13 @@ def main() -> int:
     rows = []
     for f in json.load(open(args.raw))["features"]:
         p = f["properties"]
-        public = "0" if p["isPrivate"] else "1"
-        public = overrides.get(str(p["siteId"]), public)
-        if public != "1":
-            continue                                        # ship public/allmenn sites only
+        # The Report map returns public (allmenn) sites + the logged-in user's OWN private
+        # ones (isPrivate=true). Ship both: public localities (everyone) and "mine" (the
+        # user's customs, which the import links by bare name). Others' privates never appear.
+        mine = "1" if p["isPrivate"] else "0"
+        public = overrides.get(str(p["siteId"]), "0" if p["isPrivate"] else "1")
+        if public != "1" and mine != "1":
+            continue
         g = f["geometry"]
         geom = ""
         if g["type"] == "Point":
@@ -73,14 +76,17 @@ def main() -> int:
         rows.append({"id": str(p["siteId"]), "lokalitet": lok, "hovedlokalitet": hoved,
                      "kommune": kom, "fylke": args.fylke, "lat": lat, "lon": lon,
                      "count": 0, "observers": 0, "fullname": full,
-                     "radius": int(p["accuracy"]), "geometry": geom, "public": "1"})
+                     "radius": int(p["accuracy"]), "geometry": geom, "public": public, "mine": mine})
     rows.sort(key=lambda r: (r["lokalitet"].lower(), r["id"]))
     with open(CSV, "w", newline="") as fh:
         w = csv.DictWriter(fh, fieldnames=COLS)
         w.writeheader()
         w.writerows(rows)
+    npub = sum(1 for r in rows if r["public"] == "1")
+    nmine = sum(1 for r in rows if r["mine"] == "1")
     npoly = sum(1 for r in rows if r["geometry"])
-    print(f"Wrote {len(rows)} public localities ({npoly} polygons, {len(rows)-npoly} points) to {CSV}")
+    print(f"Wrote {len(rows)} localities ({npub} public, {nmine} yours) - {npoly} polygons, "
+          f"{len(rows)-npoly} points - to {CSV}")
     return 0
 
 
