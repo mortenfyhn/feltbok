@@ -276,14 +276,14 @@ private class PreviewOverlay : Overlay() {
     var fix: GeoPoint? = null
     var accuracyM: Float = Float.NaN
 
-    private val fill = fillPaint(0x553C8C28L)
-    private val stroke = strokePaint(0xFF2E7D32L, 3f)
-    private val privFill = fillPaint(0x55E0A100L)
-    private val privStroke = strokePaint(0xFFB8860BL, 3f)
-    private val accFill = fillPaint(0x332962FFL)
-    private val accStroke = strokePaint(0xAA2962FFL, 2.5f)
-    private val gps = fillPaint(0xFF2962FFL)
-    private val gpsRing = strokePaint(0xFFFFFFFFL, 3f)
+    private val fill = fillPaint(MapPalette.GreenFill)
+    private val stroke = strokePaint(MapPalette.GreenStroke, 3f)
+    private val privFill = fillPaint(MapPalette.YellowFill)
+    private val privStroke = strokePaint(MapPalette.YellowStroke, 3f)
+    private val accFill = fillPaint(MapPalette.GpsAccFill)
+    private val accStroke = strokePaint(MapPalette.GpsAccStroke, 2.5f)
+    private val gps = fillPaint(MapPalette.Gps)
+    private val gpsRing = strokePaint(MapPalette.GpsRing, 3f)
     private val p = Point()
     private val path = Path()
 
@@ -338,27 +338,27 @@ private class LocalityOverlay(
     var tapsBlocked = false          // ignore taps (so the map pans) while placing a new spot
 
     // New-spot marker: magenta, distinct from public (green), your own (yellow) and GPS (blue).
-    private val newFill = fillPaint(0x22D500F9L)
-    private val newStroke = strokePaint(0xFFD500F9L, 5f)
-    private val fill = fillPaint(0x553C8C28L)
-    private val fillPale = fillPaint(0x1E3C8C28L)   // big ones, so they don't dominate
-    private val stroke = strokePaint(0xFF2E7D32L, 2f)
-    private val privFill = fillPaint(0x55E0A100L)    // your own = yellow
-    private val privFillPale = fillPaint(0x1EE0A100L)
-    private val privStroke = strokePaint(0xFFB8860BL, 2f)
-    private val selFill = fillPaint(0xDD4CAF50L)
-    private val selFillFaint = fillPaint(0x224CAF50L)
-    private val selStroke = strokePaint(0xFF1B5E20L, 6f)
-    // Private picks keep the same bold-highlight shape but in the yellow (privFill) hue.
-    private val selFillPriv = fillPaint(0xDDE0A100L)
-    private val selFillFaintPriv = fillPaint(0x22E0A100L)
-    private val selStrokePriv = strokePaint(0xFF6B4F00L, 6f)
-    private val accFill = fillPaint(0x222962FFL)
-    private val accStroke = strokePaint(0x882962FFL, 2f)
-    private val gps = fillPaint(0xFF2962FFL)
-    private val gpsRing = strokePaint(0xFFFFFFFFL, 3f)
-    private val labelFill = Paint().apply { color = 0xFF18250F.toInt(); textSize = 38f; textAlign = Paint.Align.CENTER; isAntiAlias = true }
-    private val labelHalo = Paint().apply { color = 0xF2FFFFFF.toInt(); textSize = 38f; textAlign = Paint.Align.CENTER; isAntiAlias = true; style = Paint.Style.STROKE; strokeWidth = 5f }
+    private val newFill = fillPaint(MapPalette.NewFill)
+    private val newStroke = strokePaint(MapPalette.NewStroke, 5f)
+    private val fill = fillPaint(MapPalette.GreenFill)
+    private val fillPale = fillPaint(MapPalette.GreenFillPale)
+    private val stroke = strokePaint(MapPalette.GreenStroke, 2f)
+    private val privFill = fillPaint(MapPalette.YellowFill)
+    private val privFillPale = fillPaint(MapPalette.YellowFillPale)
+    private val privStroke = strokePaint(MapPalette.YellowStroke, 2f)
+    private val selFill = fillPaint(MapPalette.SelFill)
+    private val selFillFaint = fillPaint(MapPalette.SelFillFaint)
+    private val selStroke = strokePaint(MapPalette.SelStroke, 6f)
+    // Private picks keep the same bold-highlight shape but in the yellow hue.
+    private val selFillPriv = fillPaint(MapPalette.SelFillPriv)
+    private val selFillFaintPriv = fillPaint(MapPalette.SelFillFaintPriv)
+    private val selStrokePriv = strokePaint(MapPalette.SelStrokePriv, 6f)
+    private val accFill = fillPaint(MapPalette.GpsAccFillFaint)
+    private val accStroke = strokePaint(MapPalette.GpsAccStrokeFaint, 2f)
+    private val gps = fillPaint(MapPalette.Gps)
+    private val gpsRing = strokePaint(MapPalette.GpsRing, 3f)
+    private val labelFill = Paint().apply { color = MapPalette.LabelText.toInt(); textSize = 38f; textAlign = Paint.Align.CENTER; isAntiAlias = true }
+    private val labelHalo = Paint().apply { color = MapPalette.LabelHalo.toInt(); textSize = 38f; textAlign = Paint.Align.CENTER; isAntiAlias = true; style = Paint.Style.STROKE; strokeWidth = 5f }
     private val p = Point()
     private val path = Path()
 

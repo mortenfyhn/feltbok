@@ -10,30 +10,8 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.viewModels
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
-import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.graphics.Color
 import androidx.core.content.ContextCompat
-
-private val Moss = Color(0xFF5B7A2B)
-private val MossDark = Color(0xFF41591D)
-
-private val MossColors = lightColorScheme(
-    primary = Moss,
-    onPrimary = Color.White,
-    primaryContainer = Color(0xFFDCE8C6),
-    onPrimaryContainer = MossDark,
-    secondary = MossDark,
-    onSecondary = Color.White,
-    background = Color(0xFFEEF1F0),
-    onBackground = Color(0xFF1C2624),
-    surface = Color.White,
-    onSurface = Color(0xFF1C2624),
-    surfaceVariant = Color(0xFFF2F5F3),
-    onSurfaceVariant = Color(0xFF6B7A76),
-    outline = Color(0xFFCBD3D0),
-    error = Color(0xFFB3261E),
-)
 
 class MainActivity : ComponentActivity() {
     private val vm: MainViewModel by viewModels()
@@ -60,7 +38,7 @@ class MainActivity : ComponentActivity() {
 
 @Composable
 fun App(vm: MainViewModel) {
-    MaterialTheme(colorScheme = MossColors) {
+    AppTheme {
         Surface(color = MaterialTheme.colorScheme.background) {
             // System back navigates within the app instead of exiting (except on the list).
             BackHandler(enabled = vm.showExport || vm.screen != Screen.LIST) {
