@@ -29,7 +29,8 @@ _T = Transformer.from_crs("EPSG:3857", "EPSG:4326", always_xy=True)   # Web Merc
 # Where the harvested raw GeoJSON lives (kept out of the repo - it's large). Override with
 # APPOBS_DATA_DIR; pass --raw to point at a specific file.
 DATA_DIR = os.environ.get("APPOBS_DATA_DIR", "/home/morten/Documents/projects/app-feltbok")
-CSV = "app/src/main/assets/localities.csv"
+CSV = "app/src/main/assets/localities.csv"        # public/allmenn - bundled + committed + shared
+MY_CSV = "my-localities.csv"                       # the maintainer's own - gitignored, device-only
 
 _mp = pathlib.Path(__file__).parent / "mark_public.py"
 _spec = importlib.util.spec_from_file_location("mp", _mp)
@@ -84,15 +85,23 @@ def main() -> int:
                      "count": 0, "observers": 0, "fullname": full,
                      "radius": int(p["accuracy"]), "geometry": geom, "public": public, "mine": mine})
     rows.sort(key=lambda r: (r["lokalitet"].lower(), r["id"]))
-    with open(CSV, "w", newline="") as fh:
-        w = csv.DictWriter(fh, fieldnames=COLS)
-        w.writeheader()
-        w.writerows(rows)
-    npub = sum(1 for r in rows if r["public"] == "1")
-    nmine = sum(1 for r in rows if r["mine"] == "1")
-    npoly = sum(1 for r in rows if r["geometry"])
-    print(f"Wrote {len(rows)} localities ({npub} public, {nmine} yours) - {npoly} polygons, "
-          f"{len(rows)-npoly} points - to {CSV}")
+
+    def write(path, sel):
+        with open(path, "w", newline="") as fh:
+            w = csv.DictWriter(fh, fieldnames=COLS)
+            w.writeheader()
+            w.writerows(sel)
+
+    # Split: public/allmenn localities are bundled, committed and shared in the APK; the
+    # maintainer's OWN customs (mine=1) go to a separate file that is gitignored and pushed
+    # only to their device - so a friend's APK ships public localities only.
+    pub = [r for r in rows if r["public"] == "1"]
+    mine = [r for r in rows if r["mine"] == "1"]
+    write(CSV, pub)
+    write(MY_CSV, mine)
+    npoly = sum(1 for r in pub if r["geometry"])
+    print(f"Wrote {len(pub)} public localities ({npoly} polygons) to {CSV}; "
+          f"{len(mine)} of yours to {MY_CSV}")
     return 0
 
 

@@ -217,23 +217,36 @@ private fun parsePolygon(wkt: String): List<DoubleArray> {
     return pts
 }
 
+/** Read an external-only override file (no bundled-asset fallback); empty if absent. Used for
+ *  `my-localities.csv` - the maintainer's own privates, pushed to their device but never
+ *  bundled/committed, so a shared APK ships public localities only. */
+private fun readExternal(ctx: Context, name: String): List<List<String>> {
+    val ext = File(ctx.getExternalFilesDir(null), name)
+    if (!ext.exists()) return emptyList()
+    return ext.readText().lineSequence().filter { it.isNotBlank() }.drop(1).map { parseCsvLine(it) }.toList()
+}
+
 /** Columns: id,lokalitet,hovedlokalitet,kommune,fylke,lat,lon,count,observers,fullname,radius,geometry,public,mine */
+private fun parseLocalityRow(c: List<String>): Locality? {
+    if (c.size < 7) return null
+    val lat = c[5].toDoubleOrNull() ?: return null
+    val lon = c[6].toDoubleOrNull() ?: return null
+    val full = c.getOrElse(9) { "" }.ifBlank { c[1] }   // fall back to bare name pre-fullname
+    val obs = c.getOrElse(8) { "" }.toIntOrNull() ?: 0
+    val radius = c.getOrElse(10) { "" }.toDoubleOrNull() ?: 0.0
+    val poly = parsePolygon(c.getOrElse(11) { "" })
+    val public = c.getOrElse(12) { "1" } != "0"
+    val mine = c.getOrElse(13) { "0" } == "1"
+    // Show public (allmenn) localities and the user's own customs; drop anything else.
+    if (!public && !mine) return null
+    return Locality(c[0], c[1], c[2], c[3], lat, lon, full, obs, radius, poly, public = public, mine = mine)
+}
+
+/** Public localities from the bundled (or pushed) `localities.csv`, plus the user's own
+ *  customs from the external-only `my-localities.csv` (present only on the maintainer's device). */
 fun loadLocalities(ctx: Context): List<Locality> =
-    readData(ctx, "localities.csv").mapNotNull { c ->
-        if (c.size < 7) return@mapNotNull null
-        val lat = c[5].toDoubleOrNull() ?: return@mapNotNull null
-        val lon = c[6].toDoubleOrNull() ?: return@mapNotNull null
-        val full = c.getOrElse(9) { "" }.ifBlank { c[1] }   // fall back to bare name pre-fullname
-        val obs = c.getOrElse(8) { "" }.toIntOrNull() ?: 0
-        val radius = c.getOrElse(10) { "" }.toDoubleOrNull() ?: 0.0
-        val poly = parsePolygon(c.getOrElse(11) { "" })
-        val public = c.getOrElse(12) { "1" } != "0"
-        val mine = c.getOrElse(13) { "0" } == "1"
-        // Show public (allmenn) localities and the user's own customs; drop anything else
-        // (someone else's private - shouldn't occur, you can't upload to those anyway).
-        if (!public && !mine) return@mapNotNull null
-        Locality(c[0], c[1], c[2], c[3], lat, lon, full, obs, radius, poly, public = public, mine = mine)
-    }
+    (readData(ctx, "localities.csv") + readExternal(ctx, "my-localities.csv"))
+        .mapNotNull(::parseLocalityRow)
 
 /** Columns: norsk,latin */
 fun loadSpecies(ctx: Context): List<Species> =

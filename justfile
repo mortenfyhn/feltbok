@@ -72,3 +72,4 @@ public-flags:
 push-data:
     adb push app/src/main/assets/localities.csv {{data_dir}}/localities.csv
     -adb push app/src/main/assets/species.csv {{data_dir}}/species.csv
+    -adb push my-localities.csv {{data_dir}}/my-localities.csv   # the maintainer's own customs (device-only)

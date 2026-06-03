@@ -33,6 +33,7 @@ process/__pycache__/
 /eksempel*.xlsx
 /probe_*.xlsx
 /my_localities.csv
+/my-localities.csv
 /localities_gazetteer.csv
 /bird_species.csv
 /localities-occurrences.jsonl
