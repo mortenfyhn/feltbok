@@ -71,6 +71,7 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
     var dPriv by mutableStateOf("")
     var dLoc by mutableStateOf<Locality?>(null)
     var dTime by mutableStateOf(0L)
+    var dUncertain by mutableStateOf(false)
     val isEditing: Boolean get() = editingId != null
 
     init {
@@ -149,7 +150,7 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
     fun startAdd() {
         editingId = null; changingSpecies = false
         dSpecies = ""; dLatin = ""; dCount = 1
-        dAge = ""; dAct = ""; dSex = ""; dPub = ""; dPriv = ""
+        dAge = ""; dAct = ""; dSex = ""; dPub = ""; dPriv = ""; dUncertain = false
         dLoc = null; dTime = 0L
         screen = Screen.SEARCH
     }
@@ -179,7 +180,7 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
         dSpecies = n.species; dLatin = n.latin; dCount = n.count
         dAge = n.age; dAct = n.activity; dSex = n.sex
         dPub = n.publicComment; dPriv = n.privateComment
-        dTime = n.time
+        dTime = n.time; dUncertain = n.uncertain
         dLoc = localities.firstOrNull { it.lokalitet == n.locName && it.lat == n.lat && it.lon == n.lon }
             ?: Locality("", n.locName, "", "", n.lat, n.lon, n.locFull, 0, 0.0)
         screen = Screen.DETAIL
@@ -217,6 +218,7 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
             locName = loc?.lokalitet ?: "", locFull = loc?.fullname ?: "",
             lat = loc?.lat ?: 0.0, lon = loc?.lon ?: 0.0,
             newLoc = loc?.newLoc == true, locRadius = if (loc?.newLoc == true) loc.radius.toInt() else 0,
+            uncertain = dUncertain,
         )
         if (isEditing) {
             val i = notes.indexOfFirst { it.id == n.id }

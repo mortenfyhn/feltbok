@@ -29,11 +29,11 @@ class ModelTest {
         .toInstant(ZoneOffset.UTC).toEpochMilli()
 
     @Test
-    fun exportRowHasFifteenColumnsInOrderWithBlankCoords() {
+    fun exportRowHasColumnsInOrderWithBlankCoords() {
         val lines = exportTsv(listOf(noteAt(noonMs))).split("\n")
         assertEquals("header + one row", 2, lines.size)
         val c = lines[1].split("\t")
-        assertEquals(15, c.size)
+        assertEquals(16, c.size)
         assertEquals("Gråmåke", c[0])
         assertEquals("3", c[1])
         assertEquals("Adult", c[2])
@@ -51,6 +51,7 @@ class ModelTest {
         assertEquals(c[10], c[12])
         assertEquals("på sjøen", c[13])
         assertEquals("test", c[14])
+        assertEquals("", c[15])   // Usikker artsbestemmelse: blank unless flagged
     }
 
     @Test

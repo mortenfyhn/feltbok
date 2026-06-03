@@ -107,6 +107,7 @@ data class Note(
     val lon: Double,
     val newLoc: Boolean = false,  // a brand-new spot: export with coordinates so the import mints it
     val locRadius: Int = 0,       // chosen radius in metres for a new spot (-> Nøyaktighet)
+    val uncertain: Boolean = false,  // uncertain species determination (-> "Usikker artsbestemmelse")
 )
 
 // ---- distance ----
@@ -283,6 +284,7 @@ fun loadNotes(ctx: Context): List<Note> {
                 lon = o.getDouble("lon"),
                 newLoc = o.optBoolean("newLoc"),
                 locRadius = o.optInt("locRadius"),
+                uncertain = o.optBoolean("uncertain"),
             )
         }
     }.getOrDefault(emptyList())
@@ -298,7 +300,7 @@ fun saveNotes(ctx: Context, notes: List<Note>) {
             put("privateComment", n.privateComment)
             put("locName", n.locName); put("locFull", n.locFull)
             put("lat", n.lat); put("lon", n.lon)
-            put("newLoc", n.newLoc); put("locRadius", n.locRadius)
+            put("newLoc", n.newLoc); put("locRadius", n.locRadius); put("uncertain", n.uncertain)
         })
     }
     notesFile(ctx).writeText(arr.toString())
@@ -349,6 +351,7 @@ private val EXPORT_COLS = listOf(
     "Artsnavn", "Antall", "Alder", "Kjønn", "Aktivitet", "Lokalitetsnavn", "Nord", "Øst",
     "Nøyaktighet", "Fra dato", "Fra klokkeslett", "Til dato", "Til klokkeslett",
     "Kommentar (synlig for alle)", "Privat kommentar (kun synlig for deg selv)",
+    "Usikker artsbestemmelse",
 )
 
 fun exportTsv(notes: List<Note>): String {
@@ -370,6 +373,7 @@ fun exportTsv(notes: List<Note>): String {
         listOf(
             n.species, n.count.toString(), n.age, n.sex, n.activity, loc,
             nord, ost, noy, d, t, d, t, n.publicComment, n.privateComment,
+            if (n.uncertain) "Ja" else "",
         ).joinToString("\t") { cell ->
             // A tab or newline in a free-text comment would split the row and desync
             // every following column on paste-import; flatten them to spaces.

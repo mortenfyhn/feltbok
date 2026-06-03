@@ -32,6 +32,7 @@ import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Checkbox
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
@@ -111,8 +112,8 @@ fun ListScreen(vm: MainViewModel) {
             containerColor = cs.primary, contentColor = Color.White,
             modifier = Modifier.align(Alignment.BottomEnd).padding(18.dp),
         ) { Text("+", fontSize = 28.sp) }
-        Text("v ${BuildConfig.GIT_VERSION}", color = cs.onSurfaceVariant.copy(alpha = 0.6f),
-            fontSize = 11.sp, modifier = Modifier.align(Alignment.BottomStart).padding(8.dp))
+        Text(BuildConfig.GIT_VERSION, color = cs.onSurfaceVariant.copy(alpha = 0.6f),
+            fontSize = 11.sp, modifier = Modifier.align(Alignment.BottomCenter).padding(8.dp))
     }
 }
 
@@ -158,7 +159,7 @@ private fun NoteRow(n: Note, distance: Double?, onClick: () -> Unit) {
         Text(
             buildAnnotatedString {
                 withStyle(SpanStyle(color = cs.onPrimaryContainer, fontWeight = FontWeight.Bold)) { append("${n.count} ") }
-                append(n.species)
+                append(if (n.uncertain) "${n.species}?" else n.species)
             },
             modifier = Modifier.weight(1f), maxLines = 1, overflow = TextOverflow.Ellipsis,
         )
@@ -262,12 +263,23 @@ fun DetailScreen(vm: MainViewModel) {
         Column(Modifier.weight(1f).verticalScroll(rememberScrollState())) {
             // Species first - it's the first thing you choose for a new observation.
             FieldRow("Art", onClick = { vm.changeSpecies() }) {
-                Text(vm.dSpecies, fontWeight = FontWeight.Medium, maxLines = 1,
+                Text(vm.dSpecies + if (vm.dUncertain && vm.dSpecies.isNotBlank()) "?" else "",
+                    fontWeight = FontWeight.Medium, maxLines = 1,
                     overflow = TextOverflow.Ellipsis, modifier = Modifier.weight(1f, fill = false))
                 if (vm.dLatin.isNotBlank())
                     Text("  ${vm.dLatin}", color = cs.onSurfaceVariant, fontStyle = FontStyle.Italic,
                         fontSize = 13.sp, maxLines = 1, overflow = TextOverflow.Ellipsis)
             }
+            // Uncertain species determination -> "Usikker artsbestemmelse" on export (shows as "Vipe?").
+            Row(
+                Modifier.fillMaxWidth().clickable { vm.dUncertain = !vm.dUncertain }
+                    .background(cs.surface).padding(start = 16.dp, end = 8.dp),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                Text("Usikker artsbestemmelse", color = cs.onSurfaceVariant, modifier = Modifier.weight(1f))
+                Checkbox(checked = vm.dUncertain, onCheckedChange = { vm.dUncertain = it })
+            }
+            HorizontalDivider(color = cs.outline.copy(alpha = 0.4f))
             // Locality
             FieldRow("Lokalitet", onClick = { vm.openLocalityPicker() }) {
                 val loc = vm.dLoc
@@ -288,21 +300,23 @@ fun DetailScreen(vm: MainViewModel) {
             CommentField("Åpen kommentar", vm.dPub, vm.lastPub) { vm.dPub = it }
             CommentField("Privat kommentar", vm.dPriv, vm.lastPriv) { vm.dPriv = it }
             val tctx = LocalContext.current
-            FieldRow("Tidspunkt", onClick = {
-                val cal = java.util.Calendar.getInstance().apply {
-                    timeInMillis = if (vm.dTime > 0) vm.dTime else System.currentTimeMillis()
-                }
+            val tMs = if (vm.dTime > 0) vm.dTime else System.currentTimeMillis()
+            // Date and time are separate rows so you can change just the one you mean.
+            FieldRow("Dato", onClick = {
+                val cal = java.util.Calendar.getInstance().apply { timeInMillis = tMs }
                 android.app.DatePickerDialog(tctx, { _, y, mo, d ->
-                    cal.set(y, mo, d)
-                    android.app.TimePickerDialog(tctx, { _, h, mi ->
-                        cal.set(java.util.Calendar.HOUR_OF_DAY, h); cal.set(java.util.Calendar.MINUTE, mi)
-                        vm.dTime = cal.timeInMillis
-                    }, cal.get(java.util.Calendar.HOUR_OF_DAY), cal.get(java.util.Calendar.MINUTE), true).show()
+                    cal.set(java.util.Calendar.YEAR, y); cal.set(java.util.Calendar.MONTH, mo)
+                    cal.set(java.util.Calendar.DAY_OF_MONTH, d); vm.dTime = cal.timeInMillis
                 }, cal.get(java.util.Calendar.YEAR), cal.get(java.util.Calendar.MONTH),
                     cal.get(java.util.Calendar.DAY_OF_MONTH)).show()
-            }) {
-                Text(displayTime(if (vm.dTime > 0) vm.dTime else System.currentTimeMillis()))
-            }
+            }) { Text(exportDate(tMs)) }
+            FieldRow("Klokkeslett", onClick = {
+                val cal = java.util.Calendar.getInstance().apply { timeInMillis = tMs }
+                android.app.TimePickerDialog(tctx, { _, h, mi ->
+                    cal.set(java.util.Calendar.HOUR_OF_DAY, h); cal.set(java.util.Calendar.MINUTE, mi)
+                    vm.dTime = cal.timeInMillis
+                }, cal.get(java.util.Calendar.HOUR_OF_DAY), cal.get(java.util.Calendar.MINUTE), true).show()
+            }) { Text(exportTime(tMs)) }
         }
         if (vm.isEditing) {
             HorizontalDivider(color = cs.outline.copy(alpha = 0.4f))
