@@ -51,6 +51,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.focus.onFocusChanged
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.graphics.Color
@@ -170,7 +171,7 @@ private fun NoteRow(n: Note, distance: Double?, onClick: () -> Unit) {
             Text(formatDistance(it), color = cs.onSurfaceVariant, fontSize = 12.sp)
             Spacer(Modifier.width(8.dp))
         }
-        Text(shortTime(n.id), color = cs.onSurfaceVariant, fontSize = 13.sp)
+        Text(shortTime(n.time), color = cs.onSurfaceVariant, fontSize = 13.sp)
     }
     HorizontalDivider(color = cs.outline.copy(alpha = 0.4f))
 }
@@ -286,7 +287,20 @@ fun DetailScreen(vm: MainViewModel) {
             DropdownRow("Kjønn", vm.dSex, Options.sexes) { vm.dSex = it }
             CommentField("Åpen kommentar", vm.dPub, vm.lastPub) { vm.dPub = it }
             CommentField("Privat kommentar", vm.dPriv, vm.lastPriv) { vm.dPriv = it }
-            FieldRow("Tidspunkt") {
+            val tctx = LocalContext.current
+            FieldRow("Tidspunkt", onClick = {
+                val cal = java.util.Calendar.getInstance().apply {
+                    timeInMillis = if (vm.dTime > 0) vm.dTime else System.currentTimeMillis()
+                }
+                android.app.DatePickerDialog(tctx, { _, y, mo, d ->
+                    cal.set(y, mo, d)
+                    android.app.TimePickerDialog(tctx, { _, h, mi ->
+                        cal.set(java.util.Calendar.HOUR_OF_DAY, h); cal.set(java.util.Calendar.MINUTE, mi)
+                        vm.dTime = cal.timeInMillis
+                    }, cal.get(java.util.Calendar.HOUR_OF_DAY), cal.get(java.util.Calendar.MINUTE), true).show()
+                }, cal.get(java.util.Calendar.YEAR), cal.get(java.util.Calendar.MONTH),
+                    cal.get(java.util.Calendar.DAY_OF_MONTH)).show()
+            }) {
                 Text(displayTime(if (vm.dTime > 0) vm.dTime else System.currentTimeMillis()))
             }
         }

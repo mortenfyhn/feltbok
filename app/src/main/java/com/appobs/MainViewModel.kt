@@ -179,7 +179,7 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
         dSpecies = n.species; dLatin = n.latin; dCount = n.count
         dAge = n.age; dAct = n.activity; dSex = n.sex
         dPub = n.publicComment; dPriv = n.privateComment
-        dTime = n.id
+        dTime = n.time
         dLoc = localities.firstOrNull { it.lokalitet == n.locName && it.lat == n.lat && it.lon == n.lon }
             ?: Locality("", n.locName, "", "", n.lat, n.lon, n.locFull, 0, 0.0)
         screen = Screen.DETAIL
@@ -210,6 +210,7 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
         val loc = dLoc ?: nearest()   // fall back to GPS-nearest if not picked yet
         val n = Note(
             id = if (isEditing) editingId!! else (dTime.takeIf { it > 0 } ?: System.currentTimeMillis()),
+            time = dTime.takeIf { it > 0 } ?: System.currentTimeMillis(),
             species = dSpecies, latin = dLatin, count = dCount.coerceAtLeast(1),
             age = dAge, activity = dAct, sex = dSex,
             publicComment = dPub, privateComment = dPriv,

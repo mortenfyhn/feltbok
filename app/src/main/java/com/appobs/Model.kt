@@ -91,7 +91,8 @@ data class Locality(
 data class Species(val norsk: String, val latin: String)
 
 data class Note(
-    val id: Long,                 // creation time in ms - stable key and the entry's timestamp
+    val id: Long,                 // creation time in ms - the stable key (never changes)
+    val time: Long = id,          // the observation time (date+time) - editable; defaults to id
     val species: String,
     val latin: String,
     val count: Int,
@@ -267,6 +268,7 @@ fun loadNotes(ctx: Context): List<Note> {
             val o = arr.getJSONObject(i)
             Note(
                 id = o.getLong("id"),
+                time = o.optLong("time", o.getLong("id")),
                 species = o.getString("species"),
                 latin = o.optString("latin"),
                 count = o.getInt("count"),
@@ -290,7 +292,7 @@ fun saveNotes(ctx: Context, notes: List<Note>) {
     val arr = JSONArray()
     notes.forEach { n ->
         arr.put(JSONObject().apply {
-            put("id", n.id); put("species", n.species); put("latin", n.latin)
+            put("id", n.id); put("time", n.time); put("species", n.species); put("latin", n.latin)
             put("count", n.count); put("age", n.age); put("activity", n.activity)
             put("sex", n.sex); put("publicComment", n.publicComment)
             put("privateComment", n.privateComment)
@@ -357,8 +359,8 @@ fun exportTsv(notes: List<Note>): String {
     //    links to a public locality. Only manual selection on the site links to public.
     // So we emit the bare name and let the user scope the import form to the kommune to
     // disambiguate, fixing the rest by hand. Nord/Øst/Nøyaktighet are left blank.
-    val rows = notes.sortedBy { it.id }.map { n ->
-        val d = exportDate(n.id); val t = exportTime(n.id)
+    val rows = notes.sortedBy { it.time }.map { n ->
+        val d = exportDate(n.time); val t = exportTime(n.time)
         val loc = n.locName.ifBlank { n.locFull }
         // A brand-new spot is exported WITH coordinates (+ its radius as Nøyaktighet), which
         // mints a new custom locality on import; registry localities stay name-only.
