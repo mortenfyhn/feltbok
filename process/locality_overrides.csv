@@ -1,9 +1,5 @@
 id,public,note
-# Manual public/private corrections, applied by mark_public.py AFTER the
-# reporter-count heuristic (which is imperfect). One row per locality:
-#   id     = the locationID (stable site id) from localities.csv
-#   public = 1 to force public (show + matchable), 0 to force private (hidden)
-#   note   = the locality name, for humans
-# Verified against the manual reporting form on artsobservasjoner.no.
-1367977,0,Nordhammarvik gravsted (not in the public picker online)
-1367971,0,Krysset mot Kystbarnehage (private per the online picker)
+# Manual public/private corrections by Artsobservasjoner siteId, applied by build_sites.py
+# AFTER the authoritative isPrivate flag. Rarely needed now that the flag is ground truth.
+#   id     = the siteId from localities.csv
+#   public = 1 to force public (show), 0 to force private (hide)

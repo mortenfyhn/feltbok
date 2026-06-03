@@ -204,13 +204,9 @@ fun LocalityPreview(vm: MainViewModel, modifier: Modifier = Modifier) {
 }
 
 /** Draws a single locality disk plus the GPS pin, for the main-screen minimap. */
-/** Artsobservasjoner only lets a locality's radius be one of these fixed values, so any
- *  other number is a computed coordinateUncertaintyInMeters - i.e. a point locality, not a
- *  circle. 300 m is GBIF's "unknown" default (a third of all points), so it's a point too.
- *  Points draw as a small fixed dot; only these values draw a real radius circle. */
-private val CIRCLE_RADII_M = setOf(1, 5, 10, 25, 50, 75, 100, 125, 150, 200, 250, 400, 500,
-    750, 1000, 1500, 2000, 2500, 3000, 5000)
-private fun isCircleLocality(radiusM: Double) = radiusM.toInt() in CIRCLE_RADII_M
+// Radius is Artsobservasjoner's authoritative locality radius (accuracy in metres):
+// 0 = a point locality -> a small fixed dot; > 0 = a real circle of that radius.
+// Polygons draw their own shape and ignore radius.
 private const val POINT_DOT_PX = 15f
 
 private class PreviewOverlay : Overlay() {
@@ -250,7 +246,7 @@ private class PreviewOverlay : Overlay() {
                 c.drawPath(path, fp)
                 c.drawPath(path, sp)
             } else {
-                val rPx = if (isCircleLocality(it.radius)) (it.radius * ppm).toFloat().coerceIn(POINT_DOT_PX, 200f)
+                val rPx = if (it.radius > 0.0) (it.radius * ppm).toFloat().coerceIn(POINT_DOT_PX, 200f)
                           else POINT_DOT_PX
                 proj.toPixels(GeoPoint(it.lat, it.lon), p)
                 c.drawCircle(p.x.toFloat(), p.y.toFloat(), rPx, fp)
@@ -311,8 +307,8 @@ private class LocalityOverlay(
     }
 
     private fun radiusPx(loc: Locality, ppm: Double): Float {
-        if (!isCircleLocality(loc.radius)) return POINT_DOT_PX   // point locality: small fixed dot
-        return (loc.radius * ppm).toFloat().coerceAtLeast(POINT_DOT_PX)  // circle: scales with zoom
+        if (loc.radius <= 0.0) return POINT_DOT_PX              // point locality: small fixed dot
+        return (loc.radius * ppm).toFloat().coerceAtLeast(POINT_DOT_PX)  // circle of the real radius
     }
 
     /** Does the locality's geographic footprint overlap the visible map bounds? Uses the

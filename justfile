@@ -28,11 +28,20 @@ log:
 uninstall:
     adb uninstall com.appobs
 
+# ---- PRIMARY locality pipeline: Artsobservasjoner's own site registry ----
+# Harvest the authoritative site list (real geometry, radius, allmenn flag) from the
+# Report-map endpoint. Needs a logged-in session cookie in /tmp/aspx_cookie.txt (see the
+# script header). Resumable + gentle. Widen with --bbox; eventually all of Norway.
+sites *args:
+    .venv/bin/python process/harvest_sites.py {{args}}
+
+# Build app/src/main/assets/localities.csv from the harvested raw GeoJSON (no GBIF needed).
+build-sites *args:
+    .venv/bin/python process/build_sites.py {{args}}
+
+# ---- LEGACY GBIF pipeline (superseded by `sites`/`build-sites`; kept for reference) ----
 # Build the official locality table from the Artsdatabanken/GBIF dump.
 # Pass extra args, e.g.: just localities --api --bbox 8.0,63.5,9.3,63.9
-# Cache the raw harvest once, then re-tune thresholds offline (no re-download):
-#   just localities --api --bbox 8.0,63.5,9.3,63.9 --save-raw localities-raw.json
-#   just localities --from-raw localities-raw.json --min-observers 3
 localities *args:
     .venv/bin/python process/build_localities.py {{args}}
 
