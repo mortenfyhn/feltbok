@@ -211,7 +211,7 @@ fun LocalityPreview(vm: MainViewModel, modifier: Modifier = Modifier) {
 private val CIRCLE_RADII_M = setOf(1, 5, 10, 25, 50, 75, 100, 125, 150, 200, 250, 400, 500,
     750, 1000, 1500, 2000, 2500, 3000, 5000)
 private fun isCircleLocality(radiusM: Double) = radiusM.toInt() in CIRCLE_RADII_M
-private const val POINT_DOT_PX = 11f
+private const val POINT_DOT_PX = 15f
 
 private class PreviewOverlay : Overlay() {
     var loc: Locality? = null
@@ -358,10 +358,11 @@ private class LocalityOverlay(
 
     private val lineH = 32f
 
-    /** Draw [name] centred on (cx, cy), wrapped so it doesn't get too wide. */
-    private fun drawLabel(c: Canvas, name: String, cx: Float, cy: Float) {
+    /** Draw [name] below the marker (which has pixel radius [markerR]), wrapped so it
+     *  doesn't get too wide. Below, not centred, so it never hides a small dot. */
+    private fun drawLabel(c: Canvas, name: String, cx: Float, cy: Float, markerR: Float) {
         val lines = wrapLabel(name, 210f)
-        var ty = cy - (lines.size - 1) * lineH / 2f + 10f
+        var ty = cy + markerR.coerceAtMost(40f) + lineH    // first baseline clears the marker
         for (line in lines) {
             c.drawText(line, cx, ty, labelHalo)
             c.drawText(line, cx, ty, labelFill)
@@ -401,7 +402,7 @@ private class LocalityOverlay(
             val px = p.x.toFloat(); val py = p.y.toFloat()
             if (loc.public) drawShape(c, proj, loc, px, py, rPx, fill, stroke)
             else drawShape(c, proj, loc, px, py, rPx, privFill, privStroke)   // private -> yellow
-            if (showLabels) drawLabel(c, loc.lokalitet, px, py)   // name at the locality point, wrapped
+            if (showLabels) drawLabel(c, loc.lokalitet, px, py, rPx)   // name below the marker, wrapped
         }
         picked?.let { pl ->                           // selected: bold outline, drawn on top
             proj.toPixels(GeoPoint(pl.lat, pl.lon), p)
@@ -413,7 +414,7 @@ private class LocalityOverlay(
                      else (if (area) selFillFaintPriv else selFillPriv)
             val sp = if (pl.public) selStroke else selStrokePriv
             drawShape(c, proj, pl, cx, cy, radiusPx(pl, ppm), fp, sp)
-            if (showLabels) drawLabel(c, pl.lokalitet, cx, cy)
+            if (showLabels) drawLabel(c, pl.lokalitet, cx, cy, radiusPx(pl, ppm))
         }
         fix?.let {
             proj.toPixels(it, p)
