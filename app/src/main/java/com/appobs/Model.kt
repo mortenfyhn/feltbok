@@ -207,15 +207,23 @@ private fun readData(ctx: Context, name: String): List<List<String>> {
         .toList()
 }
 
-private val WKT_NUM = Regex("-?\\d+(?:\\.\\d+)?")
-
-/** Parse a "POLYGON((lon lat, ...))" WKT into [lat,lon] vertices (empty if not a polygon). */
+/** Parse a "POLYGON((lon lat, ...))" WKT into [lat,lon] vertices (empty if not a polygon).
+ *  Hand-scanned rather than regex'd: the regex version cost ~9 ms per polygon (Android's
+ *  java.util.regex is slow), which dominated app launch. Inner-ring structure is ignored
+ *  (all vertices flattened into one outline), as before. */
 private fun parsePolygon(wkt: String): List<DoubleArray> {
     if (!wkt.startsWith("POLYGON")) return emptyList()
-    val n = WKT_NUM.findAll(wkt).map { it.value.toDouble() }.toList()
-    val pts = ArrayList<DoubleArray>(n.size / 2)
-    var i = 0
-    while (i + 1 < n.size) { pts.add(doubleArrayOf(n[i + 1], n[i])); i += 2 }  // WKT is lon lat
+    val pts = ArrayList<DoubleArray>(128)
+    var i = 0; val n = wkt.length; var lon = Double.NaN
+    while (i < n) {
+        val c = wkt[i]
+        if (c == '-' || c == '.' || c in '0'..'9') {
+            val start = i++
+            while (i < n && (wkt[i] in '0'..'9' || wkt[i] == '.')) i++
+            val v = wkt.substring(start, i).toDouble()
+            if (lon.isNaN()) lon = v else { pts.add(doubleArrayOf(v, lon)); lon = Double.NaN }  // WKT is lon lat
+        } else i++
+    }
     return pts
 }
 
@@ -228,14 +236,19 @@ private fun readExternal(ctx: Context, name: String): List<List<String>> {
     return ext.readText().lineSequence().filter { it.isNotBlank() }.drop(1).map { parseCsvLine(it) }.toList()
 }
 
+/** Like toDoubleOrNull but without its per-call regex screen - parseDouble straight, null on
+ *  the rare malformed value. Called ~35k times at launch, so the regex screen was costly. */
+private fun fastDouble(s: String): Double? =
+    if (s.isEmpty()) null else try { s.toDouble() } catch (e: NumberFormatException) { null }
+
 /** Columns: id,lokalitet,hovedlokalitet,kommune,fylke,lat,lon,count,observers,fullname,radius,geometry,public,mine */
 private fun parseLocalityRow(c: List<String>): Locality? {
     if (c.size < 7) return null
-    val lat = c[5].toDoubleOrNull() ?: return null
-    val lon = c[6].toDoubleOrNull() ?: return null
+    val lat = fastDouble(c[5]) ?: return null
+    val lon = fastDouble(c[6]) ?: return null
     val full = c.getOrElse(9) { "" }.ifBlank { c[1] }   // fall back to bare name pre-fullname
     val obs = c.getOrElse(8) { "" }.toIntOrNull() ?: 0
-    val radius = c.getOrElse(10) { "" }.toDoubleOrNull() ?: 0.0
+    val radius = fastDouble(c.getOrElse(10) { "" }) ?: 0.0
     val poly = parsePolygon(c.getOrElse(11) { "" })
     val public = c.getOrElse(12) { "1" } != "0"
     val mine = c.getOrElse(13) { "0" } == "1"

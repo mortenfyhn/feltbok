@@ -8,7 +8,9 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 enum class Screen { LIST, SEARCH, DETAIL, LOCALITY }
 
@@ -21,7 +23,11 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
     private val ctx = app
     private val tracker = LocationTracker(app)
 
-    val localities = mutableStateListOf<Locality>().apply { addAll(loadLocalities(app)) }
+    // Parsing the ~11.5k bundled localities takes ~0.7 s, so load them off the main thread and
+    // fill this observable list when ready - the app shows the notes list instantly meanwhile.
+    // Nothing on the first screen needs localities; nearest()/the picker just see an empty list
+    // until it populates (a beat later), then recompose.
+    val localities = mutableStateListOf<Locality>()
     val species: List<Species> = loadSpecies(app)
     /** Norwegian names pre-folded for search, parallel to [species] (folded once, not per keystroke). */
     val foldedNorsk: List<String> = species.map { fold(it.norsk) }
@@ -79,6 +85,26 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
     val isEditing: Boolean get() = editingId != null
 
     init {
+        // Seed "som forrige" from the most recent note that carried a comment (no localities needed).
+        notes.firstOrNull { it.publicComment.isNotBlank() }?.let { lastPub = it.publicComment }
+        notes.firstOrNull { it.privateComment.isNotBlank() }?.let { lastPriv = it.privateComment }
+        // Load localities off the main thread, then run the steps that depend on them.
+        viewModelScope.launch {
+            val loaded = withContext(Dispatchers.Default) { loadLocalities(ctx) }
+            localities.addAll(loaded)
+            onLocalitiesLoaded()
+        }
+        viewModelScope.launch {
+            tracker.fix.collect { f ->
+                fix = f
+                // Fill the locality once GPS settles, if adding and untouched.
+                if (screen == Screen.DETAIL && editingId == null && dLoc == null) dLoc = defaultLocality()
+            }
+        }
+    }
+
+    /** Localities-dependent startup, run once they've finished loading. */
+    private fun onLocalitiesLoaded() {
         // Backfill qualified locality names on notes saved before `locFull` existed,
         // so re-exporting an earlier day links instead of failing on the bare name.
         var migrated = false
@@ -97,16 +123,7 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
         for (n in notes) if (n.newLoc && n.locName.isNotBlank())
             addNewLocality(Locality("", n.locName, "", "", n.lat, n.lon, n.locName, 0,
                 n.locRadius.toDouble(), public = false, newLoc = true))
-        // Seed "som forrige" from the most recent note that carried a comment.
-        notes.firstOrNull { it.publicComment.isNotBlank() }?.let { lastPub = it.publicComment }
-        notes.firstOrNull { it.privateComment.isNotBlank() }?.let { lastPriv = it.privateComment }
-        viewModelScope.launch {
-            tracker.fix.collect { f ->
-                fix = f
-                // Fill the locality once GPS settles, if adding and untouched.
-                if (screen == Screen.DETAIL && editingId == null && dLoc == null) dLoc = defaultLocality()
-            }
-        }
+        nearestFix = null   // invalidate the fix-keyed memo so nearest() rescans now that we have data
     }
 
     fun startLocationUpdates() = tracker.start()
