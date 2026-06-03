@@ -22,6 +22,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.material3.Button
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -65,6 +66,9 @@ fun LocalityScreen(vm: MainViewModel) {
     val cs = MaterialTheme.colorScheme
     val ctx = LocalContext.current
     var tapped by remember { mutableStateOf<Locality?>(null) }
+    var newMode by remember { mutableStateOf(false) }      // placing a brand-new spot
+    var newRadius by remember { mutableStateOf(100) }
+    var newName by remember { mutableStateOf("") }
 
     val mapView = remember {
         configureOsmdroid(ctx)
@@ -98,14 +102,19 @@ fun LocalityScreen(vm: MainViewModel) {
         }
     }
 
+    overlay.tapsBlocked = newMode                          // in new-spot mode, pan instead of select
+
     Column(Modifier.fillMaxSize()) {
         Row(
             Modifier.fillMaxWidth().background(cs.primary).padding(horizontal = 14.dp, vertical = 9.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
-            Text("Velg lokalitet", color = Color.White, fontWeight = FontWeight.SemiBold,
-                modifier = Modifier.weight(1f))
-            TextButton(onClick = { vm.backToDetail() }) { Text("Avbryt", color = Color.White) }
+            Text(if (newMode) "Ny lokalitet" else "Velg lokalitet", color = Color.White,
+                fontWeight = FontWeight.SemiBold, modifier = Modifier.weight(1f))
+            if (!newMode) TextButton(onClick = { newMode = true }) { Text("＋ Ny", color = Color.White) }
+            TextButton(onClick = { if (newMode) newMode = false else vm.backToDetail() }) {
+                Text("Avbryt", color = Color.White)
+            }
         }
         Box(Modifier.weight(1f).fillMaxWidth()) {
             AndroidView(
@@ -117,26 +126,60 @@ fun LocalityScreen(vm: MainViewModel) {
                     val sel = tapped ?: vm.dLoc      // highlight the just-tapped one, else the current pick
                     val newFix = vm.fix?.let { GeoPoint(it.lat, it.lon) }
                     val newAcc = vm.fix?.accuracyM?.toFloat() ?: Float.NaN
+                    val nr = if (newMode) newRadius.toDouble() else -1.0
                     if (overlay.picked !== sel || overlay.fix != newFix ||
-                        overlay.accuracyM.toRawBits() != newAcc.toRawBits()) {
+                        overlay.accuracyM.toRawBits() != newAcc.toRawBits() || overlay.newRadiusM != nr) {
                         overlay.picked = sel
                         overlay.fix = newFix
                         overlay.accuracyM = newAcc
+                        overlay.newRadiusM = nr
                         m.invalidate()
                     }
                 },
             )
-            // One-handed zoom: thumb-reachable buttons (pinch is awkward one-handed).
-            Column(
+            // One-handed zoom: thumb-reachable buttons. Hidden while placing a new spot
+            // (the bottom sheet takes that space; pinch still zooms).
+            if (!newMode) Column(
                 Modifier.align(Alignment.BottomEnd).padding(16.dp),
                 verticalArrangement = Arrangement.spacedBy(12.dp),
             ) {
                 ZoomButton("+") { mapView.controller.zoomIn() }
                 ZoomButton("−") { mapView.controller.zoomOut() }
             }
+            if (newMode) Column(
+                Modifier.align(Alignment.BottomCenter).fillMaxWidth()
+                    .background(Color.White).padding(14.dp),
+                verticalArrangement = Arrangement.spacedBy(10.dp),
+            ) {
+                Text("Pan kartet så krysset står på stedet.", color = cs.onSurface, fontSize = 13.sp)
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Text("Radius", color = cs.onSurface, modifier = Modifier.weight(1f))
+                    TextButton(onClick = { newRadius = RADII.lastOrNull { it < newRadius } ?: RADII.first() }) {
+                        Text("−", fontSize = 22.sp)
+                    }
+                    Text(if (newRadius == 0) "punkt" else "$newRadius m", fontWeight = FontWeight.SemiBold)
+                    TextButton(onClick = { newRadius = RADII.firstOrNull { it > newRadius } ?: RADII.last() }) {
+                        Text("+", fontSize = 22.sp)
+                    }
+                }
+                OutlinedTextField(
+                    value = newName, onValueChange = { newName = it }, singleLine = true,
+                    label = { Text("Navn på lokaliteten") }, modifier = Modifier.fillMaxWidth(),
+                )
+                Button(
+                    onClick = {
+                        val c = mapView.mapCenter
+                        vm.createNewLocality(c.latitude, c.longitude, newRadius, newName)
+                    },
+                    enabled = newName.isNotBlank(), modifier = Modifier.fillMaxWidth(),
+                ) { Text("Lagre lokalitet her") }
+            }
         }
     }
 }
+
+/** Radii Artsobservasjoner allows for a circle locality (0 = a point). */
+private val RADII = listOf(0, 50, 100, 150, 200, 250, 300, 400, 500, 750, 1000, 1500, 2000, 3000)
 
 @Composable
 private fun ZoomButton(label: String, onClick: () -> Unit) {
@@ -275,7 +318,11 @@ private class LocalityOverlay(
     var picked: Locality? = null
     var fix: GeoPoint? = null
     var accuracyM: Float = Float.NaN
+    var newRadiusM: Double = -1.0    // >= 0: drawing a new-spot crosshair + radius at the map centre
+    var tapsBlocked = false          // ignore taps (so the map pans) while placing a new spot
 
+    private val newFill = Paint().apply { style = Paint.Style.FILL; color = 0x333F51B5.toInt(); isAntiAlias = true }
+    private val newStroke = Paint().apply { style = Paint.Style.STROKE; color = 0xFF3F51B5.toInt(); strokeWidth = 5f; isAntiAlias = true }
     private val fill = Paint().apply { style = Paint.Style.FILL; color = 0x553C8C28.toInt(); isAntiAlias = true }
     private val stroke = Paint().apply { style = Paint.Style.STROKE; color = 0xFF2E7D32.toInt(); strokeWidth = 2f; isAntiAlias = true }
     private val privFill = Paint().apply { style = Paint.Style.FILL; color = 0x55E0A100.toInt(); isAntiAlias = true }    // private = yellow
@@ -421,11 +468,22 @@ private class LocalityOverlay(
             c.drawCircle(px, py, 11f, gps)            // bigger GPS dot
             c.drawCircle(px, py, 11f, gpsRing)
         }
+        if (newRadiusM >= 0.0) {                      // placing a new spot: crosshair + radius at centre
+            val cen = map.mapCenter
+            proj.toPixels(GeoPoint(cen.latitude, cen.longitude), p)
+            val cx = p.x.toFloat(); val cy = p.y.toFloat()
+            val r = (newRadiusM * ppm).toFloat().coerceAtLeast(10f)
+            c.drawCircle(cx, cy, r, newFill)
+            c.drawCircle(cx, cy, r, newStroke)
+            c.drawLine(cx - 22f, cy, cx + 22f, cy, newStroke)
+            c.drawLine(cx, cy - 22f, cx, cy + 22f, newStroke)
+        }
     }
 
     // onSingleTapUp (not ...Confirmed) so selection is instant instead of waiting out
     // the double-tap timeout. Double-tap-to-zoom is sacrificed; pinch still zooms.
     override fun onSingleTapUp(e: MotionEvent, map: MapView): Boolean {
+        if (tapsBlocked) return false                 // placing a new spot: let taps pan, not select
         val proj = map.projection
         val ppm = pxPerMeter(map)
         var best: Locality? = null

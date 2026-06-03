@@ -73,6 +73,7 @@ data class Locality(
     val polygon: List<DoubleArray> = emptyList(),  // real footprint as [lat,lon] vertices, when it is an area
     val public: Boolean = true,   // an allmenn (public) locality, vs one of the user's own
     val mine: Boolean = false,    // the user's own custom locality (private to them; links by bare name)
+    val newLoc: Boolean = false,  // a brand-new spot the user just placed - exported WITH coords to mint it
 ) {
     val context: String get() = listOf(hovedlokalitet, kommune).filter { it.isNotBlank() }.joinToString(", ")
 }
@@ -93,6 +94,8 @@ data class Note(
     val locFull: String,          // qualified Lokalitetsnavn, for the import
     val lat: Double,
     val lon: Double,
+    val newLoc: Boolean = false,  // a brand-new spot: export with coordinates so the import mints it
+    val locRadius: Int = 0,       // chosen radius in metres for a new spot (-> Nøyaktighet)
 )
 
 // ---- distance ----
@@ -253,6 +256,8 @@ fun loadNotes(ctx: Context): List<Note> {
                 locFull = o.optString("locFull"),
                 lat = o.getDouble("lat"),
                 lon = o.getDouble("lon"),
+                newLoc = o.optBoolean("newLoc"),
+                locRadius = o.optInt("locRadius"),
             )
         }
     }.getOrDefault(emptyList())
@@ -268,6 +273,7 @@ fun saveNotes(ctx: Context, notes: List<Note>) {
             put("privateComment", n.privateComment)
             put("locName", n.locName); put("locFull", n.locFull)
             put("lat", n.lat); put("lon", n.lon)
+            put("newLoc", n.newLoc); put("locRadius", n.locRadius)
         })
     }
     notesFile(ctx).writeText(arr.toString())
@@ -331,9 +337,14 @@ fun exportTsv(notes: List<Note>): String {
     val rows = notes.sortedBy { it.id }.map { n ->
         val d = exportDate(n.id); val t = exportTime(n.id)
         val loc = n.locName.ifBlank { n.locFull }
+        // A brand-new spot is exported WITH coordinates (+ its radius as Nøyaktighet), which
+        // mints a new custom locality on import; registry localities stay name-only.
+        val nord = if (n.newLoc) String.format(Locale.US, "%.6f", n.lat) else ""
+        val ost = if (n.newLoc) String.format(Locale.US, "%.6f", n.lon) else ""
+        val noy = if (n.newLoc) "${n.locRadius} m" else ""
         listOf(
             n.species, n.count.toString(), n.age, n.sex, n.activity, loc,
-            "", "", "", d, t, d, t, n.publicComment, n.privateComment,
+            nord, ost, noy, d, t, d, t, n.publicComment, n.privateComment,
         ).joinToString("\t")
     }
     return (listOf(EXPORT_COLS.joinToString("\t")) + rows).joinToString("\n")

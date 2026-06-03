@@ -158,6 +158,14 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
     fun openLocalityPicker() { screen = Screen.LOCALITY }
     fun pickLocality(loc: Locality) { dLoc = loc; screen = Screen.DETAIL }
 
+    /** Place a brand-new spot (panned-to map centre + chosen radius + name). It exports
+     *  with coordinates, which mints the locality on Artsobservasjoner. */
+    fun createNewLocality(lat: Double, lon: Double, radiusM: Int, name: String) {
+        dLoc = Locality("", name.trim(), "", "", lat, lon, name.trim(), 0, radiusM.toDouble(),
+            newLoc = true)
+        screen = Screen.DETAIL
+    }
+
     fun setCount(n: Int) { dCount = n.coerceAtLeast(1) }
 
     fun save() {
@@ -169,6 +177,7 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
             publicComment = dPub, privateComment = dPriv,
             locName = loc?.lokalitet ?: "", locFull = loc?.fullname ?: "",
             lat = loc?.lat ?: 0.0, lon = loc?.lon ?: 0.0,
+            newLoc = loc?.newLoc == true, locRadius = if (loc?.newLoc == true) loc.radius.toInt() else 0,
         )
         if (isEditing) {
             val i = notes.indexOfFirst { it.id == n.id }
