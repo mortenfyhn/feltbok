@@ -257,19 +257,36 @@ fun LocalityPreview(vm: MainViewModel, modifier: Modifier = Modifier) {
 // Polygons draw their own shape and ignore radius.
 private const val POINT_DOT_PX = 15f
 
+/** Antialiased fill/stroke Paints from an ARGB literal, to cut the overlays' Paint boilerplate. */
+private fun fillPaint(argb: Long) =
+    Paint().apply { style = Paint.Style.FILL; color = argb.toInt(); isAntiAlias = true }
+private fun strokePaint(argb: Long, width: Float) =
+    Paint().apply { style = Paint.Style.STROKE; color = argb.toInt(); strokeWidth = width; isAntiAlias = true }
+
+/** Trace [polygon] ([lat,lon] vertices) into [path] in screen pixels, reusing [p] as scratch. */
+private fun tracePolygon(path: Path, polygon: List<DoubleArray>, proj: Projection, p: Point) {
+    path.rewind()
+    for ((j, v) in polygon.withIndex()) {
+        proj.toPixels(GeoPoint(v[0], v[1]), p)
+        if (j == 0) path.moveTo(p.x.toFloat(), p.y.toFloat())
+        else path.lineTo(p.x.toFloat(), p.y.toFloat())
+    }
+    path.close()
+}
+
 private class PreviewOverlay : Overlay() {
     var loc: Locality? = null
     var fix: GeoPoint? = null
     var accuracyM: Float = Float.NaN
 
-    private val fill = Paint().apply { style = Paint.Style.FILL; color = 0x553C8C28.toInt(); isAntiAlias = true }
-    private val stroke = Paint().apply { style = Paint.Style.STROKE; color = 0xFF2E7D32.toInt(); strokeWidth = 3f; isAntiAlias = true }
-    private val privFill = Paint().apply { style = Paint.Style.FILL; color = 0x55E0A100.toInt(); isAntiAlias = true }
-    private val privStroke = Paint().apply { style = Paint.Style.STROKE; color = 0xFFB8860B.toInt(); strokeWidth = 3f; isAntiAlias = true }
-    private val accFill = Paint().apply { style = Paint.Style.FILL; color = 0x332962FF.toInt(); isAntiAlias = true }
-    private val accStroke = Paint().apply { style = Paint.Style.STROKE; color = 0xAA2962FF.toInt(); strokeWidth = 2.5f; isAntiAlias = true }
-    private val gps = Paint().apply { style = Paint.Style.FILL; color = 0xFF2962FF.toInt(); isAntiAlias = true }
-    private val gpsRing = Paint().apply { style = Paint.Style.STROKE; color = 0xFFFFFFFF.toInt(); strokeWidth = 3f; isAntiAlias = true }
+    private val fill = fillPaint(0x553C8C28L)
+    private val stroke = strokePaint(0xFF2E7D32L, 3f)
+    private val privFill = fillPaint(0x55E0A100L)
+    private val privStroke = strokePaint(0xFFB8860BL, 3f)
+    private val accFill = fillPaint(0x332962FFL)
+    private val accStroke = strokePaint(0xAA2962FFL, 2.5f)
+    private val gps = fillPaint(0xFF2962FFL)
+    private val gpsRing = strokePaint(0xFFFFFFFFL, 3f)
     private val p = Point()
     private val path = Path()
 
@@ -284,13 +301,7 @@ private class PreviewOverlay : Overlay() {
             val fp = if (it.public) fill else privFill
             val sp = if (it.public) stroke else privStroke
             if (it.polygon.isNotEmpty()) {            // real footprint
-                path.rewind()
-                for ((j, v) in it.polygon.withIndex()) {
-                    proj.toPixels(GeoPoint(v[0], v[1]), p)
-                    if (j == 0) path.moveTo(p.x.toFloat(), p.y.toFloat())
-                    else path.lineTo(p.x.toFloat(), p.y.toFloat())
-                }
-                path.close()
+                tracePolygon(path, it.polygon, proj, p)
                 c.drawPath(path, fp)
                 c.drawPath(path, sp)
             } else {
@@ -330,25 +341,25 @@ private class LocalityOverlay(
     var tapsBlocked = false          // ignore taps (so the map pans) while placing a new spot
 
     // New-spot marker: magenta, distinct from public (green), your own (yellow) and GPS (blue).
-    private val newFill = Paint().apply { style = Paint.Style.FILL; color = 0x22D500F9.toInt(); isAntiAlias = true }
-    private val newStroke = Paint().apply { style = Paint.Style.STROKE; color = 0xFFD500F9.toInt(); strokeWidth = 5f; isAntiAlias = true }
-    private val fill = Paint().apply { style = Paint.Style.FILL; color = 0x553C8C28.toInt(); isAntiAlias = true }
-    private val fillPale = Paint().apply { style = Paint.Style.FILL; color = 0x1E3C8C28.toInt(); isAntiAlias = true }   // big ones, so they don't dominate
-    private val stroke = Paint().apply { style = Paint.Style.STROKE; color = 0xFF2E7D32.toInt(); strokeWidth = 2f; isAntiAlias = true }
-    private val privFill = Paint().apply { style = Paint.Style.FILL; color = 0x55E0A100.toInt(); isAntiAlias = true }    // your own = yellow
-    private val privFillPale = Paint().apply { style = Paint.Style.FILL; color = 0x1EE0A100.toInt(); isAntiAlias = true }
-    private val privStroke = Paint().apply { style = Paint.Style.STROKE; color = 0xFFB8860B.toInt(); strokeWidth = 2f; isAntiAlias = true }
-    private val selFill = Paint().apply { style = Paint.Style.FILL; color = 0xDD4CAF50.toInt(); isAntiAlias = true }
-    private val selFillFaint = Paint().apply { style = Paint.Style.FILL; color = 0x224CAF50.toInt(); isAntiAlias = true }
-    private val selStroke = Paint().apply { style = Paint.Style.STROKE; color = 0xFF1B5E20.toInt(); strokeWidth = 6f; isAntiAlias = true }
+    private val newFill = fillPaint(0x22D500F9L)
+    private val newStroke = strokePaint(0xFFD500F9L, 5f)
+    private val fill = fillPaint(0x553C8C28L)
+    private val fillPale = fillPaint(0x1E3C8C28L)   // big ones, so they don't dominate
+    private val stroke = strokePaint(0xFF2E7D32L, 2f)
+    private val privFill = fillPaint(0x55E0A100L)    // your own = yellow
+    private val privFillPale = fillPaint(0x1EE0A100L)
+    private val privStroke = strokePaint(0xFFB8860BL, 2f)
+    private val selFill = fillPaint(0xDD4CAF50L)
+    private val selFillFaint = fillPaint(0x224CAF50L)
+    private val selStroke = strokePaint(0xFF1B5E20L, 6f)
     // Private picks keep the same bold-highlight shape but in the yellow (privFill) hue.
-    private val selFillPriv = Paint().apply { style = Paint.Style.FILL; color = 0xDDE0A100.toInt(); isAntiAlias = true }
-    private val selFillFaintPriv = Paint().apply { style = Paint.Style.FILL; color = 0x22E0A100.toInt(); isAntiAlias = true }
-    private val selStrokePriv = Paint().apply { style = Paint.Style.STROKE; color = 0xFF6B4F00.toInt(); strokeWidth = 6f; isAntiAlias = true }
-    private val accFill = Paint().apply { style = Paint.Style.FILL; color = 0x222962FF.toInt(); isAntiAlias = true }
-    private val accStroke = Paint().apply { style = Paint.Style.STROKE; color = 0x882962FF.toInt(); strokeWidth = 2f; isAntiAlias = true }
-    private val gps = Paint().apply { style = Paint.Style.FILL; color = 0xFF2962FF.toInt(); isAntiAlias = true }
-    private val gpsRing = Paint().apply { style = Paint.Style.STROKE; color = 0xFFFFFFFF.toInt(); strokeWidth = 3f; isAntiAlias = true }
+    private val selFillPriv = fillPaint(0xDDE0A100L)
+    private val selFillFaintPriv = fillPaint(0x22E0A100L)
+    private val selStrokePriv = strokePaint(0xFF6B4F00L, 6f)
+    private val accFill = fillPaint(0x222962FFL)
+    private val accStroke = strokePaint(0x882962FFL, 2f)
+    private val gps = fillPaint(0xFF2962FFL)
+    private val gpsRing = strokePaint(0xFFFFFFFFL, 3f)
     private val labelFill = Paint().apply { color = 0xFF18250F.toInt(); textSize = 38f; textAlign = Paint.Align.CENTER; isAntiAlias = true }
     private val labelHalo = Paint().apply { color = 0xF2FFFFFF.toInt(); textSize = 38f; textAlign = Paint.Align.CENTER; isAntiAlias = true; style = Paint.Style.STROKE; strokeWidth = 5f }
     private val p = Point()
@@ -407,13 +418,7 @@ private class LocalityOverlay(
     private fun drawShape(c: Canvas, proj: Projection, loc: Locality,
                           cx: Float, cy: Float, rPx: Float, fp: Paint, sp: Paint) {
         if (loc.polygon.isNotEmpty()) {
-            path.rewind()
-            for ((j, v) in loc.polygon.withIndex()) {
-                proj.toPixels(GeoPoint(v[0], v[1]), p)
-                if (j == 0) path.moveTo(p.x.toFloat(), p.y.toFloat())
-                else path.lineTo(p.x.toFloat(), p.y.toFloat())
-            }
-            path.close()
+            tracePolygon(path, loc.polygon, proj, p)
             c.drawPath(path, fp)
             c.drawPath(path, sp)
         } else {
