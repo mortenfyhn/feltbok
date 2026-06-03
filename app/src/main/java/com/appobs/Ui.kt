@@ -98,7 +98,7 @@ fun ListScreen(vm: MainViewModel) {
                 )
                 LazyColumn(Modifier.weight(1f)) {
                     items(vm.notes, key = { it.id }) { n ->
-                        NoteRow(n, vm.distanceToNote(n)) { vm.editNote(n) }
+                        NoteRow(n, vm.redStatus(n.latin), vm.distanceToNote(n)) { vm.editNote(n) }
                     }
                 }
             }
@@ -148,8 +148,16 @@ private fun StatusStrip(vm: MainViewModel) {
     }
 }
 
+/** Rødlista 2021 category badge (e.g. NT, VU) - red bold caps next to a species name. */
 @Composable
-private fun NoteRow(n: Note, distance: Double?, onClick: () -> Unit) {
+private fun RedStatus(code: String) {
+    if (code.isBlank()) return
+    Text(code, color = MaterialTheme.colorScheme.error, fontWeight = FontWeight.Bold,
+        fontSize = 11.sp, letterSpacing = 0.5.sp, modifier = Modifier.padding(start = 6.dp))
+}
+
+@Composable
+private fun NoteRow(n: Note, status: String, distance: Double?, onClick: () -> Unit) {
     val cs = MaterialTheme.colorScheme
     Row(
         Modifier.fillMaxWidth().clickable(onClick = onClick).background(cs.surface)
@@ -161,8 +169,10 @@ private fun NoteRow(n: Note, distance: Double?, onClick: () -> Unit) {
                 withStyle(SpanStyle(color = cs.onPrimaryContainer, fontWeight = FontWeight.Bold)) { append("${n.count} ") }
                 append(if (n.uncertain) "${n.species}?" else n.species)
             },
-            modifier = Modifier.weight(1f), maxLines = 1, overflow = TextOverflow.Ellipsis,
+            maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.weight(1f, fill = false),
         )
+        RedStatus(status)
+        Spacer(Modifier.weight(1f))
         if (n.locName.isNotBlank()) {
             Text(n.locName, color = cs.onSurface, fontSize = 13.sp, maxLines = 1,
                 overflow = TextOverflow.Ellipsis, modifier = Modifier.widthIn(max = 130.dp))
@@ -235,6 +245,7 @@ fun SearchScreen(vm: MainViewModel) {
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
                     Text(s.norsk, fontWeight = FontWeight.Medium, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                    RedStatus(s.status)
                     if (s.latin.isNotBlank()) {
                         Spacer(Modifier.width(8.dp))
                         Text(s.latin, color = cs.onSurfaceVariant, fontStyle = FontStyle.Italic,
@@ -266,6 +277,7 @@ fun DetailScreen(vm: MainViewModel) {
                 Text(vm.dSpecies + if (vm.dUncertain && vm.dSpecies.isNotBlank()) "?" else "",
                     fontWeight = FontWeight.Medium, maxLines = 1,
                     overflow = TextOverflow.Ellipsis, modifier = Modifier.weight(1f, fill = false))
+                RedStatus(vm.redStatus(vm.dLatin))
                 if (vm.dLatin.isNotBlank())
                     Text("  ${vm.dLatin}", color = cs.onSurfaceVariant, fontStyle = FontStyle.Italic,
                         fontSize = 13.sp, maxLines = 1, overflow = TextOverflow.Ellipsis)

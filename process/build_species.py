@@ -1,14 +1,17 @@
 #!/usr/bin/env python3
-"""Build the Norwegian bird checklist (norsk,latin) for the app's species search.
+"""Build the Norwegian bird checklist (norsk,latin,status) for the app's species search.
 
 Lists every bird species ever recorded in Artsobservasjoner (GBIF dataset
 b124e1e0-…, taxonKey 212 = Aves) and resolves each to its Norwegian + scientific
 name via the GBIF backbone vernacular names (language 'nor', then 'nno'). Sorted
-most-observed first, so common species rank first in search.
+most-observed first, so common species rank first in search. The `status` column
+carries the Norwegian Red List 2021 category (mainland) for red-listed species.
 
     python process/build_species.py      # -> species.csv  (then: just push-data, or rebundle)
 """
 import csv
+import html as _html
+import re
 import sys
 import time
 
@@ -17,6 +20,39 @@ import requests
 DATASET = "b124e1e0-4755-430f-9eab-894f25a9b59c"
 AVES = 212
 NORTAXA = "a6c6cead-b5ce-4a4e-8cf5-1542ba708dec"  # Artsdatabanken's Norwegian name base
+
+# Norwegian Red List 2021 (Artsdatabanken), mainland (Area=N) bird assessments.
+# Only red-listed categories are kept for display; LC/NA/NE map to "".
+REDLIST_URL = "https://lister.artsdatabanken.no/rodlisteforarter/2021?SpeciesGroups=Fugler&Area=N"
+REDLISTED = {"RE", "CR", "EN", "VU", "NT", "DD"}
+# Red List uses newer genera than this checklist for a few species; map to ours so they match.
+REDLIST_ALIASES = {
+    "Curruca nisoria": "Sylvia nisoria",          # hauksanger
+    "Hydrobates leucorhous": "Oceanodroma leucorhoa",  # stormsvale
+}
+
+
+def fetch_redlist():
+    """{scientific name -> Red List 2021 category} for red-listed mainland birds."""
+    rowre = re.compile(r'<a[^>]*href="/rodlisteforarter/2021/\d+".*?</a>', re.S)
+    latre = re.compile(r"element_scientific_name[^>]*><i>([^<]+)</i>")
+    catre = re.compile(r'class="(RE|CR|EN|VU|NT|DD|LC|NA|NE) risk-category-circle"')
+    out, page = {}, 1
+    while True:
+        r = requests.get(f"{REDLIST_URL}&Page={page}",
+                         headers={"User-Agent": "feltbok-redlist/1.0"}, timeout=60)
+        r.raise_for_status()
+        rows = rowre.findall(r.text)
+        if not rows:
+            break
+        for blob in rows:
+            lat, cat = latre.search(blob), catre.search(blob)
+            if lat and cat and cat.group(1) in REDLISTED:
+                name = _html.unescape(lat.group(1)).strip()
+                out[REDLIST_ALIASES.get(name, name)] = cat.group(1)
+        page += 1
+        time.sleep(0.6)        # gentle on Artsdatabanken
+    return out
 
 # Manual Bokmål names for species the lookups miss - mostly where this dataset
 # files a bird under an old genus (Sylvia) that Artsnavnebasen only lists under
@@ -96,6 +132,8 @@ def resolve(key):
 
 
 def main() -> int:
+    redlist = fetch_redlist()
+    print(f"{len(redlist)} red-listed mainland birds (Rødlista 2021)", file=sys.stderr)
     keys = species_keys()
     print(f"{len(keys)} bird species; resolving names…", file=sys.stderr)
     rows = []
@@ -119,10 +157,10 @@ def main() -> int:
             continue
         seen.add(latin)
         # override > resolved name > scientific name
-        out.append((OVERRIDES.get(latin) or norsk or latin, latin))
+        out.append((OVERRIDES.get(latin) or norsk or latin, latin, redlist.get(latin, "")))
     with open("species.csv", "w", newline="", encoding="utf-8") as f:
         w = csv.writer(f)
-        w.writerow(["norsk", "latin"])
+        w.writerow(["norsk", "latin", "status"])
         w.writerows(out)
     print(f"Wrote {len(out)} bird species ({gaps} without a Norwegian name) to species.csv",
           file=sys.stderr)

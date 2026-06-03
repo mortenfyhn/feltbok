@@ -88,7 +88,7 @@ data class Locality(
     }
 }
 
-data class Species(val norsk: String, val latin: String)
+data class Species(val norsk: String, val latin: String, val status: String = "")
 
 data class Note(
     val id: Long,                 // creation time in ms - the stable key (never changes)
@@ -250,10 +250,11 @@ fun loadLocalities(ctx: Context): List<Locality> =
     (readData(ctx, "localities.csv") + readExternal(ctx, "my-localities.csv"))
         .mapNotNull(::parseLocalityRow)
 
-/** Columns: norsk,latin */
+/** Columns: norsk,latin,status (Rødlista 2021 category, blank if not red-listed) */
 fun loadSpecies(ctx: Context): List<Species> =
     readData(ctx, "species.csv").mapNotNull { c ->
-        if (c.isEmpty() || c[0].isBlank()) null else Species(c[0], c.getOrElse(1) { "" })
+        if (c.isEmpty() || c[0].isBlank()) null
+        else Species(c[0], c.getOrElse(1) { "" }, c.getOrElse(2) { "" })
     }
 
 // ---- note persistence (a JSON file in app storage) ----
