@@ -87,9 +87,12 @@ fun LocalityScreen(vm: MainViewModel) {
         }
     }
     val overlay = remember {
-        LocalityOverlay(vm.localities) { tapped = it; mapView.invalidate() }   // highlight, then go
+        LocalityOverlay { tapped = it; mapView.invalidate() }   // highlight, then go
             .also { mapView.overlays.add(it) }
     }
+    // Refresh the overlay's plain-List copy whenever the locality set changes (async load
+    // finishing, or a new spot placed) - not every frame.
+    LaunchedEffect(vm.localities.size) { overlay.localities = vm.localities.toList(); mapView.invalidate() }
     // Flash the tapped locality highlighted, then return to the entry screen.
     LaunchedEffect(tapped) { tapped?.let { delay(300); vm.pickLocality(it) } }
 
@@ -327,9 +330,11 @@ private class PreviewOverlay : Overlay() {
  *  the nearest locality. Public localities are green; private ones will be yellow once
  *  we have the allmenn flag. */
 private class LocalityOverlay(
-    private val localities: List<Locality>,
     private val onTap: (Locality) -> Unit,
 ) : Overlay() {
+    // A plain-List snapshot, refreshed from the composable only when the data changes - iterating
+    // the live SnapshotStateList every frame got expensive once the table grew past ~10k localities.
+    var localities: List<Locality> = emptyList()
     var picked: Locality? = null
     var fix: GeoPoint? = null
     var accuracyM: Float = Float.NaN
@@ -388,18 +393,9 @@ private class LocalityOverlay(
      *  polygon's vertex extent (or the circle's radius), so a large shape whose centre is
      *  off-screen still draws while it covers the view. */
     private fun boundsVisible(loc: Locality, bb: BoundingBox): Boolean {
-        val latMin: Double; val latMax: Double; val lonMin: Double; val lonMax: Double
-        val b = loc.polyBounds
-        if (b != null) {
-            latMin = b[0]; latMax = b[1]; lonMin = b[2]; lonMax = b[3]
-        } else {
-            val dLat = loc.radius / 111_320.0
-            val dLon = loc.radius / (111_320.0 * cos(Math.toRadians(loc.lat)))
-            latMin = loc.lat - dLat; latMax = loc.lat + dLat
-            lonMin = loc.lon - dLon; lonMax = loc.lon + dLon
-        }
-        return !(latMax < bb.latSouth || latMin > bb.latNorth ||
-                 lonMax < bb.lonWest || lonMin > bb.lonEast)
+        val b = loc.cullBounds   // [latMin, latMax, lonMin, lonMax], precomputed once
+        return !(b[1] < bb.latSouth || b[0] > bb.latNorth ||
+                 b[3] < bb.lonWest || b[2] > bb.lonEast)
     }
 
     /** Draw a locality's real polygon, or its radius circle if it's a point locality. */

@@ -86,6 +86,16 @@ data class Locality(
         }
         doubleArrayOf(laMin, laMax, loMin, loMax)
     }
+
+    /** [latMin, latMax, lonMin, lonMax] for viewport culling - the polygon extent, or the
+     *  radius circle's box for point localities. Computed once (the trig was per-frame before). */
+    val cullBounds: DoubleArray by lazy {
+        polyBounds ?: run {
+            val dLat = radius / 111_320.0
+            val dLon = radius / (111_320.0 * cos(Math.toRadians(lat)))
+            doubleArrayOf(lat - dLat, lat + dLat, lon - dLon, lon + dLon)
+        }
+    }
 }
 
 data class Species(val norsk: String, val latin: String, val status: String = "")
