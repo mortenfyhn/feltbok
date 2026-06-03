@@ -21,7 +21,7 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
     private val ctx = app
     private val tracker = LocationTracker(app)
 
-    val localities: List<Locality> = loadLocalities(app)
+    val localities = mutableStateListOf<Locality>().apply { addAll(loadLocalities(app)) }
     val species: List<Species> = loadSpecies(app)
     /** Norwegian names pre-folded for search, parallel to [species] (folded once, not per keystroke). */
     val foldedNorsk: List<String> = species.map { fold(it.norsk) }
@@ -87,6 +87,11 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
             }
         }
         if (migrated) saveNotes(ctx, notes)
+        // Re-add brand-new spots from saved notes, so a custom locality stays selectable
+        // across restarts (until it's been uploaded and adjusted on the website).
+        for (n in notes) if (n.newLoc && n.locName.isNotBlank())
+            addNewLocality(Locality("", n.locName, "", "", n.lat, n.lon, n.locName, 0,
+                n.locRadius.toDouble(), newLoc = true))
         // Seed "som forrige" from the most recent note that carried a comment.
         notes.firstOrNull { it.publicComment.isNotBlank() }?.let { lastPub = it.publicComment }
         notes.firstOrNull { it.privateComment.isNotBlank() }?.let { lastPriv = it.privateComment }
@@ -171,9 +176,17 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
     /** Place a brand-new spot (panned-to map centre + chosen radius + name). It exports
      *  with coordinates, which mints the locality on Artsobservasjoner. */
     fun createNewLocality(lat: Double, lon: Double, radiusM: Int, name: String) {
-        dLoc = Locality("", name.trim(), "", "", lat, lon, name.trim(), 0, radiusM.toDouble(),
+        val loc = Locality("", name.trim(), "", "", lat, lon, name.trim(), 0, radiusM.toDouble(),
             newLoc = true)
+        addNewLocality(loc)        // make it immediately selectable for further observations
+        dLoc = loc
         screen = Screen.DETAIL
+    }
+
+    /** Add a brand-new spot to the pickable list (deduped by name + position). */
+    private fun addNewLocality(loc: Locality) {
+        if (localities.none { it.newLoc && it.lokalitet == loc.lokalitet && it.lat == loc.lat && it.lon == loc.lon })
+            localities.add(loc)
     }
 
     fun setCount(n: Int) { dCount = n.coerceAtLeast(1) }

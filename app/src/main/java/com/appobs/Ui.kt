@@ -51,6 +51,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.focus.onFocusChanged
+import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalClipboardManager
@@ -402,6 +403,7 @@ private fun OptionItem(text: String, selected: Boolean, onClick: () -> Unit) {
 @Composable
 private fun CommentField(label: String, value: String, previous: String, onChange: (String) -> Unit) {
     val cs = MaterialTheme.colorScheme
+    val focus = LocalFocusManager.current
     Column(Modifier.background(cs.surface).padding(horizontal = 16.dp, vertical = 5.dp)) {
         Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
             Text(label, color = cs.onSurfaceVariant, fontSize = 13.sp,
@@ -411,7 +413,11 @@ private fun CommentField(label: String, value: String, previous: String, onChang
                     modifier = Modifier.clickable { onChange(previous) }.padding(bottom = 2.dp))
             }
         }
-        OutlinedTextField(value, onChange, Modifier.fillMaxWidth(), minLines = 1)
+        // Single-line with a "Done" action so the keyboard closes (a multi-line field leaves
+        // the tester stuck - Enter just inserts a newline). Comments are short anyway.
+        OutlinedTextField(value, onChange, Modifier.fillMaxWidth(), singleLine = true,
+            keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
+            keyboardActions = KeyboardActions(onDone = { focus.clearFocus() }))
     }
     HorizontalDivider(color = cs.outline.copy(alpha = 0.4f))
 }
