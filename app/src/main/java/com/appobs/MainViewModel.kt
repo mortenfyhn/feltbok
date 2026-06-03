@@ -55,10 +55,8 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
     var showExport by mutableStateOf(false); private set
     var fix by mutableStateOf<GpsFix?>(null); private set
 
-    // Remembered locality-picker camera, so reopening it keeps your last view (lat 0 = unset).
+    // Remembered locality-picker zoom, so reopening it keeps your last zoom level.
     var mapZoom = 16.0
-    var mapLat = 0.0
-    var mapLon = 0.0
 
     // ---- draft (current add/edit) ----
     private var editingId: Long? = null
@@ -83,7 +81,8 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
             val n = notes[i]
             if (n.locFull.isBlank() && n.locName.isNotBlank()) {
                 val loc = localities.firstOrNull { it.lokalitet == n.locName && it.lat == n.lat && it.lon == n.lon }
-                    ?: localities.firstOrNull { it.lokalitet == n.locName }
+                    ?: localities.filter { it.lokalitet == n.locName }   // same name across kommuner:
+                        .minByOrNull { haversine(it.lat, it.lon, n.lat, n.lon) }  // pick the nearest, not the first
                 if (loc != null) { notes[i] = n.copy(locFull = loc.fullname); migrated = true }
             }
         }
@@ -103,9 +102,20 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
     fun startLocationUpdates() = tracker.start()
     fun stopLocationUpdates() = tracker.stop()
 
+    // nearest() is read on every recomposition (status strip, save button) but only changes
+    // when the fix does, so memoize the last full-table scan against the fix it was computed for.
+    private var nearestFix: GpsFix? = null
+    private var nearestLoc: Locality? = null
+
     /** Official locality nearest the current fix, or null until GPS settles. */
-    fun nearest(): Locality? =
-        fix?.let { f -> localities.minByOrNull { haversine(f.lat, f.lon, it.lat, it.lon) } }
+    fun nearest(): Locality? {
+        val f = fix ?: return null
+        if (f !== nearestFix) {
+            nearestFix = f
+            nearestLoc = localities.minByOrNull { haversine(f.lat, f.lon, it.lat, it.lon) }
+        }
+        return nearestLoc
+    }
 
     fun distanceTo(loc: Locality): Double? =
         fix?.let { haversine(it.lat, it.lon, loc.lat, loc.lon) }

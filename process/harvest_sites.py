@@ -36,7 +36,9 @@ import requests
 
 URL = "https://www.artsobservasjoner.no/Map/GetSitesGeoJson"
 COOKIE_FILE = os.environ.get("ARTSOBS_COOKIE_FILE", "/tmp/aspx_cookie.txt")
-DATA_DIR = "/home/morten/Documents/projects/app-feltbok"
+# Where the raw GeoJSON is written (kept out of the repo - it's large). Override with
+# APPOBS_DATA_DIR; pass --out to point at a specific file.
+DATA_DIR = os.environ.get("APPOBS_DATA_DIR", "/home/morten/Documents/projects/app-feltbok")
 # Frøya + Hitra default; --bbox to widen (eventually all of Norway: ~4.0,57.9,31.2,71.3).
 DEFAULT_BBOX = (8.0, 63.5, 9.3, 63.9)
 USER_ID = int(os.environ.get("ARTSOBS_USER_ID", "58758"))
@@ -155,8 +157,10 @@ def main() -> int:
                 c = lat0 + (lat1 - lat0) * j / ny; d = lat0 + (lat1 - lat0) * (j + 1) / ny
                 r = fetch(session, *merc(a, c), *merc(b, d), zoom)
                 if r is not None:
+                    # A tile with no points (or no polygons) may omit the key or null it;
+                    # tolerate that instead of crashing the whole resumable sweep.
                     for kind in ("points", "polygons"):
-                        for f in r[kind]["features"]:
+                        for f in (r.get(kind) or {}).get("features", []):
                             feats[f["properties"]["siteId"]] = f
                     done.add((zoom, i, j))
                 n += 1

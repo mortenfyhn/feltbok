@@ -477,10 +477,3 @@ fun ExportDialog(vm: MainViewModel) {
         )
     }
 }
-
-@Composable
-private fun SectionLabel(text: String) {
-    Text(text, color = MaterialTheme.colorScheme.onSurfaceVariant, fontSize = 12.sp,
-        modifier = Modifier.fillMaxWidth().background(MaterialTheme.colorScheme.background)
-            .padding(horizontal = 16.dp, vertical = 6.dp))
-}

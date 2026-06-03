@@ -20,12 +20,15 @@ import argparse
 import csv
 import importlib.util
 import json
+import os
 import pathlib
 
 from pyproj import Transformer
 
 _T = Transformer.from_crs("EPSG:3857", "EPSG:4326", always_xy=True)   # Web Mercator -> WGS84
-DATA_DIR = "/home/morten/Documents/projects/app-feltbok"
+# Where the harvested raw GeoJSON lives (kept out of the repo - it's large). Override with
+# APPOBS_DATA_DIR; pass --raw to point at a specific file.
+DATA_DIR = os.environ.get("APPOBS_DATA_DIR", "/home/morten/Documents/projects/app-feltbok")
 CSV = "app/src/main/assets/localities.csv"
 
 _mp = pathlib.Path(__file__).parent / "mark_public.py"
@@ -66,8 +69,11 @@ def main() -> int:
             lat, lon = wgs(*g["coordinates"])
         else:
             pts = [wgs(x, y) for x, y in g["coordinates"][0]]
-            lat = round(sum(a for a, _ in pts) / len(pts), 6)
-            lon = round(sum(b for _, b in pts) / len(pts), 6)
+            # A GeoJSON ring repeats its first vertex as the last; drop it before averaging
+            # so the centroid isn't biased toward whichever vertex the ring starts on.
+            ring = pts[:-1] if len(pts) > 1 and pts[0] == pts[-1] else pts
+            lat = round(sum(a for a, _ in ring) / len(ring), 6)
+            lon = round(sum(b for _, b in ring) / len(ring), 6)
             geom = "POLYGON((" + ", ".join(f"{b} {a}" for a, b in pts) + "))"
         lok = p["siteName"] or ""
         hoved = p["parentName"] or ""

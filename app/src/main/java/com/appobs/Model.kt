@@ -75,7 +75,17 @@ data class Locality(
     val mine: Boolean = false,    // the user's own custom locality (private to them; links by bare name)
     val newLoc: Boolean = false,  // a brand-new spot the user just placed - exported WITH coords to mint it
 ) {
-    val context: String get() = listOf(hovedlokalitet, kommune).filter { it.isNotBlank() }.joinToString(", ")
+    /** [latMin, latMax, lonMin, lonMax] of the footprint, computed once (the map needs it
+     *  every frame for culling and fading); null for point localities. */
+    val polyBounds: DoubleArray? by lazy {
+        if (polygon.isEmpty()) return@lazy null
+        var laMin = 90.0; var laMax = -90.0; var loMin = 180.0; var loMax = -180.0
+        for (v in polygon) {
+            laMin = minOf(laMin, v[0]); laMax = maxOf(laMax, v[0])
+            loMin = minOf(loMin, v[1]); loMax = maxOf(loMax, v[1])
+        }
+        doubleArrayOf(laMin, laMax, loMin, loMax)
+    }
 }
 
 data class Species(val norsk: String, val latin: String)
@@ -345,7 +355,11 @@ fun exportTsv(notes: List<Note>): String {
         listOf(
             n.species, n.count.toString(), n.age, n.sex, n.activity, loc,
             nord, ost, noy, d, t, d, t, n.publicComment, n.privateComment,
-        ).joinToString("\t")
+        ).joinToString("\t") { cell ->
+            // A tab or newline in a free-text comment would split the row and desync
+            // every following column on paste-import; flatten them to spaces.
+            cell.replace('\t', ' ').replace('\n', ' ').replace('\r', ' ')
+        }
     }
     return (listOf(EXPORT_COLS.joinToString("\t")) + rows).joinToString("\n")
 }

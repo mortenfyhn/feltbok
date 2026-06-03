@@ -55,7 +55,6 @@ import kotlin.math.abs
 import kotlin.math.cos
 import kotlin.math.hypot
 import kotlin.math.max
-import kotlin.math.min
 
 /**
  * The locality picker, as a map. Localities are drawn as green disks at their real
@@ -97,9 +96,7 @@ fun LocalityScreen(vm: MainViewModel) {
     DisposableEffect(Unit) {
         mapView.onResume()
         onDispose {
-            vm.mapZoom = mapView.zoomLevelDouble     // keep the camera for next time
-            vm.mapLat = mapView.mapCenter.latitude
-            vm.mapLon = mapView.mapCenter.longitude
+            vm.mapZoom = mapView.zoomLevelDouble     // keep the zoom for next time
             mapView.onPause(); mapView.onDetach()
         }
     }
@@ -381,14 +378,9 @@ private class LocalityOverlay(
 
     /** Roughly how big the locality is on screen (px), for fading big ones so they don't dominate. */
     private fun screenSpanPx(loc: Locality, rPx: Float, ppm: Double): Float {
-        if (loc.polygon.isEmpty()) return rPx
-        var laMin = 90.0; var laMax = -90.0; var loMin = 180.0; var loMax = -180.0
-        for (v in loc.polygon) {
-            laMin = min(laMin, v[0]); laMax = max(laMax, v[0])
-            loMin = min(loMin, v[1]); loMax = max(loMax, v[1])
-        }
-        val mLat = (laMax - laMin) * 111_320.0
-        val mLon = (loMax - loMin) * 111_320.0 * cos(Math.toRadians((laMin + laMax) / 2))
+        val b = loc.polyBounds ?: return rPx
+        val mLat = (b[1] - b[0]) * 111_320.0
+        val mLon = (b[3] - b[2]) * 111_320.0 * cos(Math.toRadians((b[0] + b[1]) / 2))
         return (max(mLat, mLon) / 2.0 * ppm).toFloat()
     }
 
@@ -397,13 +389,9 @@ private class LocalityOverlay(
      *  off-screen still draws while it covers the view. */
     private fun boundsVisible(loc: Locality, bb: BoundingBox): Boolean {
         val latMin: Double; val latMax: Double; val lonMin: Double; val lonMax: Double
-        if (loc.polygon.isNotEmpty()) {
-            var laMin = 90.0; var laMax = -90.0; var loMin = 180.0; var loMax = -180.0
-            for (v in loc.polygon) {
-                laMin = min(laMin, v[0]); laMax = max(laMax, v[0])
-                loMin = min(loMin, v[1]); loMax = max(loMax, v[1])
-            }
-            latMin = laMin; latMax = laMax; lonMin = loMin; lonMax = loMax
+        val b = loc.polyBounds
+        if (b != null) {
+            latMin = b[0]; latMax = b[1]; lonMin = b[2]; lonMax = b[3]
         } else {
             val dLat = loc.radius / 111_320.0
             val dLon = loc.radius / (111_320.0 * cos(Math.toRadians(loc.lat)))
