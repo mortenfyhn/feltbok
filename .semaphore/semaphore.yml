@@ -1,9 +1,14 @@
 version: v1.0
 name: Feltbok
+# Build inside Semaphore's ready-made Android container (ships the SDK + JDK +
+# the CI toolbox), so we don't hand-roll an SDK install on the base image.
 agent:
   machine:
     type: e1-standard-2
-    os_image: ubuntu2204
+    os_image: ubuntu2404
+  containers:
+    - name: main
+      image: registry.semaphoreci.com/android:34
 
 # Don't burn minutes building the same commit twice (branch push + its PR).
 auto_cancel:
@@ -16,12 +21,11 @@ blocks:
       prologue:
         commands:
           - checkout
-          - sem-version java 17
           - cache restore gradle-$(checksum app/build.gradle.kts)
       jobs:
         - name: unit tests + debug APK
           commands:
-            - ./gradlew test assembleDebug
+            - ./gradlew test assembleDebug --console=plain --no-daemon
       epilogue:
         on_pass:
           commands:
@@ -29,7 +33,8 @@ blocks:
 
   # Runs only when a v* tag is pushed: builds the signed release APK and publishes
   # it as a GitHub release. Needs the 'feltbok-signing' secret (keystore + passwords
-  # + a GH token) - see docs/release.md.
+  # + a GH token) - see docs/release.md. The android image has no gh CLI, so we fetch
+  # the latest gh release binary just-in-time for the publish step.
   - name: Release
     run:
       when: "tag =~ '^v'"
@@ -44,11 +49,15 @@ blocks:
           commands:
             - checkout
             - git fetch --tags --force          # so `git describe` sees the tag for the in-app version
-            - sem-version java 17
-            - ./gradlew assembleRelease
-            - >-
-              gh release create "$SEMAPHORE_GIT_TAG_NAME"
-              app/build/outputs/apk/release/app-release.apk
-              --title "Feltbok $SEMAPHORE_GIT_TAG_NAME"
-              --notes-file docs/release-notes-install.md
-              --generate-notes
+            - ./gradlew assembleRelease --console=plain --no-daemon
+            - |
+              gh_tgz=$(curl -sSL https://api.github.com/repos/cli/cli/releases/latest \
+                | grep -o 'https://[^"]*_linux_amd64\.tar\.gz' | head -1)
+              curl -sSL "$gh_tgz" -o /tmp/gh.tgz
+              tar -xzf /tmp/gh.tgz -C /tmp
+              export PATH="$(dirname "$(find /tmp -type f -path '*/bin/gh' | head -1)"):$PATH"
+              gh release create "$SEMAPHORE_GIT_TAG_NAME" \
+                app/build/outputs/apk/release/app-release.apk \
+                --title "Feltbok $SEMAPHORE_GIT_TAG_NAME" \
+                --notes-file docs/release-notes-install.md \
+                --generate-notes
