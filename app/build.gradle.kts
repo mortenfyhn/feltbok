@@ -1,14 +1,26 @@
+import java.util.Properties
+
 plugins {
     id("com.android.application")
     id("org.jetbrains.kotlin.android")
     id("org.jetbrains.kotlin.plugin.compose")
 }
 
-// Build version shown in-app, straight from git (e.g. "5240840" or "v0.1-3-gabc-dirty").
+// Build version shown in-app, straight from git. At a tag it's "0.1"; between tags
+// "0.1-3-gabc-dirty"; with no tag yet, the short hash. The leading "v" from the tag is
+// dropped so the app shows a bare "0.1".
 val gitVersion: String = try {
     ProcessBuilder("git", "describe", "--always", "--dirty")
-        .start().inputStream.bufferedReader().readText().trim().ifEmpty { "dev" }
+        .start().inputStream.bufferedReader().readText().trim().removePrefix("v").ifEmpty { "dev" }
 } catch (e: Exception) { "dev" }
+
+// Release signing: keystore.properties (local, gitignored) or env vars (Semaphore CI).
+// Absent in either -> release stays unsigned, so a plain checkout still builds.
+val keystoreProps = rootProject.file("keystore.properties").takeIf { it.exists() }
+    ?.let { Properties().apply { load(it.inputStream()) } }
+fun signingValue(prop: String, env: String): String? =
+    keystoreProps?.getProperty(prop) ?: System.getenv(env)
+val signStore = signingValue("storeFile", "KEYSTORE_FILE")
 
 android {
     namespace = "com.appobs"
@@ -23,9 +35,19 @@ android {
         buildConfigField("String", "GIT_VERSION", "\"$gitVersion\"")
     }
 
+    signingConfigs {
+        if (signStore != null) create("release") {
+            storeFile = rootProject.file(signStore)
+            storePassword = signingValue("storePassword", "KEYSTORE_PASSWORD")
+            keyAlias = signingValue("keyAlias", "KEY_ALIAS")
+            keyPassword = signingValue("keyPassword", "KEY_PASSWORD")
+        }
+    }
+
     buildTypes {
         release {
             isMinifyEnabled = false
+            if (signStore != null) signingConfig = signingConfigs.getByName("release")
         }
     }
 

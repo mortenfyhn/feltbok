@@ -1,0 +1,53 @@
+version: v1.0
+name: Feltbok
+agent:
+  machine:
+    type: e1-standard-2
+    os_image: ubuntu2204
+
+# Don't burn minutes building the same commit twice (branch push + its PR).
+auto_cancel:
+  running:
+    when: "branch != 'master'"
+
+blocks:
+  - name: Test & build
+    task:
+      prologue:
+        commands:
+          - checkout
+          - sem-version java 17
+          - cache restore gradle-$(checksum app/build.gradle.kts)
+      jobs:
+        - name: unit tests + debug APK
+          commands:
+            - ./gradlew test assembleDebug
+      epilogue:
+        on_pass:
+          commands:
+            - cache store gradle-$(checksum app/build.gradle.kts) ~/.gradle
+
+  # Runs only when a v* tag is pushed: builds the signed release APK and publishes
+  # it as a GitHub release. Needs the 'feltbok-signing' secret (keystore + passwords
+  # + a GH token) - see docs/release.md.
+  - name: Release
+    run:
+      when: "tag =~ '^v'"
+    task:
+      secrets:
+        - name: feltbok-signing
+      env_vars:
+        - name: KEYSTORE_FILE
+          value: /home/semaphore/feltbok-release.keystore
+      jobs:
+        - name: signed APK + GitHub release
+          commands:
+            - checkout
+            - git fetch --tags --force          # so `git describe` sees the tag for the in-app version
+            - sem-version java 17
+            - ./gradlew assembleRelease
+            - >-
+              gh release create "$SEMAPHORE_GIT_TAG_NAME"
+              app/build/outputs/apk/release/app-release.apk
+              --title "Feltbok $SEMAPHORE_GIT_TAG_NAME"
+              --generate-notes
