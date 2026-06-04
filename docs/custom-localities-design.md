@@ -5,6 +5,45 @@ while keeping the app offline-in-field and zero-login. Notes from an evening of 
 probing — treat the Artskart specifics as "promising, needs one more reverse-engineering
 pass", not settled.
 
+## ✅ SOLVED (2026-06-04): the new mobile API — `mobil.artsobservasjoner.no`
+
+**This is the way to fetch a user's own localities, and likely the future for harvest too.**
+The new mobile site is an Angular SPA backed by a **Duende BFF**:
+
+- **Auth:** the user logs in on the site (OIDC, fully handled in-page). The BFF sets HttpOnly
+  cookies `__Host-bff`, `__Host-bffC1`, `__Host-bffC2`. API calls go **same-origin** to a
+  `/core/...` prefix (the SPA's `coreApiUrl` is literally `"core"`), with the header
+  **`X-CSRF: 1`** (Duende's anti-forgery); the BFF proxies to the core API with the access token.
+  Because the cookies are HttpOnly, you can't read them from `CookieManager.getCookie` — so the
+  in-app flow must **fetch from inside the WebView via JS** (same-origin `fetch`, cookies ride
+  along automatically), not extract a cookie for a separate HTTP client.
+
+- **`GET /core/Sites/ByUser?pageSize=100&pageNumber=N`** → the user's own localities, paginated
+  (`pageSize` caps at 100; response has `totalPages`/`totalCount`). **Session-scoped — no userId.**
+  Each row: `id, name, presentationName` (the qualified "Name, Parent, Kommune, FylkeAbbr" the
+  import matches), `longitude, latitude` (**WGS84 — no reprojection**), `isPrivate`, `accuracy`
+  (= radius m), `municipalityName`, `countyName`, `parentSiteId`, `isPolygon`, `polygonCoordinates`
+  (a JSON string `[[lon,lat],…]` in WGS84 → convert to `POLYGON((lon lat, …))` for our parser).
+
+- **Other endpoints in the bundle (for the future), all under `/core/`:**
+  `Sites/ByBoundingBox`, `Sites/Search`, `Sites/{id}`, `Sites/ByUser/LastUsed?top=`,
+  `Taxons/*`, `TaxonName/Search`, `Areas/Names/*`, `Sightings/*`, `SightingSearch/*`,
+  `Users/*`, `Projects`, `Inbox/*`, `MediaFiles/*`. A clean, modern REST surface.
+
+  **Future harvest:** `Sites/ByBoundingBox` (paginated JSON, WGS84) is a clean replacement for
+  the old login-gated, Web-Mercator, multi-zoom `GetSitesGeoJson` the harvest uses now. Worth
+  migrating `harvest_sites.py` to the mobile API when revisited.
+
+### In-app "Synk mine lokaliteter" plan (when we build it)
+1. A menu action opens a WebView to `https://mobil.artsobservasjoner.no/`; the user logs in
+   (the site does OIDC; the app never sees a password). App stays usable/public-only without it.
+2. After login, page through `/core/Sites/ByUser` via `evaluateJavascript` running
+   `fetch('/core/Sites/ByUser?pageSize=100&pageNumber=N',{headers:{'X-CSRF':'1'}})` until
+   `pageNumber > totalPages`. No Kotlin HTTP client, no cookie handling — the WebView carries auth.
+3. Map rows → our Locality (mine=1, public=0, WGS84 coords, `accuracy`→radius,
+   `polygonCoordinates`→WKT), persist to the device's mine-file, merge into the picker (yellow).
+   Online is the source of truth; re-sync replaces the local set. Cookie expiry → just re-login.
+
 ## ✅ SOLVED (2026-06-02): the authoritative allmenn flag — `FindSitesByName`
 
 The public observation-search page (`/ViewSighting/SearchSighting`, no login) drives its
