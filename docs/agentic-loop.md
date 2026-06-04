@@ -24,8 +24,15 @@ on Semaphore (`docs/release.md`).
 
 ## Use it
 - **New work:** open an issue describing the change, then add the `claude` label.
+- Claude implements on a `claude/issue-N-*` branch, runs `./gradlew test`, and comments on the
+  issue with a one-click **"Create PR"** link (it pushes the branch but doesn't auto-open the PR).
+  Click it (or `gh pr create --head <branch>`) to open the PR, then review + merge.
 - **Iterate on a PR:** comment `@claude <follow-up>` on the PR.
 - Claude follows `CLAUDE.md` (build/test commands, minimal-diff + trailer-free conventions).
+
+Verified working (2026-06-04) on #20 → PR #21. Gotchas that bit during setup, now fixed in the
+workflow: the action needs `id-token: write` even with an API key, and passing
+`github_token: ${{ secrets.GITHUB_TOKEN }}` avoids having to install the Claude GitHub App.
 
 ## Not included (deliberately)
 - **Screenshot/video proof** of the change running on an emulator — dropped for now (the
