@@ -37,7 +37,6 @@ import androidx.compose.material3.Checkbox
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -320,12 +319,19 @@ fun SearchScreen(vm: MainViewModel) {
 fun DetailScreen(vm: MainViewModel) {
     val cs = MaterialTheme.colorScheme
     Column(Modifier.fillMaxSize()) {
-        Text(
-            if (vm.isEditing) "Endre observasjon" else "Ny observasjon",
-            color = Color.White, fontWeight = FontWeight.SemiBold, fontSize = 16.sp,
-            textAlign = TextAlign.Center,
-            modifier = Modifier.fillMaxWidth().background(cs.primary).padding(vertical = 9.dp),
-        )
+        // Avbryt sits top-right, matching the search and locality-picker screens, so cancelling
+        // is in the same place everywhere (issue #8). Lagre is the full-width primary below.
+        Row(
+            Modifier.fillMaxWidth().background(cs.primary).padding(start = 14.dp, end = 4.dp),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Text(
+                if (vm.isEditing) "Endre observasjon" else "Ny observasjon",
+                color = Color.White, fontWeight = FontWeight.SemiBold, fontSize = 16.sp,
+                modifier = Modifier.weight(1f),
+            )
+            TextButton(onClick = { vm.cancel() }) { Text("Avbryt", color = Color.White) }
+        }
         Column(Modifier.weight(1f).verticalScroll(rememberScrollState())) {
             // Species first - it's the first thing you choose for a new observation.
             FieldRow("Art", onClick = { vm.changeSpecies() }) {
@@ -379,14 +385,10 @@ fun DetailScreen(vm: MainViewModel) {
                 modifier = Modifier.fillMaxWidth().background(cs.surface).padding(vertical = 4.dp),
             ) { Text("Slett observasjon", color = cs.error) }
         }
-        Row(
-            Modifier.fillMaxWidth().background(cs.surface).padding(horizontal = 14.dp, vertical = 11.dp),
-            horizontalArrangement = Arrangement.spacedBy(10.dp),
-        ) {
-            OutlinedButton(onClick = { vm.cancel() }, modifier = Modifier.weight(1f)) { Text("Avbryt") }
+        Box(Modifier.fillMaxWidth().background(cs.surface).padding(horizontal = 14.dp, vertical = 11.dp)) {
             Button(onClick = { vm.save() },
                 enabled = vm.dSpecies.isNotBlank() && (vm.dLoc != null || vm.nearest() != null),
-                modifier = Modifier.weight(1.7f)) { Text("Lagre") }
+                modifier = Modifier.fillMaxWidth()) { Text("Lagre") }
         }
     }
 }
