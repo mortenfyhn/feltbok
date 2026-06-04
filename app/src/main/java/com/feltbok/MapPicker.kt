@@ -203,8 +203,11 @@ internal fun configureOsmdroid(ctx: Context) {
         userAgentValue = ctx.packageName               // required by the OSM tile policy
         osmdroidBasePath = File(ctx.cacheDir, "osmdroid")
         osmdroidTileCache = File(ctx.cacheDir, "osmdroid/tiles")
-        animationSpeedDefault = 200                    // snappier zoom (default ~1s lags fast pinches)
-        animationSpeedShort = 100
+        // Commit zooms instantly (0 = no animation). osmdroid animates every pinch-release
+        // zoom and ignores a new pinch while that animation runs, so quick successive pinches
+        // (how you zoom far, fast) only zoomed partially - the later ones got dropped.
+        animationSpeedDefault = 0
+        animationSpeedShort = 0
     }
 }
 
