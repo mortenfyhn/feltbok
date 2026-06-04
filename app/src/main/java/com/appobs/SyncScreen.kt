@@ -94,11 +94,16 @@ fun SyncScreen(vm: MainViewModel) {
                             }
                             else -> {
                                 val sites = withContext(Dispatchers.Default) { parseMySites(json) }
-                                vm.applyMySites(sites)
-                                CookieManager.getInstance().flush()   // persist the session for next time
-                                done = true; fetching = false
-                                status = "Hentet ${sites.size} av dine lokaliteter ✓"
-                                delay(1200); vm.closeSync()
+                                val ok = runCatching { vm.applyMySites(sites) }.isSuccess
+                                fetching = false
+                                if (ok) {
+                                    CookieManager.getInstance().flush()   // persist the session for next time
+                                    done = true
+                                    status = "Hentet ${sites.size} av dine lokaliteter ✓"
+                                    delay(1200); vm.closeSync()
+                                } else {
+                                    status = "Klarte ikke å lagre lokalitetene."
+                                }
                             }
                         }
                     }

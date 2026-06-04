@@ -237,14 +237,19 @@ private fun parsePolygon(wkt: String): List<DoubleArray> {
     return pts
 }
 
-/** Read an external-only override file (no bundled-asset fallback); empty if absent. Used for
- *  `my-localities.csv` - the maintainer's own privates, pushed to their device but never
- *  bundled/committed, so a shared APK ships public localities only. */
-private fun readExternal(ctx: Context, name: String): List<List<String>> {
-    val ext = File(ctx.getExternalFilesDir(null), name)
-    if (!ext.exists()) return emptyList()
-    return ext.readText().lineSequence().filter { it.isNotBlank() }.drop(1).map { parseCsvLine(it) }.toList()
+/** The user's own private localities, never bundled/committed (so a shared APK is public-only).
+ *  Two sources, internal preferred: the in-app sync writes [myLocalitiesFile] (internal storage,
+ *  always app-writable); `just push-data` seeds the external files dir (dev convenience). Once
+ *  you've synced in-app, that file wins - online is the source of truth. */
+private fun readMyLocalities(ctx: Context): List<List<String>> {
+    val internal = myLocalitiesFile(ctx)
+    val external = File(ctx.getExternalFilesDir(null), "my-localities.csv")
+    val f = if (internal.exists()) internal else external
+    if (!f.exists()) return emptyList()
+    return f.readText().lineSequence().filter { it.isNotBlank() }.drop(1).map { parseCsvLine(it) }.toList()
 }
+
+private fun myLocalitiesFile(ctx: Context) = File(ctx.filesDir, "my-localities.csv")
 
 /** Like toDoubleOrNull but without its per-call regex screen - parseDouble straight, null on
  *  the rare malformed value. Called ~35k times at launch, so the regex screen was costly. */
@@ -270,7 +275,7 @@ private fun parseLocalityRow(c: List<String>): Locality? {
 /** Public localities from the bundled (or pushed) `localities.csv`, plus the user's own
  *  customs from the external-only `my-localities.csv` (present only on the maintainer's device). */
 fun loadLocalities(ctx: Context): List<Locality> =
-    (readData(ctx, "localities.csv") + readExternal(ctx, "my-localities.csv"))
+    (readData(ctx, "localities.csv") + readMyLocalities(ctx))
         .mapNotNull(::parseLocalityRow)
 
 // ---- "my localities" sync (from the mobile API's /core/Sites/ByUser) ----
@@ -333,7 +338,7 @@ fun saveMyLocalities(ctx: Context, sites: List<Locality>) {
             s.radius.toString(), geom, "0", "1",
         ).joinToString(",", postfix = "\n") { csvField(it) })
     }
-    File(ctx.getExternalFilesDir(null), "my-localities.csv").writeText(sb.toString())
+    myLocalitiesFile(ctx).writeText(sb.toString())   // internal storage: always app-writable
 }
 
 /** Columns: norsk,latin,status (Rødlista 2021 category, blank if not red-listed) */
