@@ -86,44 +86,53 @@ fun ListScreen(vm: MainViewModel) {
     Box(Modifier.fillMaxSize()) {
         Column(Modifier.fillMaxSize()) {
             StatusStrip(vm)
-            if (vm.notes.isEmpty()) {
-                Box(Modifier.weight(1f).fillMaxWidth(), Alignment.Center) {
-                    Text(
-                        "Ingen notater enda.\nTrykk + for å legge til.",
-                        color = cs.onSurfaceVariant, textAlign = TextAlign.Center,
-                    )
-                }
-            } else {
-                Text(
-                    "I dag · ${vm.notes.size} ${if (vm.notes.size == 1) "notat" else "notater"}",
-                    color = cs.onSurfaceVariant, fontSize = 13.sp,
-                    modifier = Modifier.padding(horizontal = 16.dp, vertical = 9.dp),
-                )
-                // Bottom padding so the last row scrolls clear of the floating footer (Synk / Tilbakemelding / version).
-                LazyColumn(Modifier.weight(1f), contentPadding = PaddingValues(bottom = 56.dp)) {
-                    items(vm.notes, key = { it.id }) { n ->
-                        NoteRow(n, vm.redStatus(n.latin), vm.distanceToNote(n)) { vm.editNote(n) }
+            // The list area holds the notes (or the empty hint) and the floating + button.
+            // The footer below sits in normal flow, so it can never overlap a note row (#28).
+            Box(Modifier.weight(1f).fillMaxWidth()) {
+                if (vm.notes.isEmpty()) {
+                    Box(Modifier.fillMaxSize(), Alignment.Center) {
+                        Text(
+                            "Ingen notater enda.\nTrykk + for å legge til.",
+                            color = cs.onSurfaceVariant, textAlign = TextAlign.Center,
+                        )
+                    }
+                } else {
+                    Column(Modifier.fillMaxSize()) {
+                        Text(
+                            "I dag · ${vm.notes.size} ${if (vm.notes.size == 1) "notat" else "notater"}",
+                            color = cs.onSurfaceVariant, fontSize = 13.sp,
+                            modifier = Modifier.padding(horizontal = 16.dp, vertical = 9.dp),
+                        )
+                        // Bottom padding so the last row scrolls clear of the floating + button.
+                        LazyColumn(Modifier.weight(1f), contentPadding = PaddingValues(bottom = 84.dp)) {
+                            items(vm.notes, key = { it.id }) { n ->
+                                NoteRow(n, vm.redStatus(n.latin), vm.distanceToNote(n)) { vm.editNote(n) }
+                            }
+                        }
                     }
                 }
+                FloatingActionButton(
+                    onClick = { vm.startAdd() },
+                    containerColor = cs.primary, contentColor = Color.White,
+                    modifier = Modifier.align(Alignment.BottomEnd).padding(18.dp),
+                ) { Text("+", fontSize = 28.sp) }
+            }
+            // Footer bar: Synk / Tilbakemelding, with the version tucked at the right.
+            HorizontalDivider(color = cs.outline.copy(alpha = 0.4f))
+            Row(Modifier.fillMaxWidth().background(cs.surface), verticalAlignment = Alignment.CenterVertically) {
+                Text("⟳ Synk", color = cs.primary, fontWeight = FontWeight.Medium, fontSize = 13.sp,
+                    modifier = Modifier.clickable { vm.openSync() }.padding(14.dp))
+                Text("Tilbakemelding", color = cs.primary, fontWeight = FontWeight.Medium, fontSize = 13.sp,
+                    modifier = Modifier.clickable { showFeedback = true }.padding(14.dp))
+                Spacer(Modifier.weight(1f))
+                Text(BuildConfig.GIT_VERSION, color = cs.onSurfaceVariant.copy(alpha = 0.6f),
+                    fontSize = 11.sp, modifier = Modifier.padding(end = 14.dp))
             }
         }
         // Round minimap on the left of the top bar, clipping the top and left edges equally.
         // Hidden for now (unclear if it's useful); flip SHOW_MINIMAP to bring it back.
         if (SHOW_MINIMAP)
             LocalityPreview(vm, Modifier.align(Alignment.TopStart).offset(x = (-6).dp, y = (-6).dp))
-        FloatingActionButton(
-            onClick = { vm.startAdd() },
-            containerColor = cs.primary, contentColor = Color.White,
-            modifier = Modifier.align(Alignment.BottomEnd).padding(18.dp),
-        ) { Text("+", fontSize = 28.sp) }
-        Text(BuildConfig.GIT_VERSION, color = cs.onSurfaceVariant.copy(alpha = 0.6f),
-            fontSize = 11.sp, modifier = Modifier.align(Alignment.BottomCenter).padding(bottom = 34.dp))
-        Row(Modifier.align(Alignment.BottomStart), verticalAlignment = Alignment.CenterVertically) {
-            Text("⟳ Synk", color = cs.primary, fontWeight = FontWeight.Medium, fontSize = 13.sp,
-                modifier = Modifier.clickable { vm.openSync() }.padding(14.dp))
-            Text("Tilbakemelding", color = cs.primary, fontWeight = FontWeight.Medium, fontSize = 13.sp,
-                modifier = Modifier.clickable { showFeedback = true }.padding(14.dp))
-        }
     }
 }
 
