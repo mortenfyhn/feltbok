@@ -33,8 +33,8 @@ blocks:
 
   # Runs only when a v* tag is pushed: builds the signed release APK and publishes
   # it as a GitHub release. Needs the 'feltbok-signing' secret (keystore + passwords
-  # + a GH token) - see docs/release.md. The android image has no gh CLI, so we fetch
-  # the latest gh release binary just-in-time for the publish step.
+  # + a GH token) - see docs/release.md. The android image has no gh CLI, so we drop
+  # in a pinned gh binary just for the publish step.
   - name: Release
     run:
       when: "tag =~ '^v'"
@@ -50,14 +50,10 @@ blocks:
             - checkout
             - git fetch --tags --force          # so `git describe` sees the tag for the in-app version
             - ./gradlew assembleRelease --console=plain --no-daemon
-            - |
-              gh_tgz=$(curl -sSL https://api.github.com/repos/cli/cli/releases/latest \
-                | grep -o 'https://[^"]*_linux_amd64\.tar\.gz' | head -1)
-              curl -sSL "$gh_tgz" -o /tmp/gh.tgz
-              tar -xzf /tmp/gh.tgz -C /tmp
-              export PATH="$(dirname "$(find /tmp -type f -path '*/bin/gh' | head -1)"):$PATH"
-              gh release create "$SEMAPHORE_GIT_TAG_NAME" \
-                app/build/outputs/apk/release/app-release.apk \
-                --title "Feltbok $SEMAPHORE_GIT_TAG_NAME" \
-                --notes-file docs/release-notes-install.md \
-                --generate-notes
+            - curl -fsSL https://github.com/cli/cli/releases/download/v2.93.0/gh_2.93.0_linux_amd64.tar.gz | tar -xz -C /tmp
+            - >-
+              /tmp/gh_2.93.0_linux_amd64/bin/gh release create "$SEMAPHORE_GIT_TAG_NAME"
+              app/build/outputs/apk/release/app-release.apk
+              --title "Feltbok $SEMAPHORE_GIT_TAG_NAME"
+              --notes-file docs/release-notes-install.md
+              --generate-notes
