@@ -17,6 +17,9 @@ capturing bird observations in Norway and exporting a TSV to paste into Artsobse
 - **Commit messages explain the why. Do NOT add `Co-Authored-By` or other trailers** (this repo's
   history is trailer-free).
 - Norwegian (Bokmål) for user-facing strings.
+- **Worktree by default for real work.** When starting non-trivial implementation (editing/creating
+  source files), first isolate with EnterWorktree so parallel sessions don't collide. Skip it for
+  read-only questions, quick one-file edits, and investigations.
 
 ## Where things live
 - `app/src/main/java/com/feltbok/Model.kt` — data classes, CSV/JSON load+save, TSV export.
