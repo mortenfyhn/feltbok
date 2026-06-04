@@ -12,9 +12,9 @@ test:
     .venv/bin/python -m unittest discover -s process -p 'test_*.py'
     ./gradlew testDebugUnitTest
 
-# Install on connected device
+# Install on connected device (-d allows downgrading over a newer build)
 install: build
-    adb install -r {{apk}}
+    adb install -r -d {{apk}}
 
 # Build, install, and launch the app
 run: install
