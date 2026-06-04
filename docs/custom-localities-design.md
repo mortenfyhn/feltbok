@@ -30,9 +30,32 @@ The new mobile site is an Angular SPA backed by a **Duende BFF**:
   `Taxons/*`, `TaxonName/Search`, `Areas/Names/*`, `Sightings/*`, `SightingSearch/*`,
   `Users/*`, `Projects`, `Inbox/*`, `MediaFiles/*`. A clean, modern REST surface.
 
-  **Future harvest:** `Sites/ByBoundingBox` (paginated JSON, WGS84) is a clean replacement for
-  the old login-gated, Web-Mercator, multi-zoom `GetSitesGeoJson` the harvest uses now. Worth
-  migrating `harvest_sites.py` to the mobile API when revisited.
+### ✅ DONE (2026-06-04): harvest migrated to `Sites/ByBoundingBox` (issue #16)
+
+`process/harvest_sites_mobil.py` (`just sites`) now harvests from the mobile API; the old
+`GetSitesGeoJson` harvest stays as the documented fallback (`just sites-legacy`). The
+reverse-engineered contract:
+
+    GET /core/Sites/ByBoundingBox?MinX=&MinY=&MaxX=&MaxY=&MaxSites=&IncludePublicSites=true
+    Header: X-CSRF: 1   + the BFF cookies (same auth as ByUser above)
+
+- **`Min/Max X/Y` are WGS84 lon/lat** (X=lon, Y=lat) — no reprojection.
+- **`IncludePublicSites=true` is essential**: without it the endpoint returns only the
+  caller's OWN sites (effectively a spatial `ByUser`); with it you get the public allmenn
+  registry + your own privates, like the old Report map.
+- **Two server limits drive the tiling:** a box may span at most **~50 km in Web Mercator
+  per side** (else `400 "BoundingBox too large"`, errorCode G8), and a response returns at
+  most **1000 sites** (`MaxSites` caps at 1000; no paging). So the harvester tiles in Web
+  Mercator at a safe size and **recursively quarters** any tile that hits the 1000 cap.
+- **Rows** carry `id, name, presentationName, longitude, latitude, isPrivate, accuracy
+  (=radius m), municipalityName, countyName, parentSiteId, isPolygon, polygonCoordinates`
+  (already a `[[lon,lat],…]` list here, not the JSON string `ByUser` returns). `build_sites.py`
+  auto-detects this flat-array shape vs the legacy GeoJSON; `hovedlokalitet` comes from
+  resolving `parentSiteId` against the harvest's own id→name map.
+
+Why this beats the legacy harvest: native WGS84 (drops the reprojection), a real per-row
+`countyName` (the old build assumed one fylke per run), and one call returns every tier
+(no multi-zoom union hack).
 
 ### In-app "Synk mine lokaliteter" plan (when we build it)
 1. A menu action opens a WebView to `https://mobil.artsobservasjoner.no/`; the user logs in

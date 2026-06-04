@@ -28,14 +28,21 @@ log:
 uninstall:
     adb uninstall com.feltbok
 
-# ---- PRIMARY locality pipeline: Artsobservasjoner's own site registry ----
-# Harvest the authoritative site list (real geometry, radius, allmenn flag) from the
-# Report-map endpoint. Needs a logged-in session cookie in /tmp/aspx_cookie.txt (see the
-# script header). Resumable + gentle. Widen with --bbox; eventually all of Norway.
+# ---- PRIMARY locality pipeline: Artsobservasjoner's mobile API ----
+# Harvest the authoritative public site list (WGS84, real geometry, radius, per-row fylke)
+# from the mobile API's /core/Sites/ByBoundingBox. Needs a logged-in BFF cookie in
+# /tmp/bff_cookie.txt (see the script header). Resumable + gentle. Default bbox is all of
+# Norway; narrow with --bbox.
 sites *args:
+    .venv/bin/python process/harvest_sites_mobil.py {{args}}
+
+# Legacy harvest via the old login-gated Report-map endpoint (Web Mercator, multi-zoom).
+# Kept as a documented fallback; needs an .ASPXAUTHNO cookie in /tmp/aspx_cookie.txt.
+sites-legacy *args:
     .venv/bin/python process/harvest_sites.py {{args}}
 
-# Build app/src/main/assets/localities.csv from the harvested raw GeoJSON (no GBIF needed).
+# Build app/src/main/assets/localities.csv from the harvested raw (mobile-API JSON or
+# legacy GeoJSON; the format is auto-detected). No GBIF needed.
 build-sites *args:
     .venv/bin/python process/build_sites.py {{args}}
 

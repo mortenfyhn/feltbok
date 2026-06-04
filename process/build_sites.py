@@ -1,18 +1,19 @@
 #!/usr/bin/env python3
-"""Build app/src/main/assets/localities.csv from a harvest_sites.py raw GeoJSON.
+"""Build app/src/main/assets/localities.csv from a site harvest.
 
 The harvest carries everything we need straight from Artsobservasjoner, so this is the
 whole pipeline now - no GBIF, no footprints, no observer/polygon heuristic, no
-FindSitesByName flag fetch:
-  - `siteId`        -> id            (the current Artsobs site id)
-  - `siteName`      -> lokalitet     (the exact registered name; what paste-import matches)
-  - `parentName`    -> hovedlokalitet (superlokalitet)
-  - `siteAreaName`  -> kommune       (when siteAreaDescription == "Kommune")
-  - geometry        -> lat/lon (centroid) + a reprojected WGS84 `geometry` POLYGON, or none
-  - `accuracy`      -> radius        (0 = point/dot, > 0 = real circle radius in metres)
-  - `isPrivate`     -> public        (we keep only public/allmenn sites; the app is shareable)
-Manual corrections in locality_overrides.csv (keyed by siteId) still win, but the
-authoritative flag means they're rarely needed.
+FindSitesByName flag fetch. Two harvest shapes are accepted, auto-detected by structure:
+
+  - the new mobile API (harvest_sites_mobil.py): a flat JSON array of site rows, already in
+    WGS84 with a per-row county, so no reprojection and no --fylke guess. `hovedlokalitet`
+    is resolved from `parentSiteId` against the harvest's own id->name map. PREFERRED.
+  - the legacy GeoJSON (harvest_sites.py, POST /Map/GetSitesGeoJson): Web-Mercator features
+    reprojected here; carries only the kommune, so --fylke/--fylke-abbr name the fylke.
+
+Either way: `siteName`/`name` -> lokalitet (the exact registered name paste-import matches),
+geometry -> lat/lon + a WGS84 POLYGON or none, accuracy -> radius (0 = point), isPrivate ->
+public/mine. Manual corrections in locality_overrides.csv (keyed by siteId) still win.
 
     .venv/bin/python process/build_sites.py [--raw FILE] [--fylke Trøndelag --fylke-abbr Tø]
 """
@@ -46,24 +47,48 @@ def wgs(x, y):
     return round(lat, 6), round(lon, 6)
 
 
-def main() -> int:
-    ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
-    ap.add_argument("--raw", default=f"{DATA_DIR}/artsobs-sites-raw.json")
-    ap.add_argument("--fylke", default="Trøndelag", help="fylke name (harvest only gives kommune)")
-    ap.add_argument("--fylke-abbr", default="Tø", help="fylke abbreviation for the qualified name")
-    args = ap.parse_args()
+def make_row(site_id, lok, hoved, kom, fylke, lat, lon, full, radius, geom, is_private, overrides):
+    """Common row assembly + the public/mine filter. The harvest returns public (allmenn)
+    sites + the logged-in user's OWN private ones; ship both (others' privates never appear).
+    Returns the CSV row, or None to drop a site that is neither public nor ours."""
+    mine = "1" if is_private else "0"
+    public = overrides.get(str(site_id), "0" if is_private else "1")
+    if public != "1" and mine != "1":
+        return None
+    return {"id": str(site_id), "lokalitet": lok, "hovedlokalitet": hoved,
+            "kommune": kom, "fylke": fylke, "lat": lat, "lon": lon,
+            "count": 0, "observers": 0, "fullname": full,
+            "radius": radius, "geometry": geom, "public": public, "mine": mine}
 
-    overrides = mp.load_overrides()
-    rows = []
-    for f in json.load(open(args.raw))["features"]:
+
+def rows_from_mobil(raw, overrides):
+    """New mobile-API shape: a flat list of site rows, already WGS84 with a per-row county."""
+    names = {r["id"]: r["name"] for r in raw}              # resolve parentSiteId -> parent name
+    out = []
+    for r in raw:
+        geom = ""
+        if r.get("isPolygon") and r.get("polygonCoordinates"):
+            pc = r["polygonCoordinates"]                   # [[lon, lat], ...] in WGS84,
+            coords = json.loads(pc) if isinstance(pc, str) else pc   # already parsed on this endpoint
+            if coords and coords[0] != coords[-1]:          # close the ring for valid WKT
+                coords = coords + [coords[0]]
+            geom = "POLYGON((" + ", ".join(f"{lon} {lat}" for lon, lat in coords) + "))"
+        lok = r["name"] or ""
+        hoved = names.get(r.get("parentSiteId"), "") or ""
+        row = make_row(r["id"], lok, hoved, r.get("municipalityName") or "",
+                       r.get("countyName") or "", round(r["latitude"], 6), round(r["longitude"], 6),
+                       r.get("presentationName") or lok, int(r.get("accuracy") or 0),
+                       geom, r["isPrivate"], overrides)
+        if row:
+            out.append(row)
+    return out
+
+
+def rows_from_geojson(features, fylke, fylke_abbr, overrides):
+    """Legacy GeoJSON shape (POST /Map/GetSitesGeoJson): Web-Mercator, reprojected here."""
+    out = []
+    for f in features:
         p = f["properties"]
-        # The Report map returns public (allmenn) sites + the logged-in user's OWN private
-        # ones (isPrivate=true). Ship both: public localities (everyone) and "mine" (the
-        # user's customs, which the import links by bare name). Others' privates never appear.
-        mine = "1" if p["isPrivate"] else "0"
-        public = overrides.get(str(p["siteId"]), "0" if p["isPrivate"] else "1")
-        if public != "1" and mine != "1":
-            continue
         g = f["geometry"]
         geom = ""
         if g["type"] == "Point":
@@ -77,13 +102,28 @@ def main() -> int:
             lon = round(sum(b for _, b in ring) / len(ring), 6)
             geom = "POLYGON((" + ", ".join(f"{b} {a}" for a, b in pts) + "))"
         lok = p["siteName"] or ""
-        hoved = p["parentName"] or ""
         kom = p["siteAreaName"] if p.get("siteAreaDescription") == "Kommune" else ""
-        full = ", ".join(x for x in (lok, hoved, kom, args.fylke_abbr) if x)
-        rows.append({"id": str(p["siteId"]), "lokalitet": lok, "hovedlokalitet": hoved,
-                     "kommune": kom, "fylke": args.fylke, "lat": lat, "lon": lon,
-                     "count": 0, "observers": 0, "fullname": full,
-                     "radius": int(p["accuracy"]), "geometry": geom, "public": public, "mine": mine})
+        full = ", ".join(x for x in (lok, p["parentName"] or "", kom, fylke_abbr) if x)
+        row = make_row(p["siteId"], lok, p["parentName"] or "", kom, fylke, lat, lon,
+                       full, int(p["accuracy"]), geom, p["isPrivate"], overrides)
+        if row:
+            out.append(row)
+    return out
+
+
+def main() -> int:
+    ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
+    ap.add_argument("--raw", default=f"{DATA_DIR}/artsobs-sites-mobil.json")
+    ap.add_argument("--fylke", default="Trøndelag", help="legacy harvest only: fylke name")
+    ap.add_argument("--fylke-abbr", default="Tø", help="legacy harvest only: fylke abbreviation")
+    args = ap.parse_args()
+
+    overrides = mp.load_overrides()
+    raw = json.load(open(args.raw))
+    if isinstance(raw, list):                              # new mobile API
+        rows = rows_from_mobil(raw, overrides)
+    else:                                                  # legacy GeoJSON FeatureCollection
+        rows = rows_from_geojson(raw["features"], args.fylke, args.fylke_abbr, overrides)
     rows.sort(key=lambda r: (r["lokalitet"].lower(), r["id"]))
 
     def write(path, sel):
