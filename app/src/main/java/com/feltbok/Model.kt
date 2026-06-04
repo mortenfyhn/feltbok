@@ -118,7 +118,7 @@ data class Note(
     val lon: Double,
     val newLoc: Boolean = false,  // a brand-new spot: export with coordinates so the import mints it
     val locRadius: Int = 0,       // chosen radius in metres for a new spot (-> Nøyaktighet)
-    val uncertain: Boolean = false,  // uncertain species determination (-> "Usikker artsbestemmelse")
+    val uncertain: Boolean = false,  // uncertain species determination (-> "Usikker artsbestemming")
 )
 
 // ---- distance ----
@@ -453,7 +453,11 @@ private val EXPORT_COLS = listOf(
     "Artsnavn", "Antall", "Alder", "Kjønn", "Aktivitet", "Lokalitetsnavn", "Nord", "Øst",
     "Nøyaktighet", "Fra dato", "Fra klokkeslett", "Til dato", "Til klokkeslett",
     "Kommentar (synlig for alle)", "Privat kommentar (kun synlig for deg selv)",
-    "Usikker artsbestemmelse",
+    // The registered template header is misspelt "artsbestemming" (not "-bestemmelse").
+    // Paste-import matches columns by header name, so the misspelling must be reproduced
+    // verbatim or a flagged row fails validation ("Usikker artsbestemming" = col 40 of the
+    // v2.20 Fugl template; checkbox cells accept «X»/«ja»/«1», so "Ja" is fine).
+    "Usikker artsbestemming",
 )
 
 fun exportTsv(notes: List<Note>): String {

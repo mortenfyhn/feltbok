@@ -51,7 +51,16 @@ class ModelTest {
         assertEquals(c[10], c[12])
         assertEquals("på sjøen", c[13])
         assertEquals("test", c[14])
-        assertEquals("", c[15])   // Usikker artsbestemmelse: blank unless flagged
+        assertEquals("", c[15])   // Usikker artsbestemming: blank unless flagged
+    }
+
+    @Test
+    fun uncertainExportsUnderTheRegisteredMisspeltHeader() {
+        // Paste-import matches columns by header name; the header must reproduce the
+        // template's "artsbestemming" misspelling or a flagged row fails validation.
+        val lines = exportTsv(listOf(noteAt(noonMs).copy(uncertain = true))).split("\n")
+        assertEquals("Usikker artsbestemming", lines[0].split("\t")[15])
+        assertEquals("Ja", lines[1].split("\t")[15])
     }
 
     @Test

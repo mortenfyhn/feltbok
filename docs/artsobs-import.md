@@ -101,7 +101,14 @@ allmenn flag from the Artsobservasjoner API (build-time download, requested sepa
 
 `Artsnavn`, `Antall`, `Alder`, `Kjønn`, `Aktivitet`, `Lokalitetsnavn`, `Nord`, `Øst`,
 `Nøyaktighet`, `Fra dato`, `Fra klokkeslett`, `Til dato`, `Til klokkeslett`,
-`Kommentar (synlig for alle)`, `Privat kommentar (kun synlig for deg selv)`.
+`Kommentar (synlig for alle)`, `Privat kommentar (kun synlig for deg selv)`,
+`Usikker artsbestemming`.
 
 `Nord`/`Øst`/`Nøyaktighet` are left blank unless "Ta med koordinater" is on. Dates are
 `dd.MM.yyyy`, times `HH:mm`; from/til are the same instant (one moment of observation).
+
+The `Usikker artsbestemming` header is a **misspelling carried by the official template**
+(the Norwegian word is *artsbestemmelse*; the Fugl sheet, col 40, has *-bestemming*).
+Paste-import matches by header name, so the typo must be reproduced verbatim — a flagged
+row under the correctly-spelt header fails validation. The cell is a checkbox: blank, or
+`Ja` (the template accepts «X», «ja» or «1»).
