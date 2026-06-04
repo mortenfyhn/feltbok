@@ -114,6 +114,8 @@ fun ListScreen(vm: MainViewModel) {
         ) { Text("+", fontSize = 28.sp) }
         Text(BuildConfig.GIT_VERSION, color = cs.onSurfaceVariant.copy(alpha = 0.6f),
             fontSize = 11.sp, modifier = Modifier.align(Alignment.BottomCenter).padding(8.dp))
+        Text("⟳ Synk", color = cs.primary, fontWeight = FontWeight.Medium, fontSize = 13.sp,
+            modifier = Modifier.align(Alignment.BottomStart).clickable { vm.openSync() }.padding(14.dp))
     }
 }
 

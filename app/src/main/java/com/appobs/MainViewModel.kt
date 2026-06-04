@@ -12,7 +12,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
-enum class Screen { LIST, SEARCH, DETAIL, LOCALITY }
+enum class Screen { LIST, SEARCH, DETAIL, LOCALITY, SYNC }
 
 /**
  * Single source of truth for the UI. Holds the day's notes (persisted), the live
@@ -209,6 +209,19 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
 
     fun openLocalityPicker() { screen = Screen.LOCALITY }
     fun pickLocality(loc: Locality) { dLoc = loc; screen = Screen.DETAIL }
+
+    // ---- "Synk mine lokaliteter" (pull the user's own privates from Artsobservasjoner) ----
+    fun openSync() { screen = Screen.SYNC }
+    fun closeSync() { screen = Screen.LIST }
+
+    /** Replace the user's own (mine) localities with a freshly synced set, persist, and re-pick
+     *  the nearest. Public localities and in-progress new spots are left untouched. */
+    fun applyMySites(sites: List<Locality>) {
+        localities.removeAll { it.mine }
+        localities.addAll(sites)
+        saveMyLocalities(ctx, sites)
+        nearestFix = null   // invalidate the fix-keyed memo so nearest() rescans
+    }
 
     /** Place a brand-new spot (panned-to map centre + chosen radius + name). It exports
      *  with coordinates, which mints the locality on Artsobservasjoner. */

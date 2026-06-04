@@ -45,6 +45,7 @@ fun App(vm: MainViewModel) {
                 when {
                     vm.showExport -> vm.closeExport()
                     vm.screen == Screen.LOCALITY -> vm.backToDetail()
+                    vm.screen == Screen.SYNC -> vm.closeSync()
                     vm.screen == Screen.SEARCH -> vm.cancelSearch()
                     vm.screen == Screen.DETAIL -> vm.cancel()
                     else -> {}
@@ -55,6 +56,7 @@ fun App(vm: MainViewModel) {
                 Screen.SEARCH -> SearchScreen(vm)
                 Screen.DETAIL -> DetailScreen(vm)
                 Screen.LOCALITY -> LocalityScreen(vm)
+                Screen.SYNC -> SyncScreen(vm)
             }
             if (vm.showExport) ExportDialog(vm)
         }

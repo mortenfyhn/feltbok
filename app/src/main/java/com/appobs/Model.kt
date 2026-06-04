@@ -273,6 +273,69 @@ fun loadLocalities(ctx: Context): List<Locality> =
     (readData(ctx, "localities.csv") + readExternal(ctx, "my-localities.csv"))
         .mapNotNull(::parseLocalityRow)
 
+// ---- "my localities" sync (from the mobile API's /core/Sites/ByUser) ----
+
+/** Map the mobile API's accumulated `{data:[...]}` rows to the user's own private localities.
+ *  Coordinates are already WGS84; only `isPrivate` sites go to the mine-file (public ones are
+ *  already in the bundled set). */
+fun parseMySites(json: String): List<Locality> {
+    val arr = JSONObject(json).optJSONArray("data") ?: return emptyList()
+    val out = ArrayList<Locality>(arr.length())
+    for (i in 0 until arr.length()) {
+        val o = arr.getJSONObject(i)
+        if (!o.optBoolean("isPrivate")) continue
+        val lat = o.optDouble("latitude", Double.NaN); val lon = o.optDouble("longitude", Double.NaN)
+        if (lat.isNaN() || lon.isNaN()) continue
+        val poly = if (o.optBoolean("isPolygon")) lonLatRingToVertices(o.optString("polygonCoordinates"))
+                   else emptyList()
+        out.add(Locality(
+            id = o.optLong("id").toString(),
+            lokalitet = o.optString("name"),
+            hovedlokalitet = "",
+            kommune = o.optString("municipalityName"),
+            lat = lat, lon = lon,
+            fullname = o.optString("presentationName").ifBlank { o.optString("name") },
+            observers = 0, radius = o.optDouble("accuracy", 0.0),
+            polygon = poly, public = false, mine = true,
+        ))
+    }
+    return out
+}
+
+/** "[[lon,lat],...]" (WGS84 JSON) -> [lat,lon] vertices, matching our polygon convention. */
+private fun lonLatRingToVertices(s: String): List<DoubleArray> {
+    if (s.isBlank()) return emptyList()
+    return try {
+        val a = JSONArray(s)
+        ArrayList<DoubleArray>(a.length()).apply {
+            for (i in 0 until a.length()) {
+                val p = a.getJSONArray(i)
+                add(doubleArrayOf(p.getDouble(1), p.getDouble(0)))
+            }
+        }
+    } catch (e: Exception) { emptyList() }
+}
+
+private fun csvField(s: String): String =
+    if (s.any { it == ',' || it == '"' || it == '\n' }) "\"" + s.replace("\"", "\"\"") + "\"" else s
+
+/** Persist the synced privates to the same external `my-localities.csv` the app loads at start,
+ *  so they survive restarts. Polygons are written back as WKT for [parsePolygon]. */
+fun saveMyLocalities(ctx: Context, sites: List<Locality>) {
+    val sb = StringBuilder()
+    sb.append("id,lokalitet,hovedlokalitet,kommune,fylke,lat,lon,count,observers,fullname,radius,geometry,public,mine\n")
+    for (s in sites) {
+        val geom = if (s.polygon.isEmpty()) ""
+                   else "POLYGON((" + s.polygon.joinToString(", ") { "${it[1]} ${it[0]}" } + "))"
+        sb.append(listOf(
+            s.id, s.lokalitet, s.hovedlokalitet, s.kommune, "",
+            s.lat.toString(), s.lon.toString(), "0", "0", s.fullname,
+            s.radius.toString(), geom, "0", "1",
+        ).joinToString(",", postfix = "\n") { csvField(it) })
+    }
+    File(ctx.getExternalFilesDir(null), "my-localities.csv").writeText(sb.toString())
+}
+
 /** Columns: norsk,latin,status (Rødlista 2021 category, blank if not red-listed) */
 fun loadSpecies(ctx: Context): List<Species> =
     readData(ctx, "species.csv").mapNotNull { c ->
