@@ -6,12 +6,11 @@ plugins {
     id("org.jetbrains.kotlin.plugin.compose")
 }
 
-// Build version shown in-app, straight from git. At a tag it's "0.1"; between tags
-// "0.1-3-gabc-dirty"; with no tag yet, the short hash. The leading "v" from the tag is
-// dropped so the app shows a bare "0.1".
+// Build version shown in-app, straight from git. At a tag it's "v0.1"; between tags
+// "v0.1-3-gabc-dirty"; with no tag yet, the short hash.
 val gitVersion: String = try {
     ProcessBuilder("git", "describe", "--always", "--dirty")
-        .start().inputStream.bufferedReader().readText().trim().removePrefix("v").ifEmpty { "dev" }
+        .start().inputStream.bufferedReader().readText().trim().ifEmpty { "dev" }
 } catch (e: Exception) { "dev" }
 
 // Release signing: keystore.properties (local, gitignored) or env vars (Semaphore CI).
