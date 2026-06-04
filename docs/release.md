@@ -1,7 +1,9 @@
 # Releasing Feltbok
 
 Releases are **signed APKs published as GitHub releases**, built by Semaphore on a `v*` tag.
-Friends install the APK by sideloading it (enable "install unknown apps" for their browser).
+Friends install the APK by sideloading it — see [install.md](install.md) for the
+step-by-step (and the expected Play Protect warning). Each release page prepends those
+install steps from `release-notes-install.md` via `gh release create --notes-file`.
 The bundled APK ships **public localities only** - the maintainer's own customs
 (`my-localities.csv`) are gitignored and pushed to the dev phone separately.
 
@@ -52,3 +54,22 @@ Build one locally:
    ```
 
 The pipeline also runs `./gradlew test assembleDebug` on every push.
+
+## Distribution roadmap (Play Protect / #13)
+
+Sideloaded APKs always trigger a **Play Protect** warning ("Play Protect har ikke sett
+noen apper fra denne utvikleren før"). Nothing in the APK can suppress it — it's a
+client-side Google feature keyed on whether the app/developer is known to Google Play.
+We mitigate it for now with clear install instructions (above); the steps below remove
+or future-proof it.
+
+- **Free Limited Distribution Account** (Android developer verification). Early access
+  June 2026; **no government ID**, **up to 20 devices**. Register the release signing key
+  + `com.feltbok`. Doesn't silence today's scan prompt, but future-proofs installability
+  in Norway when verification enforcement reaches Europe (2027+), and is the same identity
+  reused for Play later.
+  See <https://support.google.com/android-developer-console/answer/16561738>.
+- **Google Play closed/internal testing track** (deferred). The only channel with *no*
+  Play Protect prompt — apps installed via Play aren't treated as unknown. Needs a Play
+  Console account and an AAB upload.
+- **F-Droid** (deferred, free). Convenience/auto-update; still sideload-scanned.

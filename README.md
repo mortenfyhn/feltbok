@@ -6,6 +6,8 @@ reporting site. Structured, dropdown-driven entry (like iGoTerra, greatly simpli
 GPS-nearest official locality, and a copy-paste export. **No login, no account, no
 network needed in the field** — so it can be shared with friends as-is.
 
+**Installing the released app:** see [docs/install.md](docs/install.md).
+
 ## How it works
 
 1. **Capture in the field.** Tap ＋, search the species, fill the Artsobservasjoner

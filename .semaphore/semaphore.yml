@@ -50,4 +50,5 @@ blocks:
               gh release create "$SEMAPHORE_GIT_TAG_NAME"
               app/build/outputs/apk/release/app-release.apk
               --title "Feltbok $SEMAPHORE_GIT_TAG_NAME"
+              --notes-file docs/release-notes-install.md
               --generate-notes
