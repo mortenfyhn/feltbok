@@ -126,6 +126,9 @@ fun SyncScreen(vm: MainViewModel) {
         ) {
             Text("Synk mine lokaliteter", color = Color.White, fontWeight = FontWeight.SemiBold,
                 modifier = Modifier.weight(1f))
+            if (!done) TextButton(onClick = {
+                if (!fetching) { fetching = true; status = "Henter…"; webView.evaluateJavascript(FETCH_JS, null) }
+            }) { Text("Hent", color = Color.White) }
             TextButton(onClick = { vm.closeSync() }) { Text("Lukk", color = Color.White) }
         }
         Text(status, color = cs.onSurfaceVariant, modifier = Modifier.padding(14.dp))
