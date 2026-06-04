@@ -122,8 +122,13 @@ def main() -> int:
     raw = json.load(open(args.raw))
     if isinstance(raw, list):                              # new mobile API
         rows = rows_from_mobil(raw, overrides)
+        # The mobile harvest is PUBLIC-ONLY: ByBoundingBox returns the caller's own privates
+        # but also other people's privates, so its `mine` set isn't reliably yours. Don't emit
+        # my-localities.csv from here - your own localities come from the ByUser sync instead.
+        emit_mine = False
     else:                                                  # legacy GeoJSON FeatureCollection
         rows = rows_from_geojson(raw["features"], args.fylke, args.fylke_abbr, overrides)
+        emit_mine = True                                   # old endpoint returned only YOUR privates
     rows.sort(key=lambda r: (r["lokalitet"].lower(), r["id"]))
 
     def write(path, sel):
@@ -132,16 +137,18 @@ def main() -> int:
             w.writeheader()
             w.writerows(sel)
 
-    # Split: public/allmenn localities are bundled, committed and shared in the APK; the
-    # maintainer's OWN customs (mine=1) go to a separate file that is gitignored and pushed
-    # only to their device - so a friend's APK ships public localities only.
+    # Public/allmenn localities are bundled, committed and shared in the APK. The maintainer's
+    # OWN customs (mine=1, legacy path only) go to a separate gitignored file pushed only to
+    # their device - so a friend's APK ships public localities only.
     pub = [r for r in rows if r["public"] == "1"]
-    mine = [r for r in rows if r["mine"] == "1"]
     write(CSV, pub)
-    write(MY_CSV, mine)
     npoly = sum(1 for r in pub if r["geometry"])
-    print(f"Wrote {len(pub)} public localities ({npoly} polygons) to {CSV}; "
-          f"{len(mine)} of yours to {MY_CSV}")
+    msg = f"Wrote {len(pub)} public localities ({npoly} polygons) to {CSV}"
+    if emit_mine:
+        mine = [r for r in rows if r["mine"] == "1"]
+        write(MY_CSV, mine)
+        msg += f"; {len(mine)} of yours to {MY_CSV}"
+    print(msg)
     return 0
 
 
