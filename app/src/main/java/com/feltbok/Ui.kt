@@ -497,6 +497,14 @@ fun ExportDialog(vm: MainViewModel) {
         title = { Text("Eksporter til Artsobservasjoner") },
         text = {
             Column {
+                // Field testing showed people reaching for the share sheet; spell out the
+                // copy-then-paste flow so the text lands in the right place.
+                Text(
+                    "Trykk Kopiér, åpne Artsobservasjoner og lim teksten inn under "
+                        + "«Importer observasjoner». Ikke del via Quick Share e.l. – bare lim inn.",
+                    fontSize = 13.sp,
+                    modifier = Modifier.padding(bottom = 10.dp),
+                )
                 OutlinedTextField(text, {}, Modifier.fillMaxWidth().height(170.dp), readOnly = true,
                     textStyle = androidx.compose.ui.text.TextStyle(fontSize = 11.sp))
                 TextButton(onClick = { confirmClear = true }) {
