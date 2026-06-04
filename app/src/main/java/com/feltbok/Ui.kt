@@ -205,24 +205,29 @@ private fun NoteRow(n: Note, status: String, distance: Double?, onClick: () -> U
             .padding(horizontal = 16.dp, vertical = 9.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        Text(
-            buildAnnotatedString {
-                withStyle(SpanStyle(color = cs.onPrimaryContainer, fontWeight = FontWeight.Bold)) { append("${n.count} ") }
-                append(if (n.uncertain) "${n.species}?" else n.species)
-            },
-            maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.weight(1f, fill = false),
-        )
-        RedStatus(status)
-        Spacer(Modifier.weight(1f))
+        // Count + species is the primary content: give it all the leftover width so it only
+        // ellipsizes when genuinely too long. (The old weighted Spacer ate half the row, cutting
+        // even short species names.) The locality yields first when space is tight.
+        Row(Modifier.weight(1f), verticalAlignment = Alignment.CenterVertically) {
+            Text(
+                buildAnnotatedString {
+                    withStyle(SpanStyle(color = cs.onPrimaryContainer, fontWeight = FontWeight.Bold)) { append("${n.count} ") }
+                    append(if (n.uncertain) "${n.species}?" else n.species)
+                },
+                maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.weight(1f, fill = false),
+            )
+            RedStatus(status)
+        }
         if (n.locName.isNotBlank()) {
+            Spacer(Modifier.width(8.dp))
             Text(n.locName, color = cs.onSurface, fontSize = 13.sp, maxLines = 1,
                 overflow = TextOverflow.Ellipsis, modifier = Modifier.widthIn(max = 130.dp))
-            Spacer(Modifier.width(8.dp))
         }
         distance?.let {
-            Text(formatDistance(it), color = cs.onSurfaceVariant, fontSize = 12.sp)
             Spacer(Modifier.width(8.dp))
+            Text(formatDistance(it), color = cs.onSurfaceVariant, fontSize = 12.sp)
         }
+        Spacer(Modifier.width(8.dp))
         Text(shortTime(n.time), color = cs.onSurfaceVariant, fontSize = 13.sp)
     }
     HorizontalDivider(color = cs.outline.copy(alpha = 0.4f))
