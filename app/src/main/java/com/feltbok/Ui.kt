@@ -570,6 +570,7 @@ private fun FieldRow(label: String, onClick: (() -> Unit)? = null, content: @Com
 fun ExportDialog(vm: MainViewModel) {
     val cs = MaterialTheme.colorScheme
     val clip = LocalClipboardManager.current
+    val ctx = LocalContext.current
     val text = vm.exportText()
     var confirmClear by remember { mutableStateOf(false) }
     AlertDialog(
@@ -583,7 +584,19 @@ fun ExportDialog(vm: MainViewModel) {
                     "Trykk Kopiér, åpne Artsobservasjoner og lim teksten inn under "
                         + "«Importer observasjoner». Ikke del via Quick Share e.l. – bare lim inn.",
                     fontSize = 13.sp,
-                    modifier = Modifier.padding(bottom = 10.dp),
+                    modifier = Modifier.padding(bottom = 6.dp),
+                )
+                // Direct link to the import page, so people don't have to hunt for it.
+                Text(
+                    "Åpne importsiden ›", color = cs.primary, fontWeight = FontWeight.Medium,
+                    fontSize = 13.sp,
+                    modifier = Modifier.clickable {
+                        runCatching {
+                            ctx.startActivity(android.content.Intent(
+                                android.content.Intent.ACTION_VIEW,
+                                android.net.Uri.parse("https://www.artsobservasjoner.no/ImportSighting")))
+                        }
+                    }.padding(bottom = 10.dp),
                 )
                 OutlinedTextField(text, {}, Modifier.fillMaxWidth().height(170.dp), readOnly = true,
                     textStyle = androidx.compose.ui.text.TextStyle(fontSize = 11.sp))
