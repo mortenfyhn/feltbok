@@ -20,7 +20,7 @@ network needed in the field** — so it can be shared with friends as-is.
 
 ```
 app/                      Android app (Kotlin, Jetpack Compose)
-  src/main/java/com/appobs/
+  src/main/java/com/feltbok/
     Model.kt              data classes, option lists, CSV loading, TSV export
     MainViewModel.kt      screen state + navigation (no nav library)
     MainActivity.kt       theme + GPS lifecycle + permissions

@@ -22,11 +22,11 @@ fun signingValue(prop: String, env: String): String? =
 val signStore = signingValue("storeFile", "KEYSTORE_FILE")
 
 android {
-    namespace = "com.appobs"
+    namespace = "com.feltbok"
     compileSdk = 34
 
     defaultConfig {
-        applicationId = "com.appobs"
+        applicationId = "com.feltbok"
         minSdk = 26
         targetSdk = 34
         versionCode = 1

@@ -1,4 +1,4 @@
-package com.appobs
+package com.feltbok
 
 import android.Manifest
 import android.content.pm.PackageManager

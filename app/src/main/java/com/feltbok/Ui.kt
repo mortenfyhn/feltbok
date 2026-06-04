@@ -1,6 +1,6 @@
 @file:OptIn(ExperimentalMaterial3Api::class)
 
-package com.appobs
+package com.feltbok
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border

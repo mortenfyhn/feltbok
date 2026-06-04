@@ -1,4 +1,4 @@
-package com.appobs
+package com.feltbok
 
 import android.content.Context
 import org.json.JSONArray

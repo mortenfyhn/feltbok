@@ -1,4 +1,4 @@
-package com.appobs
+package com.feltbok
 
 import android.annotation.SuppressLint
 import android.webkit.CookieManager

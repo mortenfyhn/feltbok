@@ -1,4 +1,4 @@
-package com.appobs
+package com.feltbok
 
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.lightColorScheme

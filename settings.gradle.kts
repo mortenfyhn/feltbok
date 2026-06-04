@@ -12,5 +12,5 @@ dependencyResolutionManagement {
         mavenCentral()
     }
 }
-rootProject.name = "appobs"
+rootProject.name = "feltbok"
 include(":app")

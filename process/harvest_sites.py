@@ -37,8 +37,8 @@ import requests
 URL = "https://www.artsobservasjoner.no/Map/GetSitesGeoJson"
 COOKIE_FILE = os.environ.get("ARTSOBS_COOKIE_FILE", "/tmp/aspx_cookie.txt")
 # Where the raw GeoJSON is written (kept out of the repo - it's large). Override with
-# APPOBS_DATA_DIR; pass --out to point at a specific file.
-DATA_DIR = os.environ.get("APPOBS_DATA_DIR", "/home/morten/Documents/projects/app-feltbok")
+# FELTBOK_DATA_DIR; pass --out to point at a specific file.
+DATA_DIR = os.environ.get("FELTBOK_DATA_DIR", "/home/morten/Documents/projects/app-feltbok")
 # Frøya + Hitra default; --bbox to widen (eventually all of Norway: ~4.0,57.9,31.2,71.3).
 DEFAULT_BBOX = (8.0, 63.5, 9.3, 63.9)
 USER_ID = int(os.environ.get("ARTSOBS_USER_ID", "58758"))

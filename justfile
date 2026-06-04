@@ -1,7 +1,7 @@
 export ANDROID_HOME := env("ANDROID_HOME", home_directory() / "Android/Sdk")
 
 apk := "app/build/outputs/apk/debug/app-debug.apk"
-data_dir := "/sdcard/Android/data/com.appobs/files"
+data_dir := "/sdcard/Android/data/com.feltbok/files"
 
 # Build debug APK
 build:
@@ -18,7 +18,7 @@ install: build
 
 # Build, install, and launch the app
 run: install
-    adb shell am start -n com.appobs/.MainActivity
+    adb shell am start -n com.feltbok/.MainActivity
 
 # Show device logs for the app
 log:
@@ -26,7 +26,7 @@ log:
 
 # Uninstall from device
 uninstall:
-    adb uninstall com.appobs
+    adb uninstall com.feltbok
 
 # ---- PRIMARY locality pipeline: Artsobservasjoner's own site registry ----
 # Harvest the authoritative site list (real geometry, radius, allmenn flag) from the

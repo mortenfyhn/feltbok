@@ -27,8 +27,8 @@ from pyproj import Transformer
 
 _T = Transformer.from_crs("EPSG:3857", "EPSG:4326", always_xy=True)   # Web Mercator -> WGS84
 # Where the harvested raw GeoJSON lives (kept out of the repo - it's large). Override with
-# APPOBS_DATA_DIR; pass --raw to point at a specific file.
-DATA_DIR = os.environ.get("APPOBS_DATA_DIR", "/home/morten/Documents/projects/app-feltbok")
+# FELTBOK_DATA_DIR; pass --raw to point at a specific file.
+DATA_DIR = os.environ.get("FELTBOK_DATA_DIR", "/home/morten/Documents/projects/app-feltbok")
 CSV = "app/src/main/assets/localities.csv"        # public/allmenn - bundled + committed + shared
 MY_CSV = "my-localities.csv"                       # the maintainer's own - gitignored, device-only
 

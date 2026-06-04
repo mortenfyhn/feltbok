@@ -1,4 +1,4 @@
-package com.appobs
+package com.feltbok
 
 import android.app.Application
 import androidx.compose.runtime.getValue

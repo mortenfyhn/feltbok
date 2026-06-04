@@ -1,6 +1,6 @@
 # Feltbok — repo guide
 
-Offline-first Android app (Kotlin + Jetpack Compose, package `com.appobs`, minSdk 26) for
+Offline-first Android app (Kotlin + Jetpack Compose, package `com.feltbok`, minSdk 26) for
 capturing bird observations in Norway and exporting a TSV to paste into Artsobservasjoner's
 "Importer observasjoner". Zero-login and shareable; works fully offline in the field.
 
@@ -19,7 +19,7 @@ capturing bird observations in Norway and exporting a TSV to paste into Artsobse
 - Norwegian (Bokmål) for user-facing strings.
 
 ## Where things live
-- `app/src/main/java/com/appobs/Model.kt` — data classes, CSV/JSON load+save, TSV export.
+- `app/src/main/java/com/feltbok/Model.kt` — data classes, CSV/JSON load+save, TSV export.
 - `MainViewModel.kt` — all UI state (four-ish screens, no nav lib). `Ui.kt` — the Compose screens.
 - `MapPicker.kt` — osmdroid locality-picker map + overlays. `SyncScreen.kt` — WebView "Synk mine lokaliteter".
 - `app/src/main/assets/localities.csv` (public, bundled), `species.csv` (checklist + Rødlista status).
