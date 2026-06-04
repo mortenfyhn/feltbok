@@ -290,7 +290,7 @@ fun DetailScreen(vm: MainViewModel) {
                     .background(cs.surface).padding(start = 16.dp, end = 8.dp),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
-                Text("Usikker artsbestemmelse", color = cs.onSurfaceVariant, modifier = Modifier.weight(1f))
+                Text("Usikker art", color = cs.onSurfaceVariant, modifier = Modifier.weight(1f))
                 Checkbox(checked = vm.dUncertain, onCheckedChange = { vm.dUncertain = it })
             }
             HorizontalDivider(color = cs.outline.copy(alpha = 0.4f))
