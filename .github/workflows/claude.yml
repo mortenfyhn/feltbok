@@ -25,6 +25,7 @@ jobs:
       contents: write
       pull-requests: write
       issues: write
+      id-token: write   # the action fetches an OIDC token even when using an API key
     steps:
       - uses: actions/checkout@v4
         with:
