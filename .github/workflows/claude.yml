@@ -37,5 +37,7 @@ jobs:
       - uses: anthropics/claude-code-action@v1
         with:
           anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
+          # Use the workflow's own token so we don't need the Claude GitHub App installed.
+          github_token: ${{ secrets.GITHUB_TOKEN }}
           # Let Claude verify its change before opening the PR (Read/Edit/Write are allowed by default).
           claude_args: '--allowedTools "Bash(./gradlew:*),Bash(git:*)"'
