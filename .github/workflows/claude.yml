@@ -41,3 +41,22 @@ jobs:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           # Let Claude verify its change before opening the PR (Read/Edit/Write are allowed by default).
           claude_args: '--allowedTools "Bash(./gradlew:*),Bash(git:*)"'
+
+      # The action pushes a claude/issue-N-* branch but stops at a "Create PR" link; open the PR
+      # automatically. Same job (a GITHUB_TOKEN push won't trigger a separate on:push workflow).
+      - name: Auto-open the PR
+        if: github.event_name == 'issues'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          ISSUE: ${{ github.event.issue.number }}
+          REPO: ${{ github.repository }}
+        run: |
+          BRANCH=$(gh api "repos/$REPO/branches" --paginate \
+            --jq ".[].name | select(startswith(\"claude/issue-$ISSUE-\"))" | sort | tail -1)
+          if [ -z "$BRANCH" ]; then echo "No claude branch for #$ISSUE — nothing to open."; exit 0; fi
+          if [ -n "$(gh pr list --repo "$REPO" --head "$BRANCH" --state open --json number --jq '.[0].number')" ]; then
+            echo "A PR is already open for $BRANCH."; exit 0
+          fi
+          TITLE=$(gh api "repos/$REPO/commits/$BRANCH" --jq '.commit.message' | head -1)
+          gh pr create --repo "$REPO" --base master --head "$BRANCH" \
+            --title "$TITLE" --body "Closes #$ISSUE — auto-opened by the Claude issue→PR loop."

@@ -24,9 +24,8 @@ on Semaphore (`docs/release.md`).
 
 ## Use it
 - **New work:** open an issue describing the change, then add the `claude` label.
-- Claude implements on a `claude/issue-N-*` branch, runs `./gradlew test`, and comments on the
-  issue with a one-click **"Create PR"** link (it pushes the branch but doesn't auto-open the PR).
-  Click it (or `gh pr create --head <branch>`) to open the PR, then review + merge.
+- Claude implements on a `claude/issue-N-*` branch, runs `./gradlew test`, and a follow-up step in
+  the workflow **auto-opens the PR** (titled from the commit, `Closes #N`). Just review + merge.
 - **Iterate on a PR:** comment `@claude <follow-up>` on the PR.
 - Claude follows `CLAUDE.md` (build/test commands, minimal-diff + trailer-free conventions).
 
