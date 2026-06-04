@@ -60,20 +60,14 @@ class LocationTracker(context: Context) {
         manager.removeUpdates(listener)
     }
 
-    /**
-     * Keep [candidate] over [current] if it's clearly fresher or better: a much
-     * newer fix wins outright (the old one has gone stale), otherwise we only
-     * replace with something of comparable-or-better accuracy so a coarse
-     * network fix doesn't clobber a precise GPS one.
-     */
     private fun isBetter(candidate: Location, current: Location?): Boolean {
         if (current == null) return true
-        val newerByNanos = candidate.elapsedRealtimeNanos - current.elapsedRealtimeNanos
-        if (newerByNanos > 10_000_000_000L) return true   // current >10s stale
-        if (newerByNanos < 0) return false                // older fix
-        if (!candidate.hasAccuracy()) return false
-        if (!current.hasAccuracy()) return true
-        return candidate.accuracy <= current.accuracy + 20f
+        return preferNewFix(
+            candAccuracyM = if (candidate.hasAccuracy()) candidate.accuracy else Float.NaN,
+            candNanos = candidate.elapsedRealtimeNanos,
+            curAccuracyM = if (current.hasAccuracy()) current.accuracy else Float.NaN,
+            curNanos = current.elapsedRealtimeNanos,
+        )
     }
 
     private fun Location.toFix() = GpsFix(
@@ -83,4 +77,26 @@ class LocationTracker(context: Context) {
         accuracyM = if (hasAccuracy()) accuracy else Float.NaN,
         elapsedRealtimeNanos = elapsedRealtimeNanos,
     )
+}
+
+/** ~60 s; past this the current fix is treated as stale enough to take whatever arrives next. */
+private const val STALE_NANOS = 60_000_000_000L
+
+/**
+ * Should a new fix replace the current one? Pure (no Android types) so it's unit-testable;
+ * accuracy is metres, [Float.NaN] when the provider didn't report it, and the nanos are
+ * elapsed-realtime timestamps.
+ *
+ * Keep comparable-or-better accuracy so a precise fix tracks your movement, but reject a much
+ * *worse* one (a coarse network/cell fix, or a wild GPS outlier) unless the current fix has
+ * gone stale - otherwise an occasional bad fix yanks the position kilometres away (issue #32).
+ */
+fun preferNewFix(candAccuracyM: Float, candNanos: Long, curAccuracyM: Float, curNanos: Long): Boolean {
+    val newerByNanos = candNanos - curNanos
+    if (newerByNanos < 0) return false                       // older fix
+    val veryStale = newerByNanos > STALE_NANOS
+    if (candAccuracyM.isNaN()) return veryStale              // can't judge it: only when desperate
+    if (curAccuracyM.isNaN()) return true                    // anything beats an unmeasured fix
+    if (candAccuracyM <= curAccuracyM + 20f) return true     // comparable-or-better: track it
+    return veryStale                                         // much worse: only to recover a dead fix
 }
