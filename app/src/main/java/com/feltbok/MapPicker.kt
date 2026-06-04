@@ -171,14 +171,15 @@ fun LocalityScreen(vm: MainViewModel) {
                 }
                 OutlinedTextField(
                     value = newName, onValueChange = { newName = it }, singleLine = true,
-                    label = { Text("Navn på lokaliteten") }, modifier = Modifier.fillMaxWidth(),
+                    label = { Text("Navn på lokaliteten (valgfritt)") },
+                    placeholder = { Text("Ny lokalitet") }, modifier = Modifier.fillMaxWidth(),
                 )
                 Button(
                     onClick = {
                         val gp = mapView.projection.fromPixels(mapView.width / 2, (mapView.height - sheetH) / 2)
                         vm.createNewLocality(gp.latitude, gp.longitude, newRadius, newName)
                     },
-                    enabled = newName.isNotBlank(), modifier = Modifier.fillMaxWidth(),
+                    modifier = Modifier.fillMaxWidth(),
                 ) { Text("Lagre lokalitet her") }
             }
         }
