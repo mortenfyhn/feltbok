@@ -225,9 +225,11 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
     }
 
     /** Place a brand-new spot (panned-to map centre + chosen radius + name). It exports
-     *  with coordinates, which mints the locality on Artsobservasjoner. */
+     *  with coordinates, which mints the locality on Artsobservasjoner. The name is optional:
+     *  blank gets a placeholder you can rename later on the website. */
     fun createNewLocality(lat: Double, lon: Double, radiusM: Int, name: String) {
-        val loc = Locality("", name.trim(), "", "", lat, lon, name.trim(), 0, radiusM.toDouble(),
+        val finalName = name.trim().ifBlank { "Ny lokalitet" }
+        val loc = Locality("", finalName, "", "", lat, lon, finalName, 0, radiusM.toDouble(),
             public = false, newLoc = true)
         addNewLocality(loc)        // make it immediately selectable for further observations
         dLoc = loc
