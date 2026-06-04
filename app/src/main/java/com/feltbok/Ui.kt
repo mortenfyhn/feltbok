@@ -313,24 +313,11 @@ fun DetailScreen(vm: MainViewModel) {
             DropdownRow("Kjønn", vm.dSex, Options.sexes) { vm.dSex = it }
             CommentField("Åpen kommentar", vm.dPub, vm.lastPub) { vm.dPub = it }
             CommentField("Privat kommentar", vm.dPriv, vm.lastPriv) { vm.dPriv = it }
-            val tctx = LocalContext.current
+            // One row to save space; tap to open the from/to editor (point or range).
             val tMs = if (vm.dTime > 0) vm.dTime else System.currentTimeMillis()
-            // Date and time are separate rows so you can change just the one you mean.
-            FieldRow("Dato", onClick = {
-                val cal = java.util.Calendar.getInstance().apply { timeInMillis = tMs }
-                android.app.DatePickerDialog(tctx, { _, y, mo, d ->
-                    cal.set(java.util.Calendar.YEAR, y); cal.set(java.util.Calendar.MONTH, mo)
-                    cal.set(java.util.Calendar.DAY_OF_MONTH, d); vm.dTime = cal.timeInMillis
-                }, cal.get(java.util.Calendar.YEAR), cal.get(java.util.Calendar.MONTH),
-                    cal.get(java.util.Calendar.DAY_OF_MONTH)).show()
-            }) { Text(exportDate(tMs)) }
-            FieldRow("Klokkeslett", onClick = {
-                val cal = java.util.Calendar.getInstance().apply { timeInMillis = tMs }
-                android.app.TimePickerDialog(tctx, { _, h, mi ->
-                    cal.set(java.util.Calendar.HOUR_OF_DAY, h); cal.set(java.util.Calendar.MINUTE, mi)
-                    vm.dTime = cal.timeInMillis
-                }, cal.get(java.util.Calendar.HOUR_OF_DAY), cal.get(java.util.Calendar.MINUTE), true).show()
-            }) { Text(exportTime(tMs)) }
+            var showTime by remember { mutableStateOf(false) }
+            FieldRow("Tid", onClick = { showTime = true }) { Text(displayTimeRange(tMs, vm.dEndTime)) }
+            if (showTime) TimeDialog(vm) { showTime = false }
         }
         if (vm.isEditing) {
             HorizontalDivider(color = cs.outline.copy(alpha = 0.4f))
@@ -464,6 +451,60 @@ private fun CommentField(label: String, value: String, previous: String, onChang
             keyboardActions = KeyboardActions(onDone = { focus.clearFocus() }))
     }
     HorizontalDivider(color = cs.outline.copy(alpha = 0.4f))
+}
+
+/** From/to time editor. A single point by default; ticking "Tidsrom" reveals the
+ *  Til date+time, which lets an observation span a period (and across midnight). */
+@Composable
+private fun TimeDialog(vm: MainViewModel, onDismiss: () -> Unit) {
+    val cs = MaterialTheme.colorScheme
+    val ctx = LocalContext.current
+    val start = if (vm.dTime > 0) vm.dTime else System.currentTimeMillis()
+    fun pickDate(ms: Long, onSet: (Long) -> Unit) {
+        val cal = java.util.Calendar.getInstance().apply { timeInMillis = ms }
+        android.app.DatePickerDialog(ctx, { _, y, mo, d ->
+            cal.set(java.util.Calendar.YEAR, y); cal.set(java.util.Calendar.MONTH, mo)
+            cal.set(java.util.Calendar.DAY_OF_MONTH, d); onSet(cal.timeInMillis)
+        }, cal.get(java.util.Calendar.YEAR), cal.get(java.util.Calendar.MONTH),
+            cal.get(java.util.Calendar.DAY_OF_MONTH)).show()
+    }
+    fun pickTime(ms: Long, onSet: (Long) -> Unit) {
+        val cal = java.util.Calendar.getInstance().apply { timeInMillis = ms }
+        android.app.TimePickerDialog(ctx, { _, h, mi ->
+            cal.set(java.util.Calendar.HOUR_OF_DAY, h); cal.set(java.util.Calendar.MINUTE, mi)
+            onSet(cal.timeInMillis)
+        }, cal.get(java.util.Calendar.HOUR_OF_DAY), cal.get(java.util.Calendar.MINUTE), true).show()
+    }
+    // Keep the range non-inverted: moving the start forward drags the end with it; the end
+    // can't be set before the start.
+    fun setStart(ms: Long) { vm.dTime = ms; vm.dEndTime?.let { if (it < ms) vm.dEndTime = ms } }
+    fun setEnd(ms: Long) { vm.dEndTime = maxOf(ms, start) }
+    val range = vm.dEndTime != null
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text("Tid") },
+        text = {
+            Column {
+                Row(
+                    Modifier.fillMaxWidth().clickable { vm.dEndTime = if (range) null else start }
+                        .padding(vertical = 4.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    Text("Tidsrom", color = cs.onSurfaceVariant, modifier = Modifier.weight(1f))
+                    Checkbox(checked = range, onCheckedChange = { vm.dEndTime = if (it) start else null })
+                }
+                FieldRow(if (range) "Fra dato" else "Dato",
+                    onClick = { pickDate(start, ::setStart) }) { Text(exportDate(start)) }
+                FieldRow(if (range) "Fra kl." else "Klokkeslett",
+                    onClick = { pickTime(start, ::setStart) }) { Text(exportTime(start)) }
+                vm.dEndTime?.let { end ->
+                    FieldRow("Til dato", onClick = { pickDate(end, ::setEnd) }) { Text(exportDate(end)) }
+                    FieldRow("Til kl.", onClick = { pickTime(end, ::setEnd) }) { Text(exportTime(end)) }
+                }
+            }
+        },
+        confirmButton = { TextButton(onClick = onDismiss) { Text("Ferdig") } },
+    )
 }
 
 @Composable

@@ -102,7 +102,8 @@ data class Species(val norsk: String, val latin: String, val status: String = ""
 
 data class Note(
     val id: Long,                 // creation time in ms - the stable key (never changes)
-    val time: Long = id,          // the observation time (date+time) - editable; defaults to id
+    val time: Long = id,          // observation start (date+time) - editable; defaults to id
+    val endTime: Long? = null,    // observation end; null = a single time point (Til = Fra on export)
     val species: String,
     val latin: String,
     val count: Int,
@@ -181,6 +182,13 @@ fun fuzzyScore(query: String, target: String): Int? = fuzzyRank(foldQuery(query)
 private val NB = Locale("nb", "NO")
 fun displayTime(ms: Long): String = SimpleDateFormat("d. MMM, HH:mm", NB).format(Date(ms))
 fun shortTime(ms: Long): String = SimpleDateFormat("HH:mm", NB).format(Date(ms))
+
+/** The editor's one-line time summary: a single point, or "from – to" for a range. */
+fun displayTimeRange(start: Long, end: Long?): String {
+    val fmt = SimpleDateFormat("d. MMM HH:mm", NB)
+    return if (end == null) fmt.format(Date(start)) else "${fmt.format(Date(start))} – ${fmt.format(Date(end))}"
+}
+
 fun exportDate(ms: Long): String = SimpleDateFormat("dd.MM.yyyy", NB).format(Date(ms))
 fun exportTime(ms: Long): String = SimpleDateFormat("HH:mm", NB).format(Date(ms))
 
@@ -362,6 +370,7 @@ fun loadNotes(ctx: Context): List<Note> {
             Note(
                 id = o.getLong("id"),
                 time = o.optLong("time", o.getLong("id")),
+                endTime = if (o.has("endTime")) o.getLong("endTime") else null,
                 species = o.getString("species"),
                 latin = o.optString("latin"),
                 count = o.getInt("count"),
@@ -387,6 +396,7 @@ fun saveNotes(ctx: Context, notes: List<Note>) {
     notes.forEach { n ->
         arr.put(JSONObject().apply {
             put("id", n.id); put("time", n.time); put("species", n.species); put("latin", n.latin)
+            n.endTime?.let { put("endTime", it) }
             put("count", n.count); put("age", n.age); put("activity", n.activity)
             put("sex", n.sex); put("publicComment", n.publicComment)
             put("privateComment", n.privateComment)
@@ -456,6 +466,9 @@ fun exportTsv(notes: List<Note>): String {
     // disambiguate, fixing the rest by hand. Nord/Øst/Nøyaktighet are left blank.
     val rows = notes.sortedBy { it.time }.map { n ->
         val d = exportDate(n.time); val t = exportTime(n.time)
+        // Til defaults to Fra; an explicit endTime makes it a range (may cross midnight).
+        val end = n.endTime ?: n.time
+        val dEnd = exportDate(end); val tEnd = exportTime(end)
         val loc = n.locName.ifBlank { n.locFull }
         // A brand-new spot is exported WITH coordinates (+ its radius as Nøyaktighet), which
         // mints a new custom locality on import; registry localities stay name-only.
@@ -464,7 +477,7 @@ fun exportTsv(notes: List<Note>): String {
         val noy = if (n.newLoc) "${n.locRadius} m" else ""
         listOf(
             n.species, n.count.toString(), n.age, n.sex, n.activity, loc,
-            nord, ost, noy, d, t, d, t, n.publicComment, n.privateComment,
+            nord, ost, noy, d, t, dEnd, tEnd, n.publicComment, n.privateComment,
             if (n.uncertain) "Ja" else "",
         ).joinToString("\t") { cell ->
             // A tab or newline in a free-text comment would split the row and desync

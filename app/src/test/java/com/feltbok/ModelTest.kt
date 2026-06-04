@@ -55,6 +55,15 @@ class ModelTest {
     }
 
     @Test
+    fun exportUsesEndTimeForTilWhenSet() {
+        // A range spanning into the next day: Fra and Til must differ on both date and time.
+        val end = noonMs + 16 * 3_600_000  // +16h -> next day 01:30
+        val c = exportTsv(listOf(noteAt(noonMs).copy(endTime = end))).split("\n")[1].split("\t")
+        assertEquals("01.06.2026", c[9]); assertEquals("09:30", c[10])
+        assertEquals("02.06.2026", c[11]); assertEquals("01:30", c[12])
+    }
+
+    @Test
     fun exportSortsByTimeAscending() {
         val early = noteAt(noonMs)
         val late = noteAt(noonMs + 3_600_000)

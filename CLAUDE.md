@@ -7,8 +7,12 @@ capturing bird observations in Norway and exporting a TSV to paste into Artsobse
 ## Build / test / run
 - `./gradlew test` — JVM unit tests (also `just test`, which adds the Python tests).
 - `./gradlew assembleDebug` — debug APK. `./gradlew assembleRelease` — signed release (needs the keystore).
-- `just install` / `just run` — build + install on a connected device (dev only).
+- `just install` / `just run` — build + install (+ launch) on a connected device. When a device is
+  connected (`adb devices`), use these to verify a change in the real app; drive the UI with
+  `adb shell input tap/text` and inspect with `adb exec-out screencap`.
 - Always run `./gradlew test` before opening a PR.
+- In a fresh worktree, copy `local.properties` from the repo root first (it's gitignored, and Gradle
+  needs its `sdk.dir`).
 
 ## Conventions
 - **Minimal diffs.** Implement only what the issue asks; don't expand scope or add features unasked.

@@ -81,6 +81,7 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
     var dPriv by mutableStateOf("")
     var dLoc by mutableStateOf<Locality?>(null)
     var dTime by mutableStateOf(0L)
+    var dEndTime by mutableStateOf<Long?>(null)   // observation end; null = single time point
     var dUncertain by mutableStateOf(false)
     val isEditing: Boolean get() = editingId != null
 
@@ -172,7 +173,7 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
         editingId = null; changingSpecies = false
         dSpecies = ""; dLatin = ""; dCount = 1
         dAge = ""; dAct = ""; dSex = ""; dPub = ""; dPriv = ""; dUncertain = false
-        dLoc = null; dTime = 0L
+        dLoc = null; dTime = 0L; dEndTime = null
         screen = Screen.SEARCH
     }
 
@@ -201,7 +202,7 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
         dSpecies = n.species; dLatin = n.latin; dCount = n.count
         dAge = n.age; dAct = n.activity; dSex = n.sex
         dPub = n.publicComment; dPriv = n.privateComment
-        dTime = n.time; dUncertain = n.uncertain
+        dTime = n.time; dEndTime = n.endTime; dUncertain = n.uncertain
         dLoc = localities.firstOrNull { it.lokalitet == n.locName && it.lat == n.lat && it.lon == n.lon }
             ?: Locality("", n.locName, "", "", n.lat, n.lon, n.locFull, 0, 0.0)
         screen = Screen.DETAIL
@@ -246,6 +247,7 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
         val n = Note(
             id = if (isEditing) editingId!! else (dTime.takeIf { it > 0 } ?: System.currentTimeMillis()),
             time = dTime.takeIf { it > 0 } ?: System.currentTimeMillis(),
+            endTime = dEndTime,
             species = dSpecies, latin = dLatin, count = dCount.coerceAtLeast(1),
             age = dAge, activity = dAct, sex = dSex,
             publicComment = dPub, privateComment = dPriv,
