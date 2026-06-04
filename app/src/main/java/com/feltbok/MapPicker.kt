@@ -256,6 +256,11 @@ fun LocalityPreview(vm: MainViewModel, modifier: Modifier = Modifier) {
 // 0 = a point locality -> a small fixed dot; > 0 = a real circle of that radius.
 // Polygons draw their own shape and ignore radius.
 private const val POINT_DOT_PX = 15f
+/** Below this zoom, localities whose on-screen footprint is smaller than
+ *  [DECLUTTER_MIN_SPAN_PX] (px half-extent) are hidden, so a far-out view of many
+ *  harvested kommuner isn't a wall of dots. Tune these two to taste. */
+private const val DECLUTTER_ZOOM = 14.0
+private const val DECLUTTER_MIN_SPAN_PX = 24f
 
 /** Antialiased fill/stroke Paints from an ARGB literal, to cut the overlays' Paint boilerplate. */
 private fun fillPaint(argb: Long) =
@@ -381,9 +386,11 @@ private class LocalityOverlay(
         return (loc.radius * ppm).toFloat().coerceAtLeast(POINT_DOT_PX)  // circle of the real radius
     }
 
-    /** Roughly how big the locality is on screen (px), for fading big ones so they don't dominate. */
-    private fun screenSpanPx(loc: Locality, rPx: Float, ppm: Double): Float {
-        val b = loc.polyBounds ?: return rPx
+    /** Roughly how big the locality's real footprint is on screen (px half-extent): the
+     *  polygon's extent, the circle's true radius, or 0 for a point locality. Drives both
+     *  fading big localities and culling tiny ones when zoomed far out. */
+    private fun screenSpanPx(loc: Locality, ppm: Double): Float {
+        val b = loc.polyBounds ?: return (loc.radius * ppm).toFloat()
         val mLat = (b[1] - b[0]) * 111_320.0
         val mLon = (b[3] - b[2]) * 111_320.0 * cos(Math.toRadians((b[0] + b[1]) / 2))
         return (max(mLat, mLon) / 2.0 * ppm).toFloat()
@@ -447,17 +454,23 @@ private class LocalityOverlay(
         val ppm = pxPerMeter(map)
         val bb = map.boundingBox
         val showLabels = map.zoomLevelDouble >= 15.5     // names only when zoomed in enough to read them
+        // Zoomed far out, thousands of point/small localities collapse to a clutter of dots.
+        // Hide the small ones until the view is zoomed in; big footprints (areas, wide
+        // circles) still read as shapes and keep drawing. The active pick is culled-exempt.
+        val showSmall = map.zoomLevelDouble >= DECLUTTER_ZOOM
         for (loc in localities) {
             if (loc === picked) continue              // drawn highlighted on top, after the loop
             // Cull by the locality's geographic bounds, not just its centre: a big polygon
             // (or wide circle) can fill the view while its centre point sits off-screen.
             if (bb != null && !boundsVisible(loc, bb)) continue
+            val span = screenSpanPx(loc, ppm)
+            if (!showSmall && span < DECLUTTER_MIN_SPAN_PX) continue   // declutter the far-out view
             proj.toPixels(GeoPoint(loc.lat, loc.lon), p)
             val rPx = radiusPx(loc, ppm)
             val px = p.x.toFloat(); val py = p.y.toFloat()
             // Fade large localities (big circles/polygons) so they don't dominate the map.
             // New spots have public=false, so they draw yellow like the user's own.
-            val big = screenSpanPx(loc, rPx, ppm) > 140f
+            val big = span > 140f
             val fp = if (loc.public) (if (big) fillPale else fill) else (if (big) privFillPale else privFill)
             drawShape(c, proj, loc, px, py, rPx, fp, if (loc.public) stroke else privStroke)
             if (showLabels) drawLabel(c, loc.lokalitet, px, py, rPx)   // name below the marker, wrapped
