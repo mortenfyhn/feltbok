@@ -1,0 +1,25 @@
+name: Tilbakemelding
+description: Meld om en feil eller foreslå en forbedring i Feltbok.
+title: "Tilbakemelding: "
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Takk for at du tar deg tid! Fyll ut det du kan – ingen felt er påkrevd.
+        Du trenger ikke kunne noe om GitHub; bare skriv på norsk.
+  - type: textarea
+    id: hva
+    attributes:
+      label: Hva gjelder det?
+      description: Beskriv feilen eller forslaget. Hva skjedde, og hva forventet du?
+      placeholder: F.eks. «Appen krasjer når jeg søker etter en art med æ/ø/å.»
+    validations:
+      required: false
+  - type: input
+    id: versjon
+    attributes:
+      label: Appversjon (valgfritt)
+      description: Står nederst på hovedskjermen i appen.
+      placeholder: f.eks. 0.4
+    validations:
+      required: false

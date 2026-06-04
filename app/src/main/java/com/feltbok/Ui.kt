@@ -15,6 +15,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -80,6 +81,8 @@ private const val SHOW_MINIMAP = false
 @Composable
 fun ListScreen(vm: MainViewModel) {
     val cs = MaterialTheme.colorScheme
+    var showFeedback by remember { mutableStateOf(false) }
+    if (showFeedback) FeedbackDialog { showFeedback = false }
     Box(Modifier.fillMaxSize()) {
         Column(Modifier.fillMaxSize()) {
             StatusStrip(vm)
@@ -96,7 +99,8 @@ fun ListScreen(vm: MainViewModel) {
                     color = cs.onSurfaceVariant, fontSize = 13.sp,
                     modifier = Modifier.padding(horizontal = 16.dp, vertical = 9.dp),
                 )
-                LazyColumn(Modifier.weight(1f)) {
+                // Bottom padding so the last row scrolls clear of the floating footer (Synk / Tilbakemelding / version).
+                LazyColumn(Modifier.weight(1f), contentPadding = PaddingValues(bottom = 56.dp)) {
                     items(vm.notes, key = { it.id }) { n ->
                         NoteRow(n, vm.redStatus(n.latin), vm.distanceToNote(n)) { vm.editNote(n) }
                     }
@@ -113,10 +117,45 @@ fun ListScreen(vm: MainViewModel) {
             modifier = Modifier.align(Alignment.BottomEnd).padding(18.dp),
         ) { Text("+", fontSize = 28.sp) }
         Text(BuildConfig.GIT_VERSION, color = cs.onSurfaceVariant.copy(alpha = 0.6f),
-            fontSize = 11.sp, modifier = Modifier.align(Alignment.BottomCenter).padding(8.dp))
-        Text("⟳ Synk", color = cs.primary, fontWeight = FontWeight.Medium, fontSize = 13.sp,
-            modifier = Modifier.align(Alignment.BottomStart).clickable { vm.openSync() }.padding(14.dp))
+            fontSize = 11.sp, modifier = Modifier.align(Alignment.BottomCenter).padding(bottom = 34.dp))
+        Row(Modifier.align(Alignment.BottomStart), verticalAlignment = Alignment.CenterVertically) {
+            Text("⟳ Synk", color = cs.primary, fontWeight = FontWeight.Medium, fontSize = 13.sp,
+                modifier = Modifier.clickable { vm.openSync() }.padding(14.dp))
+            Text("Tilbakemelding", color = cs.primary, fontWeight = FontWeight.Medium, fontSize = 13.sp,
+                modifier = Modifier.clickable { showFeedback = true }.padding(14.dp))
+        }
     }
+}
+
+/** Lets people send feedback without knowing what GitHub is: a friendly chooser between
+ *  filing a GitHub issue (via a guided issue form) and plain email. */
+@Composable
+private fun FeedbackDialog(onDismiss: () -> Unit) {
+    val ctx = LocalContext.current
+    fun open(intent: android.content.Intent) {
+        runCatching { ctx.startActivity(intent) }
+        onDismiss()
+    }
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text("Tilbakemelding") },
+        text = { Text("Har du funnet en feil eller har et forslag? Velg hvordan du vil ta kontakt.") },
+        confirmButton = {
+            TextButton(onClick = {
+                open(android.content.Intent(android.content.Intent.ACTION_VIEW,
+                    android.net.Uri.parse("https://github.com/mortenfyhn/feltbok/issues/new?template=tilbakemelding.yml")))
+            }) { Text("GitHub Issue") }
+        },
+        dismissButton = {
+            TextButton(onClick = {
+                val body = "\n\n---\nFeltbok ${BuildConfig.GIT_VERSION}"
+                open(android.content.Intent(android.content.Intent.ACTION_SENDTO,
+                    android.net.Uri.parse("mailto:morten.fyhn.amundsen+feltbok@gmail.com" +
+                        "?subject=" + android.net.Uri.encode("Feltbok-tilbakemelding") +
+                        "&body=" + android.net.Uri.encode(body))))
+            }) { Text("Send e-post") }
+        },
+    )
 }
 
 @Composable
