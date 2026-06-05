@@ -9,7 +9,7 @@ plugins {
 // Build version shown in-app, straight from git. At a tag it's "v0.1"; between tags
 // "v0.1-3-gabc-dirty"; with no tag yet, the short hash.
 val gitVersion: String = try {
-    ProcessBuilder("git", "describe", "--always", "--dirty")
+    ProcessBuilder("git", "describe", "--tags", "--always", "--dirty")
         .start().inputStream.bufferedReader().readText().trim().ifEmpty { "dev" }
 } catch (e: Exception) { "dev" }
 
