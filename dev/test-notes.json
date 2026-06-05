@@ -1,0 +1,12 @@
+[
+  {"id":1780684800000,"time":1780684800000,"species":"Sandlo","latin":"Charadrius hiaticula","count":1,"lat":63.431,"lon":10.392,"locName":"Gaula, Bråleiret-Leira mellom E6 og elva","locFull":"Gaula, Bråleiret-Leira mellom E6 og elva, Melhus, Trøndelag"},
+  {"id":1780684500000,"time":1780684500000,"species":"Svarthalespove","latin":"Limosa limosa","count":2,"lat":63.432,"lon":10.393,"locName":"Øyamelen","locFull":"Øyamelen, Trondheim, Trøndelag"},
+  {"id":1780684200000,"time":1780684200000,"species":"Svarthalespove","latin":"Limosa limosa","count":3,"lat":63.433,"lon":10.394,"locName":"Storøra naturreservat, sone 3.2","locFull":"Storøra naturreservat, sone 3.2, Trondheim, Trøndelag"},
+  {"id":1780683900000,"time":1780683900000,"species":"Grågås","latin":"Anser anser","count":120,"lat":63.434,"lon":10.395,"locName":"Øyamelen, sone 3.1","locFull":"Øyamelen, sone 3.1, Trondheim, Trøndelag"},
+  {"id":1780683600000,"time":1780683600000,"species":"Storspove","latin":"Numenius arquata","count":1,"lat":63.435,"lon":10.396,"locName":"Gaula, Bråleiret-Leira","locFull":"Gaula, Bråleiret-Leira, Melhus, Trøndelag"},
+  {"id":1780683300000,"time":1780683300000,"species":"Gulspurv","latin":"Emberiza citrinella","count":1,"lat":63.436,"lon":10.397,"locName":"Øykrene, sone 4.2","locFull":"Øykrene, sone 4.2, Trondheim, Trøndelag"},
+  {"id":1780683000000,"time":1780683000000,"species":"Kjøttmeis","latin":"Parus major","count":4,"lat":63.437,"lon":10.398,"locName":"","locFull":""},
+  {"id":1780682700000,"time":1780682700000,"species":"Sandlo","latin":"Charadrius hiaticula","count":5,"lat":63.438,"lon":10.399,"locName":"Øyamelen","locFull":"Øyamelen, Trondheim, Trøndelag"},
+  {"id":1780682400000,"time":1780682400000,"species":"Hettemåke","latin":"Chroicocephalus ridibundus","count":2,"lat":63.439,"lon":10.400,"locName":"Storøra naturreservat, sone 3.2","locFull":"Storøra naturreservat, sone 3.2, Trondheim, Trøndelag"},
+  {"id":1780682100000,"time":1780682100000,"species":"Dvergdykker","latin":"Tachybaptus ruficollis","count":1,"lat":63.440,"lon":10.401,"locName":"Leinøra friluftsområde ved sjøen","locFull":"Leinøra friluftsområde ved sjøen, Melhus, Trøndelag"}
+]
