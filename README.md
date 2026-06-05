@@ -1,3 +1,5 @@
+[![Build Status](https://fyhn.semaphoreci.com/badges/feltbok/branches/master.svg?key=ebed8946-d053-4da8-ba73-36874709de64)](https://fyhn.semaphoreci.com/projects/feltbok)
+
 # Feltbok
 
 A small Android app for jotting down bird observations in the field and exporting
