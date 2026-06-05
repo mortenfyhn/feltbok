@@ -9,7 +9,11 @@ against the official site list by GPS distance, and *Eksporter* produces a tab-s
 block you paste into the *Importer observasjoner* page. No login, no account, and no
 network needed in the field.
 
-<video src="https://github.com/mortenfyhn/feltbok/raw/master/docs/img/feltbok-demo.mp4" controls width="280"></video>
+
+
+https://github.com/user-attachments/assets/463080c3-b6be-46ea-bfd6-91535ed26116
+
+
 
 To install, download the latest `.apk` from
 [Releases](https://github.com/mortenfyhn/feltbok/releases/latest).
