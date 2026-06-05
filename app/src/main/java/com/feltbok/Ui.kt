@@ -585,57 +585,89 @@ private fun FieldRow(label: String, onClick: (() -> Unit)? = null, content: @Com
 
 // ============================ EXPORT ============================
 
+/** One numbered step: a circled number on the left, title + body on the right. */
 @Composable
-fun ExportDialog(vm: MainViewModel) {
+private fun Step(n: Int, title: String, body: @Composable () -> Unit) {
+    Row(Modifier.fillMaxWidth().padding(vertical = 10.dp)) {
+        Box(
+            Modifier.size(26.dp).clip(RoundedCornerShape(50)).background(MaterialTheme.colorScheme.primary),
+            contentAlignment = Alignment.Center,
+        ) {
+            Text("$n", color = Color.White, fontWeight = FontWeight.Bold, fontSize = 14.sp)
+        }
+        Spacer(Modifier.width(12.dp))
+        Column(Modifier.weight(1f)) {
+            Text(title, fontWeight = FontWeight.SemiBold, fontSize = 15.sp)
+            body()
+        }
+    }
+}
+
+/**
+ * Full-page export walkthrough. Field testing showed people reaching for the share sheet, so the
+ * copy → open → paste flow is spelled out as explicit numbered steps. Shown as an overlay over the
+ * list (via showExport), so it needs its own opaque background.
+ */
+@Composable
+fun ExportScreen(vm: MainViewModel) {
     val cs = MaterialTheme.colorScheme
     val clip = LocalClipboardManager.current
     val ctx = LocalContext.current
     val text = vm.exportText()
+    var copied by remember { mutableStateOf(false) }
     var confirmClear by remember { mutableStateOf(false) }
-    AlertDialog(
-        onDismissRequest = { vm.closeExport() },
-        title = { Text("Eksporter til Artsobservasjoner") },
-        text = {
-            Column {
-                // Field testing showed people reaching for the share sheet; spell out the
-                // copy-then-paste flow so the text lands in the right place.
-                Text(
-                    "Trykk Kopiér, åpne Artsobservasjoner og lim teksten inn under "
-                        + "«Importer observasjoner». Ikke del via Quick Share e.l. – bare lim inn.",
-                    fontSize = 13.sp,
-                    modifier = Modifier.padding(bottom = 6.dp),
-                )
-                // Direct link to the import page, so people don't have to hunt for it.
-                Text(
-                    "Åpne importsiden ›", color = cs.primary, fontWeight = FontWeight.Medium,
-                    fontSize = 13.sp,
-                    modifier = Modifier.clickable {
+
+    Column(Modifier.fillMaxSize().background(cs.background)) {
+        Row(
+            Modifier.fillMaxWidth().background(cs.primary).padding(horizontal = 14.dp, vertical = 9.dp),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Text("Eksporter til Artsobservasjoner", color = Color.White,
+                fontWeight = FontWeight.SemiBold, modifier = Modifier.weight(1f))
+            TextButton(onClick = { vm.closeExport() }) { Text("Lukk", color = Color.White) }
+        }
+        Column(Modifier.weight(1f).verticalScroll(rememberScrollState()).padding(horizontal = 16.dp)) {
+            Step(1, "Kopier observasjoner") {
+                OutlinedTextField(text, {},
+                    Modifier.fillMaxWidth().height(120.dp).padding(top = 6.dp), readOnly = true,
+                    textStyle = androidx.compose.ui.text.TextStyle(fontSize = 11.sp))
+                Button(
+                    onClick = { clip.setText(AnnotatedString(text)); copied = true },
+                    modifier = Modifier.padding(top = 6.dp),
+                ) { Text(if (copied) "Kopiert ✓" else "Kopiér") }
+            }
+            Step(2, "Åpne Artsobservasjoner") {
+                Button(
+                    onClick = {
                         runCatching {
                             ctx.startActivity(android.content.Intent(
                                 android.content.Intent.ACTION_VIEW,
                                 android.net.Uri.parse("https://www.artsobservasjoner.no/ImportSighting")))
                         }
-                    }.padding(bottom = 10.dp),
-                )
-                OutlinedTextField(text, {}, Modifier.fillMaxWidth().height(170.dp), readOnly = true,
-                    textStyle = androidx.compose.ui.text.TextStyle(fontSize = 11.sp))
-                TextButton(onClick = { confirmClear = true }) {
-                    Text("Slett alle notater", color = cs.error)
-                }
+                    },
+                    modifier = Modifier.padding(top = 6.dp),
+                ) { Text("Kjør") }
             }
-        },
-        confirmButton = {
-            Button(onClick = { clip.setText(AnnotatedString(text)); vm.closeExport() }) { Text("Kopiér") }
-        },
-        dismissButton = { TextButton(onClick = { vm.closeExport() }) { Text("Lukk") } },
-    )
+            Step(3, "Lim inn og importer") {
+                Text(buildAnnotatedString {
+                    append("Lim inn den kopierte teksten på Artsobservasjoner og trykk ")
+                    withStyle(SpanStyle(fontStyle = FontStyle.Italic)) { append("Importer") }
+                }, fontSize = 13.sp, color = cs.onSurfaceVariant, modifier = Modifier.padding(top = 4.dp))
+            }
+            Step(4, "Slett notater når du er ferdig") {
+                Text("Slett alle notater", color = cs.error, fontWeight = FontWeight.Medium,
+                    fontSize = 14.sp,
+                    modifier = Modifier.clickable { confirmClear = true }.padding(top = 6.dp))
+            }
+            Spacer(Modifier.height(24.dp))
+        }
+    }
     if (confirmClear) {
         AlertDialog(
             onDismissRequest = { confirmClear = false },
             title = { Text("Slett alle notater?") },
             text = {
-                Text("Sletter alle ${vm.notes.size} notatene. Gjør dette først når du har "
-                    + "importert og publisert på Artsobservasjoner.")
+                Text("Sletter alle ${vm.notes.size} notatene. Ikke gjør dette før du har importert alt til Artsobservasjoner!")
             },
             confirmButton = {
                 Button(

@@ -58,7 +58,7 @@ fun App(vm: MainViewModel) {
                 Screen.LOCALITY -> LocalityScreen(vm)
                 Screen.SYNC -> SyncScreen(vm)
             }
-            if (vm.showExport) ExportDialog(vm)
+            if (vm.showExport) ExportScreen(vm)
         }
     }
 }
