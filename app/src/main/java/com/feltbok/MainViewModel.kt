@@ -164,11 +164,6 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
         return if (movedAway) nearest() else last
     }
 
-    /** Distance from the current fix to where a note was made, or null if unknown. */
-    fun distanceToNote(n: Note): Double? =
-        if (n.lat == 0.0 && n.lon == 0.0) null
-        else fix?.let { haversine(it.lat, it.lon, n.lat, n.lon) }
-
     // ---- navigation / actions ----
     fun startAdd() {
         editingId = null; changingSpecies = false

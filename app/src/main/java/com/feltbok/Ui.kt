@@ -52,6 +52,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.focus.onFocusChanged
+import androidx.compose.ui.layout.Layout
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.text.input.ImeAction
@@ -68,6 +69,7 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.text.withStyle
+import androidx.compose.ui.unit.Constraints
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import kotlinx.coroutines.delay
@@ -105,7 +107,7 @@ fun ListScreen(vm: MainViewModel) {
                         // Bottom padding so the last row scrolls clear of the floating + button.
                         LazyColumn(Modifier.weight(1f), contentPadding = PaddingValues(bottom = 84.dp)) {
                             items(vm.notes, key = { it.id }) { n ->
-                                NoteRow(n, vm.redStatus(n.latin), vm.distanceToNote(n)) { vm.editNote(n) }
+                                NoteRow(n, vm.redStatus(n.latin)) { vm.editNote(n) }
                             }
                         }
                     }
@@ -207,37 +209,47 @@ private fun RedStatus(code: String) {
 }
 
 @Composable
-private fun NoteRow(n: Note, status: String, distance: Double?, onClick: () -> Unit) {
+private fun NoteRow(n: Note, status: String, onClick: () -> Unit) {
     val cs = MaterialTheme.colorScheme
-    Row(
-        Modifier.fillMaxWidth().clickable(onClick = onClick).background(cs.surface)
+    val hasLoc = n.locName.isNotBlank()
+    // A plain Row can't split width by need: weights divide the slack by ratio and never hand one
+    // child's leftover to another. So we measure by hand — time pinned right, species first claim on
+    // the rest, locality takes what's left. A short species lets a long locality fill the gap; a long
+    // species pushes the locality to ellipsize. Whoever is short frees its room for the other.
+    Layout(
+        content = {
+            Row(verticalAlignment = Alignment.CenterVertically) {   // [0] count + species + red status
+                Text(
+                    buildAnnotatedString {
+                        withStyle(SpanStyle(color = cs.onPrimaryContainer, fontWeight = FontWeight.Bold)) { append("${n.count} ") }
+                        append(if (n.uncertain) "${n.species}?" else n.species)
+                    },
+                    maxLines = 1, overflow = TextOverflow.Ellipsis,
+                )
+                RedStatus(status)
+            }
+            // End-align so a truncated name's "…" hugs the right edge instead of leaving the
+            // ellipsized box's trailing slack, keeping every locality flush against the timestamp.
+            Text(n.locName, color = cs.onSurface, fontSize = 13.sp, textAlign = TextAlign.End,   // [1] locality
+                maxLines = 1, overflow = TextOverflow.Ellipsis)
+            Text(shortTime(n.time), color = cs.onSurfaceVariant, fontSize = 13.sp)   // [2] timestamp
+        },
+        modifier = Modifier.fillMaxWidth().clickable(onClick = onClick).background(cs.surface)
             .padding(horizontal = 16.dp, vertical = 9.dp),
-        verticalAlignment = Alignment.CenterVertically,
-    ) {
-        // Count + species is the primary content: give it all the leftover width so it only
-        // ellipsizes when genuinely too long. (The old weighted Spacer ate half the row, cutting
-        // even short species names.) The locality yields first when space is tight.
-        Row(Modifier.weight(1f), verticalAlignment = Alignment.CenterVertically) {
-            Text(
-                buildAnnotatedString {
-                    withStyle(SpanStyle(color = cs.onPrimaryContainer, fontWeight = FontWeight.Bold)) { append("${n.count} ") }
-                    append(if (n.uncertain) "${n.species}?" else n.species)
-                },
-                maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.weight(1f, fill = false),
-            )
-            RedStatus(status)
+    ) { measurables, constraints ->
+        val w = constraints.maxWidth
+        val gap = 8.dp.roundToPx()
+        val time = measurables[2].measure(Constraints(maxWidth = w))
+        val leftBudget = (w - time.width - gap).coerceAtLeast(0)               // room left of the timestamp
+        val species = measurables[0].measure(Constraints(maxWidth = leftBudget))
+        val locBudget = if (hasLoc) (leftBudget - species.width - gap).coerceAtLeast(0) else 0
+        val loc = measurables[1].measure(Constraints(maxWidth = locBudget))
+        val h = maxOf(species.height, loc.height, time.height)
+        layout(w, h) {
+            species.placeRelative(0, (h - species.height) / 2)
+            time.placeRelative(w - time.width, (h - time.height) / 2)
+            if (hasLoc) loc.placeRelative(w - time.width - gap - loc.width, (h - loc.height) / 2)
         }
-        if (n.locName.isNotBlank()) {
-            Spacer(Modifier.width(8.dp))
-            Text(n.locName, color = cs.onSurface, fontSize = 13.sp, maxLines = 1,
-                overflow = TextOverflow.Ellipsis, modifier = Modifier.widthIn(max = 130.dp))
-        }
-        distance?.let {
-            Spacer(Modifier.width(8.dp))
-            Text(formatDistance(it), color = cs.onSurfaceVariant, fontSize = 12.sp)
-        }
-        Spacer(Modifier.width(8.dp))
-        Text(shortTime(n.time), color = cs.onSurfaceVariant, fontSize = 13.sp)
     }
     HorizontalDivider(color = cs.outline.copy(alpha = 0.4f))
 }
