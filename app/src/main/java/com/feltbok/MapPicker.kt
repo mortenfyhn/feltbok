@@ -77,13 +77,14 @@ fun LocalityScreen(vm: MainViewModel) {
             setTileSource(TileSourceFactory.MAPNIK)
             setMultiTouchControls(true)
             zoomController.setVisibility(CustomZoomButtonsController.Visibility.NEVER)  // use our own buttons
-            // Keep the last zoom. When editing, centre on the observation's own locality so
-            // you adjust around where it was, not your current position. For a new observation
-            // re-centre on the current GPS fix so it shows where you are now (falling back to
-            // the picked/nearest locality, then a default).
+            // Keep the last zoom. When editing an observation or changing the current locality,
+            // centre on that chosen locality so you adjust around it, not your current position.
+            // For a new observation re-centre on the current GPS fix so it shows where you are now
+            // (falling back to the picked/nearest locality, then a default).
             controller.setZoom(if (vm.mapZoom >= 1.0) vm.mapZoom else 16.0)
-            val lat = (if (vm.isEditing) vm.dLoc?.lat else null) ?: vm.fix?.lat ?: vm.dLoc?.lat ?: vm.nearest()?.lat ?: 63.7
-            val lon = (if (vm.isEditing) vm.dLoc?.lon else null) ?: vm.fix?.lon ?: vm.dLoc?.lon ?: vm.nearest()?.lon ?: 8.7
+            val focus = if (vm.isEditing || vm.pickingCurrent) vm.pickerFocus else null
+            val lat = focus?.lat ?: vm.fix?.lat ?: vm.dLoc?.lat ?: vm.nearest()?.lat ?: 63.7
+            val lon = focus?.lon ?: vm.fix?.lon ?: vm.dLoc?.lon ?: vm.nearest()?.lon ?: 8.7
             controller.setCenter(GeoPoint(lat, lon))
         }
     }
@@ -115,7 +116,7 @@ fun LocalityScreen(vm: MainViewModel) {
             Text(if (newMode) "Ny lokalitet" else "Velg lokalitet", color = Color.White,
                 fontWeight = FontWeight.SemiBold, modifier = Modifier.weight(1f))
             if (!newMode) TextButton(onClick = { newMode = true }) { Text("＋ Ny", color = Color.White) }
-            TextButton(onClick = { if (newMode) newMode = false else vm.backToDetail() }) {
+            TextButton(onClick = { if (newMode) newMode = false else vm.leaveLocalityPicker() }) {
                 Text("Avbryt", color = Color.White)
             }
         }
@@ -126,7 +127,7 @@ fun LocalityScreen(vm: MainViewModel) {
                 update = { m ->
                     // Only touch the overlay when something actually changed, so a GPS tick
                     // mid-gesture doesn't force a redraw (which flickers the view).
-                    val sel = tapped ?: vm.dLoc      // highlight the just-tapped one, else the current pick
+                    val sel = tapped ?: vm.pickerFocus  // highlight the just-tapped one, else the current pick
                     val newFix = vm.fix?.let { GeoPoint(it.lat, it.lon) }
                     val newAcc = vm.fix?.accuracyM?.toFloat() ?: Float.NaN
                     val nr = if (newMode) newRadius.toDouble() else -1.0

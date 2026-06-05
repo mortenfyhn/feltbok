@@ -44,7 +44,7 @@ fun App(vm: MainViewModel) {
             BackHandler(enabled = vm.showExport || vm.screen != Screen.LIST) {
                 when {
                     vm.showExport -> vm.closeExport()
-                    vm.screen == Screen.LOCALITY -> vm.backToDetail()
+                    vm.screen == Screen.LOCALITY -> vm.leaveLocalityPicker()
                     vm.screen == Screen.SYNC -> vm.closeSync()
                     vm.screen == Screen.SEARCH -> vm.cancelSearch()
                     vm.screen == Screen.DETAIL -> vm.cancel()

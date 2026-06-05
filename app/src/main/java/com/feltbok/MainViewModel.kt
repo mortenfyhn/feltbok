@@ -99,7 +99,7 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
             tracker.fix.collect { f ->
                 fix = f
                 // Fill the locality once GPS settles, if adding and untouched.
-                if (screen == Screen.DETAIL && editingId == null && dLoc == null) dLoc = defaultLocality()
+                if (screen == Screen.DETAIL && editingId == null && dLoc == null) dLoc = currentLocality()
             }
         }
     }
@@ -153,9 +153,10 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
     private var lastUsedLoc: Locality? = null
     private var lastUsedFix: GpsFix? = null
 
-    /** Default locality for a new observation: keep the last one used while you're still within
-     *  ~50 m of where you used it; re-snap to the GPS-nearest only after a genuine move (good fix). */
-    private fun defaultLocality(): Locality? {
+    /** The "current" locality: keep the last one used/picked while you're still within ~50 m of
+     *  where you used it; re-snap to the GPS-nearest only after a genuine move (good fix). Shown on
+     *  the list and used as the default for a new observation. */
+    fun currentLocality(): Locality? {
         val last = lastUsedLoc ?: return nearest()
         val from = lastUsedFix; val now = fix
         val movedAway = from != null && now != null && now.accuracyM <= 35f &&
@@ -191,7 +192,7 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
         saveUses(ctx, uses)
         if (!changingSpecies && !isEditing) {
             dTime = System.currentTimeMillis()  // stamp the entry time now
-            dLoc = defaultLocality()
+            dLoc = currentLocality()
         }
         changingSpecies = false
         screen = Screen.DETAIL
@@ -208,8 +209,30 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
         screen = Screen.DETAIL
     }
 
-    fun openLocalityPicker() { screen = Screen.LOCALITY }
-    fun pickLocality(loc: Locality) { dLoc = loc; screen = Screen.DETAIL }
+    // True while the picker was opened from the list to set the "current" locality, rather than
+    // from the observation draft. Routes selection/back to the list instead of the detail screen.
+    var pickingCurrent by mutableStateOf(false); private set
+
+    fun openLocalityPicker() { pickingCurrent = false; screen = Screen.LOCALITY }
+    fun openCurrentLocalityPicker() { pickingCurrent = true; screen = Screen.LOCALITY }
+
+    /** The locality the picker should open focused on and highlight. */
+    val pickerFocus: Locality? get() = if (pickingCurrent) currentLocality() else dLoc
+
+    fun pickLocality(loc: Locality) {
+        if (pickingCurrent) {
+            lastUsedLoc = loc; lastUsedFix = fix   // stick it, same as after saving an observation
+            pickingCurrent = false
+            screen = Screen.LIST
+        } else {
+            dLoc = loc; screen = Screen.DETAIL
+        }
+    }
+
+    /** Leave the picker without choosing, back to wherever it was opened from. */
+    fun leaveLocalityPicker() {
+        if (pickingCurrent) { pickingCurrent = false; screen = Screen.LIST } else backToDetail()
+    }
 
     // ---- "Synk mine lokaliteter" (pull the user's own privates from Artsobservasjoner) ----
     fun openSync() { screen = Screen.SYNC }

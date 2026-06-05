@@ -169,16 +169,17 @@ private fun FeedbackDialog(onDismiss: () -> Unit) {
 @Composable
 private fun StatusStrip(vm: MainViewModel) {
     val cs = MaterialTheme.colorScheme
-    val near = vm.nearest()
+    val cur = vm.currentLocality()
     Row(
         // start padding leaves room for the round minimap overlaid on the left (when shown).
         Modifier.fillMaxWidth().background(cs.primary)
             .padding(start = if (SHOW_MINIMAP) 104.dp else 14.dp, end = 14.dp, top = 11.dp, bottom = 11.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        val edge = near?.let { l -> vm.distanceTo(l)?.let { (it - l.radius).coerceAtLeast(0.0) } }
-        Column(Modifier.weight(1f)) {
-            Text(if (near != null) "${near.lokalitet}, ${near.kommune}" else "Finner posisjon…",
+        val edge = cur?.let { l -> vm.distanceTo(l)?.let { (it - l.radius).coerceAtLeast(0.0) } }
+        // Tap to open the map and pick a different current locality.
+        Column(Modifier.weight(1f).clickable { vm.openCurrentLocalityPicker() }) {
+            Text(if (cur != null) "${cur.lokalitet}, ${cur.kommune} ›" else "Finner posisjon…",
                 color = Color.White, fontWeight = FontWeight.SemiBold,
                 maxLines = 2, overflow = TextOverflow.Ellipsis)
             if (edge != null)
