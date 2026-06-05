@@ -24,8 +24,10 @@ blocks:
           - cache restore gradle-$(checksum app/build.gradle.kts)
       jobs:
         - name: unit tests + debug APK
+          # testDebugUnitTest (not `test`) so we don't also compile+run the release
+          # unit-test variant - same sources, no release-only tests, just wasted work.
           commands:
-            - ./gradlew test assembleDebug --console=plain --no-daemon
+            - ./gradlew testDebugUnitTest assembleDebug --console=plain --no-daemon
       epilogue:
         on_pass:
           commands:
@@ -44,10 +46,15 @@ blocks:
       env_vars:
         - name: KEYSTORE_FILE
           value: /home/semaphore/feltbok-release.keystore
+      # Reuse the dependency + Gradle-distribution cache the debug block already stored
+      # (same key); otherwise a tag build cold-downloads everything from scratch.
+      prologue:
+        commands:
+          - checkout
+          - cache restore gradle-$(checksum app/build.gradle.kts)
       jobs:
         - name: signed APK + GitHub release
           commands:
-            - checkout
             - git fetch --tags --force          # so `git describe` sees the tag for the in-app version
             - ./gradlew assembleRelease --console=plain --no-daemon
             - curl -fsSL https://github.com/cli/cli/releases/download/v2.93.0/gh_2.93.0_linux_amd64.tar.gz | tar -xz -C /tmp
