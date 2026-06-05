@@ -343,16 +343,6 @@ fun DetailScreen(vm: MainViewModel) {
                     Text("  ${vm.dLatin}", color = cs.onSurfaceVariant, fontStyle = FontStyle.Italic,
                         fontSize = 13.sp, maxLines = 1, overflow = TextOverflow.Ellipsis)
             }
-            // Uncertain species determination -> "Usikker artsbestemmelse" on export (shows as "Vipe?").
-            Row(
-                Modifier.fillMaxWidth().clickable { vm.dUncertain = !vm.dUncertain }
-                    .background(cs.surface).padding(start = 16.dp, end = 8.dp),
-                verticalAlignment = Alignment.CenterVertically,
-            ) {
-                Text("Usikker art", color = cs.onSurfaceVariant, modifier = Modifier.weight(1f))
-                Checkbox(checked = vm.dUncertain, onCheckedChange = { vm.dUncertain = it })
-            }
-            HorizontalDivider(color = cs.outline.copy(alpha = 0.4f))
             // Locality
             FieldRow("Lokalitet", onClick = { vm.openLocalityPicker() }) {
                 val loc = vm.dLoc
