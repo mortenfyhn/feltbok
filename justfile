@@ -3,6 +3,10 @@ export ANDROID_HOME := env("ANDROID_HOME", home_directory() / "Android/Sdk")
 apk := "app/build/outputs/apk/debug/app-debug.apk"
 data_dir := "/sdcard/Android/data/com.feltbok/files"
 
+# List all recipes
+default:
+    @just --list
+
 # Build debug APK
 build:
     ./gradlew assembleDebug
@@ -28,55 +32,22 @@ log:
 uninstall:
     adb uninstall com.feltbok
 
-# ---- PRIMARY locality pipeline: Artsobservasjoner's mobile API ----
-# Harvest the authoritative public site list (WGS84, real geometry, radius, per-row fylke)
-# from the mobile API's /core/Sites/ByBoundingBox. Needs a logged-in BFF cookie in
-# /tmp/bff_cookie.txt (see the script header). Resumable + gentle. Default bbox is all of
-# Norway; narrow with --bbox.
+# ---- Locality / species data, rebuilt on the maintainer's machine ----
+
+# Harvest the official site list from Artsobservasjoner's mobile API (auth + usage in the script header)
 sites *args:
     .venv/bin/python process/harvest_sites_mobil.py {{args}}
 
-# Legacy harvest via the old login-gated Report-map endpoint (Web Mercator, multi-zoom).
-# Kept as a documented fallback; needs an .ASPXAUTHNO cookie in /tmp/aspx_cookie.txt.
-sites-legacy *args:
-    .venv/bin/python process/harvest_sites.py {{args}}
-
-# Build app/src/main/assets/localities.csv from the harvested raw (mobile-API JSON or
-# legacy GeoJSON; the format is auto-detected). No GBIF needed.
+# Build app/src/main/assets/localities.csv from the harvested sites
 build-sites *args:
     .venv/bin/python process/build_sites.py {{args}}
 
-# ---- LEGACY GBIF pipeline (superseded by `sites`/`build-sites`; kept for reference) ----
-# Build the official locality table from the Artsdatabanken/GBIF dump.
-# Pass extra args, e.g.: just localities --api --bbox 8.0,63.5,9.3,63.9
-localities *args:
-    .venv/bin/python process/build_localities.py {{args}}
-
-# Build the Norwegian bird checklist (norsk,latin) from GBIF -> species.csv
+# Build app/src/main/assets/species.csv (Norwegian bird checklist, norsk + latin)
 species:
     .venv/bin/python process/build_species.py
 
-# Add real locality polygons (GBIF footprintWKT, reprojected) to localities.csv.
-# Run after `just localities` to enrich the table with a `geometry` column.
-footprints:
-    .venv/bin/python process/add_footprints.py
-
-# Flag each locality public/private by distinct reporters; add a `public` column.
-# Streams the full raw harvest to localities-occurrences.jsonl. Pass --from-raw to
-# re-derive from that cache in seconds (no re-harvest):  just mark-public --from-raw
-mark-public *args:
-    .venv/bin/python process/mark_public.py {{args}}
-
-# Set the AUTHORITATIVE public/private flag from Artsobservasjoner's own allmenn flag
-# (POST /ViewSighting/FindSitesByName, public/no-auth). Run after mark-public — it
-# replaces the heuristic guess where Artsobs confirms, and keeps it where a lookup is
-# capped/failed. The real source of truth; supersedes the observer/polygon heuristic.
-public-flags:
-    .venv/bin/python process/fetch_public_flags.py
-
-# Push the generated locality/species CSVs to the device (overrides the bundled
-# assets — no rebuild needed). Run after `just localities`.
+# Push the built localities/species CSVs to the device (overrides the bundled assets, no rebuild)
 push-data:
     adb push app/src/main/assets/localities.csv {{data_dir}}/localities.csv
     -adb push app/src/main/assets/species.csv {{data_dir}}/species.csv
-    -adb push my-localities.csv {{data_dir}}/my-localities.csv   # the maintainer's own customs (device-only)
+    -adb push my-localities.csv {{data_dir}}/my-localities.csv   # maintainer's own customs (device-only)
