@@ -2,30 +2,20 @@
 
 # Feltbok
 
-A small Android app for entering bird observations in the field and exporting them for
-**[Artsobservasjoner](https://www.artsobservasjoner.no)**. Entry uses the same fields as
-an Artsobs sighting (antall, alder, kjønn, aktivitet, kommentar), the locality is matched
-against the official site list by GPS distance, and *Eksporter* produces a tab-separated
-block you paste into the *Importer observasjoner* page. No login, no account, and no
-network needed in the field.
-
-
+En app for å kvikt taste inn fugleobservasjoner i felt. Deretter kan du enkelt lastes opp til artsobservasjoner.no. Behøver ingen innlogging og ingen nettilgang.
 
 https://github.com/user-attachments/assets/463080c3-b6be-46ea-bfd6-91535ed26116
 
+## Installer
 
+[Finn siste utgave her](https://github.com/mortenfyhn/feltbok/releases/latest).
 
-To install, download the latest `.apk` from
-[Releases](https://github.com/mortenfyhn/feltbok/releases/latest).
+## Bygg
 
-## Build
-
-Needs the Android SDK (`ANDROID_HOME`), [`just`](https://github.com/casey/just), and a
-connected device or emulator.
+Behøver Android SDK (`ANDROID_HOME`) og [`just`](https://github.com/casey/just).
 
 ```sh
-just run     # build, install, and launch
+just run     # bygg, installer, og kjør
 ```
 
-Run `just` on its own to list every recipe (build, test, install, logs, and the
-data-build pipeline).
+Kjør `just` alene for å ramse opp alle oppskriftene (bygg, test, installer, etc).
