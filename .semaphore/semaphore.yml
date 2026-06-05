@@ -57,10 +57,12 @@ blocks:
           commands:
             - git fetch --tags --force          # so `git describe` sees the tag for the in-app version
             - ./gradlew assembleRelease --console=plain --no-daemon
+            # Publish under a recognisable name (feltbok-v0.5.apk), not Gradle's app-release.apk.
+            - cp app/build/outputs/apk/release/app-release.apk "feltbok-$SEMAPHORE_GIT_TAG_NAME.apk"
             - curl -fsSL https://github.com/cli/cli/releases/download/v2.93.0/gh_2.93.0_linux_amd64.tar.gz | tar -xz -C /tmp
             - >-
               /tmp/gh_2.93.0_linux_amd64/bin/gh release create "$SEMAPHORE_GIT_TAG_NAME"
-              app/build/outputs/apk/release/app-release.apk
+              "feltbok-$SEMAPHORE_GIT_TAG_NAME.apk"
               --title "Feltbok $SEMAPHORE_GIT_TAG_NAME"
               --notes-file docs/release-notes-install.md
               --generate-notes
