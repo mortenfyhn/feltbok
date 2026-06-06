@@ -531,13 +531,27 @@ private class LocalityOverlay(
         if (tapsBlocked) return false                 // placing a new spot: let taps pan, not select
         val proj = map.projection
         val ppm = pxPerMeter(map)
+        val tap = proj.fromPixels(e.x.toInt(), e.y.toInt())
         var best: Locality? = null
         var bestD = Float.MAX_VALUE
+        // Prefer a locality whose real footprint actually contains the tap, so tapping inside a
+        // polygon near its edge keeps that locality even when a neighbour's centre is closer (#63).
+        // When several footprints contain the tap (overlapping localities) the nearest centre wins -
+        // the tiebreak that already worked well for overlaps.
         for (loc in localities) {
+            if (!localityContains(loc, tap.latitude, tap.longitude)) continue
             proj.toPixels(GeoPoint(loc.lat, loc.lon), p)
             val d = hypot((p.x - e.x), (p.y - e.y))
-            // accept a tap inside the disk, or within a comfortable touch radius
-            if (d < bestD && d <= maxOf(radiusPx(loc, ppm), 44f)) { bestD = d; best = loc }
+            if (d < bestD) { bestD = d; best = loc }
+        }
+        if (best == null) {
+            // Nothing contains the tap: fall back to the nearest centre within a comfortable touch
+            // radius, so point localities and small dots stay tappable.
+            for (loc in localities) {
+                proj.toPixels(GeoPoint(loc.lat, loc.lon), p)
+                val d = hypot((p.x - e.x), (p.y - e.y))
+                if (d < bestD && d <= maxOf(radiusPx(loc, ppm), 44f)) { bestD = d; best = loc }
+            }
         }
         best?.let { onTap(it); return true }
         return false

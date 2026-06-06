@@ -161,6 +161,43 @@ class ModelTest {
         assertEquals("Gulsanger", ranked.first().norsk)
     }
 
+    // ---- locality tap hit-testing (#63: a tap inside a polygon must pick that polygon) ----
+
+    private fun square(latLo: Double, latHi: Double, lonLo: Double, lonHi: Double) = listOf(
+        doubleArrayOf(latLo, lonLo), doubleArrayOf(latLo, lonHi),
+        doubleArrayOf(latHi, lonHi), doubleArrayOf(latHi, lonLo),
+    )
+
+    @Test
+    fun pointInPolygonDetectsInsideAndOutside() {
+        val sq = square(63.0, 64.0, 8.0, 9.0)
+        assertTrue(pointInPolygon(63.5, 8.5, sq))      // centre
+        assertTrue(pointInPolygon(63.99, 8.01, sq))    // near a corner, still inside
+        assertTrue(!pointInPolygon(64.5, 8.5, sq))     // north of the box
+        assertTrue(!pointInPolygon(63.5, 9.5, sq))     // east of the box
+    }
+
+    @Test
+    fun localityContainsPrefersFootprintOverNearerCentre() {
+        // The #63 case: a tap inside polygon A but closer to point-locality B's centre. A contains
+        // the tap; B (a point, no footprint) does not - so the picker keeps A.
+        val a = Locality("a", "Polygon A", "", "", 63.5, 8.5, "A", 0, 0.0,
+            polygon = square(63.0, 64.0, 8.0, 9.0))
+        val b = Locality("b", "Point B", "", "", 64.05, 9.05, "B", 0, 0.0)  // just outside A, nearer the corner
+        val tapLat = 63.98; val tapLon = 8.98          // inside A, near its NE corner, close to B
+        assertTrue(localityContains(a, tapLat, tapLon))
+        assertTrue(!localityContains(b, tapLat, tapLon))
+    }
+
+    @Test
+    fun localityContainsUsesRadiusForCircles() {
+        val circle = Locality("c", "Circle", "", "", 63.0, 8.0, "C", 0, 200.0)  // 200 m radius
+        assertTrue(localityContains(circle, 63.0, 8.0))                 // dead centre
+        assertTrue(!localityContains(circle, 63.1, 8.0))               // ~11 km away
+        val point = circle.copy(radius = 0.0)
+        assertTrue(!localityContains(point, 63.0, 8.0))                // a point has no footprint
+    }
+
     private fun mine(id: String, name: String = "Lok $id", lat: Double = 63.0, radius: Double = 0.0) =
         Locality(id, name, "", "", lat, 8.0, name, 0, radius, public = false, mine = true)
 

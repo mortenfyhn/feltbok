@@ -138,6 +138,32 @@ fun haversine(lat1: Double, lon1: Double, lat2: Double, lon2: Double): Double {
 fun formatDistance(m: Double): String =
     if (m < 1000) "${m.toInt()} m" else String.format(Locale.US, "%.1f km", m / 1000)
 
+/** Ray-casting point-in-polygon test. [polygon] holds [lat,lon] vertices (see [Locality.polygon]),
+ *  with lat as y and lon as x. Boundary cases aren't special-cased - it only has to decide which
+ *  locality a tap landed in. */
+fun pointInPolygon(lat: Double, lon: Double, polygon: List<DoubleArray>): Boolean {
+    if (polygon.size < 3) return false
+    var inside = false
+    var j = polygon.size - 1
+    for (i in polygon.indices) {
+        val latI = polygon[i][0]; val lonI = polygon[i][1]
+        val latJ = polygon[j][0]; val lonJ = polygon[j][1]
+        if ((latI > lat) != (latJ > lat) &&
+            lon < (lonJ - lonI) * (lat - latI) / (latJ - latI) + lonI) {
+            inside = !inside
+        }
+        j = i
+    }
+    return inside
+}
+
+/** Whether a point falls inside a locality's real footprint: its polygon, or its radius circle.
+ *  Point localities (no polygon, radius 0) have no footprint, so the picker falls back to a
+ *  touch-radius hit-test for those instead. */
+fun localityContains(loc: Locality, lat: Double, lon: Double): Boolean =
+    if (loc.polygon.isNotEmpty()) pointInPolygon(lat, lon, loc.polygon)
+    else loc.radius > 0.0 && haversine(lat, lon, loc.lat, loc.lon) <= loc.radius
+
 // ---- species search ----
 
 /** Fold Norwegian/diacritic letters so typing plain ASCII still matches. */
