@@ -47,7 +47,8 @@ fun App(vm: MainViewModel) {
                     vm.screen == Screen.LOCALITY -> vm.leaveLocalityPicker()
                     vm.screen == Screen.SYNC -> vm.closeSync()
                     vm.screen == Screen.SEARCH -> vm.cancelSearch()
-                    vm.screen == Screen.DETAIL -> vm.cancel()
+                    // DETAIL composes a draft, so its own BackHandler intercepts here and routes
+                    // Back through the discard confirm; this branch never runs while it's open.
                     else -> {}
                 }
             }

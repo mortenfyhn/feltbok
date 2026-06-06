@@ -2,6 +2,7 @@
 
 package com.feltbok
 
+import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -434,6 +435,10 @@ internal fun ScreenHeader(
 fun DetailScreen(vm: MainViewModel) {
     val cs = MaterialTheme.colorScheme
     var confirmDiscard by remember { mutableStateOf(false) }
+    // System Back is the natural cancel (NN/g), so it must go through the same discard confirm as
+    // the ✕ - otherwise an accidental back-swipe drops a started observation silently. This handler
+    // sits inside DetailScreen, so it shadows the app-level one only while the editor is open.
+    BackHandler { confirmDiscard = true }
     if (confirmDiscard) {
         AlertDialog(
             onDismissRequest = { confirmDiscard = false },
