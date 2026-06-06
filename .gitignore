@@ -1,7 +1,11 @@
 # Build output
+/build/
 /app/build/
 /.gradle/
 /app/.cxx/
+
+# Claude Code session/config dir
+/.claude/
 # Android SDK path — machine-specific
 /local.properties
 
