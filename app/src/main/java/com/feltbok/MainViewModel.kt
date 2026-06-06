@@ -40,6 +40,17 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
 
     val notes = mutableStateListOf<Note>().apply { addAll(loadNotes(app)) }
 
+    /** Notes marked for bulk delete. Non-empty => the list is in selection mode: a tap toggles a
+     *  mark instead of opening the editor (entered by long-pressing a note). See [toggleSelect]. */
+    val selected = mutableStateListOf<Long>()
+    fun toggleSelect(id: Long) { if (!selected.remove(id)) selected.add(id) }
+    fun clearSelection() = selected.clear()
+    fun deleteSelected() {
+        notes.removeAll { it.id in selected }
+        selected.clear()
+        persist()
+    }
+
     /** Recently chosen species (norsk), most-recent first - the quick list when search is empty.
      *  Persisted, so it survives restarts; seeds with the most common species first run. */
     val recent = mutableStateListOf<String>().apply {

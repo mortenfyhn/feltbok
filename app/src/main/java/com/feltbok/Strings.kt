@@ -24,6 +24,12 @@ object Strings {
         const val searchingGps = "søker GPS"
         const val gps = "GPS"
         fun gpsAccuracy(m: Int) = "(GPS ±$m m)"
+
+        // Selection mode: long-press a note to mark it, then tap more, then delete the marked ones.
+        fun selected(n: Int) = "$n markert"
+        const val deleteSelected = "Slett"
+        fun deleteTitle(n: Int) = "Slett $n ${if (n == 1) "notat" else "notater"}?"
+        const val deleteConfirm = "Slett"
     }
 
     object Feedback {

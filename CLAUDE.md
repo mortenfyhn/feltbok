@@ -10,6 +10,15 @@ capturing bird observations in Norway and exporting a TSV to paste into Artsobse
 - `just install` / `just run` — build + install (+ launch) on a connected device. When a device is
   connected (`adb devices`), use these to verify a change in the real app; drive the UI with
   `adb shell input tap/text` and inspect with `adb exec-out screencap`.
+- **Two builds coexist on the device.** The dev build carries the `.debug` applicationId suffix
+  (`com.feltbok.debug`), so it installs alongside the maintainer's daily **release** app
+  (`com.feltbok`). `just install`/`just run`/`just uninstall` all target the **debug** package — so
+  always go through `just` (or use `com.feltbok.debug` explicitly) when installing, launching
+  (`am start -n com.feltbok.debug/com.feltbok.MainActivity`), or clearing data. NEVER
+  `adb uninstall com.feltbok` or `pm clear com.feltbok`: that is the maintainer's real app and wipes
+  their actual field notes (`notes.json` lives in internal storage, lost on uninstall). The two
+  builds are distinguishable by the footer version string (`…-dev` = debug) and the app label
+  (debug shows a "beta" launcher icon).
 - Always run `./gradlew test` before opening a PR.
 - `just fmt` auto-formats Kotlin (ktlint) + `process/` Python (ruff); `just lint` checks both. Both
   are gated in CI (ktlint in the Kotlin job, ruff in a parallel block). The ktlint ruleset

@@ -3,9 +3,11 @@
 package com.feltbok
 
 import androidx.activity.compose.BackHandler
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -39,18 +41,13 @@ import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.PlainTooltip
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
-import androidx.compose.material3.TooltipBox
-import androidx.compose.material3.TooltipDefaults
-import androidx.compose.material3.rememberTooltipState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -79,7 +76,6 @@ import androidx.compose.ui.unit.Constraints
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import kotlinx.coroutines.delay
-import kotlinx.coroutines.launch
 
 // ============================ LIST ============================
 
@@ -91,6 +87,22 @@ fun ListScreen(vm: MainViewModel) {
     val cs = MaterialTheme.colorScheme
     var showFeedback by remember { mutableStateOf(false) }
     if (showFeedback) FeedbackDialog { showFeedback = false }
+    val selecting = vm.selected.isNotEmpty()
+    // While marking notes, system Back clears the marks rather than exiting the app.
+    BackHandler(enabled = selecting) { vm.clearSelection() }
+    var confirmDelete by remember { mutableStateOf(false) }
+    if (confirmDelete) {
+        AlertDialog(
+            onDismissRequest = { confirmDelete = false },
+            title = { Text(Strings.Notes.deleteTitle(vm.selected.size)) },
+            confirmButton = {
+                TextButton(onClick = { confirmDelete = false; vm.deleteSelected() }) {
+                    Text(Strings.Notes.deleteConfirm, color = cs.error)
+                }
+            },
+            dismissButton = { TextButton(onClick = { confirmDelete = false }) { Text(Strings.cancel) } },
+        )
+    }
     Box(Modifier.fillMaxSize()) {
         Column(Modifier.fillMaxSize()) {
             StatusStrip(vm)
@@ -106,20 +118,47 @@ fun ListScreen(vm: MainViewModel) {
                     }
                 } else {
                     Column(Modifier.fillMaxSize()) {
-                        Text(
-                            Strings.Notes.header(vm.notes.size),
-                            color = cs.onSurfaceVariant, fontSize = 13.sp,
-                            modifier = Modifier.padding(horizontal = 16.dp, vertical = 9.dp),
-                        )
+                        // While marking, the header turns into a contextual bar: how many are marked,
+                        // a delete action, and a ✕ to leave selection mode.
+                        if (selecting) {
+                            // Actions are clickable Text (not TextButton) carrying the SAME 13sp +
+                            // 9.dp vertical padding as the idle header, so swapping modes doesn't
+                            // change the strip's height (TextButton's 48.dp min height would jump it).
+                            Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+                                Text(Strings.Notes.selected(vm.selected.size),
+                                    color = cs.onSurface, fontSize = 13.sp,
+                                    modifier = Modifier.weight(1f).padding(start = 16.dp, top = 9.dp, bottom = 9.dp))
+                                Text(Strings.Notes.deleteSelected, color = cs.error, fontSize = 13.sp,
+                                    fontWeight = FontWeight.Medium,
+                                    modifier = Modifier.clickable { confirmDelete = true }
+                                        .padding(horizontal = 16.dp, vertical = 9.dp))
+                                Text("✕", color = cs.onSurfaceVariant, fontSize = 13.sp,
+                                    fontWeight = FontWeight.Medium,
+                                    modifier = Modifier.clickable { vm.clearSelection() }
+                                        .padding(horizontal = 16.dp, vertical = 9.dp))
+                            }
+                        } else {
+                            Text(
+                                Strings.Notes.header(vm.notes.size),
+                                color = cs.onSurfaceVariant, fontSize = 13.sp,
+                                modifier = Modifier.padding(horizontal = 16.dp, vertical = 9.dp),
+                            )
+                        }
                         // Bottom padding so the last row scrolls clear of the floating + button.
                         LazyColumn(Modifier.weight(1f), contentPadding = PaddingValues(bottom = 84.dp)) {
                             items(vm.notes, key = { it.id }) { n ->
-                                NoteRow(n, vm.statusFor(n.latin)) { vm.editNote(n) }
+                                NoteRow(
+                                    n, vm.statusFor(n.latin), selected = n.id in vm.selected,
+                                    // In selection mode a tap toggles the mark; otherwise it edits.
+                                    onClick = { if (selecting) vm.toggleSelect(n.id) else vm.editNote(n) },
+                                    onLongClick = { vm.toggleSelect(n.id) },
+                                )
                             }
                         }
                     }
                 }
-                FloatingActionButton(
+                // Hidden while marking notes — the contextual bar's delete is the action then.
+                if (!selecting) FloatingActionButton(
                     onClick = { vm.startAdd() },
                     containerColor = cs.primary, contentColor = Color.White,
                     modifier = Modifier.align(Alignment.BottomEnd).padding(18.dp),
@@ -243,42 +282,26 @@ private fun StatusStrip(vm: MainViewModel) {
 }
 
 private val REDLIST_CODES = setOf("RE", "CR", "EN", "VU", "NT", "DD")
-private val STATUS_NAMES = mapOf(
-    "RE" to "Regionalt utdødd", "CR" to "Kritisk truet", "EN" to "Sterkt truet",
-    "VU" to "Sårbar", "NT" to "Nær truet", "DD" to "Datamangel",
-    "SE" to "Svært høy risiko", "HI" to "Høy risiko", "PH" to "Potensielt høy risiko",
-    "LO" to "Lav risiko", "NK" to "Ingen kjent risiko",
-)
 
 /** Conservation/alien-risk badge (e.g. VU, SE) - bold caps next to a species name. Colour flags the
  *  concern at a glance: Rødlista 2021 red (vulnerable), Fremmedartslista 2023 SE/HI/PH black (invasive,
- *  high risk), LO/NK grey. Tapping shows a tooltip naming the category and its list. */
+ *  high risk), LO/NK grey. Purely a label - no tap target, so it never swallows a tap meant for the
+ *  row it sits in (e.g. opening/marking a note). */
 @Composable
 private fun StatusBadge(code: String) {
     if (code.isBlank()) return
-    val isRed = code in REDLIST_CODES
     val color = when {
-        isRed -> MaterialTheme.colorScheme.error
+        code in REDLIST_CODES -> MaterialTheme.colorScheme.error
         code == "SE" || code == "HI" || code == "PH" -> Color.Black
         else -> MaterialTheme.colorScheme.onSurfaceVariant   // LO/NK (and any unknown)
     }
-    val name = STATUS_NAMES[code]
-    val list = if (isRed) "Rødlista 2021" else "Fremmedartslista 2023"
-    val tip = rememberTooltipState()
-    val scope = rememberCoroutineScope()
-    TooltipBox(
-        positionProvider = TooltipDefaults.rememberPlainTooltipPositionProvider(),
-        tooltip = { PlainTooltip { Text(if (name != null) "$name ($list)" else code) } },
-        state = tip,
-        enableUserInput = false,   // drive on tap, not the default long-press
-    ) {
-        Text(code, color = color, fontWeight = FontWeight.Bold, fontSize = 11.sp, letterSpacing = 0.5.sp,
-            modifier = Modifier.padding(start = 6.dp).clickable { scope.launch { tip.show() } })
-    }
+    Text(code, color = color, fontWeight = FontWeight.Bold, fontSize = 11.sp, letterSpacing = 0.5.sp,
+        modifier = Modifier.padding(start = 6.dp))
 }
 
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
-private fun NoteRow(n: Note, status: String, onClick: () -> Unit) {
+private fun NoteRow(n: Note, status: String, selected: Boolean, onClick: () -> Unit, onLongClick: () -> Unit) {
     val cs = MaterialTheme.colorScheme
     val hasLoc = n.locName.isNotBlank()
     // A plain Row can't split width by need: weights divide the slack by ratio and never hand one
@@ -303,7 +326,9 @@ private fun NoteRow(n: Note, status: String, onClick: () -> Unit) {
                 maxLines = 1, overflow = TextOverflow.Ellipsis)
             Text(shortTime(n.time), color = cs.onSurfaceVariant, fontSize = 13.sp)   // [2] timestamp
         },
-        modifier = Modifier.fillMaxWidth().clickable(onClick = onClick).background(cs.surface)
+        modifier = Modifier.fillMaxWidth()
+            .combinedClickable(onClick = onClick, onLongClick = onLongClick)
+            .background(if (selected) cs.primaryContainer else cs.surface)
             .padding(horizontal = 16.dp, vertical = 9.dp),
     ) { measurables, constraints ->
         val w = constraints.maxWidth
