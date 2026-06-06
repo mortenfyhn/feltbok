@@ -12,7 +12,6 @@ package com.feltbok
 object Strings {
     const val cancel = "Avbryt"
     const val back = "Tilbake"                        // header back action on screens that discard nothing
-    const val discard = "Forkast"                     // header action on the screen that throws away a draft
     const val findingPosition = "Finner posisjon…"   // shared by the status strip and the detail screen
 
     object Notes {
