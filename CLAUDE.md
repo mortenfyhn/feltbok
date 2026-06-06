@@ -23,9 +23,9 @@ capturing bird observations in Norway and exporting a TSV to paste into Artsobse
 - **Disclose AI authorship.** When an agent files an issue or opens a PR, state upfront that the
   body is AI-generated so a human reader doesn't mistake it for human-written text.
 - Norwegian (Bokmål) for user-facing strings.
-- **Worktree by default for real work.** When starting non-trivial implementation (editing/creating
-  source files), first isolate with EnterWorktree so parallel sessions don't collide. Skip it for
-  read-only questions, quick one-file edits, and investigations.
+- **Worktrees are opt-in.** Work in the main checkout by default. Only reach for EnterWorktree when
+  the user explicitly asks, or when you know another session is editing the same files concurrently —
+  the rebase/index tangles they create usually outweigh the isolation benefit.
 - **Shared working tree.** Sometimes parallel agents run in the same checkout without worktrees, so
   expect unrelated uncommitted changes from another agent's work — that's normal, not a mistake to
   fix. Leave those changes alone and commit only the files that are part of your own task.
