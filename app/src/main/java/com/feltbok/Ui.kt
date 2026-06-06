@@ -22,6 +22,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
@@ -351,6 +352,11 @@ fun SearchScreen(vm: MainViewModel) {
     // Auto-focus with the keyboard up so you can type the moment the screen opens.
     val focus = remember { FocusRequester() }
     LaunchedEffect(Unit) { focus.requestFocus() }
+    // Snap back to the top on every new result set. Otherwise the LazyColumn keeps its scroll
+    // anchored to the previously-visible item across searches, so after typing a few queries back
+    // and forth the top row was a stale, low-ranked match instead of the best one (#64).
+    val listState = rememberLazyListState()
+    LaunchedEffect(results) { listState.scrollToItem(0) }
     Column(Modifier.fillMaxSize()) {
         Row(
             Modifier.fillMaxWidth().background(cs.surface).padding(start = 12.dp, end = 4.dp, top = 10.dp, bottom = 10.dp),
@@ -364,7 +370,7 @@ fun SearchScreen(vm: MainViewModel) {
                 keyboardActions = KeyboardActions(onSearch = { results.firstOrNull()?.let { vm.pickSpecies(it) } }))
             TextButton(onClick = { vm.cancelSearch() }) { Text(Strings.cancel) }
         }
-        LazyColumn(Modifier.weight(1f)) {
+        LazyColumn(Modifier.weight(1f), state = listState) {
             items(results, key = { it.latin }) { s ->   // norsk has homonyms (e.g. Rødhalevarsler); latin is unique
                 Row(
                     Modifier.fillMaxWidth().clickable { vm.pickSpecies(s) }.background(cs.surface)
