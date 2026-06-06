@@ -194,26 +194,26 @@ private fun StatusStrip(vm: MainViewModel) {
         verticalAlignment = Alignment.CenterVertically,
     ) {
         val edge = cur?.let { l -> vm.distanceTo(l)?.let { (it - l.radius).coerceAtLeast(0.0) } }
+        // Distance to the locality edge and GPS accuracy share one line so neither crowds the
+        // export button. The accuracy tells you whether to trust the fix / wait for a better one.
+        val fix = vm.fix
+        val subtitle = listOfNotNull(
+            edge?.let { if (it < 10) "du er her" else "${formatDistance(it)} unna" },
+            when {
+                fix == null -> "søker GPS"
+                fix.accuracyM.isNaN() -> "GPS"
+                else -> "(GPS ±${fix.accuracyM.toInt()} m)"
+            },
+        ).joinToString(" ")
         // Tap to open the map and pick a different current locality.
         Column(Modifier.weight(1f).clickable { vm.openCurrentLocalityPicker() }) {
             Text(if (cur != null) "${cur.lokalitet}, ${cur.kommune} ›" else "Finner posisjon…",
                 color = Color.White, fontWeight = FontWeight.SemiBold,
                 maxLines = 2, overflow = TextOverflow.Ellipsis)
-            if (edge != null)
-                Text(if (edge < 10) "du er her" else "${formatDistance(edge)} unna",
-                    color = Color.White.copy(alpha = 0.82f), fontSize = 12.sp)
-        }
-        // GPS accuracy chip: how good the current fix is, so you can judge whether to wait for it.
-        val fix = vm.fix
-        val acc = when {
-            fix == null -> "søker"
-            fix.accuracyM.isNaN() -> "GPS"
-            else -> "GPS ±${fix.accuracyM.toInt()} m"
+            Text(subtitle, color = Color.White.copy(alpha = 0.82f), fontSize = 12.sp,
+                maxLines = 1, overflow = TextOverflow.Ellipsis)
         }
         Spacer(Modifier.width(10.dp))
-        Text(acc, color = Color.White, fontSize = 12.sp,
-            modifier = Modifier.background(Color(0x33FFFFFF), RoundedCornerShape(10.dp))
-                .padding(horizontal = 8.dp, vertical = 1.dp))
         if (vm.notes.isNotEmpty()) {
             Spacer(Modifier.width(10.dp))
             Box(
