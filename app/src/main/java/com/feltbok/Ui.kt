@@ -363,7 +363,9 @@ fun SearchScreen(vm: MainViewModel) {
             verticalAlignment = Alignment.CenterVertically,
         ) {
             // Cancel on the left, consistent with the other screens (#59).
-            TextButton(onClick = { vm.cancelSearch() }) { Text(Strings.cancel) }
+            // No full header here (keeps the width for species), but match the chevron the other
+            // screens' back/cancel uses so it still reads as "go back".
+            TextButton(onClick = { vm.cancelSearch() }) { Text("‹ ${Strings.cancel}") }
             OutlinedTextField(q, { q = it }, Modifier.weight(1f).focusRequester(focus), singleLine = true,
                 placeholder = { Text(Strings.Search.placeholder) },
                 // autoCorrect off: don't want the IME "correcting" species names, and the
