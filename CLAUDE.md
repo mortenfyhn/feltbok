@@ -5,11 +5,13 @@ capturing bird observations in Norway and exporting a TSV to paste into Artsobse
 "Importer observasjoner". Zero-login and shareable; works fully offline in the field.
 
 ## Build / test / run
-- `./gradlew test` — JVM unit tests (also `just test`, which adds the Python tests).
-- `./gradlew assembleDebug` — debug APK. `./gradlew assembleRelease` — signed release (needs the keystore).
-- `just install` / `just run` — build + install (+ launch) on a connected device. When a device is
-  connected (`adb devices`), use these to verify a change in the real app; drive the UI with
-  `adb shell input tap/text` and inspect with `adb exec-out screencap`.
+Recipes live in `just --list` — the notes below are only the why's and gotchas that aren't in
+there. (`just --list` mangles the `run` description by leaking a multi-line comment; it means
+"build, install, and launch".)
+- `just install` / `just run` verify a change in the real app on a connected device (`adb devices`);
+  drive the UI with `adb shell input tap/text` and inspect with `adb exec-out screencap`.
+- Always run `./gradlew test` (Kotlin units) before opening a PR; `just test` also runs the Python tests.
+- `./gradlew assembleRelease` — signed release, needs the keystore (no `just` recipe for it).
 - **Two builds coexist on the device.** The dev build carries the `.debug` applicationId suffix
   (`com.feltbok.debug`), so it installs alongside the maintainer's daily **release** app
   (`com.feltbok`). `just install`/`just run`/`just uninstall` all target the **debug** package — so
@@ -19,12 +21,10 @@ capturing bird observations in Norway and exporting a TSV to paste into Artsobse
   their actual field notes (`notes.json` lives in internal storage, lost on uninstall). The two
   builds are distinguishable by the footer version string (`…-dev` = debug) and the app label
   (debug shows a "beta" launcher icon).
-- Always run `./gradlew test` before opening a PR.
-- `just format` auto-formats Kotlin (ktlint) + `process/` Python (ruff); `just lint` checks both. Both
-  are gated in CI (ktlint in the Kotlin job, ruff in a parallel block). The ktlint ruleset
-  (`.editorconfig`) only fixes whitespace/indentation/import order — it deliberately leaves line
-  structure, line length, and naming alone, so it won't churn the terse hand-written style. ruff
-  (`ruff.toml`) is the full black-style formatter for the Python pipelines.
+- `just format`/`just lint` are gated in CI (ktlint in the Kotlin job, ruff in a parallel block). The
+  ktlint ruleset (`.editorconfig`) only fixes whitespace/indentation/import order — it deliberately
+  leaves line structure, line length, and naming alone, so it won't churn the terse hand-written
+  style. ruff (`ruff.toml`) is the full black-style formatter for the Python pipelines.
 - In a fresh worktree, copy `local.properties` from the repo root first (it's gitignored, and Gradle
   needs its `sdk.dir`).
 - CI runs on Semaphore (`.semaphore/semaphore.yml`): a `Test & build` block (Android container) and a
