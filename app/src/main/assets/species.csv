@@ -65,7 +65,7 @@ Enkeltbekkasin,Gallinago gallinago,
 Stillits,Carduelis carduelis,
 Svartmeis,Periparus ater,
 Fuglekonge,Regulus regulus,
-Kanadagås,Branta canadensis,
+Kanadagås,Branta canadensis,HI
 Sjøorre,Melanitta fusca,VU
 Svartand,Melanitta nigra,VU
 Musvåk,Buteo buteo,
@@ -182,7 +182,7 @@ Svarthalespove,Limosa limosa,CR
 Tundragås,Anser albifrons,
 Lappspurv,Calcarius lapponicus,EN
 Rosenfink,Carpodacus erythrinus,NT
-Fasan,Phasianus colchicus,
+Fasan,Phasianus colchicus,LO
 Svartkråke,Corvus corone,
 Bøksanger,Phylloscopus sibillatrix,
 Furukorsnebb,Loxia pytyopsittacus,
@@ -229,11 +229,11 @@ Svartrødstjert,Phoenicurus ochruros,EN
 Egretthegre,Ardea alba,
 Tundrasædgås,Anser serrirostris,VU
 Trelerke,Lullula arborea,NT
-Mandarinand,Aix galericulata,
+Mandarinand,Aix galericulata,LO
 Isfugl,Alcedo atthis,
 Lappiplerke,Anthus cervinus,
 Splitterne,Thalasseus sandvicensis,
-Stripegås,Anser indicus,
+Stripegås,Anser indicus,LO
 Jaktfalk,Falco rusticolus,VU
 Stellerand,Polysticta stelleri,VU
 Polarjo,Stercorarius pomarinus,
@@ -256,7 +256,7 @@ Turteldue,Streptopelia turtur,
 Grålire,Puffinus griseus,
 Lappmeis,Poecile cinctus,
 Dvergfluesnapper,Ficedula parva,
-Snøgås,Anser caerulescens,
+Snøgås,Anser caerulescens,LO
 Rødglente,Milvus milvus,
 Steppehauk,Circus macrourus,
 Amerikakrikkand,Anas carolinensis,
@@ -306,7 +306,7 @@ Rapphøne,Perdix perdix,RE
 Kornspurv,Emberiza calandra,RE
 Svarthalsdykker,Podiceps nigricollis,
 Gulirisk,Serinus serinus,
-Niland,Alopochen aegyptiaca,
+Niland,Alopochen aegyptiaca,SE
 Ørkensteinskvett,Oenanthe deserti,
 Fuglekongesanger,Phylloscopus proregulus,
 Vierspurv,Emberiza rustica,CR
@@ -334,7 +334,7 @@ Ringnebbdykker,Podilymbus podiceps,
 Kanadahettemåke,Chroicocephalus philadelphia,
 Svartstrupesteinskvett,Oenanthe pleschanka,
 Sørnattergal,Luscinia megarhynchos,
-Knoppand,Cairina moschata,
+Knoppand,Cairina moschata,NK
 Damsnipe,Tringa stagnatilis,
 Aquila clanga,Aquila clanga,
 Ørkenlo,Charadrius leschenaultii,
@@ -350,7 +350,7 @@ Tereksnipe,Xenus cinereus,
 Markpiplerke,Anthus campestris,
 Blåråke,Coracias garrulus,
 Rødfotand,Anas rubripes,
-Stivhaleand,Oxyura jamaicensis,
+Stivhaleand,Oxyura jamaicensis,LO
 Østgulerle,Motacilla tschutschensis,
 Svarthodespurv,Emberiza melanocephala,
 Hvitøyeand,Aythya nyroca,
@@ -379,14 +379,14 @@ Isabellasteinskvett,Oenanthe isabellina,
 Stripesanger,Locustella lanceolata,
 Asurmeis,Cyanistes cyanus,
 Tundrapiplerke,Anthus gustavi,
-Brudeand,Aix sponsa,
-Sørblesand,Mareca sibilatrix,
+Brudeand,Aix sponsa,LO
+Sørblesand,Mareca sibilatrix,LO
 Sibirjernspurv,Prunella montanella,
 Harlekinand,Histrionicus histrionicus,
 Halsbåndfluesnapper,Ficedula albicollis,
 Rosenterne,Sterna dougallii,
 Blåvingeand,Spatula discors,
-Svartsvane,Cygnus atratus,
+Svartsvane,Cygnus atratus,LO
 Polargås,Branta hutchinsii,
 Rødbrystsanger,Curruca iberiae,
 Åkersanger,Acrocephalus agricola,
@@ -394,7 +394,7 @@ Bleksanger,Iduna pallida,
 Slagugle,Strix uralensis,EN
 Viersanger,Phylloscopus schwarzi,
 Svartstork,Ciconia nigra,
-Hjelmfiskand,Lophodytes cucullatus,
+Hjelmfiskand,Lophodytes cucullatus,LO
 Willetsnipe,Tringa semipalmata,
 Orientbrakksvale,Glareola maldivarum,
 Islandsand,Bucephala islandica,
@@ -411,7 +411,7 @@ Locustella certhiola,Locustella certhiola,
 Steppemåke,Ichthyaetus ichthyaetus,
 Tartarsanger,Iduna caligata,
 Hvitkinnsvartterne,Chlidonias hybrida,
-Halsbåndparakitt,Psittacula krameri,
+Halsbåndparakitt,Psittacula krameri,LO
 Alpeseiler,Tachymarptis melba,
 Keiserørn,Aquila heliaca,
 Dvergtrappe,Tetrax tetrax,
@@ -478,8 +478,8 @@ Brunhodespurv,Emberiza bruniceps,
 Bruntrost,Turdus naumanni,
 Aquila pomarina,Aquila pomarina,
 Luscinia calliope,Luscinia calliope,
-Hvitkinnand,Anas bahamensis,
-Berghøne,Alectoris chukar,
+Hvitkinnand,Anas bahamensis,LO
+Berghøne,Alectoris chukar,LO
 Sultansanger,Sylvia crassirostris,
 Amerikasandlo,Charadrius semipalmatus,
 Ovnparula,Seiurus aurocapilla,
@@ -487,8 +487,8 @@ Munkegribb,Aegypius monachus,
 Krattspurv,Emberiza pallasi,
 Furusanger,Phylloscopus orientalis,
 Musespurv,Passerculus sandwichensis,
-Kaneland,Spatula cyanoptera,
-Svanegås,Anser cygnoides,
+Kaneland,Spatula cyanoptera,LO
+Svanegås,Anser cygnoides,LO
 Slangeørn,Circaetus gallicus,
 Chileflamingo,Phoenicopterus chilensis,
 Rosenbrysttykknebb,Pheucticus ludovicianus,
@@ -504,7 +504,7 @@ Lundtrupial,Icterus galbula,
 Nordgulstrupe,Geothlypis trichas,
 Gullfasan,Chrysolophus pictus,
 Mongollo,Charadrius mongolus,
-Engvaktel,Coturnix japonica,
+Engvaktel,Coturnix japonica,HI
 Blåkinnbieter,Merops persicus,
 Einersanger,Phylloscopus nitidus,
 Mellomspett,Dendrocoptes medius,
@@ -525,13 +525,13 @@ Ospesanger,Phylloscopus plumbeitarsus,
 Punersteinskvett,Oenanthe hispanica,
 Klatreparula,Mniotilta varia,
 Dverghornugle,Otus scops,
-Keisergås,Anser canagicus,
+Keisergås,Anser canagicus,LO
 Tristanalbatross,Thalassarche chlororhynchos,
 Steintrost,Monticola saxatilis,
 Møllparula,Leiothlypis peregrina,
 Ichthyaetus melanocephalus x Larus canus,Ichthyaetus melanocephalus x Larus canus,
-Rødhøne,Alectoris rufa,
-Tartarfalk,Falco cherrug,
+Rødhøne,Alectoris rufa,NK
+Tartarfalk,Falco cherrug,LO
 Hvitørebylbyl,Pycnonotus leucotis,
 Calandrella rufescens,Calandrella rufescens,
 Gråkjernebiter,Eophona personata,
@@ -568,7 +568,7 @@ Rosenpelikan,Pelecanus rufescens,
 Svartvingeglente,Elanus caeruleus,
 Gåsegribb,Gyps fulvus,
 Båndhavørn,Haliaeetus leucoryphus,
-Prærievåk,Buteo swainsoni,
+Prærievåk,Buteo swainsoni,NK
 Dvergørn,Hieraaetus pennatus,
 Ørkenløper,Cursorius cursor,
 Krabbehegre,Butorides striata,

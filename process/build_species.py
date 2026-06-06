@@ -16,6 +16,7 @@ import html as _html
 import re
 import sys
 import time
+from urllib.parse import urlsplit
 
 import requests
 
@@ -45,7 +46,10 @@ ALIEN_CATS = {"SE", "HI", "PH", "LO", "NK"}
 def _scrape_categories(url, categories, label):
     """{scientific name -> category} scraped from an Artsdatabanken list, page by page.
     Both lists render the same row markup: an <i> scientific name + a risk-category circle."""
-    rowre = re.compile(r'<a[^>]*href="[^"]*/\d+".*?</a>', re.S)
+    # Match each species' own detail anchor (/<list>/<year>/<id>), not just any link ending in
+    # digits - else nav/footer links keep `rows` non-empty past the last page and we never break.
+    base = urlsplit(url).path
+    rowre = re.compile(rf'<a[^>]*href="{re.escape(base)}/\d+".*?</a>', re.S)
     latre = re.compile(r"element_scientific_name[^>]*><i>([^<]+)</i>")
     catre = re.compile(r'class="([A-Z]{2}) risk-category-circle"')
     out, page = {}, 1
