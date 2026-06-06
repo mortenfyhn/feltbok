@@ -493,13 +493,13 @@ fun DetailScreen(vm: MainViewModel) {
         Column(Modifier.weight(1f).verticalScroll(rememberScrollState())) {
             // Species first - it's the first thing you choose for a new observation.
             FieldRow(Strings.Detail.species, onClick = { vm.changeSpecies() }) {
+                // Common name keeps its full width; the latin is what gets ellipsized when space is tight.
                 Text(vm.dSpecies + if (vm.dUncertain && vm.dSpecies.isNotBlank()) "?" else "",
-                    fontWeight = FontWeight.Medium, maxLines = 1,
-                    overflow = TextOverflow.Ellipsis, modifier = Modifier.weight(1f, fill = false))
-                StatusBadge(vm.statusFor(vm.dLatin))
+                    fontWeight = FontWeight.Medium, maxLines = 1, overflow = TextOverflow.Ellipsis)
                 if (vm.dLatin.isNotBlank())
                     Text("  ${vm.dLatin}", color = cs.onSurfaceVariant, fontStyle = FontStyle.Italic,
-                        fontSize = 13.sp, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                        fontSize = 13.sp, maxLines = 1, overflow = TextOverflow.Ellipsis,
+                        modifier = Modifier.weight(1f, fill = false))
             }
             // Locality
             FieldRow(Strings.Detail.locality, onClick = { vm.openLocalityPicker() }) {
