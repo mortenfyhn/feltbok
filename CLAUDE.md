@@ -25,6 +25,8 @@ capturing bird observations in Norway and exporting a TSV to paste into Artsobse
 - Match the surrounding style, naming, and comment density. Comments explain **WHY**, not what.
 - **Commit messages explain the why. Do NOT add `Co-Authored-By` or other trailers** (this repo's
   history is trailer-free).
+- **Closing issues.** When a commit resolves an issue, put a closing keyword (`Fix #50`, `Closes #50`)
+  in the commit message so GitHub auto-closes the issue when it lands on `master`.
 - **Disclose AI authorship.** When an agent files an issue or opens a PR, state upfront that the
   body is AI-generated so a human reader doesn't mistake it for human-written text.
 - Norwegian (Bokmål) for user-facing strings.
