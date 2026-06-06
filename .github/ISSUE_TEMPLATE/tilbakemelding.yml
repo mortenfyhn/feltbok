@@ -15,11 +15,10 @@ body:
       placeholder: F.eks. «Appen krasjer når jeg søker etter en art med æ/ø/å.»
     validations:
       required: false
-  - type: input
-    id: versjon
+  - type: textarea
+    id: teknisk
     attributes:
-      label: Appversjon (valgfritt)
-      description: Står nederst på hovedskjermen i appen.
-      placeholder: f.eks. 0.4
+      label: Teknisk info
+      description: Fylles ut automatisk når du melder fra via appen. La den stå.
     validations:
       required: false
