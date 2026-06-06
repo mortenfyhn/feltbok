@@ -435,8 +435,8 @@ fun DetailScreen(vm: MainViewModel) {
             }
             AntallRow(vm)
             DropdownRow(Strings.Detail.age, vm.dAge, Options.ages) { vm.dAge = it }
-            DropdownRow(Strings.Detail.activity, vm.dAct, vm.activityOptions()) { vm.dAct = it }
             DropdownRow(Strings.Detail.sex, vm.dSex, Options.sexes) { vm.dSex = it }
+            DropdownRow(Strings.Detail.activity, vm.dAct, vm.activityOptions()) { vm.dAct = it }
             CommentField(Strings.Detail.commentPublic, vm.dPub, vm.lastPub) { vm.dPub = it }
             CommentField(Strings.Detail.commentPrivate, vm.dPriv, vm.lastPriv) { vm.dPriv = it }
             // One row to save space; tap to open the from/to editor (point or range).
