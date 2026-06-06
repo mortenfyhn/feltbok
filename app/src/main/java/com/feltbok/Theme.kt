@@ -54,10 +54,6 @@ object MapPalette {
     const val SelFillFaintPriv = 0x22E0A100L
     const val SelStrokePriv = 0xFF6B4F00L
 
-    // New spot — magenta, distinct from all of the above
-    const val NewFill = 0x22D500F9L
-    const val NewStroke = 0xFFD500F9L
-
     // GPS fix — blue dot + white ring + an accuracy halo
     const val Gps = 0xFF2962FFL
     const val GpsRing = 0xFFFFFFFFL

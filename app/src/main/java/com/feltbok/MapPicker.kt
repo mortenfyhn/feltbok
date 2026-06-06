@@ -2,6 +2,7 @@ package com.feltbok
 
 import android.content.Context
 import android.graphics.Canvas
+import android.graphics.DashPathEffect
 import android.graphics.Paint
 import android.graphics.Path
 import android.graphics.Point
@@ -363,9 +364,12 @@ private class LocalityOverlay(
     var newOffsetPx: Float = 0f      // bottom-panel height: shifts the crosshair up to the visible centre
     var tapsBlocked = false          // ignore taps (so the map pans) while placing a new spot
 
-    // New-spot marker: magenta, distinct from public (green), your own (yellow) and GPS (blue).
-    private val newFill = fillPaint(MapPalette.NewFill)
-    private val newStroke = strokePaint(MapPalette.NewStroke, 5f)
+    // New-spot marker: the own-locality yellow, but with a thick dashed outline + crosshair so it
+    // reads as "being placed, not saved yet" rather than an already-created locality (#68).
+    private val newFill = fillPaint(MapPalette.YellowFill)
+    private val newStroke = strokePaint(MapPalette.YellowStroke, 6f)
+        .apply { pathEffect = DashPathEffect(floatArrayOf(20f, 14f), 0f) }
+    private val newCross = strokePaint(MapPalette.YellowStroke, 4f)
     private val fill = fillPaint(MapPalette.GreenFill)
     private val fillPale = fillPaint(MapPalette.GreenFillPale)
     private val stroke = strokePaint(MapPalette.GreenStroke, 2f)
@@ -532,8 +536,8 @@ private class LocalityOverlay(
                 c.drawCircle(cx, cy, r, newFill)
                 c.drawCircle(cx, cy, r, newStroke)
             }
-            c.drawLine(cx - 22f, cy, cx + 22f, cy, newStroke)
-            c.drawLine(cx, cy - 22f, cx, cy + 22f, newStroke)
+            c.drawLine(cx - 22f, cy, cx + 22f, cy, newCross)
+            c.drawLine(cx, cy - 22f, cx, cy + 22f, newCross)
         }
     }
 
