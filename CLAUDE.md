@@ -29,6 +29,9 @@ capturing bird observations in Norway and exporting a TSV to paste into Artsobse
 - **Shared working tree.** Sometimes parallel agents run in the same checkout without worktrees, so
   expect unrelated uncommitted changes from another agent's work — that's normal, not a mistake to
   fix. Leave those changes alone and commit only the files that are part of your own task.
+- **Expect last-minute tweaks.** The user often makes small manual edits to the work before asking
+  you to commit. Re-check the diff at commit time and include those tweaks; don't revert them or
+  assume the tree still matches what you last wrote.
 
 ## Where things live
 - `app/src/main/java/com/feltbok/Model.kt` — data classes, CSV/JSON load+save, TSV export.
