@@ -33,10 +33,10 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
     /** Norwegian names pre-folded for search, parallel to [species] (folded once, not per keystroke). */
     val foldedNorsk: List<String> = species.map { fold(it.norsk) }
 
-    /** Rødlista 2021 category by scientific name, for the conservation-status badge. */
+    /** Status code (Rødlista 2021 or Fremmedartslista 2023) by scientific name, for the badge. */
     private val statusByLatin: Map<String, String> =
         species.filter { it.status.isNotBlank() }.associate { it.latin to it.status }
-    fun redStatus(latin: String): String = statusByLatin[latin] ?: ""
+    fun statusFor(latin: String): String = statusByLatin[latin] ?: ""
 
     val notes = mutableStateListOf<Note>().apply { addAll(loadNotes(app)) }
 

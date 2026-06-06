@@ -37,13 +37,18 @@ import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.PlainTooltip
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
+import androidx.compose.material3.TooltipBox
+import androidx.compose.material3.TooltipDefaults
+import androidx.compose.material3.rememberTooltipState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -72,6 +77,7 @@ import androidx.compose.ui.unit.Constraints
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 
 // ============================ LIST ============================
 
@@ -106,7 +112,7 @@ fun ListScreen(vm: MainViewModel) {
                         // Bottom padding so the last row scrolls clear of the floating + button.
                         LazyColumn(Modifier.weight(1f), contentPadding = PaddingValues(bottom = 84.dp)) {
                             items(vm.notes, key = { it.id }) { n ->
-                                NoteRow(n, vm.redStatus(n.latin)) { vm.editNote(n) }
+                                NoteRow(n, vm.statusFor(n.latin)) { vm.editNote(n) }
                             }
                         }
                     }
@@ -231,12 +237,39 @@ private fun StatusStrip(vm: MainViewModel) {
     }
 }
 
-/** Rødlista 2021 category badge (e.g. NT, VU) - red bold caps next to a species name. */
+private val REDLIST_CODES = setOf("RE", "CR", "EN", "VU", "NT", "DD")
+private val STATUS_NAMES = mapOf(
+    "RE" to "Regionalt utdødd", "CR" to "Kritisk truet", "EN" to "Sterkt truet",
+    "VU" to "Sårbar", "NT" to "Nær truet", "DD" to "Datamangel",
+    "SE" to "Svært høy risiko", "HI" to "Høy risiko", "PH" to "Potensielt høy risiko",
+    "LO" to "Lav risiko", "NK" to "Ingen kjent risiko",
+)
+
+/** Conservation/alien-risk badge (e.g. VU, SE) - bold caps next to a species name. Colour flags the
+ *  concern at a glance: Rødlista 2021 red (vulnerable), Fremmedartslista 2023 SE/HI/PH black (invasive,
+ *  high risk), LO/NK grey. Tapping shows a tooltip naming the category and its list. */
 @Composable
-private fun RedStatus(code: String) {
+private fun StatusBadge(code: String) {
     if (code.isBlank()) return
-    Text(code, color = MaterialTheme.colorScheme.error, fontWeight = FontWeight.Bold,
-        fontSize = 11.sp, letterSpacing = 0.5.sp, modifier = Modifier.padding(start = 6.dp))
+    val isRed = code in REDLIST_CODES
+    val color = when {
+        isRed -> MaterialTheme.colorScheme.error
+        code == "SE" || code == "HI" || code == "PH" -> Color.Black
+        else -> MaterialTheme.colorScheme.onSurfaceVariant   // LO/NK (and any unknown)
+    }
+    val name = STATUS_NAMES[code]
+    val list = if (isRed) "Rødlista 2021" else "Fremmedartslista 2023"
+    val tip = rememberTooltipState()
+    val scope = rememberCoroutineScope()
+    TooltipBox(
+        positionProvider = TooltipDefaults.rememberPlainTooltipPositionProvider(),
+        tooltip = { PlainTooltip { Text(if (name != null) "$name ($list)" else code) } },
+        state = tip,
+        enableUserInput = false,   // drive on tap, not the default long-press
+    ) {
+        Text(code, color = color, fontWeight = FontWeight.Bold, fontSize = 11.sp, letterSpacing = 0.5.sp,
+            modifier = Modifier.padding(start = 6.dp).clickable { scope.launch { tip.show() } })
+    }
 }
 
 @Composable
@@ -257,7 +290,7 @@ private fun NoteRow(n: Note, status: String, onClick: () -> Unit) {
                     },
                     maxLines = 1, overflow = TextOverflow.Ellipsis,
                 )
-                RedStatus(status)
+                StatusBadge(status)
             }
             // End-align so a truncated name's "…" hugs the right edge instead of leaving the
             // ellipsized box's trailing slack, keeping every locality flush against the timestamp.
@@ -343,7 +376,7 @@ fun SearchScreen(vm: MainViewModel) {
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
                     Text(s.norsk, fontWeight = FontWeight.Medium, maxLines = 1, overflow = TextOverflow.Ellipsis)
-                    RedStatus(s.status)
+                    StatusBadge(s.status)
                     if (s.latin.isNotBlank()) {
                         Spacer(Modifier.width(8.dp))
                         Text(s.latin, color = cs.onSurfaceVariant, fontStyle = FontStyle.Italic,
@@ -382,7 +415,7 @@ fun DetailScreen(vm: MainViewModel) {
                 Text(vm.dSpecies + if (vm.dUncertain && vm.dSpecies.isNotBlank()) "?" else "",
                     fontWeight = FontWeight.Medium, maxLines = 1,
                     overflow = TextOverflow.Ellipsis, modifier = Modifier.weight(1f, fill = false))
-                RedStatus(vm.redStatus(vm.dLatin))
+                StatusBadge(vm.statusFor(vm.dLatin))
                 if (vm.dLatin.isNotBlank())
                     Text("  ${vm.dLatin}", color = cs.onSurfaceVariant, fontStyle = FontStyle.Italic,
                         fontSize = 13.sp, maxLines = 1, overflow = TextOverflow.Ellipsis)

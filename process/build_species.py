@@ -5,7 +5,8 @@ Lists every bird species ever recorded in Artsobservasjoner (GBIF dataset
 b124e1e0-…, taxonKey 212 = Aves) and resolves each to its Norwegian + scientific
 name via the GBIF backbone vernacular names (language 'nor', then 'nno'). Sorted
 most-observed first, so common species rank first in search. The `status` column
-carries the Norwegian Red List 2021 category (mainland) for red-listed species.
+carries the Norwegian Red List 2021 category (mainland) for red-listed species, or
+the Alien Species List 2023 risk category (SE/HI/PH/LO/NK) for introduced species.
 
     python process/build_species.py      # -> species.csv  (then: just push-data, or rebundle)
 """
@@ -15,6 +16,7 @@ import html as _html
 import re
 import sys
 import time
+from urllib.parse import urlsplit
 
 import requests
 
@@ -35,16 +37,26 @@ REDLIST_ALIASES = {
 }
 
 
-def fetch_redlist():
-    """{scientific name -> Red List 2021 category} for red-listed mainland birds."""
-    rowre = re.compile(r'<a[^>]*href="/rodlisteforarter/2021/\d+".*?</a>', re.S)
+# Alien Species List 2023 (Artsdatabanken) bird assessments. The ecological-risk
+# categories, worst first; NR (not risk-assessed) is dropped, like LC for the red list.
+ALIENLIST_URL = "https://lister.artsdatabanken.no/fremmedartslista/2023?SpeciesGroups=Aves"
+ALIEN_CATS = {"SE", "HI", "PH", "LO", "NK"}
+
+
+def _scrape_categories(url, categories, label):
+    """{scientific name -> category} scraped from an Artsdatabanken list, page by page.
+    Both lists render the same row markup: an <i> scientific name + a risk-category circle."""
+    # Match each species' own detail anchor (/<list>/<year>/<id>), not just any link ending in
+    # digits - else nav/footer links keep `rows` non-empty past the last page and we never break.
+    base = urlsplit(url).path
+    rowre = re.compile(rf'<a[^>]*href="{re.escape(base)}/\d+".*?</a>', re.S)
     latre = re.compile(r"element_scientific_name[^>]*><i>([^<]+)</i>")
-    catre = re.compile(r'class="(RE|CR|EN|VU|NT|DD|LC|NA|NE) risk-category-circle"')
+    catre = re.compile(r'class="([A-Z]{2}) risk-category-circle"')
     out, page = {}, 1
     while True:
         r = requests.get(
-            f"{REDLIST_URL}&Page={page}",
-            headers={"User-Agent": "feltbok-redlist/1.0"},
+            f"{url}&Page={page}",
+            headers={"User-Agent": f"feltbok-{label}/1.0"},
             timeout=60,
         )
         r.raise_for_status()
@@ -53,12 +65,22 @@ def fetch_redlist():
             break
         for blob in rows:
             lat, cat = latre.search(blob), catre.search(blob)
-            if lat and cat and cat.group(1) in REDLISTED:
+            if lat and cat and cat.group(1) in categories:
                 name = _html.unescape(lat.group(1)).strip()
                 out[REDLIST_ALIASES.get(name, name)] = cat.group(1)
         page += 1
         time.sleep(0.6)  # gentle on Artsdatabanken
     return out
+
+
+def fetch_redlist():
+    """{scientific name -> Red List 2021 category} for red-listed mainland birds."""
+    return _scrape_categories(REDLIST_URL, REDLISTED, "redlist")
+
+
+def fetch_alienlist():
+    """{scientific name -> Alien Species List 2023 risk category} for introduced birds."""
+    return _scrape_categories(ALIENLIST_URL, ALIEN_CATS, "alienlist")
 
 
 # Manual Bokmål names for species the lookups miss - mostly where this dataset
@@ -158,6 +180,8 @@ def resolve(key):
 def main() -> int:
     redlist = fetch_redlist()
     print(f"{len(redlist)} red-listed mainland birds (Rødlista 2021)", file=sys.stderr)
+    alienlist = fetch_alienlist()
+    print(f"{len(alienlist)} risk-assessed alien birds (Fremmedartslista 2023)", file=sys.stderr)
     keys = species_keys()
     print(f"{len(keys)} bird species; resolving names…", file=sys.stderr)
     rows = []
@@ -180,10 +204,10 @@ def main() -> int:
         if latin in seen:
             continue
         seen.add(latin)
-        # override > resolved name > scientific name
-        out.append(
-            (OVERRIDES.get(latin) or norsk or latin, latin, redlist.get(latin, ""))
-        )
+        # override > resolved name > scientific name; red list wins over alien list
+        # (native red-listed and introduced alien are disjoint in practice anyway).
+        status = redlist.get(latin) or alienlist.get(latin, "")
+        out.append((OVERRIDES.get(latin) or norsk or latin, latin, status))
     with open("species.csv", "w", newline="", encoding="utf-8") as f:
         w = csv.writer(f)
         w.writerow(["norsk", "latin", "status"])
