@@ -4,7 +4,7 @@
     android:viewportWidth="108"
     android:viewportHeight="108">
 
-    <!-- Field notebook, tilted slightly, with a bird centred on the cover. -->
+    <!-- Field notebook, tilted slightly, with a woodcock centred on the cover. -->
     <group android:name="book" android:rotation="-13" android:pivotX="54" android:pivotY="54">
 
         <!-- stacked pages peeking on the right and bottom -->
@@ -23,17 +23,44 @@
         <!-- spine highlight line -->
         <path android:fillColor="#EADCB8" android:pathData="M40,25 L41.5,25 L41.5,83 L40,83 Z" />
 
-        <!-- bird, on the cover (clear of the spine) -->
-        <path android:fillColor="#4F93C4" android:pathData="M47,54 L40,50 L46,61 Z" />
-        <path android:fillColor="#4F93C4"
-            android:pathData="M43,57 a11,8 0 1,0 22,0 a11,8 0 1,0 -22,0 Z" />
-        <path android:fillColor="#82B7DD"
-            android:pathData="M48.5,57 a6,3.5 0 1,0 12,0 a6,3.5 0 1,0 -12,0 Z" />
-        <path android:fillColor="#4F93C4"
-            android:pathData="M56,50 a7,7 0 1,0 14,0 a7,7 0 1,0 -14,0 Z" />
-        <path android:fillColor="#F0A23C" android:pathData="M69,48 L75,50 L69,53 Z" />
-        <path android:fillColor="#1F2D36"
-            android:pathData="M63.7,48 a1.7,1.7 0 1,0 3.4,0 a1.7,1.7 0 1,0 -3.4,0 Z" />
+        <!-- Eurasian woodcock, on the cover (clear of the spine) -->
+        <!-- tail: short rounded fan, drooped back, barred with a pale tip -->
+        <path android:fillColor="#7A4F2A"
+            android:pathData="M45,52 C40,52 35,55 34,59 C33.5,62 36,64 40,63 C43,62 45,57 45,53.5 Z" />
+        <path android:fillColor="#3A2712"
+            android:pathData="M38,53.8 C36.2,55.2 35.3,57.2 35.6,59.4 L37.5,58.8 C37.2,57 37.8,55.2 39.2,54 Z" />
+        <path android:fillColor="#E7DAB8"
+            android:pathData="M34.4,57.4 C33.8,59 34.1,60.9 35.2,62.1 L36.4,61.1 C35.6,60 35.4,58.7 35.9,57.1 Z" />
+        <!-- plump body -->
+        <path android:fillColor="#9A6B3E"
+            android:pathData="M39.5,54 a12.5,9.3 0 1,0 25,0 a12.5,9.3 0 1,0 -25,0 Z" />
+        <!-- folded wing (darker), inside the body -->
+        <path android:fillColor="#6E4A29"
+            android:pathData="M37.5,51 a9.5,5.8 0 1,0 19,0 a9.5,5.8 0 1,0 -19,0 Z" />
+        <!-- dark wing bars (cryptic plumage) -->
+        <path android:fillColor="#4A3219"
+            android:pathData="M42,50 q5,-1.3 10,0.5 l-0.5,1.6 q-4.7,-1.7 -9.2,-0.7 Z" />
+        <path android:fillColor="#4A3219"
+            android:pathData="M41.5,53.3 q5.3,-1.2 10.6,0.7 l-0.5,1.6 q-5,-1.8 -10,-0.8 Z" />
+        <!-- pale buff belly -->
+        <path android:fillColor="#C7A878"
+            android:pathData="M46,59 a8,3.8 0 1,0 16,0 a8,3.8 0 1,0 -16,0 Z" />
+        <!-- head, raised at the front -->
+        <path android:fillColor="#925F33"
+            android:pathData="M56.6,47 a6.4,6.4 0 1,0 12.8,0 a6.4,6.4 0 1,0 -12.8,0 Z" />
+        <!-- crown bars (transverse, behind the eye) -->
+        <path android:fillColor="#3A2712" android:pathData="M55.6,43.2 L57.3,42.7 L58,45.9 L56.3,46.4 Z" />
+        <path android:fillColor="#3A2712" android:pathData="M58.7,42.4 L60.4,42.1 L60.9,45.3 L59.2,45.6 Z" />
+        <!-- bill, long and straight, angled ~45 deg down -->
+        <path android:fillColor="#6B543B" android:pathData="M67,49 L76.5,58.5 L75.1,59.9 L65.6,50.4 Z" />
+        <path android:fillColor="#3E3024" android:pathData="M73,55 L76.5,58.5 L75.1,59.9 L71.6,56.4 Z" />
+        <!-- dark loral line, from eye toward the bill -->
+        <path android:fillColor="#4A3219" android:pathData="M63,43.4 L66.6,49.2 L65.1,49.9 L61.8,44.4 Z" />
+        <!-- large eye, set very high on the head -->
+        <path android:fillColor="#161616"
+            android:pathData="M61,41 a2.3,2.3 0 1,0 4.6,0 a2.3,2.3 0 1,0 -4.6,0 Z" />
+        <path android:fillColor="#FFFFFF"
+            android:pathData="M62.1,40.2 a0.7,0.7 0 1,0 1.4,0 a0.7,0.7 0 1,0 -1.4,0 Z" />
 
         <!-- "beta", scrawled across the cover in red felt marker -->
         <path android:strokeColor="#E0301E" android:strokeWidth="2.1"
