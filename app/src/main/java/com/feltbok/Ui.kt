@@ -435,10 +435,13 @@ internal fun ScreenHeader(
 fun DetailScreen(vm: MainViewModel) {
     val cs = MaterialTheme.colorScheme
     var confirmDiscard by remember { mutableStateOf(false) }
-    // System Back is the natural cancel (NN/g), so it must go through the same discard confirm as
-    // the ✕ - otherwise an accidental back-swipe drops a started observation silently. This handler
-    // sits inside DetailScreen, so it shadows the app-level one only while the editor is open.
-    BackHandler { confirmDiscard = true }
+    // Confirm only when leaving would actually lose work (NN/g); editing a note and leaving it
+    // untouched just goes back, no pointless prompt.
+    val leave = { if (vm.draftHasChanges()) confirmDiscard = true else vm.cancel() }
+    // System Back is the natural cancel (NN/g), so it must go through the same path as the ✕ -
+    // otherwise an accidental back-swipe drops a started observation silently. This handler sits
+    // inside DetailScreen, so it shadows the app-level one only while the editor is open.
+    BackHandler { leave() }
     if (confirmDiscard) {
         AlertDialog(
             onDismissRequest = { confirmDiscard = false },
@@ -456,7 +459,7 @@ fun DetailScreen(vm: MainViewModel) {
         // rather than a back chevron, and confirm before actually throwing the draft away.
         ScreenHeader(
             if (vm.isEditing) Strings.Detail.titleEdit else Strings.Detail.titleNew,
-            onCancel = { confirmDiscard = true },
+            onCancel = leave,
             cancelContent = { Text("✕", color = Color.White, fontSize = 22.sp) },
         )
         Column(Modifier.weight(1f).verticalScroll(rememberScrollState())) {

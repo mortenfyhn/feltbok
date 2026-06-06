@@ -95,6 +95,20 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
     var dUncertain by mutableStateOf(false)
     val isEditing: Boolean get() = editingId != null
 
+    /** Whether leaving the editor would actually lose work, so Back/✕ can skip the discard confirm
+     *  when there's nothing to discard. A new observation is always unsaved work; an edit only
+     *  counts if a field changed from the saved note. */
+    fun draftHasChanges(): Boolean {
+        val orig = editingId?.let { id -> notes.firstOrNull { it.id == id } } ?: return true
+        val loc = dLoc
+        return dSpecies != orig.species || dLatin != orig.latin || dCount != orig.count ||
+            dAge != orig.age || dAct != orig.activity || dSex != orig.sex ||
+            dPub != orig.publicComment || dPriv != orig.privateComment ||
+            dTime != orig.time || dEndTime != orig.endTime || dUncertain != orig.uncertain ||
+            (loc?.lokalitet ?: "") != orig.locName ||
+            (loc?.lat ?: 0.0) != orig.lat || (loc?.lon ?: 0.0) != orig.lon
+    }
+
     init {
         // Seed "som forrige" from the most recent note that carried a comment (no localities needed).
         notes.firstOrNull { it.publicComment.isNotBlank() }?.let { lastPub = it.publicComment }
