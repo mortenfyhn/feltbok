@@ -18,8 +18,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.ui.draw.clip
-import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.material3.Button
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
@@ -34,6 +32,8 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalContext
@@ -41,6 +41,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.viewinterop.AndroidView
+import kotlinx.coroutines.delay
 import org.osmdroid.config.Configuration
 import org.osmdroid.tileprovider.tilesource.TileSourceFactory
 import org.osmdroid.util.BoundingBox
@@ -49,7 +50,6 @@ import org.osmdroid.views.CustomZoomButtonsController
 import org.osmdroid.views.MapView
 import org.osmdroid.views.Projection
 import org.osmdroid.views.overlay.Overlay
-import kotlinx.coroutines.delay
 import java.io.File
 import kotlin.math.abs
 import kotlin.math.cos
@@ -259,6 +259,7 @@ fun LocalityPreview(vm: MainViewModel, modifier: Modifier = Modifier) {
 // 0 = a point locality -> a small fixed dot; > 0 = a real circle of that radius.
 // Polygons draw their own shape and ignore radius.
 private const val POINT_DOT_PX = 15f
+
 /** Below this zoom, localities whose on-screen footprint is smaller than
  *  [DECLUTTER_MIN_SPAN_PX] (px half-extent) are hidden, so a far-out view of many
  *  harvested kommuner isn't a wall of dots. Tune these two to taste. */
@@ -314,7 +315,7 @@ private class PreviewOverlay : Overlay() {
                 c.drawPath(path, sp)
             } else {
                 val rPx = if (it.radius > 0.0) (it.radius * ppm).toFloat().coerceIn(POINT_DOT_PX, 200f)
-                          else POINT_DOT_PX
+                else POINT_DOT_PX
                 proj.toPixels(GeoPoint(it.lat, it.lon), p)
                 c.drawCircle(p.x.toFloat(), p.y.toFloat(), rPx, fp)
                 c.drawCircle(p.x.toFloat(), p.y.toFloat(), rPx, sp)
@@ -362,6 +363,7 @@ private class LocalityOverlay(
     private val selFill = fillPaint(MapPalette.SelFill)
     private val selFillFaint = fillPaint(MapPalette.SelFillFaint)
     private val selStroke = strokePaint(MapPalette.SelStroke, 6f)
+
     // Private picks keep the same bold-highlight shape but in the yellow hue.
     private val selFillPriv = fillPaint(MapPalette.SelFillPriv)
     private val selFillFaintPriv = fillPaint(MapPalette.SelFillFaintPriv)
@@ -405,12 +407,12 @@ private class LocalityOverlay(
     private fun boundsVisible(loc: Locality, bb: BoundingBox): Boolean {
         val b = loc.cullBounds   // [latMin, latMax, lonMin, lonMax], precomputed once
         return !(b[1] < bb.latSouth || b[0] > bb.latNorth ||
-                 b[3] < bb.lonWest || b[2] > bb.lonEast)
+            b[3] < bb.lonWest || b[2] > bb.lonEast)
     }
 
     /** Draw a locality's real polygon, or its radius circle if it's a point locality. */
     private fun drawShape(c: Canvas, proj: Projection, loc: Locality,
-                          cx: Float, cy: Float, rPx: Float, fp: Paint, sp: Paint) {
+        cx: Float, cy: Float, rPx: Float, fp: Paint, sp: Paint) {
         if (loc.polygon.isNotEmpty()) {
             tracePolygon(path, loc.polygon, proj, p)
             c.drawPath(path, fp)
@@ -485,7 +487,7 @@ private class LocalityOverlay(
             // small points get a solid fill so the dot stands out.
             val area = pl.polygon.isNotEmpty()
             val fp = if (pl.public) (if (area) selFillFaint else selFill)
-                     else (if (area) selFillFaintPriv else selFillPriv)
+            else (if (area) selFillFaintPriv else selFillPriv)
             val sp = if (pl.public) selStroke else selStrokePriv
             drawShape(c, proj, pl, cx, cy, radiusPx(pl, ppm), fp, sp)
             if (showLabels) drawLabel(c, pl.lokalitet, cx, cy, radiusPx(pl, ppm))

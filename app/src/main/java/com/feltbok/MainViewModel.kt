@@ -29,20 +29,24 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
     // until it populates (a beat later), then recompose.
     val localities = mutableStateListOf<Locality>()
     val species: List<Species> = loadSpecies(app)
+
     /** Norwegian names pre-folded for search, parallel to [species] (folded once, not per keystroke). */
     val foldedNorsk: List<String> = species.map { fold(it.norsk) }
+
     /** Rødlista 2021 category by scientific name, for the conservation-status badge. */
     private val statusByLatin: Map<String, String> =
         species.filter { it.status.isNotBlank() }.associate { it.latin to it.status }
     fun redStatus(latin: String): String = statusByLatin[latin] ?: ""
 
     val notes = mutableStateListOf<Note>().apply { addAll(loadNotes(app)) }
+
     /** Recently chosen species (norsk), most-recent first - the quick list when search is empty.
      *  Persisted, so it survives restarts; seeds with the most common species first run. */
     val recent = mutableStateListOf<String>().apply {
         val saved = loadRecent(app)
         addAll(if (saved.isNotEmpty()) saved else species.take(6).map { it.norsk })
     }
+
     /** How many times each species (norsk) has been picked, so your own regulars
      *  rank to the top of the quick list and of typed results. Persisted. */
     private val uses = mutableStateMapOf<String, Int>().apply { putAll(loadUses(app)) }
@@ -50,6 +54,7 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
 
     /** Per-activity use counts, so each user's most-used activities rise to the top. */
     private val actUses = mutableStateMapOf<String, Int>().apply { putAll(loadActUses(app)) }
+
     /** Aktivitet options with your most-used first, then the rest in the default order. */
     fun activityOptions(): List<String> {
         val (used, rest) = Options.activities.partition { (actUses[it] ?: 0) > 0 }

@@ -20,6 +20,7 @@ object Options {
         "1K", "1K+", "2K", "2K+", "2K-", "3K", "3K+", "3K-", "4K", "4K+", "4K-",
         "5K", "5K+", "5K-", "6K", "6K+", "6K-", "7K", "7K+", "7K-",
     )
+
     // The everyday non-breeding activities, surfaced first so the long list below
     // doesn't have to be scrolled for the common case.
     private val commonActivities = listOf(
@@ -27,6 +28,7 @@ object Options {
         "Sang/spill, ikke hekking", "Lokkelyd, øvrige lyder", "Ved fôring",
         "Revir, ikke hekking", "Permanent revir",
     )
+
     // The full Fugl activity list, in the template/website order.
     private val allActivities = listOf(
         "Reir med egg eller unger", "Reir, unger hørt", "Rugende", "Mat til unger",
@@ -67,12 +69,12 @@ data class Locality(
     val kommune: String,
     val lat: Double,
     val lon: Double,
-    val fullname: String,         // qualified "Lok, Hovedlok, Kommune, Fylke" - what the import matches
-    val observers: Int,           // distinct observers - a public-establishedness signal for the map
-    val radius: Double,           // the locality's map footprint radius in metres (0 = unknown)
-    val polygon: List<DoubleArray> = emptyList(),  // real footprint as [lat,lon] vertices, when it is an area
-    val public: Boolean = true,   // an allmenn (public) locality, vs one of the user's own
-    val mine: Boolean = false,    // the user's own custom locality (private to them; links by bare name)
+    val fullname: String, // qualified "Lok, Hovedlok, Kommune, Fylke" - what the import matches
+    val observers: Int, // distinct observers - a public-establishedness signal for the map
+    val radius: Double, // the locality's map footprint radius in metres (0 = unknown)
+    val polygon: List<DoubleArray> = emptyList(), // real footprint as [lat,lon] vertices, when it is an area
+    val public: Boolean = true, // an allmenn (public) locality, vs one of the user's own
+    val mine: Boolean = false, // the user's own custom locality (private to them; links by bare name)
     val newLoc: Boolean = false,  // a brand-new spot the user just placed - exported WITH coords to mint it
 ) {
     /** [latMin, latMax, lonMin, lonMax] of the footprint, computed once (the map needs it
@@ -101,9 +103,9 @@ data class Locality(
 data class Species(val norsk: String, val latin: String, val status: String = "")
 
 data class Note(
-    val id: Long,                 // creation time in ms - the stable key (never changes)
-    val time: Long = id,          // observation start (date+time) - editable; defaults to id
-    val endTime: Long? = null,    // observation end; null = a single time point (Til = Fra on export)
+    val id: Long, // creation time in ms - the stable key (never changes)
+    val time: Long = id, // observation start (date+time) - editable; defaults to id
+    val endTime: Long? = null, // observation end; null = a single time point (Til = Fra on export)
     val species: String,
     val latin: String,
     val count: Int,
@@ -112,12 +114,12 @@ data class Note(
     val sex: String,
     val publicComment: String,
     val privateComment: String,
-    val locName: String,          // short locality name, for display
-    val locFull: String,          // qualified Lokalitetsnavn, for the import
+    val locName: String, // short locality name, for display
+    val locFull: String, // qualified Lokalitetsnavn, for the import
     val lat: Double,
     val lon: Double,
-    val newLoc: Boolean = false,  // a brand-new spot: export with coordinates so the import mints it
-    val locRadius: Int = 0,       // chosen radius in metres for a new spot (-> Nøyaktighet)
+    val newLoc: Boolean = false, // a brand-new spot: export with coordinates so the import mints it
+    val locRadius: Int = 0, // chosen radius in metres for a new spot (-> Nøyaktighet)
     val uncertain: Boolean = false,  // uncertain species determination (-> "Usikker artsbestemming")
 )
 
@@ -319,7 +321,7 @@ fun parseMySites(json: String): List<Locality> {
         val lat = o.optDouble("latitude", Double.NaN); val lon = o.optDouble("longitude", Double.NaN)
         if (lat.isNaN() || lon.isNaN()) continue
         val poly = if (o.optBoolean("isPolygon")) lonLatRingToVertices(o.optString("polygonCoordinates"))
-                   else emptyList()
+        else emptyList()
         out.add(Locality(
             id = o.optLong("id").toString(),
             lokalitet = o.optString("name"),
@@ -358,7 +360,7 @@ fun saveMyLocalities(ctx: Context, sites: List<Locality>) {
     sb.append("id,lokalitet,hovedlokalitet,kommune,fylke,lat,lon,count,observers,fullname,radius,geometry,public,mine\n")
     for (s in sites) {
         val geom = if (s.polygon.isEmpty()) ""
-                   else "POLYGON((" + s.polygon.joinToString(", ") { "${it[1]} ${it[0]}" } + "))"
+        else "POLYGON((" + s.polygon.joinToString(", ") { "${it[1]} ${it[0]}" } + "))"
         sb.append(listOf(
             s.id, s.lokalitet, s.hovedlokalitet, s.kommune, "",
             s.lat.toString(), s.lon.toString(), "0", "0", s.fullname,
