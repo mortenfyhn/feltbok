@@ -155,7 +155,6 @@ fun LocalityScreen(vm: MainViewModel) {
                     .onSizeChanged { sheetH = it.height },
                 verticalArrangement = Arrangement.spacedBy(10.dp),
             ) {
-                Text(Strings.Picker.panHint, color = cs.onSurface, fontSize = 13.sp)
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Text(Strings.Picker.radius, color = cs.onSurface, modifier = Modifier.weight(1f))
                     TextButton(onClick = { newRadius = RADII.lastOrNull { it < newRadius } ?: RADII.first() }) {
@@ -171,6 +170,7 @@ fun LocalityScreen(vm: MainViewModel) {
                     label = { Text(Strings.Picker.nameLabel) },
                     placeholder = { Text(Strings.Picker.namePlaceholder) }, modifier = Modifier.fillMaxWidth(),
                 )
+                Text(Strings.Picker.adjustHint, color = cs.onSurfaceVariant, fontSize = 12.sp)
                 Button(
                     onClick = {
                         val gp = mapView.projection.fromPixels(mapView.width / 2, (mapView.height - sheetH) / 2)
