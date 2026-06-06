@@ -143,7 +143,12 @@ fun SyncScreen(vm: MainViewModel) {
             Modifier.fillMaxWidth().background(cs.primary).padding(horizontal = 14.dp, vertical = 9.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
-            Text(if (stage == Stage.LOGIN) "Logg inn på Artsobservasjoner" else "Hent mine lokaliteter",
+            Text(
+                when {
+                    stage == Stage.LOGIN -> "Logg inn på Artsobservasjoner"
+                    vm.localities.any { it.mine } -> "Oppdater lokaliteter"
+                    else -> "Hent mine lokaliteter"
+                },
                 color = Color.White, fontWeight = FontWeight.SemiBold, modifier = Modifier.weight(1f))
             TextButton(onClick = { vm.closeSync() }) { Text("Avbryt", color = Color.White) }
         }

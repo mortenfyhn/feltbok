@@ -126,7 +126,9 @@ fun ListScreen(vm: MainViewModel) {
             // clean in the gap on release ("v0.7"), spilling over the buttons on a long dev build.
             Box(Modifier.fillMaxWidth().background(cs.surface), Alignment.Center) {
                 Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
-                    Text("Hent mine lokaliteter", color = cs.primary, fontWeight = FontWeight.Medium, fontSize = 13.sp,
+                    // First time it's an invitation; once you've synced some, it's a refresh.
+                    Text(if (vm.localities.any { it.mine }) "Oppdater lokaliteter" else "Hent mine lokaliteter",
+                        color = cs.primary, fontWeight = FontWeight.Medium, fontSize = 13.sp,
                         maxLines = 1, modifier = Modifier.clickable { vm.openSync() }.padding(horizontal = 14.dp, vertical = 10.dp))
                     Spacer(Modifier.weight(1f))
                     Text("Gi tilbakemelding", color = cs.primary, fontWeight = FontWeight.Medium, fontSize = 13.sp,
