@@ -7,6 +7,7 @@ import android.graphics.Paint
 import android.graphics.Path
 import android.graphics.Point
 import android.view.MotionEvent
+import android.view.ViewGroup
 import android.widget.NumberPicker
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -115,7 +116,7 @@ fun LocalityScreen(vm: MainViewModel) {
             title = if (newMode) Strings.Picker.titleNew else Strings.Picker.titlePick,
             onCancel = { if (newMode) newMode = false else vm.leaveLocalityPicker() },
         ) {
-            if (!newMode) TextButton(onClick = { newMode = true }) { Text(Strings.Picker.newButton, color = Color.White) }
+            if (!newMode) TextButton(onClick = { newRadius = fitRadius(mapView); newMode = true }) { Text(Strings.Picker.newButton, color = Color.White) }
         }
         Box(Modifier.weight(1f).fillMaxWidth()) {
             AndroidView(
@@ -185,6 +186,8 @@ fun LocalityScreen(vm: MainViewModel) {
                             if (it == 0) Strings.Picker.point else Strings.Picker.meters(it)
                         }.toTypedArray()
                         wrapSelectorWheel = false
+                        // Block the inner EditText so long-pressing a value can't pop the keyboard.
+                        descendantFocusability = ViewGroup.FOCUS_BLOCK_DESCENDANTS
                         value = RADII.indexOf(newRadius)
                         setOnValueChangedListener { _, _, i -> newRadius = RADII[i] }
                     }
@@ -196,6 +199,17 @@ fun LocalityScreen(vm: MainViewModel) {
 
 /** Radii Artsobservasjoner allows for a circle locality (0 = a point). */
 private val RADII = listOf(0, 1, 5, 10, 25, 50, 75, 100, 125, 150, 200, 250, 300, 400, 500, 750, 1000, 1500, 2000, 2500, 3000, 5000)
+
+/** Largest preset radius whose circle comfortably fits the current map view, so a new spot's
+ *  circle is actually visible at the current zoom instead of overflowing off-screen (#67). */
+private fun fitRadius(map: MapView): Int {
+    val proj = map.projection
+    val a = proj.toPixels(GeoPoint(map.mapCenter.latitude, map.mapCenter.longitude), null)
+    val b = proj.toPixels(GeoPoint(map.mapCenter.latitude + 100.0 / 111_320.0, map.mapCenter.longitude), null)
+    val ppm = abs(a.y - b.y) / 100.0
+    val maxR = minOf(map.width, map.height) * 0.25 / ppm   // radius ~ a quarter of the shorter side
+    return RADII.lastOrNull { it > 0 && it <= maxR } ?: RADII.first { it > 0 }
+}
 
 @Composable
 private fun ZoomButton(label: String, onClick: () -> Unit) {
