@@ -14,6 +14,7 @@ thresholds) reads from that cache with no re-harvest.
 
     .venv/bin/python process/mark_public.py
 """
+
 import collections
 import csv
 import importlib.util
@@ -60,9 +61,14 @@ def write(path, rows, reporters):
         # public sites alone (tagging co-observers), so the reporter test wrongly hides
         # them. A drawn polygon footprint + heavy use (>=50 records) is a strong
         # established-public signal, so treat that as public too.
-        established = r.get("geometry", "").startswith("POLYGON") and int(float(r.get("count") or 0)) >= 50
-        r["public"] = "1" if (len(reporters.get(r["id"], ())) >= 2 or established) else "0"
-        r["public"] = overrides.get(r["id"], r["public"])   # manual correction wins
+        established = (
+            r.get("geometry", "").startswith("POLYGON")
+            and int(float(r.get("count") or 0)) >= 50
+        )
+        r["public"] = (
+            "1" if (len(reporters.get(r["id"], ())) >= 2 or established) else "0"
+        )
+        r["public"] = overrides.get(r["id"], r["public"])  # manual correction wins
     with open(path, "w", newline="") as f:
         w = csv.DictWriter(f, fieldnames=fields)
         w.writeheader()
@@ -82,13 +88,22 @@ def occurrences(from_raw: bool):
     raw = open(RAW, "w", encoding="utf-8")
     offset = 0
     while offset + 300 <= 100_000:
-        d = bl._gbif_page({"datasetKey": bl.GBIF_DATASET, "limit": 300, "offset": offset,
-                           "hasCoordinate": "true", "taxonKey": 212,
-                           "geometry": bl.wkt_box(*bbox)})
+        d = bl._gbif_page(
+            {
+                "datasetKey": bl.GBIF_DATASET,
+                "limit": 300,
+                "offset": offset,
+                "hasCoordinate": "true",
+                "taxonKey": 212,
+                "geometry": bl.wkt_box(*bbox),
+            }
+        )
         if d is None:
             break
         for o in d.get("results", []):
-            raw.write(json.dumps(o, ensure_ascii=False) + "\n")   # full unmodified record
+            raw.write(
+                json.dumps(o, ensure_ascii=False) + "\n"
+            )  # full unmodified record
             yield o
         offset += 300
         print(f"\r  harvested {offset} records", end="", file=sys.stderr)
@@ -111,7 +126,10 @@ def main() -> int:
             reporters[lid].add(reporter(rb))
     write(path, rows, reporters)
     npriv = sum(1 for r in rows if r["public"] == "0")
-    print(f"\nMarked {npriv}/{len(rows)} localities private. Raw harvest -> {RAW}", file=sys.stderr)
+    print(
+        f"\nMarked {npriv}/{len(rows)} localities private. Raw harvest -> {RAW}",
+        file=sys.stderr,
+    )
     return 0
 
 

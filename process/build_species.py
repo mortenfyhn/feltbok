@@ -9,6 +9,7 @@ carries the Norwegian Red List 2021 category (mainland) for red-listed species.
 
     python process/build_species.py      # -> species.csv  (then: just push-data, or rebundle)
 """
+
 import csv
 import html as _html
 import re
@@ -23,11 +24,13 @@ NORTAXA = "a6c6cead-b5ce-4a4e-8cf5-1542ba708dec"  # Artsdatabanken's Norwegian n
 
 # Norwegian Red List 2021 (Artsdatabanken), mainland (Area=N) bird assessments.
 # Only red-listed categories are kept for display; LC/NA/NE map to "".
-REDLIST_URL = "https://lister.artsdatabanken.no/rodlisteforarter/2021?SpeciesGroups=Fugler&Area=N"
+REDLIST_URL = (
+    "https://lister.artsdatabanken.no/rodlisteforarter/2021?SpeciesGroups=Fugler&Area=N"
+)
 REDLISTED = {"RE", "CR", "EN", "VU", "NT", "DD"}
 # Red List uses newer genera than this checklist for a few species; map to ours so they match.
 REDLIST_ALIASES = {
-    "Curruca nisoria": "Sylvia nisoria",          # hauksanger
+    "Curruca nisoria": "Sylvia nisoria",  # hauksanger
     "Hydrobates leucorhous": "Oceanodroma leucorhoa",  # stormsvale
 }
 
@@ -39,8 +42,11 @@ def fetch_redlist():
     catre = re.compile(r'class="(RE|CR|EN|VU|NT|DD|LC|NA|NE) risk-category-circle"')
     out, page = {}, 1
     while True:
-        r = requests.get(f"{REDLIST_URL}&Page={page}",
-                         headers={"User-Agent": "feltbok-redlist/1.0"}, timeout=60)
+        r = requests.get(
+            f"{REDLIST_URL}&Page={page}",
+            headers={"User-Agent": "feltbok-redlist/1.0"},
+            timeout=60,
+        )
         r.raise_for_status()
         rows = rowre.findall(r.text)
         if not rows:
@@ -51,8 +57,9 @@ def fetch_redlist():
                 name = _html.unescape(lat.group(1)).strip()
                 out[REDLIST_ALIASES.get(name, name)] = cat.group(1)
         page += 1
-        time.sleep(0.6)        # gentle on Artsdatabanken
+        time.sleep(0.6)  # gentle on Artsdatabanken
     return out
+
 
 # Manual Bokmål names for species the lookups miss - mostly where this dataset
 # files a bird under an old genus (Sylvia) that Artsnavnebasen only lists under
@@ -72,8 +79,13 @@ OVERRIDES = {
 def nortaxa_name(latin):
     """Norwegian name from Artsnavnebasen - Artsobservasjoner uses the same base.
     Prefer Bokmål (nob, what Artsobs reports) over Nynorsk (nno)."""
-    d = get("https://api.gbif.org/v1/species/search",
-            {"datasetKey": NORTAXA, "q": latin, "qField": "SCIENTIFIC", "limit": 30}) or {}
+    d = (
+        get(
+            "https://api.gbif.org/v1/species/search",
+            {"datasetKey": NORTAXA, "q": latin, "qField": "SCIENTIFIC", "limit": 30},
+        )
+        or {}
+    )
     nob = nor = nno = None
     for r in d.get("results", []):
         if r.get("canonicalName") != latin:
@@ -102,9 +114,16 @@ def get(url, params=None):
 
 def species_keys():
     """(speciesKey, record-count) for every bird species in the dataset."""
-    d = get("https://api.gbif.org/v1/occurrence/search",
-            params={"datasetKey": DATASET, "taxonKey": AVES,
-                    "facet": "speciesKey", "facetLimit": 1000, "limit": 0})
+    d = get(
+        "https://api.gbif.org/v1/occurrence/search",
+        params={
+            "datasetKey": DATASET,
+            "taxonKey": AVES,
+            "facet": "speciesKey",
+            "facetLimit": 1000,
+            "limit": 0,
+        },
+    )
     return [(c["name"], c["count"]) for c in d["facets"][0]["counts"]]
 
 
@@ -121,12 +140,17 @@ def resolve(key):
     # for species Artsnavnebasen doesn't cover.
     norsk = nortaxa_name(latin)
     if not norsk:
-        vn = get(f"https://api.gbif.org/v1/species/{key}/vernacularNames", {"limit": 200}) or {}
+        vn = (
+            get(
+                f"https://api.gbif.org/v1/species/{key}/vernacularNames", {"limit": 200}
+            )
+            or {}
+        )
         by_lang: dict = {}
         for v in vn.get("results", []):
             by_lang.setdefault(v.get("language"), v.get("vernacularName"))
         norsk = by_lang.get("nor") or by_lang.get("nno") or ""
-    if norsk:                                  # Artsobs capitalises the first letter
+    if norsk:  # Artsobs capitalises the first letter
         norsk = norsk[:1].upper() + norsk[1:]
     return norsk or "", latin
 
@@ -157,13 +181,17 @@ def main() -> int:
             continue
         seen.add(latin)
         # override > resolved name > scientific name
-        out.append((OVERRIDES.get(latin) or norsk or latin, latin, redlist.get(latin, "")))
+        out.append(
+            (OVERRIDES.get(latin) or norsk or latin, latin, redlist.get(latin, ""))
+        )
     with open("species.csv", "w", newline="", encoding="utf-8") as f:
         w = csv.writer(f)
         w.writerow(["norsk", "latin", "status"])
         w.writerows(out)
-    print(f"Wrote {len(out)} bird species ({gaps} without a Norwegian name) to species.csv",
-          file=sys.stderr)
+    print(
+        f"Wrote {len(out)} bird species ({gaps} without a Norwegian name) to species.csv",
+        file=sys.stderr,
+    )
     return 0
 
 

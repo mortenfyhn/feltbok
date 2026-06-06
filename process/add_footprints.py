@@ -9,6 +9,7 @@ get no geometry; the app draws their radius circle instead.
 
     .venv/bin/python process/add_footprints.py     # rewrites app/src/main/assets/localities.csv
 """
+
 import csv
 import importlib.util
 import pathlib
@@ -28,9 +29,11 @@ _T = Transformer.from_crs("EPSG:25833", "EPSG:4326", always_xy=True)  # UTM33 ->
 
 def reproject(wkt: str) -> str:
     """Rewrite a UTM33 WKT's coordinate pairs to WGS84 lon/lat (6 dp)."""
+
     def conv(m):
         lon, lat = _T.transform(float(m.group(1)), float(m.group(2)))
         return f"{lon:.6f} {lat:.6f}"
+
     return re.sub(r"(-?\d+(?:\.\d+)?)\s+(-?\d+(?:\.\d+)?)", conv, wkt)
 
 
@@ -55,25 +58,36 @@ def main() -> int:
     bbox = (8.0, 63.5, 9.3, 63.9)
     found: dict[str, str] = {}
     offset, stale, page = 0, 0, 0
-    while offset + 300 <= 100_000 and stale < 30:        # stop when polygons stop coming
-        d = bl._gbif_page({"datasetKey": bl.GBIF_DATASET, "limit": 300, "offset": offset,
-                           "hasCoordinate": "true", "taxonKey": 212,
-                           "geometry": bl.wkt_box(*bbox)})
+    while offset + 300 <= 100_000 and stale < 30:  # stop when polygons stop coming
+        d = bl._gbif_page(
+            {
+                "datasetKey": bl.GBIF_DATASET,
+                "limit": 300,
+                "offset": offset,
+                "hasCoordinate": "true",
+                "taxonKey": 212,
+                "geometry": bl.wkt_box(*bbox),
+            }
+        )
         if d is None:
             break
         new = 0
         for o in d.get("results", []):
             lid = str(o.get("locationID") or "").strip()
-            w = (o.get("footprintWKT") or "")
+            w = o.get("footprintWKT") or ""
             if lid in want and lid not in found and w.upper().startswith("POLYGON"):
                 found[lid] = reproject(w)
                 new += 1
         stale = 0 if new else stale + 1
         offset += 300
         page += 1
-        if page % 15 == 0:                              # flush partial results periodically
+        if page % 15 == 0:  # flush partial results periodically
             write(path, rows, found)
-        print(f"\r  {offset} records, {len(found)} polygons (stale {stale})", end="", file=sys.stderr)
+        print(
+            f"\r  {offset} records, {len(found)} polygons (stale {stale})",
+            end="",
+            file=sys.stderr,
+        )
         if d.get("endOfRecords") or not d.get("results"):
             break
     print(file=sys.stderr)

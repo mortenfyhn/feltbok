@@ -25,6 +25,7 @@ rows saved to OUT, gentle and resumable.
 
     .venv/bin/python process/harvest_sites_mobil.py [--bbox minlon,minlat,maxlon,maxlat]
 """
+
 import argparse
 import json
 import math
@@ -39,34 +40,48 @@ URL = "https://mobil.artsobservasjoner.no/core/Sites/ByBoundingBox"
 COOKIE_FILE = os.environ.get("BFF_COOKIE_FILE", "/tmp/bff_cookie.txt")
 # Where the raw rows are written (kept out of the repo - it's large). Override with
 # FELTBOK_DATA_DIR; pass --out to point at a specific file.
-DATA_DIR = os.environ.get("FELTBOK_DATA_DIR", "/home/morten/Documents/projects/app-feltbok")
+DATA_DIR = os.environ.get(
+    "FELTBOK_DATA_DIR", "/home/morten/Documents/projects/app-feltbok"
+)
 # All of mainland Norway. --bbox to narrow (Frøya+Hitra was the old default: 8.0,63.5,9.3,63.9).
 DEFAULT_BBOX = (4.0, 57.9, 31.2, 71.3)
 # Web-Mercator tile size in metres. The server rejects a box wider than ~50 km/side
 # ("BoundingBox too large"), so stay safely under it.
 TILE_M = 40_000
-MAX_SITES = 1000                 # the server's hard per-response cap; hitting it => subdivide
-MIN_TILE_M = 400                 # stop subdividing below this (accept truncation; ~never reached)
+MAX_SITES = 1000  # the server's hard per-response cap; hitting it => subdivide
+MIN_TILE_M = 400  # stop subdividing below this (accept truncation; ~never reached)
 DELAY = 0.8
 
 
 def merc(lon, lat):
     x = lon * 20037508.34 / 180
-    y = math.log(math.tan((90 + lat) * math.pi / 360)) / (math.pi / 180) * 20037508.34 / 180
+    y = (
+        math.log(math.tan((90 + lat) * math.pi / 360))
+        / (math.pi / 180)
+        * 20037508.34
+        / 180
+    )
     return x, y
 
 
 def merc_inv(x, y):
     lon = x / 20037508.34 * 180
-    lat = math.degrees(2 * math.atan(math.exp((y / 20037508.34 * 180) * math.pi / 180)) - math.pi / 2)
+    lat = math.degrees(
+        2 * math.atan(math.exp((y / 20037508.34 * 180) * math.pi / 180)) - math.pi / 2
+    )
     return lon, lat
 
 
 def make_session(cookie_str):
     s = requests.Session()
-    s.headers.update({
-        "Accept": "application/json", "X-CSRF": "1", "Cookie": cookie_str,
-        "User-Agent": "Mozilla/5.0 (X11; Linux x86_64; rv:151.0) Gecko/20100101 Firefox/151.0"})
+    s.headers.update(
+        {
+            "Accept": "application/json",
+            "X-CSRF": "1",
+            "Cookie": cookie_str,
+            "User-Agent": "Mozilla/5.0 (X11; Linux x86_64; rv:151.0) Gecko/20100101 Firefox/151.0",
+        }
+    )
     return s
 
 
@@ -75,17 +90,26 @@ def fetch(session, mx0, my0, mx1, my1, tries=4):
     or None on a transient failure. Exits on an expired session so a refresh can resume."""
     lon0, lat0 = merc_inv(mx0, my0)
     lon1, lat1 = merc_inv(mx1, my1)
-    params = {"MinX": lon0, "MinY": lat0, "MaxX": lon1, "MaxY": lat1,
-              "MaxSites": MAX_SITES, "IncludePublicSites": "true"}
+    params = {
+        "MinX": lon0,
+        "MinY": lat0,
+        "MaxX": lon1,
+        "MaxY": lat1,
+        "MaxSites": MAX_SITES,
+        "IncludePublicSites": "true",
+    }
     for attempt in range(tries):
         try:
             r = session.get(URL, params=params, timeout=60, allow_redirects=False)
             if r.status_code == 200:
                 return r.json()
             if r.status_code in (301, 302, 401, 403):
-                print(f"\nSession expired (status {r.status_code}). Refresh the cookie in "
-                      f"{COOKIE_FILE} and rerun - the harvest resumes.", file=sys.stderr)
-                raise SystemExit(2)                      # 2 = cookie expired -> caller should stop
+                print(
+                    f"\nSession expired (status {r.status_code}). Refresh the cookie in "
+                    f"{COOKIE_FILE} and rerun - the harvest resumes.",
+                    file=sys.stderr,
+                )
+                raise SystemExit(2)  # 2 = cookie expired -> caller should stop
         except SystemExit:
             raise
         except Exception:
@@ -95,23 +119,27 @@ def fetch(session, mx0, my0, mx1, my1, tries=4):
 
 
 def main() -> int:
-    ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
-    ap.add_argument("--bbox", help="minlon,minlat,maxlon,maxlat (default: all of Norway)")
+    ap = argparse.ArgumentParser(
+        description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter
+    )
+    ap.add_argument(
+        "--bbox", help="minlon,minlat,maxlon,maxlat (default: all of Norway)"
+    )
     ap.add_argument("--out", default=f"{DATA_DIR}/artsobs-sites-mobil.json")
     args = ap.parse_args()
     bbox = tuple(float(x) for x in args.bbox.split(",")) if args.bbox else DEFAULT_BBOX
     lon0, lat0, lon1, lat1 = bbox
     session = make_session(pathlib.Path(COOKIE_FILE).read_text().strip())
 
-    rows = {}                                              # id -> row; ACCUMULATES across runs
+    rows = {}  # id -> row; ACCUMULATES across runs
     if pathlib.Path(args.out).exists():
         for r in json.load(open(args.out)):
             rows[r["id"]] = r
-    ckpt = args.out + ".tiles"                             # resume an interrupted run (per-bbox)
+    ckpt = args.out + ".tiles"  # resume an interrupted run (per-bbox)
     done = set()
     if pathlib.Path(ckpt).exists():
         d = json.load(open(ckpt))
-        if d.get("bbox") == list(bbox):                   # same area -> resume; new area -> fresh
+        if d.get("bbox") == list(bbox):  # same area -> resume; new area -> fresh
             done = set(tuple(t) for t in d["done"])
 
     def save():
@@ -134,7 +162,9 @@ def main() -> int:
             return
         for r in res:
             rows[r["id"]] = r
-        if len(res) >= MAX_SITES and (c - a) > MIN_TILE_M:   # truncated -> recurse into quarters
+        if (
+            len(res) >= MAX_SITES and (c - a) > MIN_TILE_M
+        ):  # truncated -> recurse into quarters
             mxm = (a + c) / 2
             mym = (b + d) / 2
             harvest(a, b, mxm, mym, depth + 1)
@@ -155,12 +185,19 @@ def main() -> int:
             if len(done) % 10 == 0:
                 save()
                 pub = sum(1 for r in rows.values() if not r["isPrivate"])
-                print(f"\r  {len(done)}/{nx * ny} tiles | {stats['req']} reqs | "
-                      f"{len(rows)} sites ({pub} public)", end="", file=sys.stderr, flush=True)
+                print(
+                    f"\r  {len(done)}/{nx * ny} tiles | {stats['req']} reqs | "
+                    f"{len(rows)} sites ({pub} public)",
+                    end="",
+                    file=sys.stderr,
+                    flush=True,
+                )
     save()
     pub = sum(1 for r in rows.values() if not r["isPrivate"])
-    print(f"\nHarvested {len(rows)} sites ({pub} public) -> {args.out}", file=sys.stderr)
-    pathlib.Path(ckpt).unlink(missing_ok=True)              # clean finish
+    print(
+        f"\nHarvested {len(rows)} sites ({pub} public) -> {args.out}", file=sys.stderr
+    )
+    pathlib.Path(ckpt).unlink(missing_ok=True)  # clean finish
     return 0
 
 

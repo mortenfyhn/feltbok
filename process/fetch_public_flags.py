@@ -20,6 +20,7 @@ aborts on throttling. Manual corrections in locality_overrides.csv always win.
 
     .venv/bin/python process/fetch_public_flags.py     # gentle, resumable
 """
+
 import csv
 import importlib.util
 import json
@@ -32,9 +33,9 @@ import requests
 
 URL = "https://www.artsobservasjoner.no/ViewSighting/FindSitesByName"
 CSV = "app/src/main/assets/localities.csv"
-RAW = "/tmp/public_flags_raw.json"     # name -> API results; cache + resume point
+RAW = "/tmp/public_flags_raw.json"  # name -> API results; cache + resume point
 CAP = 15
-DELAY = 1.5                            # be gentle: ~1 request / 1.5-2s (+ jitter)
+DELAY = 1.5  # be gentle: ~1 request / 1.5-2s (+ jitter)
 
 _mp = pathlib.Path(__file__).parent / "mark_public.py"
 _spec = importlib.util.spec_from_file_location("mp", _mp)
@@ -48,17 +49,26 @@ def norm(x: str) -> str:
 
 def make_session() -> requests.Session:
     s = requests.Session()
-    s.headers.update({
-        "Content-Type": "application/json", "X-Requested-With": "XMLHttpRequest",
-        "User-Agent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0 Safari/537.36"})
+    s.headers.update(
+        {
+            "Content-Type": "application/json",
+            "X-Requested-With": "XMLHttpRequest",
+            "User-Agent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0 Safari/537.36",
+        }
+    )
     return s
 
 
 def find_sites(s, term, tries=4):
     """Matching public bird sites; [] for an empty body (no match); None only on
     a genuine network failure after retries."""
-    payload = {"InAreas": [], "ForProject": None, "IncludePublicBirdSites": True,
-               "IncludeOthersPrivateSites": False, "Term": term}
+    payload = {
+        "InAreas": [],
+        "ForProject": None,
+        "IncludePublicBirdSites": True,
+        "IncludeOthersPrivateSites": False,
+        "Term": term,
+    }
     for attempt in range(tries):
         try:
             r = s.post(URL, json=payload, timeout=30)
@@ -91,11 +101,18 @@ def harvest(s, names):
             canary = find_sites(s, "Uttian")
             json.dump(cache, open(RAW, "w"), ensure_ascii=False)
             if not canary or not any(x.get("IsPublicSite") for x in canary):
-                raise SystemExit(f"\nCanary failed at {i}/{len(todo)} - throttled; cached and aborting. "
-                                 "Rerun to resume.")
+                raise SystemExit(
+                    f"\nCanary failed at {i}/{len(todo)} - throttled; cached and aborting. "
+                    "Rerun to resume."
+                )
         if i % 50 == 0:
             json.dump(cache, open(RAW, "w"), ensure_ascii=False)
-            print(f"\r  fetched {i}/{len(todo)} | {failed} net-fail", end="", file=sys.stderr, flush=True)
+            print(
+                f"\r  fetched {i}/{len(todo)} | {failed} net-fail",
+                end="",
+                file=sys.stderr,
+                flush=True,
+            )
         time.sleep(DELAY + random.uniform(0.0, 0.6))
     print(file=sys.stderr)
     json.dump(cache, open(RAW, "w"), ensure_ascii=False)
@@ -104,14 +121,20 @@ def harvest(s, names):
 
 def classify(rows, cache):
     """Authoritative flag per locality from cached results, matched by name+parent+region."""
-    public = set()       # (name, parent, region) confirmed public
-    enumerated = set()   # names whose result set was complete (< CAP) -> safe to demote
+    public = set()  # (name, parent, region) confirmed public
+    enumerated = set()  # names whose result set was complete (< CAP) -> safe to demote
     for name, res in cache.items():
         if len(res) < CAP:
             enumerated.add(name.strip().lower())
         for x in res:
             if x.get("IsPublicSite"):
-                public.add((x["Name"].strip().lower(), norm(x.get("ParentName")), x.get("Region")))
+                public.add(
+                    (
+                        x["Name"].strip().lower(),
+                        norm(x.get("ParentName")),
+                        x.get("Region"),
+                    )
+                )
     overrides = mp.load_overrides()
     promoted = demoted = kept = 0
     for r in rows:
@@ -123,7 +146,7 @@ def classify(rows, cache):
         elif r["lokalitet"].strip().lower() in enumerated:
             flag = "0"
         else:
-            flag = prior                       # capped/uncached -> don't worsen
+            flag = prior  # capped/uncached -> don't worsen
         flag = overrides.get(r["id"], flag)
         if flag == prior:
             kept += 1
@@ -145,9 +168,12 @@ def main() -> int:
         w.writeheader()
         w.writerows(rows)
     npub = sum(1 for r in rows if r["public"] == "1")
-    print(f"Authoritative allmenn flags applied (Name+Parent+Region). public={npub}/{len(rows)} "
-          f"(+{promoted} promoted, -{demoted} demoted, {kept} unchanged). "
-          f"{failed} name lookups failed. Raw cache: {RAW}", file=sys.stderr)
+    print(
+        f"Authoritative allmenn flags applied (Name+Parent+Region). public={npub}/{len(rows)} "
+        f"(+{promoted} promoted, -{demoted} demoted, {kept} unchanged). "
+        f"{failed} name lookups failed. Raw cache: {RAW}",
+        file=sys.stderr,
+    )
     return 0
 
 

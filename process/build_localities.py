@@ -24,6 +24,7 @@ most-used first. The app emits the bare `lokalitet` name + the exact `lat,lon`
 locality and disambiguate duplicate names); `hovedlokalitet` is kept for the
 new-site import path and for showing context in the picker.
 """
+
 import argparse
 import csv
 import io
@@ -61,16 +62,22 @@ def download(url: str, dest: str) -> None:
     wherever it left off (Range), and retry on connection errors. Only renamed to
     `dest` once complete, so a cached `dest` is always whole."""
     if os.path.exists(dest):
-        print(f"Using cached archive {dest} ({os.path.getsize(dest) >> 20} MB)", file=sys.stderr)
+        print(
+            f"Using cached archive {dest} ({os.path.getsize(dest) >> 20} MB)",
+            file=sys.stderr,
+        )
         return
     part = dest + ".part"
-    print(f"Downloading {url}\n  -> {dest} (a few GB, one time; resumable)", file=sys.stderr)
+    print(
+        f"Downloading {url}\n  -> {dest} (a few GB, one time; resumable)",
+        file=sys.stderr,
+    )
     for attempt in range(1, 9):
         have = os.path.getsize(part) if os.path.exists(part) else 0
         headers = {"Range": f"bytes={have}-"} if have else {}
         try:
             with requests.get(url, stream=True, timeout=120, headers=headers) as r:
-                if r.status_code == 416:           # already have it all
+                if r.status_code == 416:  # already have it all
                     break
                 mode = "ab"
                 if have and r.status_code != 206:  # server ignored Range -> restart
@@ -87,15 +94,22 @@ def download(url: str, dest: str) -> None:
                         got += len(chunk)
                         if (got >> 20) % 16 == 0:
                             tot = f" / {total >> 20} MB" if total else ""
-                            print(f"\r  {got >> 20} MB{tot}   ", end="", file=sys.stderr)
+                            print(
+                                f"\r  {got >> 20} MB{tot}   ", end="", file=sys.stderr
+                            )
             print(file=sys.stderr)
             break
-        except (requests.exceptions.ChunkedEncodingError,
-                requests.exceptions.ConnectionError,
-                requests.exceptions.ReadTimeout) as e:
+        except (
+            requests.exceptions.ChunkedEncodingError,
+            requests.exceptions.ConnectionError,
+            requests.exceptions.ReadTimeout,
+        ) as e:
             wait = min(5 * attempt, 30)
-            print(f"\n  interrupted ({type(e).__name__}); resuming in {wait}s "
-                  f"(attempt {attempt})", file=sys.stderr)
+            print(
+                f"\n  interrupted ({type(e).__name__}); resuming in {wait}s "
+                f"(attempt {attempt})",
+                file=sys.stderr,
+            )
             time.sleep(wait)
     else:
         raise SystemExit("Download kept dropping - try again later.")
@@ -103,12 +117,16 @@ def download(url: str, dest: str) -> None:
 
 
 GBIF_SEARCH = "https://api.gbif.org/v1/occurrence/search"
-GBIF_DATASET = "b124e1e0-4755-430f-9eab-894f25a9b59c"  # Norwegian Species Observation Service
+GBIF_DATASET = (
+    "b124e1e0-4755-430f-9eab-894f25a9b59c"  # Norwegian Species Observation Service
+)
 
 
 def wkt_box(minlon, minlat, maxlon, maxlat) -> str:
-    return (f"POLYGON(({minlon} {minlat},{maxlon} {minlat},{maxlon} {maxlat},"
-            f"{minlon} {maxlat},{minlon} {minlat}))")
+    return (
+        f"POLYGON(({minlon} {minlat},{maxlon} {minlat},{maxlon} {maxlat},"
+        f"{minlon} {maxlat},{minlon} {minlat}))"
+    )
 
 
 def observers(recorded_by):
@@ -130,11 +148,17 @@ def _gbif_page(params):
             r = requests.get(GBIF_SEARCH, params=params, timeout=90)
             r.raise_for_status()
             return r.json()
-        except (requests.exceptions.HTTPError, requests.exceptions.ConnectionError,
-                requests.exceptions.ReadTimeout, requests.exceptions.ChunkedEncodingError) as e:
+        except (
+            requests.exceptions.HTTPError,
+            requests.exceptions.ConnectionError,
+            requests.exceptions.ReadTimeout,
+            requests.exceptions.ChunkedEncodingError,
+        ) as e:
             if attempt == 6:
-                print(f"\n  page failed after {attempt} tries, keeping what we have: {e}",
-                      file=sys.stderr)
+                print(
+                    f"\n  page failed after {attempt} tries, keeping what we have: {e}",
+                    file=sys.stderr,
+                )
                 return None
             time.sleep(min(3 * attempt, 20))
 
@@ -148,8 +172,13 @@ def api_harvest(bbox, taxon_key=212, max_records=99_900):
     sites: dict[str, list] = {}
     offset = 0
     while offset < max_records and offset + 300 <= 100_000:
-        params = {"datasetKey": GBIF_DATASET, "limit": 300, "offset": offset,
-                  "hasCoordinate": "true", "geometry": wkt_box(*bbox)}
+        params = {
+            "datasetKey": GBIF_DATASET,
+            "limit": 300,
+            "offset": offset,
+            "hasCoordinate": "true",
+            "geometry": wkt_box(*bbox),
+        }
         if taxon_key:
             params["taxonKey"] = taxon_key
         d = _gbif_page(params)
@@ -170,12 +199,22 @@ def api_harvest(bbox, taxon_key=212, max_records=99_900):
             except (KeyError, TypeError, ValueError):
                 continue
             try:
-                radius = float(o.get("coordinateUncertaintyInMeters"))  # the locality's radius
+                radius = float(
+                    o.get("coordinateUncertaintyInMeters")
+                )  # the locality's radius
             except (TypeError, ValueError):
                 radius = 0.0
-            sites[lid] = [lid, name, round(lat, 6), round(lon, 6),
-                          (o.get("municipality") or "").strip(),
-                          (o.get("county") or "").strip(), 1, set(who), radius]
+            sites[lid] = [
+                lid,
+                name,
+                round(lat, 6),
+                round(lon, 6),
+                (o.get("municipality") or "").strip(),
+                (o.get("county") or "").strip(),
+                1,
+                set(who),
+                radius,
+            ]
         offset += 300
         print(f"\r  {offset} records, {len(sites)} sites", end="", file=sys.stderr)
         if d.get("endOfRecords") or not d.get("results"):
@@ -216,7 +255,8 @@ def drop_name_collisions(rows, public_min=25, cluster_km=2.0):
         anchors: list = []
         for r in sorted(grp, key=lambda r: -r[7]):
             if r[7] >= public_min and all(
-                    haversine(r[5], r[6], a[5], a[6]) > cluster_km for a in anchors):
+                haversine(r[5], r[6], a[5], a[6]) > cluster_km for a in anchors
+            ):
                 anchors.append(r)
         kept.extend(anchors)
     return kept
@@ -225,8 +265,10 @@ def drop_name_collisions(rows, public_min=25, cluster_km=2.0):
 def save_raw(sites, path):
     """Dump the unfiltered harvested sites to JSON, so thresholds can be re-tuned
     offline without re-downloading. The observer set is stored as a sorted list."""
-    data = {lid: [s[0], s[1], s[2], s[3], s[4], s[5], s[6], sorted(s[7]), s[8]]
-            for lid, s in sites.items()}
+    data = {
+        lid: [s[0], s[1], s[2], s[3], s[4], s[5], s[6], sorted(s[7]), s[8]]
+        for lid, s in sites.items()
+    }
     with open(path, "w", encoding="utf-8") as f:
         json.dump(data, f, ensure_ascii=False)
 
@@ -235,8 +277,10 @@ def load_raw(path):
     """Inverse of save_raw: the sites dict, observer lists back to sets."""
     with open(path, encoding="utf-8") as f:
         data = json.load(f)
-    return {lid: [s[0], s[1], s[2], s[3], s[4], s[5], s[6], set(s[7]), s[8]]
-            for lid, s in data.items()}
+    return {
+        lid: [s[0], s[1], s[2], s[3], s[4], s[5], s[6], set(s[7]), s[8]]
+        for lid, s in data.items()
+    }
 
 
 def split_name(full: str):
@@ -266,8 +310,9 @@ def parse_meta(zf: zipfile.ZipFile):
     root = ET.fromstring(zf.read("meta.xml"))
     ns = "{http://rs.tdwg.org/dwc/text/}"
     core = root.find(f"{ns}core")
-    delim = (core.get("fieldsTerminatedBy", "\\t")
-             .replace("\\t", "\t").replace("\\n", "\n"))
+    delim = (
+        core.get("fieldsTerminatedBy", "\\t").replace("\\t", "\t").replace("\\n", "\n")
+    )
     skip = int(core.get("ignoreHeaderLines", "0"))
     filename = core.find(f"{ns}files/{ns}location").text.strip()
     idx = {}
@@ -295,8 +340,11 @@ def aggregate(zf: zipfile.ZipFile, county: str | None, bbox):
             next(reader, None)
         for n, row in enumerate(reader):
             if n % 2_000_000 == 0 and n:
-                print(f"\r  {n // 1_000_000}M rows, {len(sites)} sites",
-                      end="", file=sys.stderr)
+                print(
+                    f"\r  {n // 1_000_000}M rows, {len(sites)} sites",
+                    end="",
+                    file=sys.stderr,
+                )
             if len(row) <= need:
                 continue
             lid = row[idx["locationID"]].strip()
@@ -317,42 +365,83 @@ def aggregate(zf: zipfile.ZipFile, county: str | None, bbox):
                 continue
             if bbox and not (bbox[0] <= lon <= bbox[2] and bbox[1] <= lat <= bbox[3]):
                 continue
-            sites[lid] = [lid, name, round(lat, 6), round(lon, 6),
-                          row[idx["kommune"]].strip(), fylke, 1, set(who), 0.0]
+            sites[lid] = [
+                lid,
+                name,
+                round(lat, 6),
+                round(lon, 6),
+                row[idx["kommune"]].strip(),
+                fylke,
+                1,
+                set(who),
+                0.0,
+            ]
     print(file=sys.stderr)
     return sites
 
 
 def main() -> int:
-    ap = argparse.ArgumentParser(description=__doc__,
-                                 formatter_class=argparse.RawDescriptionHelpFormatter)
-    ap.add_argument("--archive", default=DEFAULT_ARCHIVE,
-                    help="Darwin Core Archive zip; downloaded if absent "
-                         "(default: %(default)s)")
+    ap = argparse.ArgumentParser(
+        description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter
+    )
+    ap.add_argument(
+        "--archive",
+        default=DEFAULT_ARCHIVE,
+        help="Darwin Core Archive zip; downloaded if absent (default: %(default)s)",
+    )
     ap.add_argument("--county", help="keep only this fylke (e.g. Trøndelag)")
     ap.add_argument("--bbox", help="minlon,minlat,maxlon,maxlat to clip to a region")
-    ap.add_argument("--api", action="store_true",
-                    help="harvest from the GBIF occurrence API (needs --bbox) instead "
-                         "of the bulk archive - reliable when the big download won't finish")
-    ap.add_argument("--save-raw", metavar="FILE",
-                    help="dump the unfiltered harvested sites to FILE (JSON) for reuse")
-    ap.add_argument("--from-raw", metavar="FILE",
-                    help="load unfiltered sites from a --save-raw FILE instead of harvesting, "
-                         "so threshold tuning is instant (no re-download)")
-    ap.add_argument("--min-count", type=int, default=2,
-                    help="drop sites with fewer records (default: %(default)s)")
-    ap.add_argument("--min-observers", type=int, default=2,
-                    help="keep only localities used by at least this many distinct "
-                         "observers - a public-vs-private proxy, since private "
-                         "localities have a single owner (default: %(default)s)")
-    ap.add_argument("--taxon-key", type=int, default=212,
-                    help="GBIF taxonKey for --api (default 212 = Aves/birds; 0 = all taxa)")
-    ap.add_argument("--public-min", type=int, default=25,
-                    help="when a name is used at several sites, the record count a site "
-                         "needs to be kept as a real public locality (default: %(default)s)")
-    ap.add_argument("--cluster-km", type=float, default=2.0,
-                    help="same-name sites within this distance are treated as one place "
-                         "(a private route fragment), keeping only the top one (default: %(default)s)")
+    ap.add_argument(
+        "--api",
+        action="store_true",
+        help="harvest from the GBIF occurrence API (needs --bbox) instead "
+        "of the bulk archive - reliable when the big download won't finish",
+    )
+    ap.add_argument(
+        "--save-raw",
+        metavar="FILE",
+        help="dump the unfiltered harvested sites to FILE (JSON) for reuse",
+    )
+    ap.add_argument(
+        "--from-raw",
+        metavar="FILE",
+        help="load unfiltered sites from a --save-raw FILE instead of harvesting, "
+        "so threshold tuning is instant (no re-download)",
+    )
+    ap.add_argument(
+        "--min-count",
+        type=int,
+        default=2,
+        help="drop sites with fewer records (default: %(default)s)",
+    )
+    ap.add_argument(
+        "--min-observers",
+        type=int,
+        default=2,
+        help="keep only localities used by at least this many distinct "
+        "observers - a public-vs-private proxy, since private "
+        "localities have a single owner (default: %(default)s)",
+    )
+    ap.add_argument(
+        "--taxon-key",
+        type=int,
+        default=212,
+        help="GBIF taxonKey for --api (default 212 = Aves/birds; 0 = all taxa)",
+    )
+    ap.add_argument(
+        "--public-min",
+        type=int,
+        default=25,
+        help="when a name is used at several sites, the record count a site "
+        "needs to be kept as a real public locality (default: %(default)s)",
+    )
+    ap.add_argument(
+        "--cluster-km",
+        type=float,
+        default=2.0,
+        help="same-name sites within this distance are treated as one place "
+        "(a private route fragment), keeping only the top one (default: %(default)s)",
+    )
     ap.add_argument("-o", "--output", default="localities.csv")
     args = ap.parse_args()
 
@@ -373,9 +462,13 @@ def main() -> int:
         print(f"Saved {len(sites)} raw sites to {args.save_raw}", file=sys.stderr)
 
     kept = sorted(
-        (s for s in sites.values()
-         if s[6] >= args.min_count and len(s[7]) >= args.min_observers),
-        key=lambda s: -s[6])
+        (
+            s
+            for s in sites.values()
+            if s[6] >= args.min_count and len(s[7]) >= args.min_observers
+        ),
+        key=lambda s: -s[6],
+    )
     # Collapse registrations of the *same registry locality* - one Artsobservasjoner
     # site is sometimes split across several GBIF locationIDs (e.g. "Hammaren,
     # Hammarvika" or "Myra, Sistranda" with 835 records over two ids). The exact
@@ -386,7 +479,7 @@ def main() -> int:
     seen: dict = {}
     for lid, name, lat, lon, kommune, fylke, count, obs, radius in kept:
         lok, hoved = split_name(name)
-        key = name           # the exact qualified registry name
+        key = name  # the exact qualified registry name
         if key in seen:
             seen[key][7] += count
             seen[key][8] |= obs
@@ -395,17 +488,48 @@ def main() -> int:
             # `fullname` - that exact string is what the import matches on; the bare
             # `lokalitet` does not link to a public locality (it only matches your own).
             # `radius` is the locality's coordinateUncertaintyInMeters (its map footprint).
-            seen[key] = [lid, lok, hoved, kommune, fylke, lat, lon, count, set(obs), name, radius]
+            seen[key] = [
+                lid,
+                lok,
+                hoved,
+                kommune,
+                fylke,
+                lat,
+                lon,
+                count,
+                set(obs),
+                name,
+                radius,
+            ]
     merged = drop_name_collisions(list(seen.values()), args.public_min, args.cluster_km)
-    rows = [r[:8] + [len(r[8]), r[9], round(r[10])] for r in sorted(merged, key=lambda r: -r[7])]
+    rows = [
+        r[:8] + [len(r[8]), r[9], round(r[10])]
+        for r in sorted(merged, key=lambda r: -r[7])
+    ]
     with open(args.output, "w", newline="", encoding="utf-8") as f:
         w = csv.writer(f)
-        w.writerow(["id", "lokalitet", "hovedlokalitet", "kommune", "fylke",
-                    "lat", "lon", "count", "observers", "fullname", "radius"])
+        w.writerow(
+            [
+                "id",
+                "lokalitet",
+                "hovedlokalitet",
+                "kommune",
+                "fylke",
+                "lat",
+                "lon",
+                "count",
+                "observers",
+                "fullname",
+                "radius",
+            ]
+        )
         w.writerows(rows)
-    print(f"Wrote {len(rows)} public localities (>= {args.min_observers} observers, "
-          f">= {args.min_count} records, name-collisions dropped) to {args.output}, "
-          f"from {len(sites)} sites seen.", file=sys.stderr)
+    print(
+        f"Wrote {len(rows)} public localities (>= {args.min_observers} observers, "
+        f">= {args.min_count} records, name-collisions dropped) to {args.output}, "
+        f"from {len(sites)} sites seen.",
+        file=sys.stderr,
+    )
     return 0
 
 
