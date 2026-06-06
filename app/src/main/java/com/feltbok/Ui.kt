@@ -208,9 +208,13 @@ private fun StatusStrip(vm: MainViewModel) {
         ).joinToString(" ")
         // Tap to open the map and pick a different current locality.
         Column(Modifier.weight(1f).clickable { vm.openCurrentLocalityPicker() }) {
-            Text(if (cur != null) "${cur.lokalitet}, ${cur.kommune} ›" else "Finner posisjon…",
-                color = Color.White, fontWeight = FontWeight.SemiBold,
-                maxLines = 2, overflow = TextOverflow.Ellipsis)
+            // Name ellipsizes; the chevron is pinned beside it so it can't wrap to its own line.
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Text(if (cur != null) "${cur.lokalitet}, ${cur.kommune}" else "Finner posisjon…",
+                    color = Color.White, fontWeight = FontWeight.SemiBold,
+                    maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.weight(1f, fill = false))
+                if (cur != null) Text(" ›", color = Color.White, fontWeight = FontWeight.SemiBold)
+            }
             Text(subtitle, color = Color.White.copy(alpha = 0.82f), fontSize = 12.sp,
                 maxLines = 1, overflow = TextOverflow.Ellipsis)
         }
