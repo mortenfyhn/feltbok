@@ -158,7 +158,12 @@ private fun FeedbackDialog(onDismiss: () -> Unit) {
         },
         dismissButton = {
             TextButton(onClick = {
-                val body = "\n\n---\nFeltbok ${BuildConfig.GIT_VERSION}"
+                // Footer with the basics we'd otherwise have to ask the reporter for.
+                // A mailto intent can't pre-attach files, so we just nudge for a screenshot.
+                val body = "\n\n---\nLegg gjerne ved et skjermbilde.\n" +
+                    "Feltbok ${BuildConfig.GIT_VERSION}\n" +
+                    "${android.os.Build.MANUFACTURER} ${android.os.Build.MODEL}\n" +
+                    "Android ${android.os.Build.VERSION.RELEASE} (API ${android.os.Build.VERSION.SDK_INT})"
                 open(android.content.Intent(android.content.Intent.ACTION_SENDTO,
                     android.net.Uri.parse("mailto:morten.fyhn.amundsen+feltbok@gmail.com" +
                         "?subject=" + android.net.Uri.encode("Feltbok-tilbakemelding") +
