@@ -1,6 +1,6 @@
 [![Build Status](https://fyhn.semaphoreci.com/badges/feltbok/branches/master.svg?key=ebed8946-d053-4da8-ba73-36874709de64)](https://fyhn.semaphoreci.com/projects/feltbok)
 
-# Feltbok
+# Feltbok beta
 
 En app for å kvikt taste inn fugleobservasjoner i felt. Deretter kan du enkelt lastes opp til artsobservasjoner.no. Behøver ingen innlogging og ingen nettilgang.
 
