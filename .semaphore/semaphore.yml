@@ -21,18 +21,24 @@ blocks:
       prologue:
         commands:
           - checkout
-          - cache restore gradle-$(checksum app/build.gradle.kts)
       jobs:
         - name: unit tests + debug APK
           # testDebugUnitTest (not `test`) so we don't also compile+run the release
           # unit-test variant - same sources, no release-only tests, just wasted work.
-          # ktlintCheck gates formatting (run `just fmt` locally to fix).
+          # ktlintCheck gates formatting (run `just fmt` locally to fix). Cache restore/store
+          # live here (not the block prologue/epilogue) so the parallel ruff job - which has
+          # an empty ~/.gradle - can't win the store race and poison the gradle cache.
           commands:
+            - cache restore gradle-$(checksum app/build.gradle.kts)
             - ./gradlew ktlintCheck testDebugUnitTest assembleDebug --console=plain --no-daemon
-      epilogue:
-        on_pass:
-          commands:
             - cache store gradle-$(checksum app/build.gradle.kts) ~/.gradle
+        # Parallel job: lint the process/ Python scripts. Runs alongside (not before) the
+        # Kotlin job so a formatting nit doesn't hide test results. Throwaway venv because
+        # the Ubuntu base is PEP-668 externally-managed (bare `pip install` is refused).
+        - name: ruff (process/)
+          commands:
+            - python3 -m venv /tmp/ruff && /tmp/ruff/bin/pip install -q ruff
+            - /tmp/ruff/bin/ruff check process/
 
   # Runs only when a v* tag is pushed: builds the signed release APK and publishes
   # it as a GitHub release. Needs the 'feltbok-signing' secret (keystore + passwords

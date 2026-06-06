@@ -16,13 +16,15 @@ test:
     .venv/bin/python -m unittest discover -s process -p 'test_*.py'
     ./gradlew testDebugUnitTest
 
-# Auto-format Kotlin (ktlint); run before committing manual tweaks
+# Auto-format Kotlin (ktlint) + Python (ruff); run before committing manual tweaks
 fmt:
     ./gradlew ktlintFormat
+    .venv/bin/ruff format process/
 
-# Check formatting without changing files (what CI gates on)
+# Check formatting/lint without changing files (what CI gates on)
 lint:
     ./gradlew ktlintCheck
+    .venv/bin/ruff check process/
 
 # Install on connected device (-d allows downgrading over a newer build)
 install: build

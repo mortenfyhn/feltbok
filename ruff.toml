@@ -1,0 +1,5 @@
+# Linting + formatting for the process/ build/harvest scripts.
+# `just fmt` runs `ruff format`; `just lint` (gated in CI) runs `ruff check`.
+# Pin behaviour so an unpinned CI `pip install ruff` can't drift the formatting.
+line-length = 88
+target-version = "py312"

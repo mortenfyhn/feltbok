@@ -11,9 +11,11 @@ capturing bird observations in Norway and exporting a TSV to paste into Artsobse
   connected (`adb devices`), use these to verify a change in the real app; drive the UI with
   `adb shell input tap/text` and inspect with `adb exec-out screencap`.
 - Always run `./gradlew test` before opening a PR.
-- `just fmt` auto-formats Kotlin (ktlint); `just lint` (`./gradlew ktlintCheck`) is gated in CI. The
-  ruleset (`.editorconfig`) only fixes whitespace/indentation/import order — it deliberately leaves
-  line structure, line length, and naming alone, so it won't churn the terse hand-written style.
+- `just fmt` auto-formats Kotlin (ktlint) + `process/` Python (ruff); `just lint` checks both. Both
+  are gated in CI (ktlint in the Kotlin job, ruff in a parallel job). The ktlint ruleset
+  (`.editorconfig`) only fixes whitespace/indentation/import order — it deliberately leaves line
+  structure, line length, and naming alone, so it won't churn the terse hand-written style. ruff
+  (`ruff.toml`) is the full black-style formatter for the Python pipelines.
 - In a fresh worktree, copy `local.properties` from the repo root first (it's gitignored, and Gradle
   needs its `sdk.dir`).
 
