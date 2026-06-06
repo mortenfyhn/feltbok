@@ -640,7 +640,7 @@ fun ExportScreen(vm: MainViewModel) {
         ) {
             Text("Eksporter til Artsobservasjoner", color = Color.White,
                 fontWeight = FontWeight.SemiBold, modifier = Modifier.weight(1f))
-            TextButton(onClick = { vm.closeExport() }) { Text("Lukk", color = Color.White) }
+            TextButton(onClick = { vm.closeExport() }) { Text("Avbryt", color = Color.White) }
         }
         Column(Modifier.weight(1f).verticalScroll(rememberScrollState()).padding(horizontal = 16.dp)) {
             Step(1, "Kopier observasjoner") {
