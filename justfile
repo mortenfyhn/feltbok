@@ -33,9 +33,10 @@ lint:
 install: build
     adb install -r -d {{apk}}
 
-# Build, install, and launch the app
 # The activity class stays com.feltbok.MainActivity (the suffix changes the package id, not the
 # code namespace), so spell out the full component rather than the /.MainActivity shorthand.
+
+# Build, install, and launch the app
 run: install
     adb shell am start -n {{app_id}}/com.feltbok.MainActivity
 

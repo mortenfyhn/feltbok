@@ -5,9 +5,7 @@ capturing bird observations in Norway and exporting a TSV to paste into Artsobse
 "Importer observasjoner". Zero-login and shareable; works fully offline in the field.
 
 ## Build / test / run
-Recipes live in `just --list` — the notes below are only the why's and gotchas that aren't in
-there. (`just --list` mangles the `run` description by leaking a multi-line comment; it means
-"build, install, and launch".)
+Recipes live in `just --list` — the notes below are only the why's and gotchas that aren't in there.
 - `just install` / `just run` verify a change in the real app on a connected device (`adb devices`);
   drive the UI with `adb shell input tap/text` and inspect with `adb exec-out screencap`.
 - Always run `./gradlew test` (Kotlin units) before opening a PR; `just test` also runs the Python tests.
