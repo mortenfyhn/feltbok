@@ -359,16 +359,17 @@ fun SearchScreen(vm: MainViewModel) {
     LaunchedEffect(results) { listState.scrollToItem(0) }
     Column(Modifier.fillMaxSize()) {
         Row(
-            Modifier.fillMaxWidth().background(cs.surface).padding(start = 12.dp, end = 4.dp, top = 10.dp, bottom = 10.dp),
+            Modifier.fillMaxWidth().background(cs.surface).padding(start = 4.dp, end = 12.dp, top = 10.dp, bottom = 10.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
+            // Cancel on the left, consistent with the other screens (#59).
+            TextButton(onClick = { vm.cancelSearch() }) { Text(Strings.cancel) }
             OutlinedTextField(q, { q = it }, Modifier.weight(1f).focusRequester(focus), singleLine = true,
                 placeholder = { Text(Strings.Search.placeholder) },
                 // autoCorrect off: don't want the IME "correcting" species names, and the
                 // gesture/compose path it drives is what crashes on swipe-typing.
                 keyboardOptions = KeyboardOptions(autoCorrect = false, imeAction = ImeAction.Search),
                 keyboardActions = KeyboardActions(onSearch = { results.firstOrNull()?.let { vm.pickSpecies(it) } }))
-            TextButton(onClick = { vm.cancelSearch() }) { Text(Strings.cancel) }
         }
         LazyColumn(Modifier.weight(1f), state = listState) {
             items(results, key = { it.latin }) { s ->   // norsk has homonyms (e.g. Rødhalevarsler); latin is unique
@@ -394,23 +395,36 @@ fun SearchScreen(vm: MainViewModel) {
 
 // ============================ DETAIL ============================
 
+/** The screens' shared top bar. Cancel/back lives on the LEFT (not the right) so a thumb
+ *  reaching the top-right corner - where it naturally lands after typing, once the keyboard
+ *  hides the Lagre button - can't dismiss the screen by accident (#59). [trailing] holds any
+ *  screen-specific right-side action. */
+@Composable
+internal fun ScreenHeader(
+    title: String,
+    onCancel: () -> Unit,
+    trailing: @Composable RowScope.() -> Unit = {},
+) {
+    Row(
+        Modifier.fillMaxWidth().background(MaterialTheme.colorScheme.primary)
+            .padding(start = 4.dp, end = 14.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        TextButton(onClick = onCancel) { Text("‹ ${Strings.cancel}", color = Color.White) }
+        Text(title, color = Color.White, fontWeight = FontWeight.SemiBold, fontSize = 16.sp,
+            maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.weight(1f))
+        trailing()
+    }
+}
+
 @Composable
 fun DetailScreen(vm: MainViewModel) {
     val cs = MaterialTheme.colorScheme
     Column(Modifier.fillMaxSize()) {
-        // Avbryt sits top-right, matching the search and locality-picker screens, so cancelling
-        // is in the same place everywhere (issue #8). Lagre is the full-width primary below.
-        Row(
-            Modifier.fillMaxWidth().background(cs.primary).padding(start = 14.dp, end = 4.dp),
-            verticalAlignment = Alignment.CenterVertically,
-        ) {
-            Text(
-                if (vm.isEditing) Strings.Detail.titleEdit else Strings.Detail.titleNew,
-                color = Color.White, fontWeight = FontWeight.SemiBold, fontSize = 16.sp,
-                modifier = Modifier.weight(1f),
-            )
-            TextButton(onClick = { vm.cancel() }) { Text(Strings.cancel, color = Color.White) }
-        }
+        ScreenHeader(
+            if (vm.isEditing) Strings.Detail.titleEdit else Strings.Detail.titleNew,
+            onCancel = { vm.cancel() },
+        )
         Column(Modifier.weight(1f).verticalScroll(rememberScrollState())) {
             // Species first - it's the first thing you choose for a new observation.
             FieldRow(Strings.Detail.species, onClick = { vm.changeSpecies() }) {
@@ -684,14 +698,7 @@ fun ExportScreen(vm: MainViewModel) {
     var confirmClear by remember { mutableStateOf(false) }
 
     Column(Modifier.fillMaxSize().background(cs.background)) {
-        Row(
-            Modifier.fillMaxWidth().background(cs.primary).padding(horizontal = 14.dp, vertical = 9.dp),
-            verticalAlignment = Alignment.CenterVertically,
-        ) {
-            Text(Strings.Export.title, color = Color.White,
-                fontWeight = FontWeight.SemiBold, modifier = Modifier.weight(1f))
-            TextButton(onClick = { vm.closeExport() }) { Text(Strings.cancel, color = Color.White) }
-        }
+        ScreenHeader(Strings.Export.title, onCancel = { vm.closeExport() })
         Column(Modifier.weight(1f).verticalScroll(rememberScrollState()).padding(horizontal = 16.dp)) {
             Step(1, Strings.Export.step1) {
                 OutlinedTextField(text, {},

@@ -109,16 +109,11 @@ fun LocalityScreen(vm: MainViewModel) {
     overlay.tapsBlocked = newMode                          // in new-spot mode, pan instead of select
 
     Column(Modifier.fillMaxSize()) {
-        Row(
-            Modifier.fillMaxWidth().background(cs.primary).padding(horizontal = 14.dp, vertical = 9.dp),
-            verticalAlignment = Alignment.CenterVertically,
+        ScreenHeader(
+            title = if (newMode) Strings.Picker.titleNew else Strings.Picker.titlePick,
+            onCancel = { if (newMode) newMode = false else vm.leaveLocalityPicker() },
         ) {
-            Text(if (newMode) Strings.Picker.titleNew else Strings.Picker.titlePick, color = Color.White,
-                fontWeight = FontWeight.SemiBold, modifier = Modifier.weight(1f))
             if (!newMode) TextButton(onClick = { newMode = true }) { Text(Strings.Picker.newButton, color = Color.White) }
-            TextButton(onClick = { if (newMode) newMode = false else vm.leaveLocalityPicker() }) {
-                Text(Strings.cancel, color = Color.White)
-            }
         }
         Box(Modifier.weight(1f).fillMaxWidth()) {
             AndroidView(
