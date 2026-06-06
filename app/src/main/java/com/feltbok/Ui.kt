@@ -681,10 +681,13 @@ fun ExportScreen(vm: MainViewModel) {
                     withStyle(SpanStyle(fontStyle = FontStyle.Italic)) { append("Importer") }
                 }, fontSize = 13.sp, color = cs.onSurfaceVariant, modifier = Modifier.padding(top = 4.dp))
             }
-            Step(4, "Slett notater når du er ferdig") {
+            Step(4, "Ferdig") {
+                Text(buildAnnotatedString {
+                    append("Nå kan du\n" + "· Kontrollere og publisere i Artsobservasjoner\n" + "· Slette notatene fra appen")
+                }, fontSize = 13.sp, color = cs.onSurfaceVariant, modifier = Modifier.padding(top = 4.dp))
                 Text("Slett alle notater", color = cs.error, fontWeight = FontWeight.Medium,
                     fontSize = 14.sp,
-                    modifier = Modifier.clickable { confirmClear = true }.padding(top = 6.dp))
+                    modifier = Modifier.clickable { confirmClear = true }.padding(top = 10.dp))
             }
             Spacer(Modifier.height(24.dp))
         }
