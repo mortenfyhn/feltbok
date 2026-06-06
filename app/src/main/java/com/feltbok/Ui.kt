@@ -188,6 +188,17 @@ private fun StatusStrip(vm: MainViewModel) {
                 Text(if (edge < 10) "du er her" else "${formatDistance(edge)} unna",
                     color = Color.White.copy(alpha = 0.82f), fontSize = 12.sp)
         }
+        // GPS accuracy chip: how good the current fix is, so you can judge whether to wait for it.
+        val fix = vm.fix
+        val acc = when {
+            fix == null -> "søker"
+            fix.accuracyM.isNaN() -> "GPS"
+            else -> "GPS ±${fix.accuracyM.toInt()} m"
+        }
+        Spacer(Modifier.width(10.dp))
+        Text(acc, color = Color.White, fontSize = 12.sp,
+            modifier = Modifier.background(Color(0x33FFFFFF), RoundedCornerShape(10.dp))
+                .padding(horizontal = 8.dp, vertical = 1.dp))
         if (vm.notes.isNotEmpty()) {
             Spacer(Modifier.width(10.dp))
             Box(
