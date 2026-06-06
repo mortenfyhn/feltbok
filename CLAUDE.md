@@ -26,6 +26,9 @@ capturing bird observations in Norway and exporting a TSV to paste into Artsobse
 - **Worktree by default for real work.** When starting non-trivial implementation (editing/creating
   source files), first isolate with EnterWorktree so parallel sessions don't collide. Skip it for
   read-only questions, quick one-file edits, and investigations.
+- **Shared working tree.** Sometimes parallel agents run in the same checkout without worktrees, so
+  expect unrelated uncommitted changes from another agent's work — that's normal, not a mistake to
+  fix. Leave those changes alone and commit only the files that are part of your own task.
 
 ## Where things live
 - `app/src/main/java/com/feltbok/Model.kt` — data classes, CSV/JSON load+save, TSV export.
