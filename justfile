@@ -1,7 +1,10 @@
 export ANDROID_HOME := env("ANDROID_HOME", home_directory() / "Android/Sdk")
 
+# Dev build carries the .debug applicationId suffix so it installs alongside the release app
+# I use daily. Every device-facing recipe targets this id, not the release "com.feltbok".
+app_id := "com.feltbok.debug"
 apk := "app/build/outputs/apk/debug/app-debug.apk"
-data_dir := "/sdcard/Android/data/com.feltbok/files"
+data_dir := "/sdcard/Android/data/" + app_id + "/files"
 
 # List all recipes
 default:
@@ -31,16 +34,18 @@ install: build
     adb install -r -d {{apk}}
 
 # Build, install, and launch the app
+# The activity class stays com.feltbok.MainActivity (the suffix changes the package id, not the
+# code namespace), so spell out the full component rather than the /.MainActivity shorthand.
 run: install
-    adb shell am start -n com.feltbok/.MainActivity
+    adb shell am start -n {{app_id}}/com.feltbok.MainActivity
 
 # Show device logs for the app
 log:
     adb logcat -s Feltbok:* AndroidRuntime:* --format=brief
 
-# Uninstall from device
+# Uninstall the dev build from device (NOT the release app)
 uninstall:
-    adb uninstall com.feltbok
+    adb uninstall {{app_id}}
 
 # ---- Locality / species data, rebuilt on the maintainer's machine ----
 
