@@ -26,8 +26,9 @@ blocks:
         - name: unit tests + debug APK
           # testDebugUnitTest (not `test`) so we don't also compile+run the release
           # unit-test variant - same sources, no release-only tests, just wasted work.
+          # ktlintCheck gates formatting (run `just fmt` locally to fix).
           commands:
-            - ./gradlew testDebugUnitTest assembleDebug --console=plain --no-daemon
+            - ./gradlew ktlintCheck testDebugUnitTest assembleDebug --console=plain --no-daemon
       epilogue:
         on_pass:
           commands:

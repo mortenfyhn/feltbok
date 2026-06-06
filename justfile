@@ -16,6 +16,14 @@ test:
     .venv/bin/python -m unittest discover -s process -p 'test_*.py'
     ./gradlew testDebugUnitTest
 
+# Auto-format Kotlin (ktlint); run before committing manual tweaks
+fmt:
+    ./gradlew ktlintFormat
+
+# Check formatting without changing files (what CI gates on)
+lint:
+    ./gradlew ktlintCheck
+
 # Install on connected device (-d allows downgrading over a newer build)
 install: build
     adb install -r -d {{apk}}

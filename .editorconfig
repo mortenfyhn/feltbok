@@ -1,0 +1,37 @@
+root = true
+
+[*.{kt,kts}]
+# Stay close to IntelliJ's default formatting rather than ktlint's more opinionated
+# "official" style, which rewraps argument lists and forces trailing commas — that
+# would churn the whole hand-formatted codebase.
+ktlint_code_style = intellij_idea
+# ktlint can't reflow code, so enforcing a max line length would just nag without
+# fixing anything. Let the formatter handle whitespace/imports and leave lengths alone.
+ktlint_standard_max-line-length = disabled
+
+# Fix the mechanical stuff (indentation, spacing, blank lines, import order) but leave
+# the hand-written line structure alone. These rules reflow code onto multiple lines or
+# force trailing commas, which would rewrite the whole terse codebase for no real gain.
+ktlint_standard_argument-list-wrapping = disabled
+ktlint_standard_parameter-list-wrapping = disabled
+ktlint_standard_function-signature = disabled
+ktlint_standard_trailing-comma-on-call-site = disabled
+ktlint_standard_trailing-comma-on-declaration-site = disabled
+ktlint_standard_wrapping = disabled
+ktlint_standard_statement-wrapping = disabled
+ktlint_standard_multiline-expression-wrapping = disabled
+ktlint_standard_if-else-wrapping = disabled
+ktlint_standard_string-template-indent = disabled
+
+# Compose composables are PascalCase and theme tokens (md_theme_light_primary, …) are
+# snake_case by convention; these naming rules flag them and can't auto-correct, so they
+# would permanently break the CI gate.
+ktlint_standard_function-naming = disabled
+ktlint_standard_property-naming = disabled
+# Keep terse one-liner if/else without forcing braces onto separate lines.
+ktlint_standard_multiline-if-else = disabled
+# Leave deliberately aligned trailing comments (and other padding) alone.
+ktlint_standard_no-multi-spaces = disabled
+# Allow explanatory comments next to individual arguments; not auto-correctable, so this
+# would otherwise be a hard CI failure on intentional inline notes.
+ktlint_standard_discouraged-comment-location = disabled
