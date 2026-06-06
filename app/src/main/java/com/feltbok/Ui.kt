@@ -345,11 +345,7 @@ fun SearchScreen(vm: MainViewModel) {
             results = speciesQuickList(vm)
         } else {
             delay(70)  // coalesce fast keystrokes
-            val fq = foldQuery(q)
-            results = vm.species.indices
-                .mapNotNull { i -> fuzzyRank(fq, vm.foldedNorsk[i])?.let { i to it } }
-                .sortedWith(compareBy({ it.second }, { -vm.useCount(vm.species[it.first].norsk) }))
-                .map { vm.species[it.first] }
+            results = vm.searchResults(q)
         }
     }
     // Auto-focus with the keyboard up so you can type the moment the screen opens.

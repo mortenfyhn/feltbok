@@ -52,6 +52,11 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
     private val uses = mutableStateMapOf<String, Int>().apply { putAll(loadUses(app)) }
     fun useCount(norsk: String): Int = uses[norsk] ?: 0
 
+    /** Ranked matches for a typed query (best fuzzy match first, your regulars then the
+     *  Norway-wide frequency order breaking ties). See [searchSpecies]. */
+    fun searchResults(query: String): List<Species> =
+        searchSpecies(query, species, foldedNorsk, ::useCount)
+
     /** Per-activity use counts, so each user's most-used activities rise to the top. */
     private val actUses = mutableStateMapOf<String, Int>().apply { putAll(loadActUses(app)) }
 

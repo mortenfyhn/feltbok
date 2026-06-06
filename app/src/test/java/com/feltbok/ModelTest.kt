@@ -122,6 +122,45 @@ class ModelTest {
         assertEquals(1, fuzzyScore("R V T", "Rødvingetrost"))
     }
 
+    // ---- species search ranking (#64: common birds must beat rare prefix matches) ----
+
+    /** A few species in Norway-wide frequency order (common first), as the bundled CSV is. */
+    private fun freqOrdered(vararg norsk: String) = norsk.map { Species(it, it.lowercase()) }
+
+    private fun rank(query: String, list: List<Species>) =
+        searchSpecies(query, list, list.map { fold(it.norsk) }, useCount = { 0 }).map { it.norsk }
+
+    @Test
+    fun searchRanksCommonPrefixMatchAboveRareOnes() {
+        // "gul" prefix-matches the common Gulspurv and a swarm of rare vagrants alike; the
+        // common one (earlier in frequency order) must come first, not the rarities.
+        val list = freqOrdered(
+            "Gulspurv", "Gulerle", "Gulsanger",          // common, early in the list
+            "Gulkinnand", "Gulbeinsnipe", "Gulstrupespurv", "Gullfasan",  // rare vagrants
+        )
+        assertEquals("Gulspurv", rank("gul", list).first())
+        assertEquals(listOf("Gulspurv", "Gulerle", "Gulsanger"), rank("gul", list).take(3))
+    }
+
+    @Test
+    fun searchSurfacesCommonSandSpecies() {
+        val list = freqOrdered(
+            "Sandlo", "Sandsvale", "Sandløper",          // common waders/swallow
+            "Sandterne", "Sandsnipe",                    // rarer
+            "Sørblesand", "Laksand",                     // 'sand' only mid-word
+        )
+        assertEquals(listOf("Sandlo", "Sandsvale"), rank("sand", list).take(2))
+    }
+
+    @Test
+    fun searchTieBreaksOnPersonalUseCount() {
+        // Among equal-quality matches, a species the user picks often outranks frequency order.
+        val list = freqOrdered("Gulspurv", "Gulsanger")
+        val ranked = searchSpecies("gul", list, list.map { fold(it.norsk) },
+            useCount = { if (it == "Gulsanger") 5 else 0 })
+        assertEquals("Gulsanger", ranked.first().norsk)
+    }
+
     private fun mine(id: String, name: String = "Lok $id", lat: Double = 63.0, radius: Double = 0.0) =
         Locality(id, name, "", "", lat, 8.0, name, 0, radius, public = false, mine = true)
 
