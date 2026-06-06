@@ -145,15 +145,15 @@ fun SyncScreen(vm: MainViewModel) {
         ) {
             Text(
                 when {
-                    stage == Stage.LOGIN -> "Logg inn på Artsobservasjoner"
-                    vm.localities.any { it.mine } -> "Oppdater lokaliteter"
-                    else -> "Hent mine lokaliteter"
+                    stage == Stage.LOGIN -> Strings.Sync.login
+                    vm.localities.any { it.mine } -> Strings.Sync.update
+                    else -> Strings.Sync.fetch
                 },
                 color = Color.White, fontWeight = FontWeight.SemiBold, modifier = Modifier.weight(1f))
-            TextButton(onClick = { vm.closeSync() }) { Text("Avbryt", color = Color.White) }
+            TextButton(onClick = { vm.closeSync() }) { Text(Strings.cancel, color = Color.White) }
         }
         if (stage == Stage.LOGIN)
-            Text("Etter innlogging henter vi lokalitetene automatisk.",
+            Text(Strings.Sync.afterLogin,
                 color = cs.onSurfaceVariant, modifier = Modifier.padding(14.dp))
 
         // The WebView stays mounted the whole time (it holds the session cookie and does the probe);
@@ -169,10 +169,10 @@ fun SyncScreen(vm: MainViewModel) {
 
 /** Confirmation wording: first fetch, a fetch that changed something, or nothing new. */
 private fun doneMessage(d: SyncDiff?): String = when {
-    d == null -> "Ferdig ✓"
-    d.firstSync -> "Hentet ${d.total} lokaliteter ✓"
-    d.changed > 0 -> "Hentet ${d.total} lokaliteter (${d.changed} endret) ✓"
-    else -> "Allerede oppdatert (${d.total} lokaliteter) ✓"
+    d == null -> Strings.Sync.doneGeneric
+    d.firstSync -> Strings.Sync.doneFirst(d.total)
+    d.changed > 0 -> Strings.Sync.doneChanged(d.total, d.changed)
+    else -> Strings.Sync.doneUnchanged(d.total)
 }
 
 @Composable
@@ -192,23 +192,23 @@ private fun StageContent(
             Stage.CHECKING -> CircularProgressIndicator(color = cs.primary)
             Stage.INTRO -> {
                 Text(
-                    "Feltbok kan hente dine private lokaliteter fra Artsobservasjoner. Trykk på knappen for å logge inn, så går resten av seg selv.",
+                    Strings.Sync.intro,
                     color = cs.onSurface, textAlign = TextAlign.Center,
                 )
                 Spacer(Modifier.height(20.dp))
-                Button(onClick = onLogin) { Text("Logg inn på Artsobservasjoner") }
+                Button(onClick = onLogin) { Text(Strings.Sync.login) }
             }
             Stage.FETCHING -> {
                 CircularProgressIndicator(color = cs.primary)
                 Spacer(Modifier.height(12.dp))
-                Text("Henter lokaliteter…", color = cs.onSurfaceVariant)
+                Text(Strings.Sync.fetching, color = cs.onSurfaceVariant)
             }
             Stage.DONE -> Text(doneMessage(result), textAlign = TextAlign.Center,
                 color = cs.primary, fontWeight = FontWeight.SemiBold)
             Stage.ERROR -> {
-                Text("Noe gikk galt under henting.", color = cs.onSurface, textAlign = TextAlign.Center)
+                Text(Strings.Sync.error, color = cs.onSurface, textAlign = TextAlign.Center)
                 Spacer(Modifier.height(20.dp))
-                Button(onClick = onRetry) { Text("Prøv igjen") }
+                Button(onClick = onRetry) { Text(Strings.Sync.retry) }
             }
             Stage.LOGIN -> {}
         }

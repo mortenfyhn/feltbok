@@ -92,14 +92,14 @@ fun ListScreen(vm: MainViewModel) {
                 if (vm.notes.isEmpty()) {
                     Box(Modifier.fillMaxSize(), Alignment.Center) {
                         Text(
-                            "Ingen notater enda.\nTrykk + for å legge til.",
+                            Strings.Notes.empty,
                             color = cs.onSurfaceVariant, textAlign = TextAlign.Center,
                         )
                     }
                 } else {
                     Column(Modifier.fillMaxSize()) {
                         Text(
-                            "I dag · ${vm.notes.size} ${if (vm.notes.size == 1) "notat" else "notater"}",
+                            Strings.Notes.header(vm.notes.size),
                             color = cs.onSurfaceVariant, fontSize = 13.sp,
                             modifier = Modifier.padding(horizontal = 16.dp, vertical = 9.dp),
                         )
@@ -126,11 +126,11 @@ fun ListScreen(vm: MainViewModel) {
             Box(Modifier.fillMaxWidth().background(cs.surface), Alignment.Center) {
                 Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
                     // First time it's an invitation; once you've synced some, it's a refresh.
-                    Text(if (vm.localities.any { it.mine }) "Oppdater lokaliteter" else "Hent mine lokaliteter",
+                    Text(if (vm.localities.any { it.mine }) Strings.Sync.update else Strings.Sync.fetch,
                         color = cs.primary, fontWeight = FontWeight.Medium, fontSize = 13.sp,
                         maxLines = 1, modifier = Modifier.clickable { vm.openSync() }.padding(horizontal = 14.dp, vertical = 10.dp))
                     Spacer(Modifier.weight(1f))
-                    Text("Gi tilbakemelding", color = cs.primary, fontWeight = FontWeight.Medium, fontSize = 13.sp,
+                    Text(Strings.Notes.feedback, color = cs.primary, fontWeight = FontWeight.Medium, fontSize = 13.sp,
                         maxLines = 1, modifier = Modifier.clickable { showFeedback = true }.padding(horizontal = 14.dp, vertical = 10.dp))
                 }
                 Text(BuildConfig.GIT_VERSION, color = cs.onSurfaceVariant.copy(alpha = 0.6f),
@@ -161,25 +161,25 @@ private fun FeedbackDialog(onDismiss: () -> Unit) {
     }
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text("Tilbakemelding") },
-        text = { Text("Ta gjerne kontakt om du har tilbakemelding eller spørsmål:") },
+        title = { Text(Strings.Feedback.title) },
+        text = { Text(Strings.Feedback.body) },
         confirmButton = {
             TextButton(onClick = {
                 // Issue forms accept query params keyed by field id, so we prefill "teknisk".
                 open(android.content.Intent(android.content.Intent.ACTION_VIEW,
                     android.net.Uri.parse("https://github.com/mortenfyhn/feltbok/issues/new?template=tilbakemelding.yml" +
                         "&teknisk=" + android.net.Uri.encode(tech))))
-            }) { Text("GitHub Issue") }
+            }) { Text(Strings.Feedback.githubIssue) }
         },
         dismissButton = {
             TextButton(onClick = {
                 // A mailto intent can't pre-attach files, so we just nudge for a screenshot.
-                val body = "\n\n---\nLegg gjerne ved et skjermbilde.\n$tech"
+                val body = "\n\n---\n${Strings.Feedback.mailHint}\n$tech"
                 open(android.content.Intent(android.content.Intent.ACTION_SENDTO,
                     android.net.Uri.parse("mailto:morten.fyhn.amundsen+feltbok@gmail.com" +
-                        "?subject=" + android.net.Uri.encode("Feltbok-tilbakemelding") +
+                        "?subject=" + android.net.Uri.encode(Strings.Feedback.mailSubject) +
                         "&body=" + android.net.Uri.encode(body))))
-            }) { Text("Send e-post") }
+            }) { Text(Strings.Feedback.email) }
         },
     )
 }
@@ -199,18 +199,18 @@ private fun StatusStrip(vm: MainViewModel) {
         // export button. The accuracy tells you whether to trust the fix / wait for a better one.
         val fix = vm.fix
         val subtitle = listOfNotNull(
-            edge?.let { if (it < 10) "du er her" else "${formatDistance(it)} unna" },
+            edge?.let { if (it < 10) Strings.Notes.youAreHere else Strings.Notes.distanceAway(formatDistance(it)) },
             when {
-                fix == null -> "søker GPS"
-                fix.accuracyM.isNaN() -> "GPS"
-                else -> "(GPS ±${fix.accuracyM.toInt()} m)"
+                fix == null -> Strings.Notes.searchingGps
+                fix.accuracyM.isNaN() -> Strings.Notes.gps
+                else -> Strings.Notes.gpsAccuracy(fix.accuracyM.toInt())
             },
         ).joinToString(" ")
         // Tap to open the map and pick a different current locality.
         Column(Modifier.weight(1f).clickable { vm.openCurrentLocalityPicker() }) {
             // Name ellipsizes; the chevron is pinned beside it so it can't wrap to its own line.
             Row(verticalAlignment = Alignment.CenterVertically) {
-                Text(if (cur != null) "${cur.lokalitet}, ${cur.kommune}" else "Finner posisjon…",
+                Text(if (cur != null) "${cur.lokalitet}, ${cur.kommune}" else Strings.findingPosition,
                     color = Color.White, fontWeight = FontWeight.SemiBold,
                     maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.weight(1f, fill = false))
                 if (cur != null) Text(" ›", color = Color.White, fontWeight = FontWeight.SemiBold)
@@ -225,7 +225,7 @@ private fun StatusStrip(vm: MainViewModel) {
                 Modifier.clip(RoundedCornerShape(8.dp)).background(Color.White)
                     .clickable { vm.openExport() }.padding(horizontal = 14.dp, vertical = 8.dp),
             ) {
-                Text("Eksporter", color = cs.primary, fontWeight = FontWeight.Bold, fontSize = 14.sp)
+                Text(Strings.Notes.export, color = cs.primary, fontWeight = FontWeight.Bold, fontSize = 14.sp)
             }
         }
     }
@@ -328,12 +328,12 @@ fun SearchScreen(vm: MainViewModel) {
             verticalAlignment = Alignment.CenterVertically,
         ) {
             OutlinedTextField(q, { q = it }, Modifier.weight(1f).focusRequester(focus), singleLine = true,
-                placeholder = { Text("Søk art…") },
+                placeholder = { Text(Strings.Search.placeholder) },
                 // autoCorrect off: don't want the IME "correcting" species names, and the
                 // gesture/compose path it drives is what crashes on swipe-typing.
                 keyboardOptions = KeyboardOptions(autoCorrect = false, imeAction = ImeAction.Search),
                 keyboardActions = KeyboardActions(onSearch = { results.firstOrNull()?.let { vm.pickSpecies(it) } }))
-            TextButton(onClick = { vm.cancelSearch() }) { Text("Avbryt") }
+            TextButton(onClick = { vm.cancelSearch() }) { Text(Strings.cancel) }
         }
         LazyColumn(Modifier.weight(1f)) {
             items(results, key = { it.latin }) { s ->   // norsk has homonyms (e.g. Rødhalevarsler); latin is unique
@@ -370,15 +370,15 @@ fun DetailScreen(vm: MainViewModel) {
             verticalAlignment = Alignment.CenterVertically,
         ) {
             Text(
-                if (vm.isEditing) "Endre observasjon" else "Ny observasjon",
+                if (vm.isEditing) Strings.Detail.titleEdit else Strings.Detail.titleNew,
                 color = Color.White, fontWeight = FontWeight.SemiBold, fontSize = 16.sp,
                 modifier = Modifier.weight(1f),
             )
-            TextButton(onClick = { vm.cancel() }) { Text("Avbryt", color = Color.White) }
+            TextButton(onClick = { vm.cancel() }) { Text(Strings.cancel, color = Color.White) }
         }
         Column(Modifier.weight(1f).verticalScroll(rememberScrollState())) {
             // Species first - it's the first thing you choose for a new observation.
-            FieldRow("Art", onClick = { vm.changeSpecies() }) {
+            FieldRow(Strings.Detail.species, onClick = { vm.changeSpecies() }) {
                 Text(vm.dSpecies + if (vm.dUncertain && vm.dSpecies.isNotBlank()) "?" else "",
                     fontWeight = FontWeight.Medium, maxLines = 1,
                     overflow = TextOverflow.Ellipsis, modifier = Modifier.weight(1f, fill = false))
@@ -388,10 +388,10 @@ fun DetailScreen(vm: MainViewModel) {
                         fontSize = 13.sp, maxLines = 1, overflow = TextOverflow.Ellipsis)
             }
             // Locality
-            FieldRow("Lokalitet", onClick = { vm.openLocalityPicker() }) {
+            FieldRow(Strings.Detail.locality, onClick = { vm.openLocalityPicker() }) {
                 val loc = vm.dLoc
                 if (loc == null) {
-                    Text("Finner posisjon…", color = cs.onSurfaceVariant)
+                    Text(Strings.findingPosition, color = cs.onSurfaceVariant)
                 } else {
                     Text(loc.lokalitet, fontWeight = FontWeight.Medium, maxLines = 1,
                         overflow = TextOverflow.Ellipsis, modifier = Modifier.weight(1f, fill = false))
@@ -401,15 +401,15 @@ fun DetailScreen(vm: MainViewModel) {
                 }
             }
             AntallRow(vm)
-            DropdownRow("Alder", vm.dAge, Options.ages) { vm.dAge = it }
-            DropdownRow("Aktivitet", vm.dAct, vm.activityOptions()) { vm.dAct = it }
-            DropdownRow("Kjønn", vm.dSex, Options.sexes) { vm.dSex = it }
-            CommentField("Åpen kommentar", vm.dPub, vm.lastPub) { vm.dPub = it }
-            CommentField("Privat kommentar", vm.dPriv, vm.lastPriv) { vm.dPriv = it }
+            DropdownRow(Strings.Detail.age, vm.dAge, Options.ages) { vm.dAge = it }
+            DropdownRow(Strings.Detail.activity, vm.dAct, vm.activityOptions()) { vm.dAct = it }
+            DropdownRow(Strings.Detail.sex, vm.dSex, Options.sexes) { vm.dSex = it }
+            CommentField(Strings.Detail.commentPublic, vm.dPub, vm.lastPub) { vm.dPub = it }
+            CommentField(Strings.Detail.commentPrivate, vm.dPriv, vm.lastPriv) { vm.dPriv = it }
             // One row to save space; tap to open the from/to editor (point or range).
             val tMs = if (vm.dTime > 0) vm.dTime else System.currentTimeMillis()
             var showTime by remember { mutableStateOf(false) }
-            FieldRow("Tid", onClick = { showTime = true }) { Text(displayTimeRange(tMs, vm.dEndTime)) }
+            FieldRow(Strings.Detail.time, onClick = { showTime = true }) { Text(displayTimeRange(tMs, vm.dEndTime)) }
             if (showTime) TimeDialog(vm) { showTime = false }
         }
         if (vm.isEditing) {
@@ -417,12 +417,12 @@ fun DetailScreen(vm: MainViewModel) {
             TextButton(
                 onClick = { vm.delete() },
                 modifier = Modifier.fillMaxWidth().background(cs.surface).padding(vertical = 4.dp),
-            ) { Text("Slett observasjon", color = cs.error) }
+            ) { Text(Strings.Detail.delete, color = cs.error) }
         }
         Box(Modifier.fillMaxWidth().background(cs.surface).padding(horizontal = 14.dp, vertical = 11.dp)) {
             Button(onClick = { vm.save() },
                 enabled = vm.dSpecies.isNotBlank() && (vm.dLoc != null || vm.nearest() != null),
-                modifier = Modifier.fillMaxWidth()) { Text("Lagre") }
+                modifier = Modifier.fillMaxWidth()) { Text(Strings.Detail.save) }
         }
     }
 }
@@ -442,7 +442,7 @@ private fun AntallRow(vm: MainViewModel) {
         Modifier.fillMaxWidth().background(cs.surface).padding(horizontal = 16.dp, vertical = 7.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        Text("Antall", color = cs.onSurfaceVariant, fontSize = 14.sp, modifier = Modifier.weight(1f))
+        Text(Strings.Detail.count, color = cs.onSurfaceVariant, fontSize = 14.sp, modifier = Modifier.weight(1f))
         Row(
             Modifier.border(1.dp, cs.outline, RoundedCornerShape(10.dp)),
             verticalAlignment = Alignment.CenterVertically,
@@ -496,12 +496,12 @@ private fun DropdownRow(label: String, value: String, options: List<String>, onS
             title = { Text(label) },
             text = {
                 LazyColumn(Modifier.heightIn(max = 400.dp)) {
-                    item { OptionItem("Ingen", value.isBlank()) { onSelect(""); open = false } }
+                    item { OptionItem(Strings.Detail.dropdownNone, value.isBlank()) { onSelect(""); open = false } }
                     items(options) { opt -> OptionItem(opt, opt == value) { onSelect(opt); open = false } }
                 }
             },
             confirmButton = {},
-            dismissButton = { TextButton(onClick = { open = false }) { Text("Avbryt") } },
+            dismissButton = { TextButton(onClick = { open = false }) { Text(Strings.cancel) } },
         )
     }
 }
@@ -528,7 +528,7 @@ private fun CommentField(label: String, value: String, previous: String, onChang
             Text(label, color = cs.onSurfaceVariant, fontSize = 13.sp,
                 modifier = Modifier.weight(1f).padding(bottom = 2.dp))
             if (value.isBlank() && previous.isNotBlank()) {
-                Text("som forrige", color = cs.primary, fontSize = 13.sp,
+                Text(Strings.Detail.asPrevious, color = cs.primary, fontSize = 13.sp,
                     modifier = Modifier.clickable { onChange(previous) }.padding(bottom = 2.dp))
             }
         }
@@ -571,7 +571,7 @@ private fun TimeDialog(vm: MainViewModel, onDismiss: () -> Unit) {
     val range = vm.dEndTime != null
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text("Tid") },
+        title = { Text(Strings.Time.title) },
         text = {
             Column {
                 Row(
@@ -579,20 +579,20 @@ private fun TimeDialog(vm: MainViewModel, onDismiss: () -> Unit) {
                         .padding(vertical = 4.dp),
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
-                    Text("Tidsrom", color = cs.onSurfaceVariant, modifier = Modifier.weight(1f))
+                    Text(Strings.Time.range, color = cs.onSurfaceVariant, modifier = Modifier.weight(1f))
                     Checkbox(checked = range, onCheckedChange = { vm.dEndTime = if (it) start else null })
                 }
-                FieldRow(if (range) "Fra dato" else "Dato",
+                FieldRow(if (range) Strings.Time.fromDate else Strings.Time.date,
                     onClick = { pickDate(start, ::setStart) }) { Text(exportDate(start)) }
-                FieldRow(if (range) "Fra kl." else "Klokkeslett",
+                FieldRow(if (range) Strings.Time.fromTime else Strings.Time.clock,
                     onClick = { pickTime(start, ::setStart) }) { Text(exportTime(start)) }
                 vm.dEndTime?.let { end ->
-                    FieldRow("Til dato", onClick = { pickDate(end, ::setEnd) }) { Text(exportDate(end)) }
-                    FieldRow("Til kl.", onClick = { pickTime(end, ::setEnd) }) { Text(exportTime(end)) }
+                    FieldRow(Strings.Time.toDate, onClick = { pickDate(end, ::setEnd) }) { Text(exportDate(end)) }
+                    FieldRow(Strings.Time.toTime, onClick = { pickTime(end, ::setEnd) }) { Text(exportTime(end)) }
                 }
             }
         },
-        confirmButton = { TextButton(onClick = onDismiss) { Text("Ferdig") } },
+        confirmButton = { TextButton(onClick = onDismiss) { Text(Strings.Time.done) } },
     )
 }
 
@@ -653,21 +653,21 @@ fun ExportScreen(vm: MainViewModel) {
             Modifier.fillMaxWidth().background(cs.primary).padding(horizontal = 14.dp, vertical = 9.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
-            Text("Eksporter til Artsobservasjoner", color = Color.White,
+            Text(Strings.Export.title, color = Color.White,
                 fontWeight = FontWeight.SemiBold, modifier = Modifier.weight(1f))
-            TextButton(onClick = { vm.closeExport() }) { Text("Avbryt", color = Color.White) }
+            TextButton(onClick = { vm.closeExport() }) { Text(Strings.cancel, color = Color.White) }
         }
         Column(Modifier.weight(1f).verticalScroll(rememberScrollState()).padding(horizontal = 16.dp)) {
-            Step(1, "Kopier observasjoner") {
+            Step(1, Strings.Export.step1) {
                 OutlinedTextField(text, {},
                     Modifier.fillMaxWidth().height(120.dp).padding(top = 6.dp), readOnly = true,
                     textStyle = androidx.compose.ui.text.TextStyle(fontSize = 11.sp))
                 Button(
                     onClick = { clip.setText(AnnotatedString(text)); copied = true },
                     modifier = Modifier.padding(top = 6.dp),
-                ) { Text(if (copied) "Kopiert ✓" else "Kopiér") }
+                ) { Text(if (copied) Strings.Export.copied else Strings.Export.copy) }
             }
-            Step(2, "Åpne Artsobservasjoner") {
+            Step(2, Strings.Export.step2) {
                 Button(
                     onClick = {
                         runCatching {
@@ -677,19 +677,19 @@ fun ExportScreen(vm: MainViewModel) {
                         }
                     },
                     modifier = Modifier.padding(top = 6.dp),
-                ) { Text("Kjør") }
+                ) { Text(Strings.Export.open) }
             }
-            Step(3, "Lim inn og importer") {
+            Step(3, Strings.Export.step3) {
                 Text(buildAnnotatedString {
-                    append("Lim inn den kopierte teksten på Artsobservasjoner og trykk ")
-                    withStyle(SpanStyle(fontStyle = FontStyle.Italic)) { append("Importer") }
+                    append(Strings.Export.pasteBefore)
+                    withStyle(SpanStyle(fontStyle = FontStyle.Italic)) { append(Strings.Export.pasteEmphasis) }
                 }, fontSize = 13.sp, color = cs.onSurfaceVariant, modifier = Modifier.padding(top = 4.dp))
             }
-            Step(4, "Ferdig") {
+            Step(4, Strings.Export.step4) {
                 Text(buildAnnotatedString {
-                    append("Nå kan du\n" + "· Kontrollere og publisere i Artsobservasjoner\n" + "· Slette notatene fra appen")
+                    append(Strings.Export.doneBody)
                 }, fontSize = 13.sp, color = cs.onSurfaceVariant, modifier = Modifier.padding(top = 4.dp))
-                Text("Slett alle notater", color = cs.error, fontWeight = FontWeight.Medium,
+                Text(Strings.Export.clear, color = cs.error, fontWeight = FontWeight.Medium,
                     fontSize = 14.sp,
                     modifier = Modifier.clickable { confirmClear = true }.padding(top = 10.dp))
             }
@@ -699,17 +699,17 @@ fun ExportScreen(vm: MainViewModel) {
     if (confirmClear) {
         AlertDialog(
             onDismissRequest = { confirmClear = false },
-            title = { Text("Slett alle notater?") },
+            title = { Text(Strings.Export.clearTitle) },
             text = {
-                Text("Sletter alle ${vm.notes.size} notatene. Ikke gjør dette før du har importert alt til Artsobservasjoner!")
+                Text(Strings.Export.clearBody(vm.notes.size))
             },
             confirmButton = {
                 Button(
                     onClick = { vm.clearAll(); confirmClear = false; vm.closeExport() },
                     colors = ButtonDefaults.buttonColors(containerColor = cs.error),
-                ) { Text("Slett alle") }
+                ) { Text(Strings.Export.clearConfirm) }
             },
-            dismissButton = { TextButton(onClick = { confirmClear = false }) { Text("Avbryt") } },
+            dismissButton = { TextButton(onClick = { confirmClear = false }) { Text(Strings.cancel) } },
         )
     }
 }

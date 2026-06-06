@@ -113,11 +113,11 @@ fun LocalityScreen(vm: MainViewModel) {
             Modifier.fillMaxWidth().background(cs.primary).padding(horizontal = 14.dp, vertical = 9.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
-            Text(if (newMode) "Ny lokalitet" else "Velg lokalitet", color = Color.White,
+            Text(if (newMode) Strings.Picker.titleNew else Strings.Picker.titlePick, color = Color.White,
                 fontWeight = FontWeight.SemiBold, modifier = Modifier.weight(1f))
-            if (!newMode) TextButton(onClick = { newMode = true }) { Text("＋ Ny", color = Color.White) }
+            if (!newMode) TextButton(onClick = { newMode = true }) { Text(Strings.Picker.newButton, color = Color.White) }
             TextButton(onClick = { if (newMode) newMode = false else vm.leaveLocalityPicker() }) {
-                Text("Avbryt", color = Color.White)
+                Text(Strings.cancel, color = Color.White)
             }
         }
         Box(Modifier.weight(1f).fillMaxWidth()) {
@@ -160,21 +160,21 @@ fun LocalityScreen(vm: MainViewModel) {
                     .onSizeChanged { sheetH = it.height },
                 verticalArrangement = Arrangement.spacedBy(10.dp),
             ) {
-                Text("Pan kartet så krysset står på stedet.", color = cs.onSurface, fontSize = 13.sp)
+                Text(Strings.Picker.panHint, color = cs.onSurface, fontSize = 13.sp)
                 Row(verticalAlignment = Alignment.CenterVertically) {
-                    Text("Radius", color = cs.onSurface, modifier = Modifier.weight(1f))
+                    Text(Strings.Picker.radius, color = cs.onSurface, modifier = Modifier.weight(1f))
                     TextButton(onClick = { newRadius = RADII.lastOrNull { it < newRadius } ?: RADII.first() }) {
                         Text("−", fontSize = 22.sp)
                     }
-                    Text(if (newRadius == 0) "punkt" else "$newRadius m", fontWeight = FontWeight.SemiBold)
+                    Text(if (newRadius == 0) Strings.Picker.point else Strings.Picker.meters(newRadius), fontWeight = FontWeight.SemiBold)
                     TextButton(onClick = { newRadius = RADII.firstOrNull { it > newRadius } ?: RADII.last() }) {
                         Text("+", fontSize = 22.sp)
                     }
                 }
                 OutlinedTextField(
                     value = newName, onValueChange = { newName = it }, singleLine = true,
-                    label = { Text("Navn på lokaliteten (valgfritt)") },
-                    placeholder = { Text("Ny lokalitet") }, modifier = Modifier.fillMaxWidth(),
+                    label = { Text(Strings.Picker.nameLabel) },
+                    placeholder = { Text(Strings.Picker.namePlaceholder) }, modifier = Modifier.fillMaxWidth(),
                 )
                 Button(
                     onClick = {
@@ -182,7 +182,7 @@ fun LocalityScreen(vm: MainViewModel) {
                         vm.createNewLocality(gp.latitude, gp.longitude, newRadius, newName)
                     },
                     modifier = Modifier.fillMaxWidth(),
-                ) { Text("Lagre lokalitet her") }
+                ) { Text(Strings.Picker.save) }
             }
         }
     }
