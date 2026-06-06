@@ -15,8 +15,8 @@ object Strings {
     const val findingPosition = "Finner posisjon…"   // shared by the status strip and the detail screen
 
     object Notes {
-        const val empty = "Ingen notater enda.\nTrykk + for å legge til."
-        fun header(n: Int) = "I dag · $n ${if (n == 1) "notat" else "notater"}"
+        const val empty = "Ingen observasjoner enda.\nTrykk + for å legge til."
+        fun header(n: Int) = "I dag · $n ${if (n == 1) "observasjon" else "observasjoner"}"
         const val feedback = "Gi tilbakemelding"
         const val export = "Eksporter"
         const val youAreHere = "du er her"
@@ -28,7 +28,7 @@ object Strings {
         // Selection mode: long-press a note to mark it, then tap more, then delete the marked ones.
         fun selected(n: Int) = "$n markert"
         const val deleteSelected = "Slett"
-        fun deleteTitle(n: Int) = "Slett $n ${if (n == 1) "notat" else "notater"}?"
+        fun deleteTitle(n: Int) = "Slett $n ${if (n == 1) "observasjon" else "observasjoner"}?"
         const val deleteConfirm = "Slett"
     }
 
@@ -93,10 +93,10 @@ object Strings {
         const val pasteBefore = "Lim inn den kopierte teksten på Artsobservasjoner og trykk "
         const val pasteEmphasis = "Importer"
         const val step4 = "Ferdig"
-        const val doneBody = "Nå kan du\n· Kontrollere og publisere i Artsobservasjoner\n· Slette notatene fra appen"
-        const val clear = "Slett alle notater"
-        const val clearTitle = "Slett alle notater?"
-        fun clearBody(n: Int) = "Sletter alle $n notatene. Ikke gjør dette før du har importert alt til Artsobservasjoner!"
+        const val doneBody = "Nå kan du\n· Kontrollere og publisere i Artsobservasjoner\n· Slette observasjonene fra appen"
+        const val clear = "Slett alle observasjoner"
+        const val clearTitle = "Slett alle observasjoner?"
+        fun clearBody(n: Int) = "Sletter alle $n observasjonene. Ikke gjør dette før du har importert alt til Artsobservasjoner!"
         const val clearConfirm = "Slett alle"
     }
 
