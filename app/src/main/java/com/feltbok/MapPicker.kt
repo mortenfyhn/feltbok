@@ -6,6 +6,7 @@ import android.graphics.Paint
 import android.graphics.Path
 import android.graphics.Point
 import android.view.MotionEvent
+import android.widget.NumberPicker
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -149,42 +150,51 @@ fun LocalityScreen(vm: MainViewModel) {
             }
             // New-spot panel OVERLAYS the map (so the map doesn't resize/jump); the overlay
             // draws the crosshair above it, at the centre of the visible map.
-            if (newMode) Column(
+            // Wheel + form side by side so the white panel stays short and leaves the map visible.
+            if (newMode) Row(
                 Modifier.align(Alignment.BottomCenter).fillMaxWidth()
                     .background(Color.White).padding(14.dp)
                     .onSizeChanged { sheetH = it.height },
-                verticalArrangement = Arrangement.spacedBy(10.dp),
+                horizontalArrangement = Arrangement.spacedBy(14.dp),
+                verticalAlignment = Alignment.CenterVertically,
             ) {
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Text(Strings.Picker.radius, color = cs.onSurface, modifier = Modifier.weight(1f))
-                    TextButton(onClick = { newRadius = RADII.lastOrNull { it < newRadius } ?: RADII.first() }) {
-                        Text("−", fontSize = 22.sp)
-                    }
-                    Text(if (newRadius == 0) Strings.Picker.point else Strings.Picker.meters(newRadius), fontWeight = FontWeight.SemiBold)
-                    TextButton(onClick = { newRadius = RADII.firstOrNull { it > newRadius } ?: RADII.last() }) {
-                        Text("+", fontSize = 22.sp)
-                    }
+                Column(
+                    Modifier.weight(1f),
+                    verticalArrangement = Arrangement.spacedBy(8.dp),
+                ) {
+                    OutlinedTextField(
+                        value = newName, onValueChange = { newName = it }, singleLine = true,
+                        label = { Text(Strings.Picker.nameLabel) },
+                        placeholder = { Text(Strings.Picker.namePlaceholder) }, modifier = Modifier.fillMaxWidth(),
+                    )
+                    Text(Strings.Picker.adjustHint, color = cs.onSurfaceVariant, fontSize = 12.sp)
+                    Button(
+                        onClick = {
+                            val gp = mapView.projection.fromPixels(mapView.width / 2, (mapView.height - sheetH) / 2)
+                            vm.createNewLocality(gp.latitude, gp.longitude, newRadius, newName)
+                        },
+                        modifier = Modifier.fillMaxWidth(),
+                    ) { Text(Strings.Picker.save) }
                 }
-                OutlinedTextField(
-                    value = newName, onValueChange = { newName = it }, singleLine = true,
-                    label = { Text(Strings.Picker.nameLabel) },
-                    placeholder = { Text(Strings.Picker.namePlaceholder) }, modifier = Modifier.fillMaxWidth(),
-                )
-                Text(Strings.Picker.adjustHint, color = cs.onSurfaceVariant, fontSize = 12.sp)
-                Button(
-                    onClick = {
-                        val gp = mapView.projection.fromPixels(mapView.width / 2, (mapView.height - sheetH) / 2)
-                        vm.createNewLocality(gp.latitude, gp.longitude, newRadius, newName)
-                    },
-                    modifier = Modifier.fillMaxWidth(),
-                ) { Text(Strings.Picker.save) }
+                AndroidView(factory = { c ->
+                    NumberPicker(c).apply {
+                        minValue = 0
+                        maxValue = RADII.lastIndex
+                        displayedValues = RADII.map {
+                            if (it == 0) Strings.Picker.point else Strings.Picker.meters(it)
+                        }.toTypedArray()
+                        wrapSelectorWheel = false
+                        value = RADII.indexOf(newRadius)
+                        setOnValueChangedListener { _, _, i -> newRadius = RADII[i] }
+                    }
+                }, update = { it.value = RADII.indexOf(newRadius) })
             }
         }
     }
 }
 
 /** Radii Artsobservasjoner allows for a circle locality (0 = a point). */
-private val RADII = listOf(0, 50, 100, 150, 200, 250, 300, 400, 500, 750, 1000, 1500, 2000, 3000)
+private val RADII = listOf(0, 1, 5, 10, 25, 50, 75, 100, 125, 150, 200, 250, 300, 400, 500, 750, 1000, 1500, 2000, 2500, 3000, 5000)
 
 @Composable
 private fun ZoomButton(label: String, onClick: () -> Unit) {
@@ -517,9 +527,11 @@ private class LocalityOverlay(
         if (newRadiusM >= 0.0) {                      // placing a new spot: crosshair + radius
             val cx = map.width / 2f                    // fixed screen position = centre of the
             val cy = (map.height - newOffsetPx) / 2f   // map area visible above the bottom panel
-            val r = (newRadiusM * ppm).toFloat().coerceAtLeast(10f)
-            c.drawCircle(cx, cy, r, newFill)
-            c.drawCircle(cx, cy, r, newStroke)
+            if (newRadiusM > 0.0) {                    // a point locality is just the crosshair, no circle
+                val r = (newRadiusM * ppm).toFloat().coerceAtLeast(10f)
+                c.drawCircle(cx, cy, r, newFill)
+                c.drawCircle(cx, cy, r, newStroke)
+            }
             c.drawLine(cx - 22f, cy, cx + 22f, cy, newStroke)
             c.drawLine(cx, cy - 22f, cx, cy + 22f, newStroke)
         }

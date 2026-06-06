@@ -119,7 +119,6 @@ object Strings {
         const val titleNew = "Ny lokalitet"
         const val titlePick = "Velg lokalitet"
         const val newButton = "＋ Ny lokalitet"
-        const val radius = "Radius"
         const val point = "punkt"
         fun meters(m: Int) = "$m m"
         const val nameLabel = "Lokalitetsnavn (valgfritt)"
