@@ -370,7 +370,7 @@ fun saveMyLocalities(ctx: Context, sites: List<Locality>) {
     myLocalitiesFile(ctx).writeText(sb.toString())   // internal storage: always app-writable
 }
 
-/** Columns: norsk,latin,status (Rødlista 2021 category, blank if not red-listed) */
+/** Columns: norsk,latin,status (Rødlista 2021 or Fremmedartslista 2023 category, blank if neither) */
 fun loadSpecies(ctx: Context): List<Species> =
     readData(ctx, "species.csv").mapNotNull { c ->
         if (c.isEmpty() || c[0].isBlank()) null
