@@ -20,7 +20,7 @@ test:
     ./gradlew testDebugUnitTest
 
 # Auto-format Kotlin (ktlint) + Python (ruff); run before committing manual tweaks
-fmt:
+format:
     ./gradlew ktlintFormat
     .venv/bin/ruff format process/
 

@@ -20,7 +20,7 @@ capturing bird observations in Norway and exporting a TSV to paste into Artsobse
   builds are distinguishable by the footer version string (`…-dev` = debug) and the app label
   (debug shows a "beta" launcher icon).
 - Always run `./gradlew test` before opening a PR.
-- `just fmt` auto-formats Kotlin (ktlint) + `process/` Python (ruff); `just lint` checks both. Both
+- `just format` auto-formats Kotlin (ktlint) + `process/` Python (ruff); `just lint` checks both. Both
   are gated in CI (ktlint in the Kotlin job, ruff in a parallel block). The ktlint ruleset
   (`.editorconfig`) only fixes whitespace/indentation/import order — it deliberately leaves line
   structure, line length, and naming alone, so it won't churn the terse hand-written style. ruff

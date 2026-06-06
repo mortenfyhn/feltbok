@@ -39,7 +39,9 @@ REDLIST_ALIASES = {
 
 # Alien Species List 2023 (Artsdatabanken) bird assessments. The ecological-risk
 # categories, worst first; NR (not risk-assessed) is dropped, like LC for the red list.
-ALIENLIST_URL = "https://lister.artsdatabanken.no/fremmedartslista/2023?SpeciesGroups=Aves"
+ALIENLIST_URL = (
+    "https://lister.artsdatabanken.no/fremmedartslista/2023?SpeciesGroups=Aves"
+)
 ALIEN_CATS = {"SE", "HI", "PH", "LO", "NK"}
 
 
@@ -181,7 +183,10 @@ def main() -> int:
     redlist = fetch_redlist()
     print(f"{len(redlist)} red-listed mainland birds (Rødlista 2021)", file=sys.stderr)
     alienlist = fetch_alienlist()
-    print(f"{len(alienlist)} risk-assessed alien birds (Fremmedartslista 2023)", file=sys.stderr)
+    print(
+        f"{len(alienlist)} risk-assessed alien birds (Fremmedartslista 2023)",
+        file=sys.stderr,
+    )
     keys = species_keys()
     print(f"{len(keys)} bird species; resolving names…", file=sys.stderr)
     rows = []
