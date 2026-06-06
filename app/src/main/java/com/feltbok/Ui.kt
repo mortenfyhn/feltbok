@@ -363,9 +363,9 @@ fun SearchScreen(vm: MainViewModel) {
             verticalAlignment = Alignment.CenterVertically,
         ) {
             // Cancel on the left, consistent with the other screens (#59).
-            // No full header here (keeps the width for species), but match the chevron the other
-            // screens' back/cancel uses so it still reads as "go back".
-            TextButton(onClick = { vm.cancelSearch() }) { Text("‹ ${Strings.cancel}") }
+            // No full header here (keeps the width for species), but match the "‹ Tilbake" the
+            // other non-discarding screens use - leaving search throws nothing away.
+            TextButton(onClick = { vm.cancelSearch() }) { Text("‹ ${Strings.back}") }
             OutlinedTextField(q, { q = it }, Modifier.weight(1f).focusRequester(focus), singleLine = true,
                 placeholder = { Text(Strings.Search.placeholder) },
                 // autoCorrect off: don't want the IME "correcting" species names, and the
@@ -397,35 +397,60 @@ fun SearchScreen(vm: MainViewModel) {
 
 // ============================ DETAIL ============================
 
-/** The screens' shared top bar. Cancel/back lives on the LEFT (not the right) so a thumb
- *  reaching the top-right corner - where it naturally lands after typing, once the keyboard
- *  hides the Lagre button - can't dismiss the screen by accident (#59). [trailing] holds any
- *  screen-specific right-side action. */
+/** The screens' shared top bar. The back/dismiss action lives on the LEFT (not the right) so a
+ *  thumb reaching the top-right corner - where it lands after typing, once the keyboard hides the
+ *  Lagre button - can't leave the screen by accident (#59). Default label is "‹ Tilbake" for
+ *  screens that discard nothing; a screen that throws away a draft passes its own ("✕ Forkast") and
+ *  routes [onCancel] through a confirm. Title is centred (Apple/Material modal convention), padded
+ *  so a long one ellipsizes instead of sliding under the side controls. [trailing] is the optional
+ *  right-side action. */
 @Composable
 internal fun ScreenHeader(
     title: String,
     onCancel: () -> Unit,
+    cancelLabel: String = "‹ ${Strings.back}",
     trailing: @Composable RowScope.() -> Unit = {},
 ) {
-    Row(
-        Modifier.fillMaxWidth().background(MaterialTheme.colorScheme.primary)
-            .padding(start = 4.dp, end = 14.dp),
-        verticalAlignment = Alignment.CenterVertically,
+    Box(
+        Modifier.fillMaxWidth().background(MaterialTheme.colorScheme.primary),
+        contentAlignment = Alignment.Center,
     ) {
-        TextButton(onClick = onCancel) { Text("‹ ${Strings.cancel}", color = Color.White) }
         Text(title, color = Color.White, fontWeight = FontWeight.SemiBold, fontSize = 16.sp,
-            maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.weight(1f))
-        trailing()
+            textAlign = TextAlign.Center, maxLines = 1, overflow = TextOverflow.Ellipsis,
+            modifier = Modifier.fillMaxWidth().padding(horizontal = 96.dp))
+        Row(
+            Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            TextButton(onClick = onCancel) { Text(cancelLabel, color = Color.White) }
+            Row(verticalAlignment = Alignment.CenterVertically) { trailing() }
+        }
     }
 }
 
 @Composable
 fun DetailScreen(vm: MainViewModel) {
     val cs = MaterialTheme.colorScheme
+    var confirmDiscard by remember { mutableStateOf(false) }
+    if (confirmDiscard) {
+        AlertDialog(
+            onDismissRequest = { confirmDiscard = false },
+            title = { Text(if (vm.isEditing) Strings.Detail.discardTitleEdit else Strings.Detail.discardTitleNew) },
+            confirmButton = {
+                TextButton(onClick = { confirmDiscard = false; vm.cancel() }) {
+                    Text(Strings.Detail.discardConfirm, color = cs.error)
+                }
+            },
+            dismissButton = { TextButton(onClick = { confirmDiscard = false }) { Text(Strings.Detail.discardKeep) } },
+        )
+    }
     Column(Modifier.fillMaxSize()) {
+        // This screen composes a draft, so leaving discards it: label it "Forkast" and confirm first.
         ScreenHeader(
             if (vm.isEditing) Strings.Detail.titleEdit else Strings.Detail.titleNew,
-            onCancel = { vm.cancel() },
+            onCancel = { confirmDiscard = true },
+            cancelLabel = "✕ ${Strings.discard}",
         )
         Column(Modifier.weight(1f).verticalScroll(rememberScrollState())) {
             // Species first - it's the first thing you choose for a new observation.

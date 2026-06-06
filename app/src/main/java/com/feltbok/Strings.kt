@@ -11,6 +11,8 @@ package com.feltbok
  */
 object Strings {
     const val cancel = "Avbryt"
+    const val back = "Tilbake"                        // header back action on screens that discard nothing
+    const val discard = "Forkast"                     // header action on the screen that throws away a draft
     const val findingPosition = "Finner posisjon…"   // shared by the status strip and the detail screen
 
     object Notes {
@@ -54,6 +56,13 @@ object Strings {
         const val delete = "Slett observasjon"
         const val save = "Lagre"
         const val dropdownNone = "Ingen"
+
+        // Confirm before the header's Forkast throws away an in-progress observation (NN/g: guard
+        // destructive cancels that lose work).
+        const val discardTitleNew = "Forkast observasjonen?"
+        const val discardTitleEdit = "Forkast endringene?"
+        const val discardConfirm = "Forkast"
+        const val discardKeep = "Fortsett"
     }
 
     object Time {
@@ -69,7 +78,7 @@ object Strings {
     }
 
     object Export {
-        const val title = "Eksporter til Artsobservasjoner"
+        const val title = "Eksporter"
         const val step1 = "Kopier observasjoner"
         const val copy = "Kopiér"
         const val copied = "Kopiert ✓"
