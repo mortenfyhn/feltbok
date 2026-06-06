@@ -10,10 +10,11 @@ agent:
     - name: main
       image: registry.semaphoreci.com/android:34
 
-# Don't burn minutes building the same commit twice (branch push + its PR).
+# On a new push, cancel any still-running pipeline for the same branch so the
+# newest commit starts right away (also avoids the branch-push + PR double build).
 auto_cancel:
   running:
-    when: "branch != 'master'"
+    when: "true"
 
 blocks:
   - name: Test & build
