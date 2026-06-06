@@ -121,4 +121,36 @@ class ModelTest {
     fun fuzzyIgnoresSpacesAndCase() {
         assertEquals(1, fuzzyScore("R V T", "Rødvingetrost"))
     }
+
+    private fun mine(id: String, name: String = "Lok $id", lat: Double = 63.0, radius: Double = 0.0) =
+        Locality(id, name, "", "", lat, 8.0, name, 0, radius, public = false, mine = true)
+
+    @Test
+    fun diffCountsAddedRemovedAndModifiedAsOneSum() {
+        val old = listOf(mine("1"), mine("2"), mine("3"))
+        val new = listOf(
+            mine("1"),                         // unchanged
+            mine("2", lat = 64.0),             // moved -> modified
+            mine("4"),                         // added (3 is removed)
+        )
+        val d = diffMySites(old, new)
+        assertEquals(3, d.total)
+        assertEquals("1 added + 1 removed + 1 modified", 3, d.changed)
+        assertTrue(!d.firstSync)
+    }
+
+    @Test
+    fun diffFromEmptyIsFirstSync() {
+        val d = diffMySites(emptyList(), listOf(mine("1"), mine("2")))
+        assertTrue(d.firstSync)
+        assertEquals(2, d.total)
+    }
+
+    @Test
+    fun diffWithNoChangeReportsZeroChanged() {
+        val set = listOf(mine("1"), mine("2"))
+        val d = diffMySites(set, set)
+        assertEquals(0, d.changed)
+        assertTrue(!d.firstSync)
+    }
 }

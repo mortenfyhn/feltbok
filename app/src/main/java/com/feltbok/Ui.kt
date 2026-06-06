@@ -120,14 +120,21 @@ fun ListScreen(vm: MainViewModel) {
             }
             // Footer bar: Synk / Tilbakemelding, with the version tucked at the right.
             HorizontalDivider(color = cs.outline.copy(alpha = 0.4f))
-            Row(Modifier.fillMaxWidth().background(cs.surface), verticalAlignment = Alignment.CenterVertically) {
-                Text("⟳ Synk", color = cs.primary, fontWeight = FontWeight.Medium, fontSize = 13.sp,
-                    modifier = Modifier.clickable { vm.openSync() }.padding(14.dp))
-                Text("Gi tilbakemelding", color = cs.primary, fontWeight = FontWeight.Medium, fontSize = 13.sp,
-                    modifier = Modifier.clickable { showFeedback = true }.padding(14.dp))
-                Spacer(Modifier.weight(1f))
+            // The two buttons sit at the edges; the version is overlaid dead-centre on the screen
+            // (a weighted slot would centre it between the buttons, which is off-centre since the
+            // labels differ in width). It overflows visibly, so the full string stays readable:
+            // clean in the gap on release ("v0.7"), spilling over the buttons on a long dev build.
+            Box(Modifier.fillMaxWidth().background(cs.surface), Alignment.Center) {
+                Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+                    Text("Hent mine lokaliteter", color = cs.primary, fontWeight = FontWeight.Medium, fontSize = 13.sp,
+                        maxLines = 1, modifier = Modifier.clickable { vm.openSync() }.padding(horizontal = 14.dp, vertical = 10.dp))
+                    Spacer(Modifier.weight(1f))
+                    Text("Gi tilbakemelding", color = cs.primary, fontWeight = FontWeight.Medium, fontSize = 13.sp,
+                        maxLines = 1, modifier = Modifier.clickable { showFeedback = true }.padding(horizontal = 14.dp, vertical = 10.dp))
+                }
                 Text(BuildConfig.GIT_VERSION, color = cs.onSurfaceVariant.copy(alpha = 0.6f),
-                    fontSize = 11.sp, modifier = Modifier.padding(end = 14.dp))
+                    fontSize = 11.sp, maxLines = 1, softWrap = false, overflow = TextOverflow.Visible,
+                    modifier = Modifier.align(Alignment.BottomCenter).offset(y = 5.dp))
             }
         }
         // Round minimap on the left of the top bar, clipping the top and left edges equally.
@@ -142,6 +149,11 @@ fun ListScreen(vm: MainViewModel) {
 @Composable
 private fun FeedbackDialog(onDismiss: () -> Unit) {
     val ctx = LocalContext.current
+    // Version + device + OS we'd otherwise have to ask the reporter for; auto-filled into
+    // both the issue form and the email.
+    val tech = "Feltbok ${BuildConfig.GIT_VERSION}\n" +
+        "${android.os.Build.MANUFACTURER} ${android.os.Build.MODEL}\n" +
+        "Android ${android.os.Build.VERSION.RELEASE} (API ${android.os.Build.VERSION.SDK_INT})"
     fun open(intent: android.content.Intent) {
         runCatching { ctx.startActivity(intent) }
         onDismiss()
@@ -152,18 +164,16 @@ private fun FeedbackDialog(onDismiss: () -> Unit) {
         text = { Text("Ta gjerne kontakt om du har tilbakemelding eller spørsmål:") },
         confirmButton = {
             TextButton(onClick = {
+                // Issue forms accept query params keyed by field id, so we prefill "teknisk".
                 open(android.content.Intent(android.content.Intent.ACTION_VIEW,
-                    android.net.Uri.parse("https://github.com/mortenfyhn/feltbok/issues/new?template=tilbakemelding.yml")))
+                    android.net.Uri.parse("https://github.com/mortenfyhn/feltbok/issues/new?template=tilbakemelding.yml" +
+                        "&teknisk=" + android.net.Uri.encode(tech))))
             }) { Text("GitHub Issue") }
         },
         dismissButton = {
             TextButton(onClick = {
-                // Footer with the basics we'd otherwise have to ask the reporter for.
                 // A mailto intent can't pre-attach files, so we just nudge for a screenshot.
-                val body = "\n\n---\nLegg gjerne ved et skjermbilde.\n" +
-                    "Feltbok ${BuildConfig.GIT_VERSION}\n" +
-                    "${android.os.Build.MANUFACTURER} ${android.os.Build.MODEL}\n" +
-                    "Android ${android.os.Build.VERSION.RELEASE} (API ${android.os.Build.VERSION.SDK_INT})"
+                val body = "\n\n---\nLegg gjerne ved et skjermbilde.\n$tech"
                 open(android.content.Intent(android.content.Intent.ACTION_SENDTO,
                     android.net.Uri.parse("mailto:morten.fyhn.amundsen+feltbok@gmail.com" +
                         "?subject=" + android.net.Uri.encode("Feltbok-tilbakemelding") +

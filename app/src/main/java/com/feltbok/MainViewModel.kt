@@ -234,12 +234,15 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
     fun closeSync() { screen = Screen.LIST }
 
     /** Replace the user's own (mine) localities with a freshly synced set, persist, and re-pick
-     *  the nearest. Public localities and in-progress new spots are left untouched. */
-    fun applyMySites(sites: List<Locality>) {
+     *  the nearest. Public localities and in-progress new spots are left untouched. Returns what
+     *  changed versus the previous set, for the sync confirmation. */
+    fun applyMySites(sites: List<Locality>): SyncDiff {
+        val diff = diffMySites(localities.filter { it.mine }, sites)
         localities.removeAll { it.mine }
         localities.addAll(sites)
         saveMyLocalities(ctx, sites)
         nearestFix = null   // invalidate the fix-keyed memo so nearest() rescans
+        return diff
     }
 
     /** Place a brand-new spot (panned-to map centre + chosen radius + name). It exports

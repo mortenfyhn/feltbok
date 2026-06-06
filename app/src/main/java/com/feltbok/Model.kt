@@ -288,6 +288,25 @@ fun loadLocalities(ctx: Context): List<Locality> =
 
 // ---- "my localities" sync (from the mobile API's /core/Sites/ByUser) ----
 
+/** What a sync changed versus the previously cached set, for the "Hentet …" confirmation. */
+data class SyncDiff(val total: Int, val changed: Int, val firstSync: Boolean)
+
+// The fields whose change we treat as a meaningful edit to an existing locality (name, place,
+// footprint). id is the identity, so it is excluded; polygon is flattened to compare by value.
+private fun localitySig(l: Locality) =
+    listOf(l.lokalitet, l.fullname, l.lat, l.lon, l.radius, l.polygon.flatMap { it.toList() })
+
+/** Diff old vs new "mine" localities by id: count added + removed + content-changed. */
+fun diffMySites(old: List<Locality>, new: List<Locality>): SyncDiff {
+    val oldById = old.associateBy { it.id }
+    val newById = new.associateBy { it.id }
+    val added = newById.keys - oldById.keys
+    val removed = oldById.keys - newById.keys
+    val modified = (oldById.keys intersect newById.keys)
+        .count { localitySig(oldById.getValue(it)) != localitySig(newById.getValue(it)) }
+    return SyncDiff(total = new.size, changed = added.size + removed.size + modified, firstSync = old.isEmpty())
+}
+
 /** Map the mobile API's accumulated `{data:[...]}` rows to the user's own private localities.
  *  Coordinates are already WGS84; only `isPrivate` sites go to the mine-file (public ones are
  *  already in the bundled set). */
