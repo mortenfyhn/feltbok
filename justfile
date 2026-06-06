@@ -44,6 +44,10 @@ run: install
 log:
     adb logcat -s Feltbok:* AndroidRuntime:* --format=brief
 
+# Cut a signed release: bump version, build+sign, publish the GitHub release, push (see docs/release.md)
+release version:
+    ./release.sh {{version}}
+
 # Uninstall the dev build from device (NOT the release app)
 uninstall:
     adb uninstall {{app_id}}

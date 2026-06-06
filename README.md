@@ -8,7 +8,9 @@ https://github.com/user-attachments/assets/463080c3-b6be-46ea-bfd6-91535ed26116
 
 ## Installer
 
-[Finn siste utgave her](https://github.com/mortenfyhn/feltbok/releases/latest).
+Last ned `.apk`-fila fra [siste utgave](https://github.com/mortenfyhn/feltbok/releases/latest)
+og åpne den på telefonen. Android viser en Play Protect-advarsel siden appen ikke kommer fra
+Google Play – det er normalt. [Full veiledning med skjermbilder](docs/install.md).
 
 ## Bygg
 

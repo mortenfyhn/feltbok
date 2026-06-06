@@ -1,14 +1,14 @@
 # Installere Feltbok
 
-Feltbok ligger ikke i Google Play ennå, så du laster ned appen direkte fra
-GitHub. Da viser Android en advarsel fra **Google Play Protect** – det er helt
-normalt for apper som ikke kommer fra Play-butikken, og betyr ikke at noe er
-galt. Slik installerer du:
+Feltbok ligger ikke i Google Play ennå, så du installerer den direkte fra GitHub.
+Det tar under et minutt. Underveis viser Android en advarsel fra **Google Play
+Protect** – det er helt normalt for apper utenfor Play-butikken og betyr ikke at
+noe er galt.
 
 1. Åpne [siste utgivelse](https://github.com/mortenfyhn/feltbok/releases/latest)
-   og last ned `.apk`-fila.
-2. Trykk på fila (i nedlastinger eller i nettleseren). Første gang må du la
-   nettleseren «installere ukjente apper» – følg meldingen Android viser.
+   og last ned `.apk`-fila (den ligger under **Assets**).
+2. Trykk på fila når den er lastet ned. Første gang spør Android om nettleseren får
+   «installere ukjente apper» – si ja og følg meldingen.
 3. Play Protect sier **«Appen er blokkert for å beskytte enheten din»** fordi den
    ikke har sett apper fra denne utvikleren før. Trykk **Flere detaljer**.
 
@@ -18,7 +18,7 @@ galt. Slik installerer du:
 
    ![Installer likevel](img/play-protect-installer-likevel.jpg)
 
-5. Ferdig – Feltbok dukker opp i app-skuffen.
+5. Ferdig! Feltbok dukker opp i app-skuffen.
 
 ## Hvorfor advarselen?
 

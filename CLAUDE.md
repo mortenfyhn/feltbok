@@ -26,7 +26,8 @@ Recipes live in `just --list` — the notes below are only the why's and gotchas
 - In a fresh worktree, copy `local.properties` from the repo root first (it's gitignored, and Gradle
   needs its `sdk.dir`).
 - CI runs on Semaphore (`.semaphore/semaphore.yml`): a `Test & build` block (Android container) and a
-  parallel `Lint` block (plain VM — no SDK needed for ruff), plus a tag-only `Release` block. Inspect
+  parallel `Lint` block (plain VM — no SDK needed for ruff). Releases are cut locally with
+  `./release.sh` (see `docs/release.md`), not by CI. Inspect
   failing runs locally with the `sem` CLI (`sem get pipelines`, `sem logs <jobid>`). Pipeline YAML
   reference: https://docs.semaphore.io/reference/pipeline-yaml (note: once one block sets
   `dependencies`, all blocks must).

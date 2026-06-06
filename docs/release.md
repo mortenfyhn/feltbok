@@ -1,6 +1,6 @@
 # Releasing Feltbok
 
-Releases are **signed APKs published as GitHub releases**, built by Semaphore on a `v*` tag.
+Releases are **signed APKs published as GitHub releases**, cut locally with `./release.sh`.
 Friends install the APK by sideloading it — see [install.md](install.md) for the
 step-by-step (and the expected Play Protect warning). Each release page prepends those
 install steps from `release-notes-install.md` via `gh release create --notes-file`.
@@ -10,15 +10,17 @@ The bundled APK ships **public localities only** - the maintainer's own customs
 ## Cut a release
 
 ```sh
-git tag v0.2 && git push origin v0.2
+just release 0.8          # or: ./release.sh 0.8
 ```
 
-Semaphore's `Release` block (`.semaphore/semaphore.yml`) then builds the signed release APK
-and runs `gh release create`. The in-app version string comes from `git describe`, so it
-shows `0.2` at the tag.
+The script bumps `versionCode`+`versionName` in `app/build.gradle.kts`, commits, tags `v0.8`,
+builds the signed APK, pushes, and runs `gh release create`. `versionCode` auto-increments so
+each release is an upgrade Android will install over the last; the in-app version string comes
+from `git describe`, so it shows `0.8` at the tag. Needs a clean `master`, the keystore (below),
+and an authenticated `gh`. Building locally is much faster than the old cold Semaphore tag build.
 
-`versionCode` in `app/build.gradle.kts` must increase for each release Android should treat
-as an upgrade - bump it alongside the tag.
+Afterwards, edit the release on GitHub to add the hand-written "Nytt i 0.8" changelog above the
+auto-generated "What's Changed" list.
 
 ## Signing
 
@@ -37,23 +39,10 @@ Build one locally:
 ./gradlew assembleRelease   # -> app/build/outputs/apk/release/app-release.apk
 ```
 
-## Semaphore setup (one-time)
+## CI
 
-1. Add the project at https://semaphoreci.com (connect the `feltbok` GitHub repo).
-2. Create the `feltbok-signing` secret with the keystore file + passwords + a GitHub token
-   (a classic PAT with `repo` scope, or a fine-grained token with Contents: read/write), using
-   the values from `keystore.properties`:
-
-   ```sh
-   sem create secret feltbok-signing \
-     -f feltbok-release.keystore:/home/semaphore/feltbok-release.keystore \
-     -e KEYSTORE_PASSWORD=<storePassword from keystore.properties> \
-     -e KEY_ALIAS=feltbok \
-     -e KEY_PASSWORD=<keyPassword from keystore.properties> \
-     -e GITHUB_TOKEN=<a GitHub token with repo/contents write>
-   ```
-
-The pipeline also runs `./gradlew test assembleDebug` on every push.
+Semaphore (`.semaphore/semaphore.yml`) runs tests, ktlint, and a debug build on every push;
+it no longer builds releases (those are cut locally now), so no signing secret is needed there.
 
 ## Distribution roadmap (Play Protect / #13)
 

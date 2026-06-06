@@ -52,37 +52,5 @@ blocks:
             - curl -fsSL https://github.com/astral-sh/ruff/releases/latest/download/ruff-x86_64-unknown-linux-gnu.tar.gz | tar -xz -C /tmp
             - /tmp/ruff-x86_64-unknown-linux-gnu/ruff check process/
 
-  # Runs only when a v* tag is pushed: builds the signed release APK and publishes
-  # it as a GitHub release. Needs the 'feltbok-signing' secret (keystore + passwords
-  # + a GH token) - see docs/release.md. The android image has no gh CLI, so we drop
-  # in a pinned gh binary just for the publish step.
-  - name: Release
-    dependencies: ["Test & build", "Lint (process/)"]
-    run:
-      when: "tag =~ '^v'"
-    task:
-      secrets:
-        - name: feltbok-signing
-      env_vars:
-        - name: KEYSTORE_FILE
-          value: /home/semaphore/feltbok-release.keystore
-      # Reuse the dependency + Gradle-distribution cache the debug block already stored
-      # (same key); otherwise a tag build cold-downloads everything from scratch.
-      prologue:
-        commands:
-          - checkout
-          - cache restore gradle-$(checksum app/build.gradle.kts)
-      jobs:
-        - name: signed APK + GitHub release
-          commands:
-            - git fetch --tags --force          # so `git describe` sees the tag for the in-app version
-            - ./gradlew assembleRelease --console=plain --no-daemon
-            # Publish under a recognisable name (feltbok-v0.5.apk), not Gradle's app-release.apk.
-            - cp app/build/outputs/apk/release/app-release.apk "feltbok-$SEMAPHORE_GIT_TAG_NAME.apk"
-            - curl -fsSL https://github.com/cli/cli/releases/download/v2.93.0/gh_2.93.0_linux_amd64.tar.gz | tar -xz -C /tmp
-            - >-
-              /tmp/gh_2.93.0_linux_amd64/bin/gh release create "$SEMAPHORE_GIT_TAG_NAME"
-              "feltbok-$SEMAPHORE_GIT_TAG_NAME.apk"
-              --title "Feltbok $SEMAPHORE_GIT_TAG_NAME"
-              --notes-file docs/release-notes-install.md
-              --generate-notes
+  # Releases are cut locally with ./release.sh (see docs/release.md) — building the
+  # signed APK on a connected machine is faster than a cold Semaphore tag build.
