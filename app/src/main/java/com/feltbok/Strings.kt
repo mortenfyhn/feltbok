@@ -112,15 +112,15 @@ object Strings {
     object Picker {
         const val titleNew = "Ny lokalitet"
         const val titlePick = "Velg lokalitet"
-        const val newButton = "＋ Ny"
+        const val newButton = "＋ Ny lokalitet"
         const val radius = "Radius"
         const val point = "punkt"
         fun meters(m: Int) = "$m m"
-        const val nameLabel = "Navn på lokaliteten (valgfritt)"
+        const val nameLabel = "Lokalitetsnavn (valgfritt)"
         const val namePlaceholder = "Ny lokalitet"
 
         // Reassure that a new spot doesn't have to be perfect: it can be adjusted later (issue #55).
-        const val adjustHint = "Du kan justere lokaliteten senere i Artsobservasjoner"
+        const val adjustHint = "Du kan justere lokaliteten seinere i Artsobservasjoner"
         const val save = "Lagre"
     }
 }
