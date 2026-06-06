@@ -18,6 +18,7 @@ auto_cancel:
 
 blocks:
   - name: Test & build
+    dependencies: []
     task:
       prologue:
         commands:
@@ -26,26 +27,37 @@ blocks:
         - name: unit tests + debug APK
           # testDebugUnitTest (not `test`) so we don't also compile+run the release
           # unit-test variant - same sources, no release-only tests, just wasted work.
-          # ktlintCheck gates formatting (run `just fmt` locally to fix). Cache restore/store
-          # live here (not the block prologue/epilogue) so the parallel ruff job - which has
-          # an empty ~/.gradle - can't win the store race and poison the gradle cache.
+          # ktlintCheck gates formatting (run `just fmt` locally to fix).
           commands:
             - cache restore gradle-$(checksum app/build.gradle.kts)
             - ./gradlew ktlintCheck testDebugUnitTest assembleDebug --console=plain --no-daemon
             - cache store gradle-$(checksum app/build.gradle.kts) ~/.gradle
-        # Parallel job: lint the process/ Python scripts. Runs alongside (not before) the
-        # Kotlin job so a formatting nit doesn't hide test results. Throwaway venv because
-        # the Ubuntu base is PEP-668 externally-managed (bare `pip install` is refused).
+
+  # Lint process/ Python on a plain VM (no Android container) - it needs no SDK/JDK,
+  # just ruff. Parallel with Test & build via dependencies: []. Grab ruff's prebuilt
+  # binary (like the gh download below) to dodge pip/venv setup on the base image.
+  - name: Lint (process/)
+    dependencies: []
+    task:
+      agent:
+        machine:
+          type: e1-standard-2
+          os_image: ubuntu2404
+      prologue:
+        commands:
+          - checkout
+      jobs:
         - name: ruff (process/)
           commands:
-            - python3 -m venv /tmp/ruff && /tmp/ruff/bin/pip install -q ruff
-            - /tmp/ruff/bin/ruff check process/
+            - curl -fsSL https://github.com/astral-sh/ruff/releases/latest/download/ruff-x86_64-unknown-linux-gnu.tar.gz | tar -xz -C /tmp
+            - /tmp/ruff-x86_64-unknown-linux-gnu/ruff check process/
 
   # Runs only when a v* tag is pushed: builds the signed release APK and publishes
   # it as a GitHub release. Needs the 'feltbok-signing' secret (keystore + passwords
   # + a GH token) - see docs/release.md. The android image has no gh CLI, so we drop
   # in a pinned gh binary just for the publish step.
   - name: Release
+    dependencies: ["Test & build", "Lint (process/)"]
     run:
       when: "tag =~ '^v'"
     task:
