@@ -8,6 +8,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.combinedClickable
+import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -56,6 +57,7 @@ import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.Layout
 import androidx.compose.ui.platform.LocalClipboardManager
 import androidx.compose.ui.platform.LocalContext
@@ -470,6 +472,7 @@ fun DetailScreen(vm: MainViewModel) {
     // otherwise an accidental back-swipe drops a started observation silently. This handler sits
     // inside DetailScreen, so it shadows the app-level one only while the editor is open.
     BackHandler { leave() }
+    val focus = LocalFocusManager.current
     if (confirmDiscard) {
         AlertDialog(
             onDismissRequest = { confirmDiscard = false },
@@ -490,7 +493,13 @@ fun DetailScreen(vm: MainViewModel) {
             onCancel = leave,
             cancelContent = { Text("✕", color = Color.White, fontSize = 22.sp) },
         )
-        Column(Modifier.weight(1f).verticalScroll(rememberScrollState())) {
+        Column(
+            Modifier.weight(1f).verticalScroll(rememberScrollState())
+                // Tapping empty space drops focus/caret out of any text field (the number
+                // keyboard has no Done key, so this is the only way out of it). Taps on the
+                // rows are consumed by their own clickables and never reach here.
+                .pointerInput(Unit) { detectTapGestures(onTap = { focus.clearFocus() }) },
+        ) {
             // Species first - it's the first thing you choose for a new observation.
             FieldRow(Strings.Detail.species, onClick = { vm.changeSpecies() }) {
                 // Common name keeps its full width; the latin is what gets ellipsized when space is tight.
