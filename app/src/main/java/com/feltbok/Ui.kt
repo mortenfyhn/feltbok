@@ -229,11 +229,14 @@ private fun StatusStrip(vm: MainViewModel) {
         Spacer(Modifier.width(10.dp))
         if (vm.notes.isNotEmpty()) {
             Spacer(Modifier.width(10.dp))
+            // Outlined, not a solid white block: export is a once-per-session action, so it
+            // shouldn't shout for the thumb that's reaching for the + button (#62).
             Box(
-                Modifier.clip(RoundedCornerShape(8.dp)).background(Color.White)
+                Modifier.clip(RoundedCornerShape(8.dp))
+                    .border(1.dp, Color.White.copy(alpha = 0.7f), RoundedCornerShape(8.dp))
                     .clickable { vm.openExport() }.padding(horizontal = 14.dp, vertical = 8.dp),
             ) {
-                Text(Strings.Notes.export, color = cs.primary, fontWeight = FontWeight.Bold, fontSize = 14.sp)
+                Text(Strings.Notes.export, color = Color.White, fontWeight = FontWeight.Medium, fontSize = 14.sp)
             }
         }
     }
