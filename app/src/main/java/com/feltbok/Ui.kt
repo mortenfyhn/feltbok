@@ -123,7 +123,7 @@ fun ListScreen(vm: MainViewModel) {
             Row(Modifier.fillMaxWidth().background(cs.surface), verticalAlignment = Alignment.CenterVertically) {
                 Text("⟳ Synk", color = cs.primary, fontWeight = FontWeight.Medium, fontSize = 13.sp,
                     modifier = Modifier.clickable { vm.openSync() }.padding(14.dp))
-                Text("Tilbakemelding", color = cs.primary, fontWeight = FontWeight.Medium, fontSize = 13.sp,
+                Text("Gi tilbakemelding", color = cs.primary, fontWeight = FontWeight.Medium, fontSize = 13.sp,
                     modifier = Modifier.clickable { showFeedback = true }.padding(14.dp))
                 Spacer(Modifier.weight(1f))
                 Text(BuildConfig.GIT_VERSION, color = cs.onSurfaceVariant.copy(alpha = 0.6f),
@@ -149,7 +149,7 @@ private fun FeedbackDialog(onDismiss: () -> Unit) {
     AlertDialog(
         onDismissRequest = onDismiss,
         title = { Text("Tilbakemelding") },
-        text = { Text("Har du funnet en feil eller har et forslag? Velg hvordan du vil ta kontakt.") },
+        text = { Text("Ta gjerne kontakt om du har tilbakemelding eller spørsmål:") },
         confirmButton = {
             TextButton(onClick = {
                 open(android.content.Intent(android.content.Intent.ACTION_VIEW,
