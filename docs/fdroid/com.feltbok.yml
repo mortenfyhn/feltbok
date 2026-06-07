@@ -11,7 +11,7 @@ License: AGPL-3.0-only        # no "or later" clause in our source headers -> -o
 AuthorName: Morten F. Amundsen
 SourceCode: https://github.com/mortenfyhn/feltbok
 IssueTracker: https://github.com/mortenfyhn/feltbok/issues
-Changelog: https://github.com/mortenfyhn/feltbok/blob/master/CHANGELOG.md
+Changelog: https://github.com/mortenfyhn/feltbok/blob/HEAD/CHANGELOG.md
 
 AutoName: Feltbok
 
