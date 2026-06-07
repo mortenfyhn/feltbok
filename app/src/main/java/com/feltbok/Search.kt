@@ -75,6 +75,29 @@ class NumericFrequency(species: List<Species>) : FrequencyProvider {
         if (maxLog <= 0.0) 0.0 else ln(1.0 + species.count.toDouble()) / maxLog
 }
 
+/**
+ * Season-aware commonness: how often a species is reported in the *current* [month] (1..12),
+ * log-normalized, blended with all-time so a generally-common bird never vanishes off-season - it
+ * just ranks lower, still fully findable (folding/tiers still match; only the frequency boost
+ * shrinks). [monthly] maps latin -> 12 monthly counts (species_months.csv). With no monthly data it
+ * degrades to plain all-time frequency. This is the "time of year" provider; it slots behind the same
+ * [FrequencyProvider] interface, so the scorer is unchanged.
+ */
+class SeasonalFrequency(
+    species: List<Species>,
+    private val monthly: Map<String, IntArray>,
+    private val month: Int,
+    private val seasonWeight: Double = 0.8,
+) : FrequencyProvider {
+    private val allTime = NumericFrequency(species)
+    private val maxLog = ln(1.0 + (monthly.values.maxOfOrNull { it.getOrElse(month - 1) { 0 } } ?: 0).toDouble())
+    override fun weight(species: Species): Double {
+        val c = monthly[species.latin]?.getOrElse(month - 1) { 0 } ?: 0
+        val season = if (maxLog <= 0.0) 0.0 else ln(1.0 + c.toDouble()) / maxLog
+        return seasonWeight * season + (1.0 - seasonWeight) * allTime.weight(species)
+    }
+}
+
 /** A named ranking strategy. Each implementation scores all [candidates] for [query] and returns
  *  them best-first (callers take the top N). Any frequency signal is baked into the scorer at
  *  construction (so two configs can differ only by their [FrequencyProvider]). */

@@ -430,6 +430,15 @@ fun loadSpecies(ctx: Context): List<Species> =
         }
     }
 
+/** Per-species monthly report counts (latin -> 12 ints), for season-aware ranking ([SeasonalFrequency]).
+ *  Optional asset: empty if absent, so search just falls back to all-time frequency. */
+fun loadSpeciesMonths(ctx: Context): Map<String, IntArray> =
+    runCatching { readData(ctx, "species_months.csv") }.getOrDefault(emptyList())
+        .mapNotNull { c ->
+            if (c.size < 13 || c[0].isBlank()) null
+            else c[0] to IntArray(12) { c.getOrElse(it + 1) { "" }.toIntOrNull() ?: 0 }
+        }.toMap()
+
 // ---- note persistence (a JSON file in app storage) ----
 
 private fun notesFile(ctx: Context) = File(ctx.filesDir, "notes.json")

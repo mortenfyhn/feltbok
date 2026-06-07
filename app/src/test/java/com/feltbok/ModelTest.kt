@@ -229,4 +229,17 @@ class ModelTest {
         assertEquals(0, d.changed)
         assertTrue(!d.firstSync)
     }
+
+    @Test
+    fun seasonalFrequencyFollowsTheMonth() {
+        val summer = Species("Sommerfugl", "Aestas aestas", count = 1000)
+        val winter = Species("Vinterfugl", "Hiems hiems", count = 1000)
+        val monthly = mapOf(
+            "Aestas aestas" to intArrayOf(0, 0, 0, 0, 1000, 0, 0, 0, 0, 0, 0, 0), // peaks May
+            "Hiems hiems" to intArrayOf(1000, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1000), // peaks Dec/Jan
+        )
+        val species = listOf(summer, winter)
+        assertTrue(SeasonalFrequency(species, monthly, month = 5).let { it.weight(summer) > it.weight(winter) })
+        assertTrue(SeasonalFrequency(species, monthly, month = 12).let { it.weight(winter) > it.weight(summer) })
+    }
 }
