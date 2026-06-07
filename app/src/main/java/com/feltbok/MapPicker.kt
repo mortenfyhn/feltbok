@@ -9,6 +9,7 @@ import android.graphics.Point
 import android.view.MotionEvent
 import android.view.ViewGroup
 import android.widget.NumberPicker
+import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -111,10 +112,15 @@ fun LocalityScreen(vm: MainViewModel) {
 
     overlay.tapsBlocked = newMode                          // in new-spot mode, pan instead of select
 
+    // Own the system back so it matches the header's "tilbake": in new-spot mode just close
+    // that panel, otherwise leave the picker. Shadows the app-level handler (#70).
+    val back = { if (newMode) newMode = false else vm.leaveLocalityPicker() }
+    BackHandler { back() }
+
     Column(Modifier.fillMaxSize()) {
         ScreenHeader(
             title = if (newMode) Strings.Picker.titleNew else Strings.Picker.titlePick,
-            onCancel = { if (newMode) newMode = false else vm.leaveLocalityPicker() },
+            onCancel = back,
         ) {
             if (!newMode) TextButton(onClick = { newRadius = fitRadius(mapView); newMode = true }) { Text(Strings.Picker.newButton, color = Color.White) }
         }

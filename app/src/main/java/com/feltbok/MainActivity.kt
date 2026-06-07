@@ -44,11 +44,10 @@ fun App(vm: MainViewModel) {
             BackHandler(enabled = vm.showExport || vm.screen != Screen.LIST) {
                 when {
                     vm.showExport -> vm.closeExport()
-                    vm.screen == Screen.LOCALITY -> vm.leaveLocalityPicker()
                     vm.screen == Screen.SYNC -> vm.closeSync()
                     vm.screen == Screen.SEARCH -> vm.cancelSearch()
-                    // DETAIL composes a draft, so its own BackHandler intercepts here and routes
-                    // Back through the discard confirm; this branch never runs while it's open.
+                    // DETAIL and LOCALITY each compose their own BackHandler, which shadows this one
+                    // so the gesture matches their "tilbake" button; those branches never run here.
                     else -> {}
                 }
             }
