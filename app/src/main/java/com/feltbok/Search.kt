@@ -107,10 +107,11 @@ class BaselineScorer(private val useCount: (String) -> Int = { 0 }) : BirdSearch
  * a lower tier can't overtake a higher one - so "suffix beats interior" and "prefix beats suffix"
  * hold no matter how common the bird. Frequency and the quality factors only reorder *within* a tier.
  *
- * These hand-picked defaults were grid-searched (see `SearchBenchmark.tuneWeights`): the best combo
- * over freqStrength/completeness/anchoredSubseq/subseq beat them by ~0.3 pp top-3 (noise), so the
- * defaults stand. The remaining ceilings (family queries with many members, sparse subsequences) are
- * structural, not weight-fixable.
+ * These were grid-searched (see `SearchBenchmark.tuneWeights`): blind tuning beat the originals by
+ * only ~0.3 pp top-3 (noise), but it agreed on completeness=0.2, and field testing then forced two
+ * value changes (completeness 0.4->0.2 and a stronger diacriticExact) to fix specific real cases -
+ * see those fields. The remaining ceilings (family queries with many members, sparse subsequences)
+ * are structural, not weight-fixable.
  */
 data class TierWeights(
     val exact: Double = 100_000.0,
@@ -128,10 +129,14 @@ data class TierWeights(
     /** freqMult = 1 + freqStrength * weight, weight in [0,1]; so the multiplier stays in [1, 2]. */
     val freqStrength: Double = 1.0,
     /** completeness factor = (1 - completeness) + completeness * (queryLen / nameLen); rewards a
-     *  query that covers more of a (shorter) name, mildly, so it never dominates frequency. */
-    val completeness: Double = 0.4,
-    /** ×(1 + diacriticExact) when the user typed æ/ø/å correctly - precision rewarded, not required. */
-    val diacriticExact: Double = 0.05,
+     *  query that covers more of a (shorter) name, mildly, so it never dominates frequency. Kept low
+     *  (0.2) so a much-more-common long name still beats a short rarity ("stor" -> Storspove 218k,
+     *  not Storjo 16k); grid search agreed 0.2 over 0.4. */
+    val completeness: Double = 0.2,
+    /** ×(1 + diacriticExact) when the query matches the real letters (no folding needed) - precision
+     *  rewarded, not required. Big enough to lift an exact-letter match over a folded one even across
+     *  a frequency gap ("a" -> Alke over Ærfugl). */
+    val diacriticExact: Double = 0.15,
 )
 
 /**
@@ -159,13 +164,11 @@ class TieredScorer(
             .mapNotNull { c ->
                 val tq = tierAndQuality(fq, c.foldedTight) ?: return@mapNotNull null
                 val freqMult = 1.0 + w.freqStrength * freq.weight(c.species)
-                // Diacritic-exact: the name carries æ/ø/å and the user reproduced them (matches
-                // without folding). Only a tiebreak nudge - folding stays free, see fold().
-                val diacritic = if (c.foldedTight != c.lowerTight && lq.isNotEmpty() && c.lowerTight.contains(lq)) {
-                    1.0 + w.diacriticExact
-                } else {
-                    1.0
-                }
+                // Diacritic-exact: reward a match that holds on the real letters, i.e. without leaning
+                // on folding. So "a" prefers Alke (real 'a') over Ærfugl (only via æ->ae), and a query
+                // that didn't reproduce a name's æ/ø/å (or matched a part that has none) isn't penalised
+                // - it just doesn't get the nudge. Keeps folding free while rewarding precision.
+                val diacritic = if (matchesExact(lq, c.lowerTight)) 1.0 + w.diacriticExact else 1.0
                 Ranked(c.species, tq.first * tq.second * freqMult * diacritic)
             }
             .sortedWith(compareByDescending<Ranked> { it.score }.thenBy { it.species.norsk })
@@ -196,11 +199,18 @@ class TieredScorer(
         }
         if (fq.length >= 4) { // typo net only once a query is long enough to be distinctive
             val cap = if (fq.length <= 5) 1 else 2
-            val dist = osaCapped(fq, fn.take(fq.length + cap), cap)
+            // Treat the query as a typo'd *prefix*: compare to the same-length name slice (catches
+            // substitution/transposition without charging for the untyped rest, e.g. "tybj" -> tyvjo)
+            // and to a slightly longer slice (so a deletion still aligns). Take the closer.
+            val dist = minOf(osaCapped(fq, fn.take(fq.length), cap), osaCapped(fq, fn.take(fq.length + cap), cap))
             if (dist <= cap) return w.typo to (1.0 - dist.toDouble() / fq.length)
         }
         return null
     }
+
+    /** Whether the query matches on the real (diacritic-preserving) letters, so a match that doesn't
+     *  need folding can be rewarded over one that does. */
+    private fun matchesExact(lq: String, lower: String) = lq.isNotEmpty() && lower.contains(lq)
 }
 
 /** Length of the left-greedy subsequence match of [q] in [t] (last index - first index + 1), or -1

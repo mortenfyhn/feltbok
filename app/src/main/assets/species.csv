@@ -296,7 +296,6 @@ Svartstrupetrost,Turdus atrogularis,,813
 Rødhodeand,Netta rufina,,806
 Mongolturteldue,Streptopelia orientalis,,792
 Russesvartstrupe,Saxicola maurus,,768
-Mareca penelope x Anas platyrhynchos,Mareca penelope x Anas platyrhynchos,,767
 Hvithodespurv,Emberiza leucocephalos,,722
 Hubro,Bubo bubo,EN,718
 Lappugle,Strix nebulosa,VU,708
@@ -336,7 +335,6 @@ Svartstrupesteinskvett,Oenanthe pleschanka,,380
 Sørnattergal,Luscinia megarhynchos,,380
 Knoppand,Cairina moschata,NK,343
 Damsnipe,Tringa stagnatilis,,341
-Aquila clanga,Aquila clanga,,334
 Ørkenlo,Charadrius leschenaultii,,331
 Kanadalo,Pluvialis dominica,,326
 Pungmeis,Remiz pendulinus,,325
@@ -344,7 +342,6 @@ Bronseibis,Plegadis falcinellus,,316
 Franklinmåke,Leucophaeus pipixcan,,311
 Sandterne,Gelochelidon nilotica,,286
 Hvitbrystlo,Charadrius alexandrinus,,286
-Grus canadensis,Grus canadensis,,281
 Purpurhodeand,Aythya affinis,,277
 Tereksnipe,Xenus cinereus,,275
 Markpiplerke,Anthus campestris,,270
@@ -359,7 +356,6 @@ Styltesnipe,Calidris himantopus,,238
 Topplerke,Galerida cristata,RE,234
 Myrpiplerke,Anthus rubescens,,226
 Brunvarsler,Lanius cristatus,,224
-Anthropoides virgo,Anthropoides virgo,,217
 Sandsnipe,Calidris pusilla,,212
 Sumprikse,Porzana parva,,211
 Gråvingemåke,Larus glaucescens,,211
@@ -407,7 +403,6 @@ Sangspurv,Melospiza melodia,,109
 Gråhodevipe,Vanellus cinereus,,109
 Balearlire,Puffinus mauretanicus,,107
 Dvergsanger,Sylvia nana,,106
-Locustella certhiola,Locustella certhiola,,104
 Steppemåke,Ichthyaetus ichthyaetus,,104
 Tartarsanger,Iduna caligata,,95
 Hvitkinnsvartterne,Chlidonias hybrida,,94
@@ -437,7 +432,6 @@ Kortnebbekkasinsnipe,Limnodromus griseus,,61
 Gråkinnskogtrost,Catharus minimus,,61
 Isabellavarsler,Lanius isabellinus,,59
 Tårnugle,Tyto alba,,59
-Mareca strepera x Anas platyrhynchos,Mareca strepera x Anas platyrhynchos,,57
 Sumpvipe,Vanellus leucurus,,57
 Beringsnipe,Calidris mauri,,56
 Rødstrupesnipe,Calidris ruficollis,,56
@@ -446,7 +440,6 @@ Skjelltrost,Zoothera aurea,,55
 Rødfalk,Falco naumanni,,53
 Svartflekktrost,Turdus eunomus,,53
 Hvitstrupespurv,Zonotrichia albicollis,,52
-Erythropygia galactotes,Erythropygia galactotes,,51
 Ørnvåk,Buteo rufinus,,50
 Amursvale,Cecropis daurica,,48
 Eremittsnipe,Tringa solitaria,,46
@@ -458,7 +451,6 @@ Flamingo,Phoenicopterus roseus,,43
 Kalanderlerke,Melanocorypha calandra,,42
 Storlire,Puffinus gravis,,42
 Steppeørn,Aquila nipalensis,,39
-Charadrius atrifrons,Charadrius atrifrons,,38
 Krøllpelikan,Pelecanus crispus,,38
 Svartbrynalbatross,Thalassarche melanophris,,38
 Brunkinnparula,Setophaga tigrina,,35
@@ -471,13 +463,9 @@ Brakksvale,Glareola pratincola,,30
 Rustspurv,Emberiza caesia,,29
 Spottesanger,Hippolais polyglotta,,29
 Rødbrystspurv,Emberiza buchanani,,29
-Spatula clypeata x Anas platyrhynchos,Spatula clypeata x Anas platyrhynchos,,28
-Anser cygnoides x Branta canadensis,Anser cygnoides x Branta canadensis,,27
 Viriskogtrost,Catharus fuscescens,,27
 Brunhodespurv,Emberiza bruniceps,,27
 Bruntrost,Turdus naumanni,,27
-Aquila pomarina,Aquila pomarina,,26
-Luscinia calliope,Luscinia calliope,,24
 Hvitkinnand,Anas bahamensis,LO,24
 Berghøne,Alectoris chukar,LO,23
 Sultansanger,Sylvia crassirostris,,22
@@ -492,11 +480,8 @@ Svanegås,Anser cygnoides,LO,17
 Slangeørn,Circaetus gallicus,,16
 Chileflamingo,Phoenicopterus chilensis,,16
 Rosenbrysttykknebb,Pheucticus ludovicianus,,16
-Melanocorypha leucoptera,Melanocorypha leucoptera,,16
-Iduna aedon,Iduna aedon,,16
 Klippesvale,Ptyonoprogne rupestris,,15
 Raudbrystlo,Charadrius asiaticus,,14
-Charadrius veredus,Charadrius veredus,,14
 Sibirtrost,Geokichla sibirica,,14
 Hvitpelikan,Pelecanus onocrotalus,,13
 Præriesnipe,Bartramia longicauda,,13
@@ -529,11 +514,9 @@ Keisergås,Anser canagicus,LO,6
 Tristanalbatross,Thalassarche chlororhynchos,,5
 Steintrost,Monticola saxatilis,,5
 Møllparula,Leiothlypis peregrina,,5
-Ichthyaetus melanocephalus x Larus canus,Ichthyaetus melanocephalus x Larus canus,,4
 Rødhøne,Alectoris rufa,NK,4
 Tartarfalk,Falco cherrug,LO,4
 Hvitørebylbyl,Pycnonotus leucotis,,4
-Calandrella rufescens,Calandrella rufescens,,4
 Gråkjernebiter,Eophona personata,,4
 Gulbrynkjernebiter,Hesperiphona vespertina,,4
 Nordkrattvaktel,Colinus virginianus,,4
@@ -549,9 +532,6 @@ Middelhavsspurv,Passer hispaniolensis,,3
 Kongeterne,Thalasseus maximus,,3
 Tøyleterne,Onychoprion anaethetus,,3
 Langhalefink,Carpodacus sibiricus,,3
-Anser erythropus x Branta leucopsis,Anser erythropus x Branta leucopsis,,3
-Passer montanus x domesticus,Passer montanus x domesticus,,2
-Emberiza leucocephalos x citrinella,Emberiza leucocephalos x citrinella,,2
 Blåsultanhøne,Porphyrio porphyrio,,2
 Pigghaleseiler,Hirundapus caudacutus,,2
 Undulat,Melopsittacus undulatus,,2
@@ -561,8 +541,6 @@ Flekkpetrell,Daption capense,,2
 Karminfink,Carpodacus roseus,,2
 Saheldue,Streptopelia roseogrisea,,2
 Steinfink,Bucanetes mongolicus,,2
-Poecile montanus x Lophophanes cristatus,Poecile montanus x Lophophanes cristatus,,2
-Anser fabalis x indicus,Anser fabalis x indicus,,1
 Stortrappe,Otis tarda,,1
 Rosenpelikan,Pelecanus rufescens,,1
 Svartvingeglente,Elanus caeruleus,,1
@@ -598,4 +576,3 @@ Mandsjuriastær,Agropsar sturninus,,1
 Borealvarsler,Lanius borealis,,1
 Himalayagribb,Gyps himalayensis,,1
 Askedrongo,Dicrurus leucophaeus,,1
-Branta leucopsis x canadensis,Branta leucopsis x canadensis,,1

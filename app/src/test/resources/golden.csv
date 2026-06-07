@@ -14,3 +14,9 @@
 # expected name must exist exactly as in species.csv, or the row is silently skipped)
 #
 # (empty for now - add as you go)
+sanger,Gransanger
+a,Alke
+konge,Fuglekonge
+tårn,Tårnseiler
+stor,Storspove
+tybj,Tyvjo

@@ -212,10 +212,15 @@ def main() -> int:
         # override > resolved name > scientific name; red list wins over alien list
         # (native red-listed and introduced alien are disjoint in practice anyway).
         status = redlist.get(latin) or alienlist.get(latin, "")
+        # Drop species we couldn't give a Norwegian name (and hybrids, which never get one): the app
+        # searches by Norwegian name, so a bare scientific name is unsearchable noise in the results.
+        name = OVERRIDES.get(latin) or norsk
+        if not name or " x " in latin:
+            continue
         # count = Norway-wide observation count; the search uses it (log-scaled) to rank common
         # birds above rarities. The most-observed-first row order already reflects it; keeping the
         # raw number lets the ranker weight by the real (very skewed) magnitudes, not just rank.
-        out.append((OVERRIDES.get(latin) or norsk or latin, latin, status, count))
+        out.append((name, latin, status, count))
     with open("species.csv", "w", newline="", encoding="utf-8") as f:
         w = csv.writer(f)
         w.writerow(["norsk", "latin", "status", "count"])
