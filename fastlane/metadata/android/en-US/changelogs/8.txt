@@ -1,0 +1,1 @@
+Early beta release. See the full changelog at github.com/mortenfyhn/feltbok

@@ -1,0 +1,13 @@
+Feltbok er en enkel app for å taste inn fugleobservasjoner mens du er ute i felt – raskt, uten innlogging og helt uten nettforbindelse.
+
+Når du kommer hjem, eksporterer du observasjonene som en tekstbit du limer rett inn i «Importer observasjoner» på Artsobservasjoner.
+
+Egenskaper:
+* Kjapp inntasting av observasjoner i felt
+* Enkel eksport til Artsobservasjoner
+* Velg lokalitet i kart
+* Hent dine private lokaliteter fra Artsobservasjoner
+* Lag nye private lokaliteter i kartet
+* Fungerer uten nett
+
+Feltbok er gratis og har åpen kildekode (AGPL-3.0). Appen er laget for norske fugleobservatører, og brukergrensesnittet er på norsk.

@@ -1,0 +1,1 @@
+Log bird sightings in the field and export them to Artsobservasjoner
