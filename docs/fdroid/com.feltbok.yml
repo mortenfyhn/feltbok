@@ -1,13 +1,6 @@
-# F-Droid build recipe for Feltbok.
-#
-# This file is NOT used by our own build — it is the metadata recipe that gets
-# submitted to https://gitlab.com/fdroid/fdroiddata as metadata/com.feltbok.yml.
-# Kept in the repo so it's versioned alongside the app and easy to update when a
-# new tag ships. See README.md in this folder for the submission steps.
-
 Categories:
   - Science & Education
-License: AGPL-3.0-only        # no "or later" clause in our source headers -> -only
+License: AGPL-3.0-only
 AuthorName: Morten F. Amundsen
 SourceCode: https://github.com/mortenfyhn/feltbok
 IssueTracker: https://github.com/mortenfyhn/feltbok/issues
@@ -26,9 +19,7 @@ Builds:
     gradle:
       - yes
 
-# Track new releases automatically from our v* tags. When a new tag lands,
-# fdroidserver appends a matching Builds entry and bumps CurrentVersion.
-AutoUpdateMode: Version v%v
+AutoUpdateMode: Version
 UpdateCheckMode: Tags ^v[0-9.]+$
 CurrentVersion: '0.8'
 CurrentVersionCode: 8
