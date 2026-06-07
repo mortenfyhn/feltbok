@@ -399,6 +399,10 @@ fun SearchScreen(vm: MainViewModel) {
             TextButton(onClick = { vm.cancelSearch() }) { Text("‹ ${Strings.back}") }
             OutlinedTextField(q, { q = it }, Modifier.weight(1f).focusRequester(focus), singleLine = true,
                 placeholder = { Text(Strings.Search.placeholder) },
+                // Clear button - only while there's text; keep focus so the keyboard stays up to retype.
+                trailingIcon = if (q.isEmpty()) null else { {
+                    TextButton(onClick = { q = ""; focus.requestFocus() }) { Text("✕") }
+                } },
                 // autoCorrect off: don't want the IME "correcting" species names, and the
                 // gesture/compose path it drives is what crashes on swipe-typing.
                 keyboardOptions = KeyboardOptions(autoCorrect = false, imeAction = ImeAction.Search),
