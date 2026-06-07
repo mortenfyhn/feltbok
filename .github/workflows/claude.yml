@@ -27,10 +27,10 @@ jobs:
       issues: write
       id-token: write   # the action fetches an OIDC token even when using an API key
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
         with:
           fetch-depth: 0   # full history for context
-      - uses: actions/setup-java@v4
+      - uses: actions/setup-java@v5
         with:
           distribution: temurin
           java-version: '17'
