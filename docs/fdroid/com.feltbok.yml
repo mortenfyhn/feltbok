@@ -8,7 +8,7 @@
 Categories:
   - Science & Education
 License: AGPL-3.0-only        # no "or later" clause in our source headers -> -only
-AuthorName: Morten Fyhn Amundsen
+AuthorName: Morten F. Amundsen
 SourceCode: https://github.com/mortenfyhn/feltbok
 IssueTracker: https://github.com/mortenfyhn/feltbok/issues
 Changelog: https://github.com/mortenfyhn/feltbok/blob/master/CHANGELOG.md
