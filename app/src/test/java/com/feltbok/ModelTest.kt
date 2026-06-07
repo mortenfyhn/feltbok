@@ -231,15 +231,22 @@ class ModelTest {
     }
 
     @Test
-    fun seasonalFrequencyFollowsTheMonth() {
+    fun contextualFrequencyFollowsMonthAndPlace() {
         val summer = Species("Sommerfugl", "Aestas aestas", count = 1000)
         val winter = Species("Vinterfugl", "Hiems hiems", count = 1000)
+        val southern = Species("Sørfugl", "Meridies avis", count = 100) // less common nationally
+        val species = listOf(summer, winter, southern)
         val monthly = mapOf(
             "Aestas aestas" to intArrayOf(0, 0, 0, 0, 1000, 0, 0, 0, 0, 0, 0, 0), // peaks May
             "Hiems hiems" to intArrayOf(1000, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1000), // peaks Dec/Jan
         )
-        val species = listOf(summer, winter)
-        assertTrue(SeasonalFrequency(species, monthly, month = 5).let { it.weight(summer) > it.weight(winter) })
-        assertTrue(SeasonalFrequency(species, monthly, month = 12).let { it.weight(winter) > it.weight(summer) })
+        val cell = ContextualFrequency.cellKey(58.5, 8.5)
+        val regions = mapOf(cell to mapOf("Meridies avis" to 1000)) // southern bird is local here
+        val f = ContextualFrequency(species, monthly, regions)
+        // Season: the right bird leads for the month, regardless of location.
+        assertTrue(f.weight(summer, 5, null, null) > f.weight(winter, 5, null, null))
+        assertTrue(f.weight(winter, 12, null, null) > f.weight(summer, 12, null, null))
+        // Place: the southern bird ranks higher when we're in its cell than with no fix.
+        assertTrue(f.weight(southern, 6, 58.5, 8.5) > f.weight(southern, 6, null, null))
     }
 }

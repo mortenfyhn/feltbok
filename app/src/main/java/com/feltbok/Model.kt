@@ -439,6 +439,24 @@ fun loadSpeciesMonths(ctx: Context): Map<String, IntArray> =
             else c[0] to IntArray(12) { c.getOrElse(it + 1) { "" }.toIntOrNull() ?: 0 }
         }.toMap()
 
+/** Per-grid-cell species report counts (cellKey -> latin -> count), for locality-aware ranking
+ *  ([ContextualFrequency]). Rows are latS,lonW,latin,count; cellKey packs latS*100+lonW. Optional
+ *  asset: empty if absent, so the region term simply drops out. */
+fun loadSpeciesRegions(ctx: Context): Map<Int, Map<String, Int>> {
+    val out = HashMap<Int, HashMap<String, Int>>()
+    runCatching { readData(ctx, "species_regions.csv") }.getOrDefault(emptyList()).forEach { c ->
+        if (c.size >= 4) {
+            val latS = c[0].toIntOrNull()
+            val lonW = c[1].toIntOrNull()
+            val cnt = c[3].toIntOrNull()
+            if (latS != null && lonW != null && cnt != null && c[2].isNotBlank()) {
+                out.getOrPut(latS * 100 + lonW) { HashMap() }[c[2]] = cnt
+            }
+        }
+    }
+    return out
+}
+
 // ---- note persistence (a JSON file in app storage) ----
 
 private fun notesFile(ctx: Context) = File(ctx.filesDir, "notes.json")

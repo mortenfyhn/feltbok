@@ -70,9 +70,14 @@ species:
 species-months:
     .venv/bin/python scripts/build_species_months.py
 
+# Build app/src/main/assets/species_regions.csv (per-grid-cell species counts, for locality ranking)
+species-regions:
+    .venv/bin/python scripts/build_species_regions.py
+
 # Push the built localities/species CSVs to the device (overrides the bundled assets, no rebuild)
 push-data:
     adb push app/src/main/assets/localities.csv {{data_dir}}/localities.csv
     -adb push app/src/main/assets/species.csv {{data_dir}}/species.csv
     -adb push app/src/main/assets/species_months.csv {{data_dir}}/species_months.csv
+    -adb push app/src/main/assets/species_regions.csv {{data_dir}}/species_regions.csv
     -adb push my-localities.csv {{data_dir}}/my-localities.csv   # maintainer's own customs (device-only)

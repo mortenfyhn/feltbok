@@ -63,14 +63,17 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
     private val uses = mutableStateMapOf<String, Int>().apply { putAll(loadUses(app)) }
     fun useCount(norsk: String): Int = uses[norsk] ?: 0
 
-    /** Frequency signal for the search ranker: season-aware report frequency (what's reported around
-     *  *now*, by calendar month), lifted toward 1.0 for the user's own regulars so personal favourites
-     *  rank like common birds. All behind the pluggable [FrequencyProvider]; off-season/rare birds
-     *  drop in rank but stay findable (tiers/folding still match). */
-    private val seasonFreq = SeasonalFrequency(species, loadSpeciesMonths(app), java.time.LocalDate.now().monthValue)
+    /** Frequency signal for the search ranker: context-aware report frequency - what's reported in the
+     *  current month and near the current GPS [fix] - lifted toward 1.0 for the user's own regulars so
+     *  personal favourites rank like common birds. All behind the pluggable [FrequencyProvider];
+     *  off-season/elsewhere/rare birds drop in rank but stay findable (tiers/folding still match).
+     *  Month and location are read live per query, so ranking tracks where and when you are. */
+    private val ctxFreq = ContextualFrequency(species, loadSpeciesMonths(app), loadSpeciesRegions(app))
     private val freq = FrequencyProvider { s ->
+        val f = fix
+        val w = ctxFreq.weight(s, java.time.LocalDate.now().monthValue, f?.lat, f?.lon)
         val picks = useCount(s.norsk)
-        minOf(1.0, seasonFreq.weight(s) + if (picks == 0) 0.0 else minOf(0.5, 0.15 * picks))
+        minOf(1.0, w + if (picks == 0) 0.0 else minOf(0.5, 0.15 * picks))
     }
     private val scorer: BirdSearchScorer = TieredScorer(freq)
 

@@ -1,6 +1,7 @@
 package com.feltbok
 
 import kotlin.math.abs
+import kotlin.math.floor
 import kotlin.math.ln
 
 /**
@@ -76,25 +77,50 @@ class NumericFrequency(species: List<Species>) : FrequencyProvider {
 }
 
 /**
- * Season-aware commonness: how often a species is reported in the *current* [month] (1..12),
- * log-normalized, blended with all-time so a generally-common bird never vanishes off-season - it
- * just ranks lower, still fully findable (folding/tiers still match; only the frequency boost
- * shrinks). [monthly] maps latin -> 12 monthly counts (species_months.csv). With no monthly data it
- * degrades to plain all-time frequency. This is the "time of year" provider; it slots behind the same
- * [FrequencyProvider] interface, so the scorer is unchanged.
+ * Context-aware commonness for ranking: blends how often a species is reported (a) in the current
+ * calendar [month], (b) near the current location (a coarse lat/lon grid cell), and (c) all-time. So
+ * search surfaces "what's reported here, now" - spring migrants in May, southern birds in the south -
+ * while the all-time term keeps a generally-common bird from vanishing where/when it's scarce (it
+ * ranks lower but stays findable; tiers/folding still match). Location is optional: with no GPS fix
+ * the region term drops and its weight folds into all-time.
+ *
+ * Pure (no Android): the app feeds today's month and the live fix per query. [monthly] is latin -> 12
+ * monthly counts (species_months.csv); [regionCounts] is grid-cell -> latin -> count, cells being
+ * 1deg lat x 2deg lon (see [cellKey] / build_species_regions.py). With neither it degrades to
+ * all-time frequency. Weights are a prototype default - tune seasonW/regionW/baseW against field use.
  */
-class SeasonalFrequency(
+class ContextualFrequency(
     species: List<Species>,
     private val monthly: Map<String, IntArray>,
-    private val month: Int,
-    private val seasonWeight: Double = 0.8,
-) : FrequencyProvider {
+    private val regionCounts: Map<Int, Map<String, Int>>,
+    private val seasonW: Double = 0.45,
+    private val regionW: Double = 0.35,
+    private val baseW: Double = 0.20,
+) {
     private val allTime = NumericFrequency(species)
-    private val maxLog = ln(1.0 + (monthly.values.maxOfOrNull { it.getOrElse(month - 1) { 0 } } ?: 0).toDouble())
-    override fun weight(species: Species): Double {
-        val c = monthly[species.latin]?.getOrElse(month - 1) { 0 } ?: 0
-        val season = if (maxLog <= 0.0) 0.0 else ln(1.0 + c.toDouble()) / maxLog
-        return seasonWeight * season + (1.0 - seasonWeight) * allTime.weight(species)
+    private val monthMaxLog = DoubleArray(12) { m ->
+        ln(1.0 + (monthly.values.maxOfOrNull { it.getOrElse(m) { 0 } } ?: 0).toDouble())
+    }
+    private val regionMaxLog = regionCounts.mapValues { (_, m) -> ln(1.0 + (m.values.maxOrNull() ?: 0).toDouble()) }
+
+    /** [month] is 1..12; [lat]/[lon] are the live fix, or null when location is unknown. */
+    fun weight(species: Species, month: Int, lat: Double?, lon: Double?): Double {
+        val base = allTime.weight(species)
+        val season = norm(monthly[species.latin]?.getOrElse(month - 1) { 0 } ?: 0, monthMaxLog[month - 1])
+        val cell = if (lat != null && lon != null) cellKey(lat, lon) else null
+        val region = cell?.let { k -> regionMaxLog[k]?.let { norm(regionCounts[k]?.get(species.latin) ?: 0, it) } }
+        return if (region == null) {
+            (seasonW * season + (regionW + baseW) * base) / (seasonW + regionW + baseW)
+        } else {
+            seasonW * season + regionW * region + baseW * base
+        }
+    }
+
+    private fun norm(count: Int, maxLog: Double) = if (maxLog <= 0.0) 0.0 else ln(1.0 + count.toDouble()) / maxLog
+
+    companion object {
+        /** Grid cell key for a coordinate: SW corner as latS*100 + lonW (1deg lat, 2deg lon). */
+        fun cellKey(lat: Double, lon: Double) = floor(lat).toInt() * 100 + floor(lon / 2).toInt() * 2
     }
 }
 
