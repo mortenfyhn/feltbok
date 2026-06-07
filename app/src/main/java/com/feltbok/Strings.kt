@@ -64,7 +64,7 @@ object Strings {
 
         // Confirm before the header's Forkast throws away an in-progress observation (NN/g: guard
         // destructive cancels that lose work).
-        const val discardTitleNew = "Forkast observasjonen?"
+        const val discardTitleNew = "Forkast observasjon?"
         const val discardTitleEdit = "Forkast endringene?"
         const val discardConfirm = "Forkast"
         const val discardKeep = "Fortsett"
