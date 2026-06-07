@@ -2,7 +2,7 @@
 
 # Feltbok (beta)
 
-En app for å lettvint taste inn fugleobservasjoner i felt. Deretter kan de enkelt lastes opp til artsobservasjoner.no. Fungerer uten innlogging og uten nett.
+En Android-app for å kjapt taste inn fugleobservasjoner i felt. Deretter kan de enkelt lastes opp til artsobservasjoner.no. Fungerer uten innlogging og uten nett.
 
 https://github.com/user-attachments/assets/463080c3-b6be-46ea-bfd6-91535ed26116
 
