@@ -17,8 +17,8 @@ Recipes live in `just --list` — the notes below are only the why's and gotchas
   (`am start -n com.feltbok.debug/com.feltbok.MainActivity`), or clearing data. NEVER
   `adb uninstall com.feltbok` or `pm clear com.feltbok`: that is the maintainer's real app and wipes
   their actual field notes (`notes.json` lives in internal storage, lost on uninstall). The two
-  builds are distinguishable by the footer version string (`…-dev` = debug) and the app label
-  (debug shows a "beta" launcher icon).
+  builds are distinguishable by the footer version string (`… (dev)` = debug) and the app label
+  (`Feltbok (dev)` for debug vs `Feltbok (beta)` for release).
 - `just format`/`just lint` are gated in CI (ktlint in the Kotlin job, ruff in a parallel block). The
   ktlint ruleset (`.editorconfig`) only fixes whitespace/indentation/import order — it deliberately
   leaves line structure, line length, and naming alone, so it won't churn the terse hand-written
@@ -42,6 +42,12 @@ Recipes live in `just --list` — the notes below are only the why's and gotchas
   in the commit message so GitHub auto-closes the issue when it lands on `master`.
 - **Disclose AI authorship.** When an agent files an issue or opens a PR, state upfront that the
   body is AI-generated so a human reader doesn't mistake it for human-written text.
+- **Changelog.** `CHANGELOG.md` is the user-facing changelog (Bokmål, casual `du`-tone). It starts
+  at v1.0 — don't add entries before then. The v1.0 entry is a quick overview of the main features;
+  v1.1 onward are proper per-version entries with short, benefit-framed highlights (fold minor/cosmetic
+  tweaks into one "Ymse småforbedringer" line rather than listing each). When landing a user-visible
+  change, add a bullet under the current unreleased version. The same per-version text is pasted into
+  the GitHub release ("Nytt i …", see `docs/release.md`).
 - Norwegian (Bokmål) for user-facing strings.
 - **Worktrees are opt-in.** Work in the main checkout by default. Only reach for EnterWorktree when
   the user explicitly asks, or when you know another session is editing the same files concurrently —
@@ -64,4 +70,4 @@ Recipes live in `just --list` — the notes below are only the why's and gotchas
 ## Data / API notes
 - Locality + checklist data come from Artsobservasjoner; the new mobile API
   (`mobil.artsobservasjoner.no/core/...`) is the modern source. See `docs/custom-localities-design.md`.
-- Releases: signed APK via Semaphore on `v*` tags. See `docs/release.md`.
+- Releases: signed APK cut locally with `./release.sh` (tags `v*`). See `docs/release.md`.

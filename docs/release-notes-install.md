@@ -1,8 +1,8 @@
-## Installere
+## Installer appen
 
-Last ned `.apk`-fila nedenfor og trykk på den. Android viser en
-**Play Protect**-advarsel («Appen er blokkert …») fordi appen ikke kommer fra
-Google Play – det er normalt. Trykk **Flere detaljer → Installer likevel**.
-Full veiledning med skjermbilder: [docs/install.md](https://github.com/mortenfyhn/feltbok/blob/master/docs/install.md).
+* Last ned `.apk`-fila under og åpne den på mobilen din
+* Om du får en «Play Protect»-advarsel: Trykk **Flere detaljer** > **Installer likevel**
+
+[Trinn-for-trinn med skjermbilder](https://github.com/mortenfyhn/feltbok/blob/master/docs/install.md)
 
 ---

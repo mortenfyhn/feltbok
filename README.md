@@ -1,23 +1,30 @@
 [![Build Status](https://fyhn.semaphoreci.com/badges/feltbok/branches/master.svg?key=ebed8946-d053-4da8-ba73-36874709de64)](https://fyhn.semaphoreci.com/projects/feltbok)
 
-# Feltbok beta
+# Feltbok (beta)
 
-En app for å kvikt taste inn fugleobservasjoner i felt. Deretter kan du enkelt lastes opp til artsobservasjoner.no. Behøver ingen innlogging og ingen nettilgang.
+En app for å kvikt taste inn fugleobservasjoner i felt. Deretter kan de enkelt lastes opp til artsobservasjoner.no. Behøver ingen innlogging og ingen nettilgang.
 
 https://github.com/user-attachments/assets/463080c3-b6be-46ea-bfd6-91535ed26116
 
+## Funksjoner
+
+- Kjapp inntasting av observasjoner i felt
+- Enkel eksport til Artsobservasjoner
+- Velg lokalitet i kart
+- Hent private lokaliteter fra Artsobservasjoner
+- Lag nye private lokaliteter i kartet
+- Kan brukes uten nett
+
 ## Installer
 
-Last ned `.apk`-fila fra [siste utgave](https://github.com/mortenfyhn/feltbok/releases/latest)
-og åpne den på telefonen. Android viser en Play Protect-advarsel siden appen ikke kommer fra
-Google Play – det er normalt. [Full veiledning med skjermbilder](docs/install.md).
+Gå til [siste utgave](https://github.com/mortenfyhn/feltbok/releases/latest).
 
-## Bygg
+## Utvikling
 
 Behøver Android SDK (`ANDROID_HOME`) og [`just`](https://github.com/casey/just).
 
 ```sh
-just run     # bygg, installer, og kjør
+just run     # bygg, installer og kjør
 ```
 
 Kjør `just` alene for å ramse opp alle oppskriftene (bygg, test, installer, etc).

@@ -1,9 +1,10 @@
 # Releasing Feltbok
 
 Releases are **signed APKs published as GitHub releases**, cut locally with `./release.sh`.
-Friends install the APK by sideloading it — see [install.md](install.md) for the
-step-by-step (and the expected Play Protect warning). Each release page prepends those
-install steps from `release-notes-install.md` via `gh release create --notes-file`.
+The release page is the share-with-birders landing spot: each one prepends the get-started
+steps from `release-notes-install.md` via `gh release create --notes-file`, and those steps
+link to the one screenshot walkthrough in [install.md](install.md). The README points users at
+the latest release for install — so install info lives in exactly those two files, never duplicated.
 The bundled APK ships **public localities only** - the maintainer's own customs
 (`my-localities.csv`) are gitignored and pushed to the dev phone separately.
 
@@ -19,8 +20,9 @@ each release is an upgrade Android will install over the last; the in-app versio
 from `git describe`, so it shows `0.8` at the tag. Needs a clean `master`, the keystore (below),
 and an authenticated `gh`. Building locally is much faster than the old cold Semaphore tag build.
 
-Afterwards, edit the release on GitHub to add the hand-written "Nytt i 0.8" changelog above the
-auto-generated "What's Changed" list.
+Afterwards, edit the release on GitHub to paste the version's entry from `CHANGELOG.md` as a
+"Nytt i …" section above the auto-generated "What's Changed" list. (The changelog starts at
+v1.0, so pre-v1.0 releases have no such section.)
 
 ## Signing
 

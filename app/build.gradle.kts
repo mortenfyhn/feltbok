@@ -50,7 +50,7 @@ android {
         versionName = "0.8"
         buildConfigField("String", "GIT_VERSION", "\"$gitVersion\"")
         // app_name lives here (not strings.xml) so the debug build type can override it.
-        resValue("string", "app_name", "Feltbok beta")
+        resValue("string", "app_name", "Feltbok (beta)")
     }
 
     signingConfigs {
@@ -72,10 +72,10 @@ android {
         debug {
             applicationIdSuffix = ".debug"
             versionNameSuffix = "-debug"
-            resValue("string", "app_name", "Feltbok dev")
+            resValue("string", "app_name", "Feltbok (dev)")
             // Mark the in-app version string too (footer + feedback), so a dev build is
             // recognisable from inside the app, not just by its launcher label.
-            buildConfigField("String", "GIT_VERSION", "\"$gitVersion-dev\"")
+            buildConfigField("String", "GIT_VERSION", "\"$gitVersion (dev)\"")
         }
     }
 
