@@ -125,7 +125,7 @@ object Strings {
         const val namePlaceholder = "Ny lokalitet"
 
         // Reassure that a new spot doesn't have to be perfect: it can be adjusted later (issue #55).
-        const val adjustHint = "Du kan justere lokaliteten seinere i Artsobservasjoner"
+        const val adjustHint = "Du kan justere lokaliteten seinere på artsobservasjoner.no"
         const val save = "Lagre"
     }
 }
