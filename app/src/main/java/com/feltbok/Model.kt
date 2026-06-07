@@ -100,7 +100,7 @@ data class Locality(
     }
 }
 
-data class Species(val norsk: String, val latin: String, val status: String = "")
+data class Species(val norsk: String, val latin: String, val status: String = "", val count: Int = 0)
 
 data class Note(
     val id: Long, // creation time in ms - the stable key (never changes)
@@ -166,10 +166,13 @@ fun localityContains(loc: Locality, lat: Double, lon: Double): Boolean =
 
 // ---- species search ----
 
-/** Fold Norwegian/diacritic letters so typing plain ASCII still matches. */
+/** Fold Norwegian/diacritic letters so typing plain ASCII still matches. The aa/oe collapse also
+ *  accepts the digraph spellings people use without å/ø ("graagaas" -> grågås, "roedstrupe" -> rød…);
+ *  no real Norwegian bird name carries a literal aa/oe, so collapsing them is safe. */
 fun fold(s: String) = s.lowercase()
     .replace("æ", "ae").replace("ø", "o").replace("å", "a")
     .replace("ô", "o").replace("é", "e").replace("è", "e").replace("ü", "u")
+    .replace("aa", "a").replace("oe", "o")
 
 /** Fold a search query and drop its spaces, so "f m" == "fm". */
 fun foldQuery(query: String) = fold(query).filterNot { it.isWhitespace() }
@@ -419,8 +422,12 @@ fun saveMyLocalities(ctx: Context, sites: List<Locality>) {
 /** Columns: norsk,latin,status (Rødlista 2021 or Fremmedartslista 2023 category, blank if neither) */
 fun loadSpecies(ctx: Context): List<Species> =
     readData(ctx, "species.csv").mapNotNull { c ->
-        if (c.isEmpty() || c[0].isBlank()) null
-        else Species(c[0], c.getOrElse(1) { "" }, c.getOrElse(2) { "" })
+        if (c.isEmpty() || c[0].isBlank()) {
+            null
+        } else {
+            // count (Norway-wide observations) is optional - old/overridden CSVs may lack it.
+            Species(c[0], c.getOrElse(1) { "" }, c.getOrElse(2) { "" }, c.getOrElse(3) { "" }.toIntOrNull() ?: 0)
+        }
     }
 
 // ---- note persistence (a JSON file in app storage) ----

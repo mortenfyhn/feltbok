@@ -30,8 +30,8 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
     val localities = mutableStateListOf<Locality>()
     val species: List<Species> = loadSpecies(app)
 
-    /** Norwegian names pre-folded for search, parallel to [species] (folded once, not per keystroke). */
-    val foldedNorsk: List<String> = species.map { fold(it.norsk) }
+    /** Species normalized (folded forms, token splits) once for the search scorer - never per keystroke. */
+    private val prepared = prepare(species)
 
     /** Status code (Rødlista 2021 or Fremmedartslista 2023) by scientific name, for the badge. */
     private val statusByLatin: Map<String, String> =
@@ -63,10 +63,21 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
     private val uses = mutableStateMapOf<String, Int>().apply { putAll(loadUses(app)) }
     fun useCount(norsk: String): Int = uses[norsk] ?: 0
 
-    /** Ranked matches for a typed query (best fuzzy match first, your regulars then the
-     *  Norway-wide frequency order breaking ties). See [searchSpecies]. */
-    fun searchResults(query: String): List<Species> =
-        searchSpecies(query, species, foldedNorsk, ::useCount)
+    /** Frequency signal for the search ranker: Norway-wide commonness, lifted toward 1.0 for the
+     *  user's own regulars so personal favourites rank like common birds (the old useCount tiebreak,
+     *  now expressed through the pluggable [FrequencyProvider]). */
+    private val baseFreq = NumericFrequency(species)
+    private val freq = FrequencyProvider { s ->
+        val picks = useCount(s.norsk)
+        minOf(1.0, baseFreq.weight(s) + if (picks == 0) 0.0 else minOf(0.5, 0.15 * picks))
+    }
+    private val scorer: BirdSearchScorer = TieredScorer(freq)
+
+    /** Ranked matches for a typed query: the tiered scorer (prefix/suffix/initialism/typo + diacritic
+     *  folding + frequency), with your regulars boosted via [freq]. The ranking lives in Search.kt so
+     *  it's unit-benchmarked; scoring runs off the main thread (it's a flat scan over ~600 species). */
+    suspend fun searchResults(query: String): List<Species> =
+        withContext(Dispatchers.Default) { scorer.search(query, prepared).map { it.species } }
 
     /** Per-activity use counts, so each user's most-used activities rise to the top. */
     private val actUses = mutableStateMapOf<String, Int>().apply { putAll(loadActUses(app)) }

@@ -205,17 +205,20 @@ def main() -> int:
 
     seen = set()
     out = []
-    for norsk, latin, _ in sorted(rows, key=lambda r: -r[2]):  # most-observed first
+    for norsk, latin, count in sorted(rows, key=lambda r: -r[2]):  # most-observed first
         if latin in seen:
             continue
         seen.add(latin)
         # override > resolved name > scientific name; red list wins over alien list
         # (native red-listed and introduced alien are disjoint in practice anyway).
         status = redlist.get(latin) or alienlist.get(latin, "")
-        out.append((OVERRIDES.get(latin) or norsk or latin, latin, status))
+        # count = Norway-wide observation count; the search uses it (log-scaled) to rank common
+        # birds above rarities. The most-observed-first row order already reflects it; keeping the
+        # raw number lets the ranker weight by the real (very skewed) magnitudes, not just rank.
+        out.append((OVERRIDES.get(latin) or norsk or latin, latin, status, count))
     with open("species.csv", "w", newline="", encoding="utf-8") as f:
         w = csv.writer(f)
-        w.writerow(["norsk", "latin", "status"])
+        w.writerow(["norsk", "latin", "status", "count"])
         w.writerows(out)
     print(
         f"Wrote {len(out)} bird species ({gaps} without a Norwegian name) to species.csv",
