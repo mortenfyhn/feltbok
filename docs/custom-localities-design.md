@@ -32,7 +32,7 @@ The new mobile site is an Angular SPA backed by a **Duende BFF**:
 
 ### ✅ DONE (2026-06-04): harvest migrated to `Sites/ByBoundingBox` (issue #16)
 
-`process/harvest_sites_mobil.py` (`just sites`) now harvests from the mobile API; the old
+`scripts/harvest_sites_mobil.py` (`just sites`) now harvests from the mobile API; the old
 `GetSitesGeoJson` harvest stays as the documented fallback (`just sites-legacy`). The
 reverse-engineered contract:
 
@@ -82,7 +82,7 @@ locality autocomplete with:
 - An **empty 200 body = no public match = private** (a valid answer, not an error).
 - At most **15 results** per term, so for a generic name our site may be public yet not in
   the top 15 — only demote when a name is fully enumerated (<15 hits).
-- `process/fetch_public_flags.py` (`just public-flags`) queries every locality name and sets
+- `scripts/fetch_public_flags.py` (`just public-flags`) queries every locality name and sets
   the real flag, retiring the observer/polygon heuristic (kept only as a capped/failed
   fallback). A periodic "Uttian" canary aborts the run if the server starts throttling.
 

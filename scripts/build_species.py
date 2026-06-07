@@ -8,7 +8,7 @@ most-observed first, so common species rank first in search. The `status` column
 carries the Norwegian Red List 2021 category (mainland) for red-listed species, or
 the Alien Species List 2023 risk category (SE/HI/PH/LO/NK) for introduced species.
 
-    python process/build_species.py      # -> species.csv  (then: just push-data, or rebundle)
+    python scripts/build_species.py      # -> species.csv  (then: just push-data, or rebundle)
 """
 
 import csv

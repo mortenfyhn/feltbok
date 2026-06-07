@@ -22,7 +22,7 @@ Recipes live in `just --list` — the notes below are only the why's and gotchas
 - `just format`/`just lint` are gated in CI (ktlint in the Kotlin job, ruff in a parallel block). The
   ktlint ruleset (`.editorconfig`) only fixes whitespace/indentation/import order — it deliberately
   leaves line structure, line length, and naming alone, so it won't churn the terse hand-written
-  style. ruff (`ruff.toml`) is the full black-style formatter for the Python pipelines.
+  style. ruff (`scripts/ruff.toml`) is the full black-style formatter for the Python pipelines.
 - In a fresh worktree, copy `local.properties` from the repo root first (it's gitignored, and Gradle
   needs its `sdk.dir`).
 - CI runs on Semaphore (`.semaphore/semaphore.yml`): a `Test & build` block (Android container) and a
@@ -65,7 +65,8 @@ Recipes live in `just --list` — the notes below are only the why's and gotchas
 - `MapPicker.kt` — osmdroid locality-picker map + overlays. `SyncScreen.kt` — WebView "Synk mine lokaliteter".
 - `app/src/main/assets/localities.csv` (public, bundled), `species.csv` (checklist + Rødlista status).
   The user's own privates live in `my-localities.csv` — device-only, never bundled/committed.
-- `process/` — Python build/harvest pipelines (localities, species, red list). Driven by the `justfile`.
+- `scripts/` — Python build/harvest pipelines (localities, species, red list) + dev helpers
+  (`scripts/dev/`) and the ruff config. Driven by the `justfile`.
 
 ## Data / API notes
 - Locality + checklist data come from Artsobservasjoner; the new mobile API

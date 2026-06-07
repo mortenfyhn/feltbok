@@ -33,10 +33,10 @@ blocks:
             - ./gradlew ktlintCheck testDebugUnitTest assembleDebug --console=plain --no-daemon
             - cache store gradle-$(checksum app/build.gradle.kts) ~/.gradle
 
-  # Lint process/ Python on a plain VM (no Android container) - it needs no SDK/JDK,
+  # Lint scripts/ Python on a plain VM (no Android container) - it needs no SDK/JDK,
   # just ruff. Parallel with Test & build via dependencies: []. Grab ruff's prebuilt
   # binary (like the gh download below) to dodge pip/venv setup on the base image.
-  - name: Lint (process/)
+  - name: Lint (scripts/)
     dependencies: []
     task:
       agent:
@@ -47,10 +47,10 @@ blocks:
         commands:
           - checkout
       jobs:
-        - name: ruff (process/)
+        - name: ruff (scripts/)
           commands:
             - curl -fsSL https://github.com/astral-sh/ruff/releases/latest/download/ruff-x86_64-unknown-linux-gnu.tar.gz | tar -xz -C /tmp
-            - /tmp/ruff-x86_64-unknown-linux-gnu/ruff check process/
+            - /tmp/ruff-x86_64-unknown-linux-gnu/ruff check scripts/
 
   # Releases are cut locally with ./release.sh (see docs/release.md) — building the
   # signed APK on a connected machine is faster than a cold Semaphore tag build.

@@ -7,7 +7,7 @@ per locationID, reproject to WGS84, and add a `geometry` column - joining by loc
 so the existing (already filtered) set of localities is unchanged. Point-type localities
 get no geometry; the app draws their radius circle instead.
 
-    .venv/bin/python process/add_footprints.py     # rewrites app/src/main/assets/localities.csv
+    .venv/bin/python scripts/add_footprints.py     # rewrites app/src/main/assets/localities.csv
 """
 
 import csv

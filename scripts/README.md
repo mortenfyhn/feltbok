@@ -8,7 +8,7 @@ the import matches names.
 
 ```sh
 python3 -m venv .venv && . .venv/bin/activate
-pip install -r process/requirements.txt
+pip install -r scripts/requirements.txt
 ```
 
 ## `build_localities.py` — the official locality table
@@ -23,7 +23,7 @@ the site's canonical coordinates, and kommune/fylke — so one row per `location
 just localities                      # national (downloads the ~3 GB archive once)
 just localities --county Trøndelag   # one fylke only (same download, smaller output)
 # or directly:
-python process/build_localities.py [--archive a.zip] [--bbox minlon,minlat,maxlon,maxlat] [--min-count 2]
+python scripts/build_localities.py [--archive a.zip] [--bbox minlon,minlat,maxlon,maxlat] [--min-count 2]
 ```
 
 Output `localities.csv`:
@@ -48,7 +48,7 @@ import resolves locality names. Paste into *Rapportere → Importer observasjone
 established; keep it for re-testing if the import behaviour ever changes.
 
 ```sh
-python process/make_locality_test.py
+python scripts/make_locality_test.py
 ```
 
 The Artsobservasjoner import templates live in `docs/` (`artsobs-template-v2.20.xlsx`,

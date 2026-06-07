@@ -12,7 +12,7 @@ It also streams the **full, unmodified occurrence records** to
 `localities-occurrences.jsonl`, so any future re-processing (new heuristics, fields,
 thresholds) reads from that cache with no re-harvest.
 
-    .venv/bin/python process/mark_public.py
+    .venv/bin/python scripts/mark_public.py
 """
 
 import collections

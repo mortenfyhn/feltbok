@@ -21,7 +21,7 @@ single zoom returns everything - we union several zoom levels, tiling the finer 
 Output: a raw GeoJSON {features:[...]} saved to OUT (default in the data dir), gentle and
 resumable. Process it into localities.csv with build_sites.py.
 
-    .venv/bin/python process/harvest_sites.py [--bbox minlon,minlat,maxlon,maxlat]
+    .venv/bin/python scripts/harvest_sites.py [--bbox minlon,minlat,maxlon,maxlat]
 """
 
 import argparse

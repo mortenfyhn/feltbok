@@ -1,8 +1,8 @@
 """Tests for the locality-table heuristics in build_localities.py.
 
 These cover the pure logic that decides which localities survive - the part that
-is fiddly and easy to regress. Run with: .venv/bin/python -m pytest process/
-(or: .venv/bin/python -m unittest process/test_build_localities.py)
+is fiddly and easy to regress. Run with: .venv/bin/python -m pytest scripts/
+(or: .venv/bin/python -m unittest scripts/test_build_localities.py)
 """
 
 import importlib.util

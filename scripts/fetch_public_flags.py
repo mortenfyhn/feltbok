@@ -18,7 +18,7 @@ Raw API results are cached to RAW so re-processing (or a matching-logic change) 
 further requests; a name already cached is never re-queried. A periodic "Uttian" canary
 aborts on throttling. Manual corrections in locality_overrides.csv always win.
 
-    .venv/bin/python process/fetch_public_flags.py     # gentle, resumable
+    .venv/bin/python scripts/fetch_public_flags.py     # gentle, resumable
 """
 
 import csv

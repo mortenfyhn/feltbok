@@ -13,10 +13,10 @@ name-based import matches on: "Ørndalen, Sistranda, Frøya, Tø", never bare
 which is the duplicate mess we're avoiding - so the app uploads names only.)
 
 Usage:
-    python process/build_localities.py                  # download + build national table
-    python process/build_localities.py --archive a.zip  # use a pre-downloaded archive
-    python process/build_localities.py --county Trøndelag   # one fylke only
-    python process/build_localities.py --min-count 3    # drop rarely-used (likely private) sites
+    python scripts/build_localities.py                  # download + build national table
+    python scripts/build_localities.py --archive a.zip  # use a pre-downloaded archive
+    python scripts/build_localities.py --county Trøndelag   # one fylke only
+    python scripts/build_localities.py --min-count 3    # drop rarely-used (likely private) sites
 
 Output: localities.csv (id,lokalitet,hovedlokalitet,kommune,fylke,lat,lon,count),
 most-used first. The app emits the bare `lokalitet` name + the exact `lat,lon`

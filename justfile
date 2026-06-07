@@ -16,18 +16,18 @@ build:
 
 # Run all tests: Python locality heuristics + Kotlin units
 test:
-    .venv/bin/python -m unittest discover -s process -p 'test_*.py'
+    .venv/bin/python -m unittest discover -s scripts -p 'test_*.py'
     ./gradlew testDebugUnitTest
 
 # Auto-format Kotlin (ktlint) + Python (ruff); run before committing manual tweaks
 format:
     ./gradlew ktlintFormat
-    .venv/bin/ruff format process/
+    .venv/bin/ruff format scripts/
 
 # Check formatting/lint without changing files (what CI gates on)
 lint:
     ./gradlew ktlintCheck
-    .venv/bin/ruff check process/
+    .venv/bin/ruff check scripts/
 
 # Install on connected device (-d allows downgrading over a newer build)
 install: build
@@ -56,15 +56,15 @@ uninstall:
 
 # Harvest the official site list from Artsobservasjoner's mobile API (auth + usage in the script header)
 sites *args:
-    .venv/bin/python process/harvest_sites_mobil.py {{args}}
+    .venv/bin/python scripts/harvest_sites_mobil.py {{args}}
 
 # Build app/src/main/assets/localities.csv from the harvested sites
 build-sites *args:
-    .venv/bin/python process/build_sites.py {{args}}
+    .venv/bin/python scripts/build_sites.py {{args}}
 
 # Build app/src/main/assets/species.csv (Norwegian bird checklist, norsk + latin)
 species:
-    .venv/bin/python process/build_species.py
+    .venv/bin/python scripts/build_species.py
 
 # Push the built localities/species CSVs to the device (overrides the bundled assets, no rebuild)
 push-data:

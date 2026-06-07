@@ -23,7 +23,7 @@ and a response returns at most 1000 sites (no paging). So we tile in Web Mercato
 size and recursively quarter any tile that hits the 1000-site cap. Output: a JSON array of
 rows saved to OUT, gentle and resumable.
 
-    .venv/bin/python process/harvest_sites_mobil.py [--bbox minlon,minlat,maxlon,maxlat]
+    .venv/bin/python scripts/harvest_sites_mobil.py [--bbox minlon,minlat,maxlon,maxlat]
 """
 
 import argparse

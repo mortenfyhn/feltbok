@@ -15,7 +15,7 @@ Either way: `siteName`/`name` -> lokalitet (the exact registered name paste-impo
 geometry -> lat/lon + a WGS84 POLYGON or none, accuracy -> radius (0 = point), isPrivate ->
 public/mine. Manual corrections in locality_overrides.csv (keyed by siteId) still win.
 
-    .venv/bin/python process/build_sites.py [--raw FILE] [--fylke Trøndelag --fylke-abbr Tø]
+    .venv/bin/python scripts/build_sites.py [--raw FILE] [--fylke Trøndelag --fylke-abbr Tø]
 """
 
 import argparse
