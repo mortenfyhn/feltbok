@@ -36,7 +36,6 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.Checkbox
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.HorizontalDivider
@@ -693,13 +692,16 @@ private fun CommentField(label: String, value: String, previous: String, onChang
     HorizontalDivider(color = cs.outline.copy(alpha = 0.4f))
 }
 
-/** From/to time editor. A single point by default; ticking "Tidsrom" reveals the
- *  Til date+time, which lets an observation span a period (and across midnight). */
+/** From/to time editor. All four rows show at once; Til mirrors Fra (dEndTime == null) until you
+ *  set a Til field directly, which decouples it into a real range — possibly spanning midnight. */
 @Composable
 private fun TimeDialog(vm: MainViewModel, onDismiss: () -> Unit) {
-    val cs = MaterialTheme.colorScheme
     val ctx = LocalContext.current
+    // Picks mutate the draft live, so snapshot the open-time values to restore if the edit is cancelled.
+    val orig = remember { vm.dTime to vm.dEndTime }
+    fun cancel() { vm.dTime = orig.first; vm.dEndTime = orig.second; onDismiss() }
     val start = if (vm.dTime > 0) vm.dTime else System.currentTimeMillis()
+    val end = vm.dEndTime ?: start
     fun pickDate(ms: Long, onSet: (Long) -> Unit) {
         val cal = java.util.Calendar.getInstance().apply { timeInMillis = ms }
         android.app.DatePickerDialog(ctx, { _, y, mo, d ->
@@ -720,48 +722,58 @@ private fun TimeDialog(vm: MainViewModel, onDismiss: () -> Unit) {
     // can't be set before the start.
     fun setStart(ms: Long) { vm.dTime = ms; vm.dEndTime?.let { if (it < ms) vm.dEndTime = ms } }
     fun setEnd(ms: Long) { vm.dEndTime = maxOf(ms, start) }
-    val range = vm.dEndTime != null
     AlertDialog(
-        onDismissRequest = onDismiss,
+        onDismissRequest = ::cancel,
         title = { Text(Strings.Time.title) },
         text = {
             Column {
-                Row(
-                    Modifier.fillMaxWidth().clickable { vm.dEndTime = if (range) null else start }
-                        .padding(vertical = 4.dp),
-                    verticalAlignment = Alignment.CenterVertically,
-                ) {
-                    Text(Strings.Time.range, color = cs.onSurfaceVariant, modifier = Modifier.weight(1f))
-                    Checkbox(checked = range, onCheckedChange = { vm.dEndTime = if (it) start else null })
-                }
-                FieldRow(if (range) Strings.Time.fromDate else Strings.Time.date,
-                    onClick = { pickDate(start, ::setStart) }) { Text(exportDate(start)) }
-                FieldRow(if (range) Strings.Time.fromTime else Strings.Time.clock,
+                TimeGroupHeader(Strings.Time.from)
+                FieldRow(surface = false, divider = false,
+                    onClick = { pickDate(start, ::setStart) }) { Text(displayDate(start)) }
+                FieldRow(surface = false, divider = false,
                     onClick = { pickTime(start, ::setStart) }) { Text(exportTime(start)) }
-                vm.dEndTime?.let { end ->
-                    FieldRow(Strings.Time.toDate, onClick = { pickDate(end, ::setEnd) }) { Text(exportDate(end)) }
-                    FieldRow(Strings.Time.toTime, onClick = { pickTime(end, ::setEnd) }) { Text(exportTime(end)) }
-                }
+                TimeGroupHeader(Strings.Time.to)
+                FieldRow(surface = false, divider = false,
+                    onClick = { pickDate(end, ::setEnd) }) { Text(displayDate(end)) }
+                FieldRow(surface = false, divider = false,
+                    onClick = { pickTime(end, ::setEnd) }) { Text(exportTime(end)) }
             }
         },
         confirmButton = { TextButton(onClick = onDismiss) { Text(Strings.Time.done) } },
+        dismissButton = { TextButton(onClick = ::cancel) { Text(Strings.cancel) } },
     )
 }
 
 @Composable
-private fun FieldRow(label: String, onClick: (() -> Unit)? = null, content: @Composable RowScope.() -> Unit) {
+private fun TimeGroupHeader(text: String) {
+    Text(text, color = MaterialTheme.colorScheme.primary, fontWeight = FontWeight.Bold,
+        fontSize = 13.sp, modifier = Modifier.padding(top = 10.dp, bottom = 2.dp))
+}
+
+@Composable
+private fun FieldRow(
+    label: String? = null,
+    onClick: (() -> Unit)? = null,
+    surface: Boolean = true,
+    divider: Boolean = true,
+    content: @Composable RowScope.() -> Unit,
+) {
     val cs = MaterialTheme.colorScheme
     val base = Modifier.fillMaxWidth()
         .let { if (onClick != null) it.clickable(onClick = onClick) else it }
-        .background(cs.surface).padding(horizontal = 16.dp, vertical = 10.dp)
+        .let { if (surface) it.background(cs.surface) else it }
+        .padding(horizontal = 16.dp, vertical = 10.dp)
     Row(base, verticalAlignment = Alignment.CenterVertically) {
-        Text(label, color = cs.onSurfaceVariant, fontSize = 14.sp, modifier = Modifier.width(84.dp))
-        Spacer(Modifier.width(12.dp))
-        Row(Modifier.weight(1f), horizontalArrangement = Arrangement.End,
+        if (label != null) {
+            Text(label, color = cs.onSurfaceVariant, fontSize = 14.sp, modifier = Modifier.width(84.dp))
+            Spacer(Modifier.width(12.dp))
+        }
+        // Labelless rows left-align their value (the value alone is self-explanatory).
+        Row(Modifier.weight(1f), horizontalArrangement = if (label != null) Arrangement.End else Arrangement.Start,
             verticalAlignment = Alignment.CenterVertically) { content() }
         if (onClick != null) Text("  ›", color = cs.outline, fontSize = 18.sp)
     }
-    HorizontalDivider(color = cs.outline.copy(alpha = 0.4f))
+    if (divider) HorizontalDivider(color = cs.outline.copy(alpha = 0.4f))
 }
 
 // LocalityScreen (the map-based locality picker) lives in MapPicker.kt.

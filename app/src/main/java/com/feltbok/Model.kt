@@ -9,6 +9,7 @@ import android.provider.MediaStore
 import org.json.JSONArray
 import org.json.JSONObject
 import java.io.File
+import java.text.DateFormatSymbols
 import java.text.SimpleDateFormat
 import java.time.Instant
 import java.time.LocalDate
@@ -219,17 +220,25 @@ fun fuzzyRank(q: String, t: String): Int? {
 // ---- date/time formatting ----
 
 private val NB = Locale("nb", "NO")
-fun displayTime(ms: Long): String = SimpleDateFormat("d. MMM, HH:mm", NB).format(Date(ms))
-fun shortTime(ms: Long): String = SimpleDateFormat("HH:mm", NB).format(Date(ms))
+// Norwegian's abbreviated months carry a trailing dot ("jun."); we render them dotless everywhere.
+private val NB_SYMBOLS = DateFormatSymbols(NB).apply {
+    shortMonths = shortMonths.map { it.trimEnd('.') }.toTypedArray()
+}
+private fun nbFormat(pattern: String) = SimpleDateFormat(pattern, NB).apply { dateFormatSymbols = NB_SYMBOLS }
+
+fun displayTime(ms: Long): String = nbFormat("d. MMM, HH:mm").format(Date(ms))
+fun shortTime(ms: Long): String = nbFormat("HH:mm").format(Date(ms))
 
 /** The editor's one-line time summary: a single point, or "from – to" for a range. */
 fun displayTimeRange(start: Long, end: Long?): String {
-    val fmt = SimpleDateFormat("d. MMM HH:mm", NB)
+    val fmt = nbFormat("d. MMM HH:mm")
     return if (end == null) fmt.format(Date(start)) else "${fmt.format(Date(start))} – ${fmt.format(Date(end))}"
 }
 
-fun exportDate(ms: Long): String = SimpleDateFormat("dd.MM.yyyy", NB).format(Date(ms))
-fun exportTime(ms: Long): String = SimpleDateFormat("HH:mm", NB).format(Date(ms))
+fun exportDate(ms: Long): String = nbFormat("dd.MM.yyyy").format(Date(ms))
+/** Friendlier date for the editor (export keeps the strict dd.MM.yyyy). */
+fun displayDate(ms: Long): String = nbFormat("d. MMM yyyy").format(Date(ms))
+fun exportTime(ms: Long): String = nbFormat("HH:mm").format(Date(ms))
 
 // ---- day grouping (the notes list's per-day section headers) ----
 

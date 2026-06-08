@@ -78,13 +78,8 @@ object Strings {
 
     object Time {
         const val title = "Tid"
-        const val range = "Tidsrom"
-        const val fromDate = "Fra dato"
-        const val date = "Dato"
-        const val fromTime = "Fra kl."
-        const val clock = "Klokkeslett"
-        const val toDate = "Til dato"
-        const val toTime = "Til kl."
+        const val from = "Fra"
+        const val to = "Til"
         const val done = "Ferdig"
     }
 

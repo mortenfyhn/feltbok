@@ -36,6 +36,9 @@ Recipes live in `just --list` — the notes below are only the why's and gotchas
 - **Minimal diffs.** Implement only what the issue asks; don't expand scope or add features unasked.
   Prefer the smallest change, and removing code over adding it. Prefer pure functions; small focused classes.
 - Match the surrounding style, naming, and comment density. Comments explain **WHY**, not what.
+- **Avoid custom styling unless necessary.** Lean on Material defaults and existing shared composables;
+  don't hand-tune colors, sizes, paddings, or dividers without a clear reason. Prefer reusing/extending
+  a component (e.g. a flag on an existing row) over bespoke layout.
 - **Commit messages explain the why. Do NOT add `Co-Authored-By` or other trailers** (this repo's
   history is trailer-free).
 - **Closing issues.** When a commit resolves an issue, put a closing keyword (`Fix #50`, `Closes #50`)
