@@ -72,6 +72,8 @@ object Strings {
         const val discardTitleEdit = "Forkast endringene?"
         const val discardConfirm = "Forkast"
         const val discardKeep = "Fortsett"
+        const val deleteTitle = "Slett observasjon?"
+        const val deleteConfirm = "Slett"
     }
 
     object Time {

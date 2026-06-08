@@ -474,6 +474,7 @@ internal fun ScreenHeader(
 fun DetailScreen(vm: MainViewModel) {
     val cs = MaterialTheme.colorScheme
     var confirmDiscard by remember { mutableStateOf(false) }
+    var confirmDelete by remember { mutableStateOf(false) }
     // Confirm only when leaving would actually lose work (NN/g); editing a note and leaving it
     // untouched just goes back, no pointless prompt.
     val leave = { if (vm.draftHasChanges()) confirmDiscard = true else vm.cancel() }
@@ -492,6 +493,18 @@ fun DetailScreen(vm: MainViewModel) {
                 }
             },
             dismissButton = { TextButton(onClick = { confirmDiscard = false }) { Text(Strings.Detail.discardKeep) } },
+        )
+    }
+    if (confirmDelete) {
+        AlertDialog(
+            onDismissRequest = { confirmDelete = false },
+            title = { Text(Strings.Detail.deleteTitle) },
+            confirmButton = {
+                TextButton(onClick = { confirmDelete = false; vm.delete() }) {
+                    Text(Strings.Detail.deleteConfirm, color = cs.error)
+                }
+            },
+            dismissButton = { TextButton(onClick = { confirmDelete = false }) { Text(Strings.cancel) } },
         )
     }
     Column(Modifier.fillMaxSize()) {
@@ -547,7 +560,7 @@ fun DetailScreen(vm: MainViewModel) {
         if (vm.isEditing) {
             HorizontalDivider(color = cs.outline.copy(alpha = 0.4f))
             TextButton(
-                onClick = { vm.delete() },
+                onClick = { confirmDelete = true },
                 modifier = Modifier.fillMaxWidth().background(cs.surface).padding(vertical = 4.dp),
             ) { Text(Strings.Detail.delete, color = cs.error) }
         }
