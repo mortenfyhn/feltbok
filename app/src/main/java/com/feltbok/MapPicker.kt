@@ -22,8 +22,10 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.Button
+import androidx.compose.material3.Checkbox
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
@@ -39,9 +41,12 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.clipToBounds
+import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.unit.dp
@@ -99,8 +104,11 @@ fun LocalityScreen(vm: MainViewModel) {
             .also { mapView.overlays.add(it) }
     }
     // Refresh the overlay's plain-List copy whenever the locality set changes (async load
-    // finishing, or a new spot placed) - not every frame.
-    LaunchedEffect(vm.localities.size) { overlay.localities = vm.localities.toList(); mapView.invalidate() }
+    // finishing, or a new spot placed) or the private-locality toggle flips - not every frame.
+    LaunchedEffect(vm.localities.size, vm.hidePrivate) {
+        overlay.localities = vm.localities.filter { !vm.hidePrivate || it.public }
+        mapView.invalidate()
+    }
     // Flash the tapped locality highlighted, then return to the entry screen.
     LaunchedEffect(tapped) { tapped?.let { delay(300); vm.pickLocality(it) } }
 
@@ -149,6 +157,13 @@ fun LocalityScreen(vm: MainViewModel) {
                         m.invalidate()
                     }
                 },
+            )
+            // Toggle private (non-public) localities off the map - they clutter it when reporting
+            // birds (issue #88). Only offered when there are any to hide.
+            if (!newMode && vm.localities.any { !it.public }) PrivateToggle(
+                hide = vm.hidePrivate,
+                onToggle = vm::toggleHidePrivate,
+                modifier = Modifier.align(Alignment.BottomStart).padding(16.dp),
             )
             // One-handed zoom: thumb-reachable buttons (the new-spot panel covers them).
             if (!newMode) Column(
@@ -218,6 +233,28 @@ private fun fitRadius(map: MapView): Int {
     val ppm = abs(a.y - b.y) / 100.0
     val maxR = minOf(map.width, map.height) * 0.25 / ppm   // radius ~ a quarter of the shorter side
     return RADII.lastOrNull { it > 0 && it <= maxR } ?: RADII.first { it > 0 }
+}
+
+/** Hide/show the private localities (issue #88): a checkbox sitting straight on the map, its label
+ *  white-haloed so it stays legible over any tiles. Checked = the user's private spots are hidden. */
+@Composable
+private fun PrivateToggle(hide: Boolean, onToggle: () -> Unit, modifier: Modifier) {
+    Row(
+        modifier.clickable(onClick = onToggle),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Box(Modifier.scale(1.2f), contentAlignment = Alignment.Center) {
+            // Fill the box white when unchecked, so the map doesn't show through it.
+            if (!hide) Box(Modifier.size(15.dp).background(Color.White, RoundedCornerShape(2.dp)))
+            Checkbox(checked = hide, onCheckedChange = null)
+        }
+        val label = TextStyle(fontSize = 16.sp, fontWeight = FontWeight.Bold)
+        Box(Modifier.padding(start = 8.dp)) {       // clear the visually-scaled checkbox
+            Text(Strings.Picker.privateToggle, color = Color.White,
+                style = label.copy(drawStyle = Stroke(width = 12f)))   // halo for contrast
+            Text(Strings.Picker.privateToggle, color = Color.Black, style = label)
+        }
+    }
 }
 
 @Composable

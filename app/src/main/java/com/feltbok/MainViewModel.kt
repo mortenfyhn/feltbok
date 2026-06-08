@@ -106,6 +106,11 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
     // Remembered locality-picker zoom, so reopening it keeps your last zoom level.
     var mapZoom = 16.0
 
+    /** Whether the picker hides private localities - the user's own (non-public) spots, which
+     *  clutter the map when reporting birds (issue #88). Off by default; remembered across restarts. */
+    var hidePrivate by mutableStateOf(loadHidePrivate(ctx)); private set
+    fun toggleHidePrivate() { hidePrivate = !hidePrivate; saveHidePrivate(ctx, hidePrivate) }
+
     // ---- draft (current add/edit) ----
     private var editingId: Long? = null
     private var changingSpecies = false

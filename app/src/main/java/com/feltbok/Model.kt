@@ -620,6 +620,13 @@ fun saveUses(ctx: Context, uses: Map<String, Int>) = saveCounts(ctx, "uses.json"
 fun loadActUses(ctx: Context) = loadCounts(ctx, "act_uses.json")
 fun saveActUses(ctx: Context, uses: Map<String, Int>) = saveCounts(ctx, "act_uses.json", uses)
 
+// ---- map: whether private localities are hidden, remembered across restarts (issue #88) ----
+
+private fun hidePrivateFile(ctx: Context) = File(ctx.filesDir, "hide_private.txt")
+fun loadHidePrivate(ctx: Context): Boolean =
+    hidePrivateFile(ctx).takeIf { it.exists() }?.runCatching { readText().trim().toBoolean() }?.getOrNull() ?: false
+fun saveHidePrivate(ctx: Context, hide: Boolean) = hidePrivateFile(ctx).writeText(hide.toString())
+
 // ---- export (v2.20 paste format: bare name only, no coords) ----
 
 private val EXPORT_COLS = listOf(
