@@ -107,6 +107,11 @@ allmenn flag from the Artsobservasjoner API (build-time download, requested sepa
 `Nord`/`Øst`/`Nøyaktighet` are left blank unless "Ta med koordinater" is on. Dates are
 `dd.MM.yyyy`, times `HH:mm`; from/til are the same instant (one moment of observation).
 
+`Nøyaktighet` (radius of a minted custom locality) **must be a positive integer** — a
+`0 m` row hard-fails with *"Lokaliteten må ha en nøyaktighet som er et positivt heltall"*
+(observed 2026-06 importing a new "punkt" locality). So **1 m is the smallest accepted
+radius** and acts as the effective point — the locality picker no longer offers `0`/"punkt".
+
 `Antall` is emitted blank for an unknown number of individuals (the `-1` sentinel,
 [#89]). The spreadsheet template's *Instruksjoner* sheet documents `Antall` as "Et
 positivt tall … (Kan stå tom …)", so a blank cell is a valid value there, and a live

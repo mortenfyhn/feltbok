@@ -123,7 +123,6 @@ object Strings {
         const val titlePick = "Velg lokalitet"
         const val newButton = "＋ Ny lokalitet"
         const val privateToggle = "Vis private"
-        const val point = "punkt"
         fun meters(m: Int) = "$m m"
         const val nameLabel = "Lokalitetsnavn (valgfritt)"
         const val namePlaceholder = "Ny lokalitet"

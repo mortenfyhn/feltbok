@@ -220,6 +220,7 @@ fun fuzzyRank(q: String, t: String): Int? {
 // ---- date/time formatting ----
 
 private val NB = Locale("nb", "NO")
+
 // Norwegian's abbreviated months carry a trailing dot ("jun."); we render them dotless everywhere.
 private val NB_SYMBOLS = DateFormatSymbols(NB).apply {
     shortMonths = shortMonths.map { it.trimEnd('.') }.toTypedArray()
@@ -236,6 +237,7 @@ fun displayTimeRange(start: Long, end: Long?): String {
 }
 
 fun exportDate(ms: Long): String = nbFormat("dd.MM.yyyy").format(Date(ms))
+
 /** Friendlier date for the editor (export keeps the strict dd.MM.yyyy). */
 fun displayDate(ms: Long): String = nbFormat("d. MMM yyyy").format(Date(ms))
 fun exportTime(ms: Long): String = nbFormat("HH:mm").format(Date(ms))

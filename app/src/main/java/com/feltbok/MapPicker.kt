@@ -208,9 +208,7 @@ fun LocalityScreen(vm: MainViewModel) {
                     NumberPicker(c).apply {
                         minValue = 0
                         maxValue = RADII.lastIndex
-                        displayedValues = RADII.map {
-                            if (it == 0) Strings.Picker.point else Strings.Picker.meters(it)
-                        }.toTypedArray()
+                        displayedValues = RADII.map { Strings.Picker.meters(it) }.toTypedArray()
                         wrapSelectorWheel = false
                         // Block the inner EditText so long-pressing a value can't pop the keyboard.
                         descendantFocusability = ViewGroup.FOCUS_BLOCK_DESCENDANTS
@@ -223,8 +221,9 @@ fun LocalityScreen(vm: MainViewModel) {
     }
 }
 
-/** Radii Artsobservasjoner allows for a circle locality (0 = a point). */
-private val RADII = listOf(0, 1, 5, 10, 25, 50, 75, 100, 125, 150, 200, 250, 300, 400, 500, 750, 1000, 1500, 2000, 2500, 3000, 5000)
+// Radii Artsobservasjoner allows for a circle locality. No 0/"punkt": the paste-import
+// rejects a 0 m Nøyaktighet ("må ha ... et positivt heltall"), so 1 m is the effective point.
+private val RADII = listOf(1, 5, 10, 25, 50, 75, 100, 125, 150, 200, 250, 300, 400, 500, 750, 1000, 1500, 2000, 2500, 3000, 5000)
 
 /** Largest preset radius whose circle comfortably fits the current map view, so a new spot's
  *  circle is actually visible at the current zoom instead of overflowing off-screen (#67). */
@@ -234,7 +233,7 @@ private fun fitRadius(map: MapView): Int {
     val b = proj.toPixels(GeoPoint(map.mapCenter.latitude + 100.0 / 111_320.0, map.mapCenter.longitude), null)
     val ppm = abs(a.y - b.y) / 100.0
     val maxR = minOf(map.width, map.height) * 0.25 / ppm   // radius ~ a quarter of the shorter side
-    return RADII.lastOrNull { it > 0 && it <= maxR } ?: RADII.first { it > 0 }
+    return RADII.lastOrNull { it <= maxR } ?: RADII.first()
 }
 
 /** Show/hide the private localities (issue #88): a checkbox sitting straight on the map, its label
