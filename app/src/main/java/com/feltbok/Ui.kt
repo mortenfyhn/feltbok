@@ -410,7 +410,7 @@ fun SearchScreen(vm: MainViewModel) {
                 } },
                 // autoCorrect off: don't want the IME "correcting" species names, and the
                 // gesture/compose path it drives is what crashes on swipe-typing.
-                keyboardOptions = KeyboardOptions(autoCorrect = false, imeAction = ImeAction.Search),
+                keyboardOptions = KeyboardOptions(autoCorrectEnabled = false, imeAction = ImeAction.Search),
                 keyboardActions = KeyboardActions(onSearch = { results.firstOrNull()?.let { vm.pickSpecies(it) } }))
         }
         LazyColumn(Modifier.weight(1f), state = listState) {
