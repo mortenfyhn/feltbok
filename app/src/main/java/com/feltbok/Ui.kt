@@ -611,7 +611,9 @@ private fun AntallRow(vm: MainViewModel) {
                     } else {
                         justFocused = false
                         tfv = v.copy(text = digits)
-                        digits.toIntOrNull()?.let { vm.setCount(it) }
+                        // An emptied field means "unknown", matching the field's blank
+                        // display - otherwise dCount keeps its stale value and saves as 1.
+                        vm.setCount(digits.toIntOrNull() ?: UNKNOWN_COUNT)
                     }
                 },
                 modifier = Modifier.width(64.dp).padding(vertical = 10.dp)
