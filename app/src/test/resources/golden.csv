@@ -7,16 +7,16 @@
 #
 # Only add a row when you hit a real search result you're unhappy with and want locked so it can't
 # regress - especially NON-mechanical cases the generator can't derive from the name (e.g. learned
-# initialisms like rvt -> Rødvingetrost). The benchmark reports golden as its own pass-count, and
+# initialisms like rvt -> rødvingetrost). The benchmark reports golden as its own pass-count, and
 # lists the misses for the ship scorer, so each row stays visible.
 #
 # format: query,expectedNorsk   (# / blank lines ignored; query case & æ/ø/å don't matter; the
 # expected name must exist exactly as in species.csv, or the row is silently skipped)
 #
 # (empty for now - add as you go)
-sanger,Gransanger
-a,Alke
-konge,Fuglekonge
-tårn,Tårnseiler
-stor,Storspove
-tybj,Tyvjo
+sanger,gransanger
+a,alke
+konge,fuglekonge
+tårn,tårnseiler
+stor,storspove
+tybj,tyvjo

@@ -90,13 +90,13 @@ def fetch_alienlist():
 # the current one (Curruca), so the name-match fails. Only confident regulars;
 # genuine rare vagrants are left as their scientific name.
 OVERRIDES = {
-    "Sylvia communis": "Tornsanger",
-    "Sylvia curruca": "Møller",
-    "Sylvia nana": "Dvergsanger",
-    "Sylvia crassirostris": "Sultansanger",
-    "Corvus corone": "Svartkråke",
-    "Lanius isabellinus": "Isabellavarsler",
-    "Acanthis hornemanni": "Polarsisik",
+    "Sylvia communis": "tornsanger",
+    "Sylvia curruca": "møller",
+    "Sylvia nana": "dvergsanger",
+    "Sylvia crassirostris": "sultansanger",
+    "Corvus corone": "svartkråke",
+    "Lanius isabellinus": "isabellavarsler",
+    "Acanthis hornemanni": "polarsisik",
 }
 
 
@@ -174,8 +174,8 @@ def resolve(key):
         for v in vn.get("results", []):
             by_lang.setdefault(v.get("language"), v.get("vernacularName"))
         norsk = by_lang.get("nor") or by_lang.get("nno") or ""
-    if norsk:  # Artsobs capitalises the first letter
-        norsk = norsk[:1].upper() + norsk[1:]
+    if norsk:  # Bokmål species names are lowercase (Artsdatabanken orthography)
+        norsk = norsk[:1].lower() + norsk[1:]
     return norsk or "", latin
 
 

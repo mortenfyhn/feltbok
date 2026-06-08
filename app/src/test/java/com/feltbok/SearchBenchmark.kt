@@ -108,7 +108,7 @@ class SearchBenchmark {
     /** A correctness guard that should hold for any sane scorer: an exact full name ranks #1. */
     @Test
     fun exactNameRanksFirst() {
-        val sample = listOf("Stokkand", "Gråmåke", "Rødvingetrost", "Pilfink")
+        val sample = listOf("stokkand", "gråmåke", "rødvingetrost", "pilfink")
             .filter { it in names }
         for (scorer in Scorers.all(species, suffixes = suffixes)) {
             for (n in sample) {
