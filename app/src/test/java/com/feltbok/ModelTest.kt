@@ -84,6 +84,33 @@ class ModelTest {
     }
 
     @Test
+    fun exportFlattensTabsAndNewlinesInCommentsToKeepColumnsAligned() {
+        // A stray tab or newline in a free-text comment would split the row and silently
+        // desync every following column on paste-import - flatten them to spaces.
+        val n = noteAt(noonMs).copy(
+            publicComment = "ser\tut\nsom\rfjellmåke",
+            privateComment = "linje1\nlinje2",
+        )
+        val lines = exportTsv(listOf(n)).split("\n")
+        assertEquals("header + one row (no comment broke the row count)", 2, lines.size)
+        val c = lines[1].split("\t")
+        assertEquals(16, c.size)
+        assertEquals("ser ut som fjellmåke", c[13])
+        assertEquals("linje1 linje2", c[14])
+    }
+
+    @Test
+    fun newLocExportsCoordinatesAndRadiusAsNoyaktighet() {
+        // A brand-new spot is exported WITH coordinates (+ radius as Nøyaktighet) so the
+        // import mints it; registry localities stay name-only (covered by the test above).
+        val n = noteAt(noonMs).copy(newLoc = true, locRadius = 50)
+        val c = exportTsv(listOf(n)).split("\n")[1].split("\t")
+        assertEquals("63.670000", c[6])
+        assertEquals("8.310000", c[7])
+        assertEquals("50 m", c[8])
+    }
+
+    @Test
     fun haversineIsZeroForSamePointAndAboutOneEleventhKmPerDegree() {
         assertEquals(0.0, haversine(63.7, 8.8, 63.7, 8.8), 1e-6)
         val d = haversine(63.0, 8.0, 64.0, 8.0)
