@@ -8,6 +8,7 @@
 - Automatisk sikkerhetskopi til Nedlastinger.
 - Bekreftelse før du sletter en observasjon.
 - Retta en krasj som kunne gjøre observasjonene utilgjengelige.
+- Retta at en nylaga lokalitet kunne bli umulig å velge igjen.
 - Enklere og ryddigere redigering av tidspunkt på en observasjon.
 - Ymse småforbedringer og feilrettinger.
 

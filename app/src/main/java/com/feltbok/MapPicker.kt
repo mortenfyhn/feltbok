@@ -108,7 +108,9 @@ fun LocalityScreen(vm: MainViewModel) {
     // Refresh the overlay's plain-List copy whenever the locality set changes (async load
     // finishing, or a new spot placed) or the private-locality toggle flips - not every frame.
     LaunchedEffect(vm.localities.size, vm.showPrivate) {
-        overlay.localities = vm.localities.filter { vm.showPrivate || it.public }
+        // Always keep your brand-new spots on the map: "Vis private" hides the many synced privates
+        // (#88), but a spot you just placed must stay selectable for the next observation (#99).
+        overlay.localities = vm.localities.filter { vm.showPrivate || it.public || it.newLoc }
         mapView.invalidate()
     }
     // Flash the tapped locality highlighted, then return to the entry screen.
