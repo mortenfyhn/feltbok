@@ -48,7 +48,7 @@ cp app/build/outputs/apk/release/app-release.apk "$apk"
 # Release notes = install steps + this version's changelog; --generate-notes appends
 # the auto "What's Changed" list below.
 notes=$(mktemp)
-{ cat docs/release-notes-install.md; printf '\n---\n\n## Nytt i %s\n%s\n' "$tag" "$notes_body"; } > "$notes"
+{ cat docs/release-notes-install.md; printf '\n## Nytt i %s\n%s\n' "$tag" "$notes_body"; } > "$notes"
 
 # Push before creating the release so its auto-generated notes can resolve the tag + commits.
 git push origin master "$tag"
