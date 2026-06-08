@@ -107,12 +107,21 @@ allmenn flag from the Artsobservasjoner API (build-time download, requested sepa
 `Nord`/`Øst`/`Nøyaktighet` are left blank unless "Ta med koordinater" is on. Dates are
 `dd.MM.yyyy`, times `HH:mm`; from/til are the same instant (one moment of observation).
 
+`Antall` is emitted blank for an unknown number of individuals (the `-1` sentinel,
+[#89]). The spreadsheet template's *Instruksjoner* sheet documents `Antall` as "Et
+positivt tall … (Kan stå tom …)", so a blank cell is a valid value there, and a live
+paste of the sample **validates fine** on the import site — a blank `Antall` is accepted.
+Still unconfirmed: whether it registers as *unknown* vs. silently defaulting to `1`, which
+needs the **Kontroller funn** review page (blocked by a site-side bug at time of writing) —
+see [#90].
+
 ## Manual integration test sample
 
-`artsobs-import-sample.tsv` is a ready-to-paste batch the app would produce — four rows
+`artsobs-import-sample.tsv` is a ready-to-paste batch the app would produce — rows
 covering the cases that matter: a name-only registry locality, blank coordinates, an
-`Usikker artsbestemming` = `Ja` flag, a brand-new locality with coordinates + radius, and
-a from–til time range. Paste it into "Importer observasjoner" to check the live site still
+`Usikker artsbestemming` = `Ja` flag, a brand-new locality with coordinates + radius,
+a from–til time range, and a **blank `Antall`** (unknown number of individuals, the
+`Storspove` row — see #90). Paste it into "Importer observasjoner" to check the live site still
 accepts the format end-to-end (validation **and** that rows reach "Kontroller funn", not
 just the green success message). It is generated from `exportTsv`, so it stays byte-identical
 to real output. Regenerate it the same way if the export format changes.
