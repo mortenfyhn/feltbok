@@ -371,5 +371,8 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
     /** Clear the day's notes - after they've been imported and published. */
     fun clearAll() { notes.clear(); persist() }
 
-    private fun persist() = saveNotes(ctx, notes)
+    private fun persist() {
+        saveNotes(ctx, notes)
+        backupExport(ctx, notes)   // mirror to Downloads so a UI crash can't trap field data (#85)
+    }
 }

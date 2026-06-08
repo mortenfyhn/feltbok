@@ -111,6 +111,22 @@ class ModelTest {
     }
 
     @Test
+    fun withUniqueIdsNudgesCollisionsApartWithoutDroppingOrReorderingNotes() {
+        // Regression for #85: two observations minted in the same millisecond shared an id, which
+        // is the LazyColumn key - duplicates crashed the list on launch. Healing must keep every
+        // note (no dedup) and only bump the id, in order.
+        val a = noteAt(100).copy(species = "Grønnfink")
+        val b = noteAt(100).copy(species = "Bokfink")   // same id as a
+        val c = noteAt(101)                              // already collides with a's bumped 101
+        val healed = withUniqueIds(listOf(a, b, c))
+        assertEquals("no note dropped", 3, healed.size)
+        assertEquals("ids are all distinct", 3, healed.map { it.id }.toSet().size)
+        assertEquals("order and content preserved", listOf("Grønnfink", "Bokfink", "Gråmåke"),
+            healed.map { it.species })
+        assertEquals("first occurrence keeps its id", 100, healed[0].id)
+    }
+
+    @Test
     fun haversineIsZeroForSamePointAndAboutOneEleventhKmPerDegree() {
         assertEquals(0.0, haversine(63.7, 8.8, 63.7, 8.8), 1e-6)
         val d = haversine(63.0, 8.0, 64.0, 8.0)
