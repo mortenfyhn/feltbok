@@ -139,46 +139,30 @@ class ModelTest {
         assertEquals("1.5 km", formatDistance(1500.0))
     }
 
-    @Test
-    fun fuzzyRanksByMatchQuality() {
-        assertEquals(0, fuzzyScore("rødv", "Rødvingetrost"))    // prefix
-        assertEquals(1, fuzzyScore("rvt", "Rødvingetrost"))     // first letter + subsequence
-        assertEquals(2, fuzzyScore("trost", "Rødvingetrost"))   // mid-word substring
-        assertEquals(null, fuzzyScore("xyz", "Rødvingetrost"))  // no match
-    }
+    // ---- species search ranking. TieredScorer is the live ranker (MainViewModel feeds it a
+    //      frequency provider that blends commonness with personal use). These guard the
+    //      user-visible promises: a common bird beats rare prefix matches (#64), and your own
+    //      picks tie-break. They run through the shipping scorer, not a retired helper. ----
 
-    @Test
-    fun fuzzyWeightsFirstLetterMatchAboveMidWord() {
-        // "pf": Pilfink starts with p (rank 1), Lappfiskand only has p/f mid-word.
-        val pilfink = fuzzyScore("pf", "Pilfink")!!
-        val lappfiskand = fuzzyScore("pf", "Lappfiskand")!!
-        assertTrue("Pilfink ($pilfink) should outrank Lappfiskand ($lappfiskand)",
-            pilfink < lappfiskand)
-    }
-
-    @Test
-    fun fuzzyFoldsNorwegianLettersSoAsciiMatches() {
-        assertEquals(0, fuzzyScore("rodvinge", "Rødvingetrost"))
-        assertEquals(1, fuzzyScore("blmeis", "Blåmeis"))   // first letter b + subsequence
-    }
-
-    @Test
-    fun fuzzyIgnoresSpacesAndCase() {
-        assertEquals(1, fuzzyScore("R V T", "Rødvingetrost"))
-    }
-
-    // ---- species search ranking (#64: common birds must beat rare prefix matches) ----
-
-    /** A few species in Norway-wide frequency order (common first), as the bundled CSV is. */
+    /** A few species in Norway-wide frequency order (common first), as the bundled CSV is;
+     *  RowOrderFrequency turns that order into the commonness signal the scorer ranks by. */
     private fun freqOrdered(vararg norsk: String) = norsk.map { Species(it, it.lowercase()) }
 
-    private fun rank(query: String, list: List<Species>) =
-        searchSpecies(query, list, list.map { fold(it.norsk) }, useCount = { 0 }).map { it.norsk }
+    /** Rank through the shipping scorer. [useCount] folds into the frequency weight exactly as
+     *  MainViewModel does - a regular nudges up, capped - so the test mirrors real ranking. */
+    private fun rank(query: String, list: List<Species>, useCount: (String) -> Int = { 0 }): List<String> {
+        val base = RowOrderFrequency(list)
+        val freq = FrequencyProvider { s ->
+            val picks = useCount(s.norsk)
+            minOf(1.0, base.weight(s) + if (picks == 0) 0.0 else minOf(0.5, 0.15 * picks))
+        }
+        return TieredScorer(freq).search(query, prepare(list)).map { it.species.norsk }
+    }
 
     @Test
     fun searchRanksCommonPrefixMatchAboveRareOnes() {
         // "gul" prefix-matches the common Gulspurv and a swarm of rare vagrants alike; the
-        // common one (earlier in frequency order) must come first, not the rarities.
+        // common ones (earlier in frequency order) must come first, not the rarities.
         val list = freqOrdered(
             "Gulspurv", "Gulerle", "Gulsanger",          // common, early in the list
             "Gulkinnand", "Gulbeinsnipe", "Gulstrupespurv", "Gullfasan",  // rare vagrants
@@ -192,18 +176,20 @@ class ModelTest {
         val list = freqOrdered(
             "Sandlo", "Sandsvale", "Sandløper",          // common waders/swallow
             "Sandterne", "Sandsnipe",                    // rarer
-            "Sørblesand", "Laksand",                     // 'sand' only mid-word
+            "Sørblesand", "Laksand",                     // 'sand' only mid-word, so a weaker tier
         )
         assertEquals(listOf("Sandlo", "Sandsvale"), rank("sand", list).take(2))
     }
 
     @Test
     fun searchTieBreaksOnPersonalUseCount() {
-        // Among equal-quality matches, a species the user picks often outranks frequency order.
-        val list = freqOrdered("Gulspurv", "Gulsanger")
-        val ranked = searchSpecies("gul", list, list.map { fold(it.norsk) },
-            useCount = { if (it == "Gulsanger") 5 else 0 })
-        assertEquals("Gulsanger", ranked.first().norsk)
+        // Frequent personal picks lift a species past a commoner one of equal match quality. Both
+        // Grå-birds prefix-match "gra" and share a length (so completeness can't decide it); without
+        // picks the commoner Gråspurv leads, but picking Gråtrost often flips it. Stokkand tops
+        // frequency order but doesn't match, so it stays out.
+        val list = freqOrdered("Stokkand", "Gråspurv", "Gråtrost")
+        assertEquals(listOf("Gråspurv", "Gråtrost"), rank("gra", list))
+        assertEquals("Gråtrost", rank("gra", list) { if (it == "Gråtrost") 5 else 0 }.first())
     }
 
     // ---- locality tap hit-testing (#63: a tap inside a polygon must pick that polygon) ----

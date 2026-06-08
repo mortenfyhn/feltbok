@@ -20,7 +20,7 @@ registry coordinates (from GBIF/Artsdatabanken, the canonical site point):
 Paste each into its site's Importer observasjoner (do NOT publish) and read the
 per-row validation. Each row's private comment says what it tests.
 
-    python scripts/make_locality_test.py
+    python scripts/make_locality_sheets.py
 """
 
 from openpyxl import load_workbook

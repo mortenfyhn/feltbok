@@ -214,29 +214,6 @@ fun fuzzyRank(q: String, t: String): Int? {
     }
 }
 
-/** Convenience that folds both sides; used in tests. */
-fun fuzzyScore(query: String, target: String): Int? = fuzzyRank(foldQuery(query), fold(target))
-
-/**
- * Rank the species list for a typed [query]: best fuzzy match first (see [fuzzyRank]), ties
- * broken by the user's own [useCount] (their regulars rise), then the bundled Norway-wide
- * frequency order ([species] is supplied in that order, and the sort is stable). [foldedNorsk]
- * is the pre-folded names parallel to [species]. Pure - the Composable just renders the result -
- * so the ranking that decides "common birds first" is unit-testable.
- */
-fun searchSpecies(
-    query: String,
-    species: List<Species>,
-    foldedNorsk: List<String>,
-    useCount: (String) -> Int,
-): List<Species> {
-    val fq = foldQuery(query)
-    return species.indices
-        .mapNotNull { i -> fuzzyRank(fq, foldedNorsk[i])?.let { i to it } }
-        .sortedWith(compareBy({ it.second }, { -useCount(species[it.first].norsk) }))
-        .map { species[it.first] }
-}
-
 // ---- date/time formatting ----
 
 private val NB = Locale("nb", "NO")

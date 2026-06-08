@@ -39,7 +39,7 @@ kommune/fylke hard-fails, and **any coordinate mints a private duplicate**. So t
 app emits the bare registered name and no coordinates. Coordinates stay in the
 table only for GPS-nearest picking.
 
-## `make_locality_test.py` — import-matching probes
+## `make_locality_sheets.py` — import-matching probes
 
 Builds small no-/with-coordinate sheets (`lokalitetstest-gammel.xlsx` for the old
 v2.20 site, `lokalitetstest-ny.xlsx` for the new v3.0 site) to confirm how the
@@ -48,7 +48,7 @@ import resolves locality names. Paste into *Rapportere → Importer observasjone
 established; keep it for re-testing if the import behaviour ever changes.
 
 ```sh
-python scripts/make_locality_test.py
+python scripts/make_locality_sheets.py
 ```
 
 The Artsobservasjoner import templates live in `docs/` (`artsobs-template-v2.20.xlsx`,
