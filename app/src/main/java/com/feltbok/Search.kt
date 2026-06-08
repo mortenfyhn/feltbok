@@ -110,6 +110,9 @@ class ContextualFrequency(
         val season = norm(monthly[species.latin]?.getOrElse(mi) { 0 } ?: 0, monthMaxLog[mi])
         val cell = if (lat != null && lon != null) cellKey(lat, lon) else null
         val region = cell?.let { k -> regionMaxLog[k]?.let { norm(regionCounts[k]?.get(species.latin) ?: 0, it) } }
+        // DELIBERATE: with no location, region's share is *redistributed* across the remaining terms
+        // (renormalize), not dropped. So this is NOT equivalent to `region = 0` / `region ?: 0.0` -
+        // that would deflate every weight to a 0.65 ceiling. Don't "simplify" the two branches into one.
         return if (region == null) {
             (seasonW * season + (regionW + baseW) * base) / (seasonW + regionW + baseW)
         } else {
@@ -259,7 +262,11 @@ class TieredScorer(
     }
 
     /** Whether the query matches on the real (diacritic-preserving) letters, so a match that doesn't
-     *  need folding can be rewarded over one that does. */
+     *  need folding can be rewarded over one that does.
+     *  DELIBERATE: this fires for diacritic-free names too (it's "matched without folding", NOT "name
+     *  has æ/ø/å"). An earlier version required the name to carry a diacritic; that gave Rørsanger a
+     *  spurious boost over the commoner Gransanger for "sanger" (the ø isn't in the matched part). The
+     *  missing `foldedTight != lowerTight` guard is the fix, not a bug - don't add it back. */
     private fun matchesExact(lq: String, lower: String) = lq.isNotEmpty() && lower.contains(lq)
 }
 

@@ -76,6 +76,9 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
         val month = java.time.LocalDate.now().monthValue
         val f = fix
         val freq = FrequencyProvider { s ->
+            // DELIBERATE: your regulars are a *soft* additive boost (pre-scorer this was a hard
+            // tiebreak). It lifts your picks but context/season/place can still outrank them - that's
+            // intended, not a lost invariant. Clamps at 1.0 to stay within the provider's [0,1] range.
             val picks = useCount(s.norsk)
             minOf(1.0, ctxFreq.weight(s, month, f?.lat, f?.lon) + if (picks == 0) 0.0 else minOf(0.5, 0.15 * picks))
         }
