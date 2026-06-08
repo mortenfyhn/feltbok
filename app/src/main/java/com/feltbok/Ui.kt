@@ -320,7 +320,8 @@ private fun NoteRow(n: Note, status: String, selected: Boolean, onClick: () -> U
             Row(verticalAlignment = Alignment.CenterVertically) {   // [0] count + species + red status
                 Text(
                     buildAnnotatedString {
-                        withStyle(SpanStyle(color = cs.onPrimaryContainer, fontWeight = FontWeight.Bold)) { append("${n.count} ") }
+                        val count = if (n.count == UNKNOWN_COUNT) "?" else n.count.toString()
+                        withStyle(SpanStyle(color = cs.onPrimaryContainer, fontWeight = FontWeight.Bold)) { append("$count ") }
                         append(if (n.uncertain) "${n.species}?" else n.species)
                     },
                     maxLines = 1, overflow = TextOverflow.Ellipsis,
@@ -577,11 +578,13 @@ private fun AntallRow(vm: MainViewModel) {
     val cs = MaterialTheme.colorScheme
     // Local field value; reset when the draft changes. Tapping selects all so a
     // new number replaces the old one instead of appending.
-    var tfv by remember(vm.dTime, vm.isEditing) { mutableStateOf(TextFieldValue(vm.dCount.toString())) }
+    fun countText(c: Int) = if (c == UNKNOWN_COUNT) "" else c.toString()  // unknown shows a blank field
+    var tfv by remember(vm.dTime, vm.isEditing) { mutableStateOf(TextFieldValue(countText(vm.dCount))) }
     var justFocused by remember { mutableStateOf(false) }
     fun set(n: Int) {
-        val c = n.coerceAtLeast(1); vm.setCount(c)
-        tfv = TextFieldValue(c.toString(), selection = TextRange(c.toString().length))
+        vm.setCount(n)
+        val s = countText(vm.dCount)
+        tfv = TextFieldValue(s, selection = TextRange(s.length))
     }
     Row(
         Modifier.fillMaxWidth().background(cs.surface).padding(horizontal = 16.dp, vertical = 7.dp),
@@ -592,7 +595,8 @@ private fun AntallRow(vm: MainViewModel) {
             Modifier.border(1.dp, cs.outline, RoundedCornerShape(10.dp)),
             verticalAlignment = Alignment.CenterVertically,
         ) {
-            Box(Modifier.size(44.dp, 40.dp).clickable { set(vm.dCount - 1) }, Alignment.Center) {
+            // Stepping past 1 down lands on "unknown"; stepping back up returns to 1.
+            Box(Modifier.size(44.dp, 40.dp).clickable { set(if (vm.dCount <= 1) UNKNOWN_COUNT else vm.dCount - 1) }, Alignment.Center) {
                 Text("−", fontSize = 22.sp, color = cs.onPrimaryContainer)
             }
             BasicTextField(
@@ -621,7 +625,7 @@ private fun AntallRow(vm: MainViewModel) {
                     textAlign = TextAlign.Center, fontWeight = FontWeight.Bold,
                     fontSize = 18.sp, color = cs.onSurface),
             )
-            Box(Modifier.size(44.dp, 40.dp).clickable { set(vm.dCount + 1) }, Alignment.Center) {
+            Box(Modifier.size(44.dp, 40.dp).clickable { set(if (vm.dCount == UNKNOWN_COUNT) 1 else vm.dCount + 1) }, Alignment.Center) {
                 Text("+", fontSize = 22.sp, color = cs.onPrimaryContainer)
             }
         }

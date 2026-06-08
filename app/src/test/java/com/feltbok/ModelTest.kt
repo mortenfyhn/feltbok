@@ -66,6 +66,14 @@ class ModelTest {
     }
 
     @Test
+    fun unknownCountExportsAsBlankAntall() {
+        // -1 is the "unknown number of individuals" sentinel; Artsobservasjoner reads a
+        // blank Antall as unknown, so it must not export as "-1".
+        val c = exportTsv(listOf(noteAt(noonMs).copy(count = UNKNOWN_COUNT))).split("\n")[1].split("\t")
+        assertEquals("", c[1])
+    }
+
+    @Test
     fun exportUsesEndTimeForTilWhenSet() {
         // A range spanning into the next day: Fra and Til must differ on both date and time.
         val end = noonMs + 16 * 3_600_000  // +16h -> next day 01:30

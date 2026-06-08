@@ -111,13 +111,15 @@ data class Locality(
 
 data class Species(val norsk: String, val latin: String, val status: String = "", val count: Int = 0)
 
+const val UNKNOWN_COUNT = -1 // Note.count sentinel: unknown number of individuals
+
 data class Note(
     val id: Long, // creation time in ms - the stable key (never changes)
     val time: Long = id, // observation start (date+time) - editable; defaults to id
     val endTime: Long? = null, // observation end; null = a single time point (Til = Fra on export)
     val species: String,
     val latin: String,
-    val count: Int,
+    val count: Int, // UNKNOWN_COUNT (-1) = unknown number of individuals (-> blank Antall)
     val age: String,
     val activity: String,
     val sex: String,
@@ -651,7 +653,7 @@ fun exportTsv(notes: List<Note>): String {
         val ost = if (n.newLoc) String.format(Locale.US, "%.6f", n.lon) else ""
         val noy = if (n.newLoc) "${n.locRadius} m" else ""
         listOf(
-            n.species, n.count.toString(), n.age, n.sex, n.activity, loc,
+            n.species, if (n.count == UNKNOWN_COUNT) "" else n.count.toString(), n.age, n.sex, n.activity, loc,
             nord, ost, noy, d, t, dEnd, tEnd, n.publicComment, n.privateComment,
             if (n.uncertain) "Ja" else "",
         ).joinToString("\t") { cell ->

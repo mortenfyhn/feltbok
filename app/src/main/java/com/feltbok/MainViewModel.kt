@@ -322,7 +322,7 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
             localities.add(loc)
     }
 
-    fun setCount(n: Int) { dCount = n.coerceAtLeast(1) }
+    fun setCount(n: Int) { dCount = if (n < 1) UNKNOWN_COUNT else n }
 
     fun save() {
         val loc = dLoc ?: nearest()   // fall back to GPS-nearest if not picked yet
@@ -335,7 +335,7 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
             },
             time = dTime.takeIf { it > 0 } ?: System.currentTimeMillis(),
             endTime = dEndTime,
-            species = dSpecies, latin = dLatin, count = dCount.coerceAtLeast(1),
+            species = dSpecies, latin = dLatin, count = dCount,
             age = dAge, activity = dAct, sex = dSex,
             publicComment = dPub, privateComment = dPriv,
             locName = loc?.lokalitet ?: "", locFull = loc?.fullname ?: "",
