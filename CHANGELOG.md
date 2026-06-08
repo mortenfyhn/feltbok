@@ -7,6 +7,7 @@
 - Observasjoner grupperes per dag.
 - Automatisk sikkerhetskopi til Nedlastinger.
 - Bekreftelse før du sletter en observasjon.
+- Retta en krasj som kunne gjøre observasjonene utilgjengelige.
 - Ymse småforbedringer og feilrettinger.
 
 ## v0.8 – 6. juni 2026
