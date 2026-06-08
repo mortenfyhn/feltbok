@@ -107,6 +107,16 @@ allmenn flag from the Artsobservasjoner API (build-time download, requested sepa
 `Nord`/`Øst`/`Nøyaktighet` are left blank unless "Ta med koordinater" is on. Dates are
 `dd.MM.yyyy`, times `HH:mm`; from/til are the same instant (one moment of observation).
 
+## Manual integration test sample
+
+`artsobs-import-sample.tsv` is a ready-to-paste batch the app would produce — four rows
+covering the cases that matter: a name-only registry locality, blank coordinates, an
+`Usikker artsbestemming` = `Ja` flag, a brand-new locality with coordinates + radius, and
+a from–til time range. Paste it into "Importer observasjoner" to check the live site still
+accepts the format end-to-end (validation **and** that rows reach "Kontroller funn", not
+just the green success message). It is generated from `exportTsv`, so it stays byte-identical
+to real output. Regenerate it the same way if the export format changes.
+
 The `Usikker artsbestemming` header is a **misspelling carried by the official template**
 (the Norwegian word is *artsbestemmelse*; the Fugl sheet, col 40, has *-bestemming*).
 Paste-import matches by header name, so the typo must be reproduced verbatim — a flagged
