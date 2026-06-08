@@ -43,6 +43,8 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.StrokeCap
+import androidx.compose.ui.graphics.StrokeJoin
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalContext
@@ -244,14 +246,16 @@ private fun PrivateToggle(show: Boolean, onToggle: () -> Unit, modifier: Modifie
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Box(Modifier.scale(1.2f), contentAlignment = Alignment.Center) {
-            // Fill the box white when unchecked, so the map doesn't show through it.
-            if (!show) Box(Modifier.size(15.dp).background(Color.White, RoundedCornerShape(2.dp)))
+            // Fill white right up under the checkbox outline so no map shows through the ring.
+            if (!show) Box(Modifier.size(18.dp).background(Color.White, RoundedCornerShape(2.dp)))
             Checkbox(checked = show, onCheckedChange = null)
         }
         val label = TextStyle(fontSize = 16.sp, fontWeight = FontWeight.Bold)
         Box(Modifier.padding(start = 3.dp)) {       // clear the visually-scaled checkbox
+            // Halo for contrast; round join/cap so sharp corners (e.g. bottom of the "V")
+            // don't grow jagged miter spikes.
             Text(Strings.Picker.privateToggle, color = Color.White,
-                style = label.copy(drawStyle = Stroke(width = 12f)))   // halo for contrast
+                style = label.copy(drawStyle = Stroke(width = 6f, join = StrokeJoin.Round, cap = StrokeCap.Round)))
             Text(Strings.Picker.privateToggle, color = Color.Black, style = label)
         }
     }
