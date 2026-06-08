@@ -10,19 +10,24 @@ The bundled APK ships **public localities only** - the maintainer's own customs
 
 ## Cut a release
 
+First draft the version's entry in `CHANGELOG.md` (terse, user-facing highlights only). Then:
+
 ```sh
 just release 0.8          # or: ./release.sh 0.8
 ```
 
-The script bumps `versionCode`+`versionName` in `app/build.gradle.kts`, commits, tags `v0.8`,
-builds the signed APK, pushes, and runs `gh release create`. `versionCode` auto-increments so
-each release is an upgrade Android will install over the last; the in-app version string comes
-from `git describe`, so it shows `0.8` at the tag. Needs a clean `master`, the keystore (below),
-and an authenticated `gh`. Building locally is much faster than the old cold Semaphore tag build.
+The script bumps `versionCode`+`versionName` in `app/build.gradle.kts`, then **pauses** so you
+can finalize the `## v0.8` changelog section — that section becomes the release notes, so nothing
+is tagged or pushed until you press Enter. After that it commits (version bump + changelog), tags
+`v0.8`, builds the signed APK, pushes, and runs `gh release create` with notes assembled from the
+install steps + the changelog entry + the auto-generated "What's Changed" list. No manual
+GitHub edit afterwards.
 
-Afterwards, edit the release on GitHub to paste the version's entry from `CHANGELOG.md` as a
-"Nytt i …" section above the auto-generated "What's Changed" list. (The changelog starts at
-v1.0, so pre-v1.0 releases have no such section.)
+A drafted (uncommitted) `CHANGELOG.md` is the one thing allowed to be dirty when you start;
+everything else must be committed. `versionCode` auto-increments so each release is an upgrade
+Android will install over the last; the in-app version string comes from `git describe`, so it
+shows `0.8` at the tag. Needs a clean `master`, the keystore (below), and an authenticated `gh`.
+Building locally is much faster than the old cold Semaphore tag build.
 
 ## Signing
 
