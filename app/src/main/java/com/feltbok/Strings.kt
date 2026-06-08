@@ -98,11 +98,13 @@ object Strings {
         const val step3 = "Lim inn og importer"
         const val pasteBefore = "Lim inn den kopierte teksten på Artsobservasjoner og trykk "
         const val pasteEmphasis = "Importer"
-        const val step4 = "Ferdig"
-        const val doneBody = "Nå kan du\n· Kontrollere og publisere i Artsobservasjoner\n· Slette observasjonene fra appen"
+        const val step4 = "Kontroller funn"
+        const val step4Body = "Sjekk at observasjonene vises i Artsobservasjoner"
+        const val step5 = "Slett fra appen"
+        const val step5Body = "Når alt er på plass, kan du slette observasjonene fra appen"
         const val clear = "Slett alle observasjoner"
         const val clearTitle = "Slett alle observasjoner?"
-        fun clearBody(n: Int) = "Sletter alle $n observasjonene. Ikke gjør dette før du har importert alt til Artsobservasjoner!"
+        const val clearBody = "Sørg for alt er på plass i Artsobservasjoner først!"
         const val clearConfirm = "Slett alle"
     }
 

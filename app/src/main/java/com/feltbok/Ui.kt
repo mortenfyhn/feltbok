@@ -576,6 +576,7 @@ fun DetailScreen(vm: MainViewModel) {
 @Composable
 private fun AntallRow(vm: MainViewModel) {
     val cs = MaterialTheme.colorScheme
+
     // Local field value; reset when the draft changes. Tapping selects all so a
     // new number replaces the old one instead of appending.
     fun countText(c: Int) = if (c == UNKNOWN_COUNT) "" else c.toString()  // unknown shows a blank field
@@ -830,9 +831,12 @@ fun ExportScreen(vm: MainViewModel) {
                 }, fontSize = 13.sp, color = cs.onSurfaceVariant, modifier = Modifier.padding(top = 4.dp))
             }
             Step(4, Strings.Export.step4) {
-                Text(buildAnnotatedString {
-                    append(Strings.Export.doneBody)
-                }, fontSize = 13.sp, color = cs.onSurfaceVariant, modifier = Modifier.padding(top = 4.dp))
+                Text(Strings.Export.step4Body,
+                    fontSize = 13.sp, color = cs.onSurfaceVariant, modifier = Modifier.padding(top = 4.dp))
+            }
+            Step(5, Strings.Export.step5) {
+                Text(Strings.Export.step5Body,
+                    fontSize = 13.sp, color = cs.onSurfaceVariant, modifier = Modifier.padding(top = 4.dp))
                 Text(Strings.Export.clear, color = cs.error, fontWeight = FontWeight.Medium,
                     fontSize = 14.sp,
                     modifier = Modifier.clickable { confirmClear = true }.padding(top = 10.dp))
@@ -845,7 +849,7 @@ fun ExportScreen(vm: MainViewModel) {
             onDismissRequest = { confirmClear = false },
             title = { Text(Strings.Export.clearTitle) },
             text = {
-                Text(Strings.Export.clearBody(vm.notes.size))
+                Text(Strings.Export.clearBody)
             },
             confirmButton = {
                 Button(
