@@ -63,32 +63,23 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
     private val uses = mutableStateMapOf<String, Int>().apply { putAll(loadUses(app)) }
     fun useCount(norsk: String): Int = uses[norsk] ?: 0
 
-    /** Frequency signal for the search ranker: context-aware report frequency - what's reported in the
-     *  current month and near the current GPS [fix] - lifted toward 1.0 for the user's own regulars so
-     *  personal favourites rank like common birds. All behind the pluggable [FrequencyProvider];
-     *  off-season/elsewhere/rare birds drop in rank but stay findable (tiers/folding still match).
-     *  Month and location are read live per query, so ranking tracks where and when you are. */
+    /** Context-aware report frequency for ranking: what's reported in the current month and near the
+     *  current GPS fix, behind the pluggable [FrequencyProvider]. Off-season/elsewhere/rare birds drop
+     *  in rank but stay findable (tiers/folding still match). */
     private val ctxFreq = ContextualFrequency(species, loadSpeciesMonths(app), loadSpeciesRegions(app))
 
-    // Query context (month + location), snapshotted once per search so the freq lambda - run for each
-    // of ~600 species - doesn't re-read the clock or the GPS state 600 times per keystroke.
-    private var ctxMonth = 1
-    private var ctxLat: Double? = null
-    private var ctxLon: Double? = null
-    private val freq = FrequencyProvider { s ->
-        val w = ctxFreq.weight(s, ctxMonth, ctxLat, ctxLon)
-        val picks = useCount(s.norsk)
-        minOf(1.0, w + if (picks == 0) 0.0 else minOf(0.5, 0.15 * picks))
-    }
-    private val scorer: BirdSearchScorer = TieredScorer(freq)
-
     /** Ranked matches for a typed query: the tiered scorer (prefix/suffix/initialism/typo + diacritic
-     *  folding + frequency), with your regulars boosted via [freq]. The ranking lives in Search.kt so
-     *  it's unit-benchmarked; scoring runs off the main thread (it's a flat scan over ~600 species). */
+     *  folding + frequency), with your regulars boosted. Ranking lives in Search.kt so it's
+     *  unit-benchmarked. Month + location are snapshotted once per query into the provider - not
+     *  re-read for each of ~600 species, and not shared across overlapping searches - off the main thread. */
     suspend fun searchResults(query: String): List<Species> = withContext(Dispatchers.Default) {
-        ctxMonth = java.time.LocalDate.now().monthValue
-        fix.also { ctxLat = it?.lat; ctxLon = it?.lon }
-        scorer.search(query, prepared).map { it.species }
+        val month = java.time.LocalDate.now().monthValue
+        val f = fix
+        val freq = FrequencyProvider { s ->
+            val picks = useCount(s.norsk)
+            minOf(1.0, ctxFreq.weight(s, month, f?.lat, f?.lon) + if (picks == 0) 0.0 else minOf(0.5, 0.15 * picks))
+        }
+        TieredScorer(freq).search(query, prepared).map { it.species }
     }
 
     /** Per-activity use counts, so each user's most-used activities rise to the top. */

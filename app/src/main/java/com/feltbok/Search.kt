@@ -106,7 +106,8 @@ class ContextualFrequency(
     /** [month] is 1..12; [lat]/[lon] are the live fix, or null when location is unknown. */
     fun weight(species: Species, month: Int, lat: Double?, lon: Double?): Double {
         val base = allTime.weight(species)
-        val season = norm(monthly[species.latin]?.getOrElse(month - 1) { 0 } ?: 0, monthMaxLog[month - 1])
+        val mi = (month - 1).coerceIn(0, 11) // month is 1..12 from the caller; guard the array index anyway
+        val season = norm(monthly[species.latin]?.getOrElse(mi) { 0 } ?: 0, monthMaxLog[mi])
         val cell = if (lat != null && lon != null) cellKey(lat, lon) else null
         val region = cell?.let { k -> regionMaxLog[k]?.let { norm(regionCounts[k]?.get(species.latin) ?: 0, it) } }
         return if (region == null) {
