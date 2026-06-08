@@ -40,6 +40,9 @@ Recipes live in `just --list` — the notes below are only the why's and gotchas
   history is trailer-free).
 - **Closing issues.** When a commit resolves an issue, put a closing keyword (`Fix #50`, `Closes #50`)
   in the commit message so GitHub auto-closes the issue when it lands on `master`.
+- **Merging.** PRs are the exception, not the rule. The usual flow is: do the work on a branch, test
+  it quickly by hand, then merge to `master` and push `master` directly — no PR. Only open a PR when
+  explicitly asked.
 - **Disclose AI authorship.** When an agent files an issue or opens a PR, state upfront that the
   body is AI-generated so a human reader doesn't mistake it for human-written text.
 - **Changelog.** `CHANGELOG.md` is the user-facing changelog (Bokmål, casual `du`-tone). It starts
