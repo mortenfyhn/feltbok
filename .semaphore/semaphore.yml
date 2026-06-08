@@ -32,6 +32,13 @@ blocks:
             - cache restore gradle-$(checksum app/build.gradle.kts)
             - ./gradlew ktlintCheck testDebugUnitTest assembleDebug --console=plain --no-daemon
             - cache store gradle-$(checksum app/build.gradle.kts) ~/.gradle
+      # Publish the debug APK as a workflow artifact so the Claude issue→PR loop (and any
+      # branch build) gives a downloadable APK to test, without pulling the branch locally.
+      # on_pass only: a failed build won't have produced one.
+      epilogue:
+        on_pass:
+          commands:
+            - artifact push workflow app/build/outputs/apk/debug/app-debug.apk --destination feltbok-debug.apk
 
   # Lint + test scripts/ Python on a plain VM (no Android container) - it needs no SDK/JDK.
   # Parallel with Test & build via dependencies: []. Grab ruff's prebuilt binary (like the
