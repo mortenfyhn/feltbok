@@ -104,4 +104,7 @@ dependencies {
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.9.0")
     implementation("org.osmdroid:osmdroid-android:6.1.20")
     testImplementation("junit:junit:4.13.2")
+    // Real org.json on the unit-test classpath: android.jar's stub throws, so the Note
+    // JSON round-trip test (noteToJson/noteFromJson) needs the actual implementation.
+    testImplementation("org.json:json:20240303")
 }

@@ -496,51 +496,53 @@ internal fun withUniqueIds(notes: List<Note>): List<Note> {
     }
 }
 
+/** The per-field JSON mapping for a [Note], kept as pure functions (no Context) so a round-trip
+ *  test can catch a field that's saved but not loaded, or vice versa - a silent data-loss bug on
+ *  the next launch. endTime is the one optional field: omitted when null, restored as null. */
+fun noteToJson(n: Note): JSONObject = JSONObject().apply {
+    put("id", n.id); put("time", n.time); put("species", n.species); put("latin", n.latin)
+    n.endTime?.let { put("endTime", it) }
+    put("count", n.count); put("age", n.age); put("activity", n.activity)
+    put("sex", n.sex); put("publicComment", n.publicComment)
+    put("privateComment", n.privateComment)
+    put("locName", n.locName); put("locFull", n.locFull)
+    put("lat", n.lat); put("lon", n.lon)
+    put("newLoc", n.newLoc); put("locRadius", n.locRadius); put("uncertain", n.uncertain)
+}
+
+fun noteFromJson(o: JSONObject): Note = Note(
+    id = o.getLong("id"),
+    time = o.optLong("time", o.getLong("id")),
+    endTime = if (o.has("endTime")) o.getLong("endTime") else null,
+    species = o.getString("species"),
+    latin = o.optString("latin"),
+    count = o.getInt("count"),
+    age = o.optString("age"),
+    activity = o.optString("activity"),
+    sex = o.optString("sex"),
+    publicComment = o.optString("publicComment"),
+    privateComment = o.optString("privateComment"),
+    locName = o.optString("locName"),
+    locFull = o.optString("locFull"),
+    lat = o.getDouble("lat"),
+    lon = o.getDouble("lon"),
+    newLoc = o.optBoolean("newLoc"),
+    locRadius = o.optInt("locRadius"),
+    uncertain = o.optBoolean("uncertain"),
+)
+
 fun loadNotes(ctx: Context): List<Note> {
     val f = notesFile(ctx)
     if (!f.exists()) return emptyList()
     return runCatching {
         val arr = JSONArray(f.readText())
-        withUniqueIds((0 until arr.length()).map { i ->
-            val o = arr.getJSONObject(i)
-            Note(
-                id = o.getLong("id"),
-                time = o.optLong("time", o.getLong("id")),
-                endTime = if (o.has("endTime")) o.getLong("endTime") else null,
-                species = o.getString("species"),
-                latin = o.optString("latin"),
-                count = o.getInt("count"),
-                age = o.optString("age"),
-                activity = o.optString("activity"),
-                sex = o.optString("sex"),
-                publicComment = o.optString("publicComment"),
-                privateComment = o.optString("privateComment"),
-                locName = o.optString("locName"),
-                locFull = o.optString("locFull"),
-                lat = o.getDouble("lat"),
-                lon = o.getDouble("lon"),
-                newLoc = o.optBoolean("newLoc"),
-                locRadius = o.optInt("locRadius"),
-                uncertain = o.optBoolean("uncertain"),
-            )
-        })
+        withUniqueIds((0 until arr.length()).map { noteFromJson(arr.getJSONObject(it)) })
     }.getOrDefault(emptyList())
 }
 
 fun saveNotes(ctx: Context, notes: List<Note>) {
     val arr = JSONArray()
-    notes.forEach { n ->
-        arr.put(JSONObject().apply {
-            put("id", n.id); put("time", n.time); put("species", n.species); put("latin", n.latin)
-            n.endTime?.let { put("endTime", it) }
-            put("count", n.count); put("age", n.age); put("activity", n.activity)
-            put("sex", n.sex); put("publicComment", n.publicComment)
-            put("privateComment", n.privateComment)
-            put("locName", n.locName); put("locFull", n.locFull)
-            put("lat", n.lat); put("lon", n.lon)
-            put("newLoc", n.newLoc); put("locRadius", n.locRadius); put("uncertain", n.uncertain)
-        })
-    }
+    notes.forEach { arr.put(noteToJson(it)) }
     notesFile(ctx).writeText(arr.toString())
 }
 

@@ -127,6 +127,17 @@ class ModelTest {
     }
 
     @Test
+    fun noteJsonRoundTripPreservesEveryField() {
+        // Guard against a field saved but not restored (or vice versa): silent data loss on the
+        // next launch. Every field is a distinct non-default value, so dropping any one fails
+        // equality (id and time differ, so a swap is caught too).
+        val n = noteAt(1717).copy(time = 1800, endTime = 1900, newLoc = true, locRadius = 50, uncertain = true)
+        assertEquals(n, noteFromJson(noteToJson(n)))
+        // endTime is the only optional field (omitted from JSON when null); confirm null survives.
+        assertEquals(null, noteFromJson(noteToJson(n.copy(endTime = null))).endTime)
+    }
+
+    @Test
     fun haversineIsZeroForSamePointAndAboutOneEleventhKmPerDegree() {
         assertEquals(0.0, haversine(63.7, 8.8, 63.7, 8.8), 1e-6)
         val d = haversine(63.0, 8.0, 64.0, 8.0)
