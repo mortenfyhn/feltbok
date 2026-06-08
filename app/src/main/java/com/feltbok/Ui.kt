@@ -120,12 +120,12 @@ fun ListScreen(vm: MainViewModel) {
                     }
                 } else {
                     Column(Modifier.fillMaxSize()) {
-                        // While marking, the header turns into a contextual bar: how many are marked,
-                        // a delete action, and a ✕ to leave selection mode.
+                        // While marking, a contextual bar tops the list: how many are marked, a
+                        // delete action, and a ✕ to leave selection mode.
                         if (selecting) {
-                            // Actions are clickable Text (not TextButton) carrying the SAME 13sp +
-                            // 9.dp vertical padding as the idle header, so swapping modes doesn't
-                            // change the strip's height (TextButton's 48.dp min height would jump it).
+                            // Actions are clickable Text (not TextButton) carrying the same 13sp +
+                            // 9.dp vertical padding as the per-day headers, so the bar reads as one
+                            // of them (TextButton's 48.dp min height would make it tower over them).
                             Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
                                 Text(Strings.Notes.selected(vm.selected.size),
                                     color = cs.onSurface, fontSize = 13.sp,
@@ -139,22 +139,27 @@ fun ListScreen(vm: MainViewModel) {
                                     modifier = Modifier.clickable { vm.clearSelection() }
                                         .padding(horizontal = 16.dp, vertical = 9.dp))
                             }
-                        } else {
-                            Text(
-                                Strings.Notes.header(vm.notes.size),
-                                color = cs.onSurfaceVariant, fontSize = 13.sp,
-                                modifier = Modifier.padding(horizontal = 16.dp, vertical = 9.dp),
-                            )
                         }
                         // Bottom padding so the last row scrolls clear of the floating + button.
+                        // Notes are grouped into per-day sections, each under its own date header
+                        // (the contextual bar above replaces only the marking actions, not these).
                         LazyColumn(Modifier.weight(1f), contentPadding = PaddingValues(bottom = 84.dp)) {
-                            items(vm.notes, key = { it.id }) { n ->
-                                NoteRow(
-                                    n, vm.statusFor(n.latin), selected = n.id in vm.selected,
-                                    // In selection mode a tap toggles the mark; otherwise it edits.
-                                    onClick = { if (selecting) vm.toggleSelect(n.id) else vm.editNote(n) },
-                                    onLongClick = { vm.toggleSelect(n.id) },
-                                )
+                            groupNotesByDay(vm.notes).forEach { group ->
+                                item(key = "day:${group.label}") {
+                                    Text(
+                                        Strings.Notes.header(group.label, group.notes.size),
+                                        color = cs.onSurfaceVariant, fontSize = 13.sp,
+                                        modifier = Modifier.padding(horizontal = 16.dp, vertical = 9.dp),
+                                    )
+                                }
+                                items(group.notes, key = { it.id }) { n ->
+                                    NoteRow(
+                                        n, vm.statusFor(n.latin), selected = n.id in vm.selected,
+                                        // In selection mode a tap toggles the mark; otherwise it edits.
+                                        onClick = { if (selecting) vm.toggleSelect(n.id) else vm.editNote(n) },
+                                        onLongClick = { vm.toggleSelect(n.id) },
+                                    )
+                                }
                             }
                         }
                     }

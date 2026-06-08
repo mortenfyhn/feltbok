@@ -4,7 +4,9 @@ import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
+import java.time.LocalDate
 import java.time.LocalDateTime
+import java.time.ZoneId
 import java.time.ZoneOffset
 import java.util.TimeZone
 
@@ -248,5 +250,24 @@ class ModelTest {
         assertTrue(f.weight(winter, 12, null, null) > f.weight(summer, 12, null, null))
         // Place: the southern bird ranks higher when we're in its cell than with no fix.
         assertTrue(f.weight(southern, 6, 58.5, 8.5) > f.weight(southern, 6, null, null))
+    }
+
+    @Test
+    fun groupNotesByDaySplitsLabelsAndOrdersByTimeNotEntry() {
+        // Regression for #44: notes spanning days land in separate, correctly-labelled sections,
+        // ordered newest-day-first by observation time — a note dated in the past must NOT jump to
+        // the top just because it was entered last (input here is deliberately out of order).
+        val today = LocalDate.of(2026, 6, 8)
+        fun at(y: Int, mo: Int, d: Int, h: Int) =
+            noteAt(LocalDateTime.of(y, mo, d, h, 0).toInstant(ZoneOffset.UTC).toEpochMilli())
+        val groups = groupNotesByDay(
+            listOf(at(2025, 6, 8, 9), at(2026, 6, 1, 9), at(2026, 6, 8, 8), at(2026, 6, 7, 7), at(2026, 6, 8, 10)),
+            today = today, zone = ZoneId.of("UTC"),
+        )
+        // Older-than-yesterday days read as abbreviated dates; the year shows only off the current one.
+        assertEquals(listOf("I dag", "I går", "Man 1. jun", "Søn 8. jun 2025"), groups.map { it.label })
+        assertEquals(listOf(2, 1, 1, 1), groups.map { it.notes.size })
+        // Within a day, the latest observation comes first.
+        assertEquals(groups[0].notes.map { it.time }.sortedDescending(), groups[0].notes.map { it.time })
     }
 }

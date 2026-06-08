@@ -16,7 +16,11 @@ object Strings {
 
     object Notes {
         const val empty = "Ingen observasjoner enda.\nTrykk + for å legge til."
-        fun header(n: Int) = "I dag · $n ${if (n == 1) "observasjon" else "observasjoner"}"
+        const val today = "I dag"
+        const val yesterday = "I går"
+
+        // Per-day section header on the notes list; [label] is the day ("I dag", a date, …).
+        fun header(label: String, n: Int) = "$label · $n ${if (n == 1) "observasjon" else "observasjoner"}"
         const val feedback = "Gi tilbakemelding"
         const val export = "Eksporter"
         const val youAreHere = "du er her"

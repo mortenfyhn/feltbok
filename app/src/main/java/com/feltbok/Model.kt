@@ -5,6 +5,10 @@ import org.json.JSONArray
 import org.json.JSONObject
 import java.io.File
 import java.text.SimpleDateFormat
+import java.time.Instant
+import java.time.LocalDate
+import java.time.ZoneId
+import java.time.format.DateTimeFormatter
 import java.util.Date
 import java.util.Locale
 import kotlin.math.atan2
@@ -242,6 +246,40 @@ fun displayTimeRange(start: Long, end: Long?): String {
 
 fun exportDate(ms: Long): String = SimpleDateFormat("dd.MM.yyyy", NB).format(Date(ms))
 fun exportTime(ms: Long): String = SimpleDateFormat("HH:mm", NB).format(Date(ms))
+
+// ---- day grouping (the notes list's per-day section headers) ----
+
+/** A calendar day's notes for the list, with a header label relative to today. */
+data class DayGroup(val label: String, val notes: List<Note>)
+
+private val weekdayFmt = DateTimeFormatter.ofPattern("EEE", NB)
+private val monthFmt = DateTimeFormatter.ofPattern("MMM", NB)
+
+/** Label a day relative to [today]: "I dag", "I går", else an abbreviated date like "Søn 8. jun"
+ *  (with year appended when it isn't [today]'s). The locale abbreviations carry trailing periods
+ *  ("søn.", "jun.") we don't want, so trim them and capitalise the weekday by hand. */
+private fun dayLabel(day: LocalDate, today: LocalDate): String = when (day) {
+    today -> Strings.Notes.today
+    today.minusDays(1) -> Strings.Notes.yesterday
+    else -> buildString {
+        append(day.format(weekdayFmt).trimEnd('.').replaceFirstChar { it.uppercase() })
+        append(" ${day.dayOfMonth}. ")
+        append(day.format(monthFmt).trimEnd('.'))
+        if (day.year != today.year) append(" ${day.year}")
+    }
+}
+
+/** Group notes into one section per calendar day, newest day first and newest observation first
+ *  within each day — ordered by observation time, not entry order, so a note dated in the past
+ *  drops into its own day instead of jumping to the top. Pure ([today]/[zone] injected) for tests. */
+fun groupNotesByDay(
+    notes: List<Note>,
+    today: LocalDate = LocalDate.now(),
+    zone: ZoneId = ZoneId.systemDefault(),
+): List<DayGroup> =
+    notes.groupBy { Instant.ofEpochMilli(it.time).atZone(zone).toLocalDate() }
+        .toSortedMap(reverseOrder())
+        .map { (day, ns) -> DayGroup(dayLabel(day, today), ns.sortedByDescending { it.time }) }
 
 // ---- CSV loading (asset, or an external override pushed via adb) ----
 
