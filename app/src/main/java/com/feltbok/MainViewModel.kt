@@ -69,9 +69,14 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
      *  off-season/elsewhere/rare birds drop in rank but stay findable (tiers/folding still match).
      *  Month and location are read live per query, so ranking tracks where and when you are. */
     private val ctxFreq = ContextualFrequency(species, loadSpeciesMonths(app), loadSpeciesRegions(app))
+
+    // Query context (month + location), snapshotted once per search so the freq lambda - run for each
+    // of ~600 species - doesn't re-read the clock or the GPS state 600 times per keystroke.
+    private var ctxMonth = 1
+    private var ctxLat: Double? = null
+    private var ctxLon: Double? = null
     private val freq = FrequencyProvider { s ->
-        val f = fix
-        val w = ctxFreq.weight(s, java.time.LocalDate.now().monthValue, f?.lat, f?.lon)
+        val w = ctxFreq.weight(s, ctxMonth, ctxLat, ctxLon)
         val picks = useCount(s.norsk)
         minOf(1.0, w + if (picks == 0) 0.0 else minOf(0.5, 0.15 * picks))
     }
@@ -80,8 +85,11 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
     /** Ranked matches for a typed query: the tiered scorer (prefix/suffix/initialism/typo + diacritic
      *  folding + frequency), with your regulars boosted via [freq]. The ranking lives in Search.kt so
      *  it's unit-benchmarked; scoring runs off the main thread (it's a flat scan over ~600 species). */
-    suspend fun searchResults(query: String): List<Species> =
-        withContext(Dispatchers.Default) { scorer.search(query, prepared).map { it.species } }
+    suspend fun searchResults(query: String): List<Species> = withContext(Dispatchers.Default) {
+        ctxMonth = java.time.LocalDate.now().monthValue
+        fix.also { ctxLat = it?.lat; ctxLon = it?.lon }
+        scorer.search(query, prepared).map { it.species }
+    }
 
     /** Per-activity use counts, so each user's most-used activities rise to the top. */
     private val actUses = mutableStateMapOf<String, Int>().apply { putAll(loadActUses(app)) }
