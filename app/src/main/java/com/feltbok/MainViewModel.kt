@@ -218,11 +218,18 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
 
     // ---- navigation / actions ----
     fun startAdd() {
+        resetDraft()
+        screen = Screen.SEARCH
+    }
+
+    /** Clear the observation draft. Called when starting a new one and after saving, so a stale
+     *  dTime (the id source) can't leak into the next note via a path that skips re-stamping it
+     *  - e.g. createNewLocality/changeSpecies - and mint two notes with the same id. */
+    private fun resetDraft() {
         editingId = null; changingSpecies = false
         dSpecies = ""; dLatin = ""; dCount = 1
         dAge = ""; dAct = ""; dSex = ""; dPub = ""; dPriv = ""; dUncertain = false
         dLoc = null; dTime = 0L; dEndTime = null
-        screen = Screen.SEARCH
     }
 
     fun changeSpecies() { changingSpecies = true; screen = Screen.SEARCH }
@@ -320,7 +327,12 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
     fun save() {
         val loc = dLoc ?: nearest()   // fall back to GPS-nearest if not picked yet
         val n = Note(
-            id = if (isEditing) editingId!! else (dTime.takeIf { it > 0 } ?: System.currentTimeMillis()),
+            // id is the stable key; bump past any same-millisecond collision so it stays unique.
+            id = if (isEditing) editingId!! else {
+                var id = dTime.takeIf { it > 0 } ?: System.currentTimeMillis()
+                while (notes.any { it.id == id }) id++
+                id
+            },
             time = dTime.takeIf { it > 0 } ?: System.currentTimeMillis(),
             endTime = dEndTime,
             species = dSpecies, latin = dLatin, count = dCount.coerceAtLeast(1),
@@ -343,6 +355,7 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
             saveActUses(ctx, actUses)
         }
         persist()
+        resetDraft()
         screen = Screen.LIST
     }
 

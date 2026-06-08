@@ -499,12 +499,27 @@ fun loadSpeciesRegions(ctx: Context): Map<Int, Map<String, Int>> {
 
 private fun notesFile(ctx: Context) = File(ctx.filesDir, "notes.json")
 
+/**
+ * Two observations entered in the same millisecond share an `id` (it's the creation time).
+ * `id` is the list's stable key and the handle for edit/delete/select, so a collision both
+ * crashes LazyColumn and makes those actions ambiguous. Heal by nudging duplicates forward
+ * a millisecond until unique - `id` is internal only (not shown or exported), so this is safe.
+ */
+private fun withUniqueIds(notes: List<Note>): List<Note> {
+    val seen = HashSet<Long>()
+    return notes.map { n ->
+        var id = n.id
+        while (!seen.add(id)) id++
+        if (id == n.id) n else n.copy(id = id)
+    }
+}
+
 fun loadNotes(ctx: Context): List<Note> {
     val f = notesFile(ctx)
     if (!f.exists()) return emptyList()
     return runCatching {
         val arr = JSONArray(f.readText())
-        (0 until arr.length()).map { i ->
+        withUniqueIds((0 until arr.length()).map { i ->
             val o = arr.getJSONObject(i)
             Note(
                 id = o.getLong("id"),
@@ -526,7 +541,7 @@ fun loadNotes(ctx: Context): List<Note> {
                 locRadius = o.optInt("locRadius"),
                 uncertain = o.optBoolean("uncertain"),
             )
-        }
+        })
     }.getOrDefault(emptyList())
 }
 
