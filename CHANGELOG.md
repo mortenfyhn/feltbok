@@ -1,19 +1,22 @@
 # Endringslogg
 
-## v0.9 - 2026-06-08
+## v0.9 – 8. juni 2026
 
-- Smartere artssøk: rangerer treffene etter sted og årstid, og søkefeltet har fått en tøm-knapp.
-- Vis eller skjul private lokaliteter på kartet.
+- Forbedra artssøk, burde finne riktig fugl ganske lett.
+- Vis/skjul private lokaliteter i kartet.
 - Observasjoner grupperes per dag.
-- Automatisk sikkerhetskopi til Nedlastinger hver gang du lagrer.
+- Automatisk sikkerhetskopi til Nedlastinger.
 - Bekreftelse før du sletter en observasjon.
 - Ymse småforbedringer og feilrettinger.
 
-## v0.8 - 2026-06-06
+## v0.8 – 6. juni 2026
 
 - Marker og slett flere observasjoner samtidig.
 - Fremmedartstatus vises ved siden av rødlistestatus.
-- Bedre lokalitetsvalg på kartet, med GPS-nøyaktighet.
-- Bekreftelse før du forkaster en påbegynt observasjon.
-- Nytt appikon.
+- Bekreftelse før du forkaster en observasjon.
+- Nytt, tåpelig appikon. Ser du hvilken fugl det er?
 - Ymse småforbedringer og feilrettinger.
+
+## v0.7 or eldre
+
+- En slags begynnelse.
