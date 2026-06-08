@@ -53,3 +53,5 @@ scripts/__pycache__/
 /paste-test*.tsv
 /verify.tsv
 /scripts/localities-public-cache.json
+
+*.sublime-workspace
