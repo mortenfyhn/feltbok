@@ -105,8 +105,8 @@ fun LocalityScreen(vm: MainViewModel) {
     }
     // Refresh the overlay's plain-List copy whenever the locality set changes (async load
     // finishing, or a new spot placed) or the private-locality toggle flips - not every frame.
-    LaunchedEffect(vm.localities.size, vm.hidePrivate) {
-        overlay.localities = vm.localities.filter { !vm.hidePrivate || it.public }
+    LaunchedEffect(vm.localities.size, vm.showPrivate) {
+        overlay.localities = vm.localities.filter { vm.showPrivate || it.public }
         mapView.invalidate()
     }
     // Flash the tapped locality highlighted, then return to the entry screen.
@@ -161,9 +161,9 @@ fun LocalityScreen(vm: MainViewModel) {
             // Toggle private (non-public) localities off the map - they clutter it when reporting
             // birds (issue #88). Only offered when there are any to hide.
             if (!newMode && vm.localities.any { !it.public }) PrivateToggle(
-                hide = vm.hidePrivate,
-                onToggle = vm::toggleHidePrivate,
-                modifier = Modifier.align(Alignment.BottomStart).padding(16.dp),
+                show = vm.showPrivate,
+                onToggle = vm::toggleShowPrivate,
+                modifier = Modifier.align(Alignment.BottomStart).padding(8.dp),
             )
             // One-handed zoom: thumb-reachable buttons (the new-spot panel covers them).
             if (!newMode) Column(
@@ -235,21 +235,21 @@ private fun fitRadius(map: MapView): Int {
     return RADII.lastOrNull { it > 0 && it <= maxR } ?: RADII.first { it > 0 }
 }
 
-/** Hide/show the private localities (issue #88): a checkbox sitting straight on the map, its label
- *  white-haloed so it stays legible over any tiles. Checked = the user's private spots are hidden. */
+/** Show/hide the private localities (issue #88): a checkbox sitting straight on the map, its label
+ *  white-haloed so it stays legible over any tiles. Checked = the user's private spots are shown. */
 @Composable
-private fun PrivateToggle(hide: Boolean, onToggle: () -> Unit, modifier: Modifier) {
+private fun PrivateToggle(show: Boolean, onToggle: () -> Unit, modifier: Modifier) {
     Row(
-        modifier.clickable(onClick = onToggle),
+        modifier.clickable(onClick = onToggle).padding(8.dp),   // padding enlarges the tap target
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Box(Modifier.scale(1.2f), contentAlignment = Alignment.Center) {
             // Fill the box white when unchecked, so the map doesn't show through it.
-            if (!hide) Box(Modifier.size(15.dp).background(Color.White, RoundedCornerShape(2.dp)))
-            Checkbox(checked = hide, onCheckedChange = null)
+            if (!show) Box(Modifier.size(15.dp).background(Color.White, RoundedCornerShape(2.dp)))
+            Checkbox(checked = show, onCheckedChange = null)
         }
         val label = TextStyle(fontSize = 16.sp, fontWeight = FontWeight.Bold)
-        Box(Modifier.padding(start = 8.dp)) {       // clear the visually-scaled checkbox
+        Box(Modifier.padding(start = 3.dp)) {       // clear the visually-scaled checkbox
             Text(Strings.Picker.privateToggle, color = Color.White,
                 style = label.copy(drawStyle = Stroke(width = 12f)))   // halo for contrast
             Text(Strings.Picker.privateToggle, color = Color.Black, style = label)
