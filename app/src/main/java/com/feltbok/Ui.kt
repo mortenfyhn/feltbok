@@ -58,6 +58,7 @@ import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.Layout
 import androidx.compose.ui.platform.LocalClipboardManager
@@ -416,23 +417,38 @@ fun SearchScreen(vm: MainViewModel) {
     LaunchedEffect(results) { listState.scrollToItem(0) }
     Column(Modifier.fillMaxSize()) {
         Row(
-            Modifier.fillMaxWidth().background(cs.surface).padding(start = 4.dp, end = 12.dp, top = 10.dp, bottom = 10.dp),
+            Modifier.fillMaxWidth().background(cs.surface).padding(start = 4.dp, end = 12.dp, top = 2.dp, bottom = 2.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
             // Cancel on the left, consistent with the other screens (#59).
             // No full header here (keeps the width for species), but match the "‹ Tilbake" the
             // other non-discarding screens use - leaving search throws nothing away.
             TextButton(onClick = { vm.cancelSearch() }) { Text("‹ ${Strings.back}") }
-            OutlinedTextField(q, { q = it }, Modifier.weight(1f).focusRequester(focus), singleLine = true,
-                placeholder = { Text(Strings.Search.placeholder) },
-                // Clear button - only while there's text; keep focus so the keyboard stays up to retype.
-                trailingIcon = if (q.isEmpty()) null else { {
-                    TextButton(onClick = { q = ""; focus.requestFocus() }) { Text("✕") }
-                } },
+            // BasicTextField, not OutlinedTextField: the Material field forces a ~56dp min height
+            // with no contentPadding knob, which is what made the bar too tall - here we set the
+            // padding directly. Same approach as the count stepper above.
+            BasicTextField(q, { q = it },
+                Modifier.weight(1f).focusRequester(focus)
+                    .border(1.dp, cs.outline, RoundedCornerShape(8.dp)).padding(horizontal = 12.dp, vertical = 8.dp),
+                singleLine = true,
+                textStyle = LocalTextStyle.current.copy(color = cs.onSurface),
+                cursorBrush = SolidColor(cs.primary),
                 // autoCorrect off: don't want the IME "correcting" species names, and the
                 // gesture/compose path it drives is what crashes on swipe-typing.
                 keyboardOptions = KeyboardOptions(autoCorrectEnabled = false, imeAction = ImeAction.Search),
-                keyboardActions = KeyboardActions(onSearch = { results.firstOrNull()?.let { vm.pickSpecies(it) } }))
+                keyboardActions = KeyboardActions(onSearch = { results.firstOrNull()?.let { vm.pickSpecies(it) } }),
+                decorationBox = { inner ->
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Box(Modifier.weight(1f)) {
+                            if (q.isEmpty()) Text(Strings.Search.placeholder, color = cs.onSurfaceVariant)
+                            inner()
+                        }
+                        // Clear button - keep focus so the keyboard stays up to retype. Plain clickable
+                        // Text (not a TextButton) to avoid its 48dp min height re-inflating the bar.
+                        if (q.isNotEmpty()) Text("✕", color = cs.onSurfaceVariant,
+                            modifier = Modifier.clickable { q = ""; focus.requestFocus() }.padding(start = 8.dp))
+                    }
+                })
         }
         LazyColumn(Modifier.weight(1f), state = listState) {
             items(results, key = { it.latin }) { s ->   // norsk has homonyms (e.g. Rødhalevarsler); latin is unique
