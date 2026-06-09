@@ -94,11 +94,6 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
         return used.sortedByDescending { actUses[it] ?: 0 } + rest
     }
 
-    /** Last non-empty comments entered, offered as "som forrige" on a new note -
-     *  handy when the same remark applies to a run of observations. */
-    var lastPub by mutableStateOf(""); private set
-    var lastPriv by mutableStateOf(""); private set
-
     var screen by mutableStateOf(Screen.LIST); private set
     var showExport by mutableStateOf(false); private set
     var fix by mutableStateOf<GpsFix?>(null); private set
@@ -143,9 +138,6 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
     }
 
     init {
-        // Seed "som forrige" from the most recent note that carried a comment (no localities needed).
-        notes.firstOrNull { it.publicComment.isNotBlank() }?.let { lastPub = it.publicComment }
-        notes.firstOrNull { it.privateComment.isNotBlank() }?.let { lastPriv = it.privateComment }
         // Load localities off the main thread, then run the steps that depend on them.
         viewModelScope.launch {
             val loaded = withContext(Dispatchers.Default) { loadLocalities(ctx) }
@@ -353,8 +345,6 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
             if (i >= 0) notes[i] = n else notes.add(0, n)
         } else notes.add(0, n)
         if (loc != null && !isEditing) { lastUsedLoc = loc; lastUsedFix = fix }   // stick it for the next obs
-        if (dPub.isNotBlank()) lastPub = dPub
-        if (dPriv.isNotBlank()) lastPriv = dPriv
         if (dAct.isNotBlank()) {
             actUses[dAct] = (actUses[dAct] ?: 0) + 1
             saveActUses(ctx, actUses)

@@ -570,8 +570,8 @@ fun DetailScreen(vm: MainViewModel) {
             DropdownRow(Strings.Detail.age, vm.dAge, Options.ages) { vm.dAge = it }
             DropdownRow(Strings.Detail.sex, vm.dSex, Options.sexes) { vm.dSex = it }
             DropdownRow(Strings.Detail.activity, vm.dAct, vm.activityOptions()) { vm.dAct = it }
-            CommentField(Strings.Detail.commentPublic, vm.dPub, vm.lastPub) { vm.dPub = it }
-            CommentField(Strings.Detail.commentPrivate, vm.dPriv, vm.lastPriv) { vm.dPriv = it }
+            CommentField(Strings.Detail.commentPublic, vm.dPub) { vm.dPub = it }
+            CommentField(Strings.Detail.commentPrivate, vm.dPriv) { vm.dPriv = it }
             // One row to save space; tap to open the from/to editor (point or range).
             val tMs = if (vm.dTime > 0) vm.dTime else System.currentTimeMillis()
             var showTime by remember { mutableStateOf(false) }
@@ -695,18 +695,11 @@ private fun OptionItem(text: String, selected: Boolean, onClick: () -> Unit) {
 }
 
 @Composable
-private fun CommentField(label: String, value: String, previous: String, onChange: (String) -> Unit) {
+private fun CommentField(label: String, value: String, onChange: (String) -> Unit) {
     val cs = MaterialTheme.colorScheme
     val focus = LocalFocusManager.current
     Column(Modifier.background(cs.surface).padding(horizontal = 16.dp, vertical = 5.dp)) {
-        Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
-            Text(label, color = cs.onSurfaceVariant, fontSize = 13.sp,
-                modifier = Modifier.weight(1f).padding(bottom = 2.dp))
-            if (value.isBlank() && previous.isNotBlank()) {
-                Text(Strings.Detail.asPrevious, color = cs.primary, fontSize = 13.sp,
-                    modifier = Modifier.clickable { onChange(previous) }.padding(bottom = 2.dp))
-            }
-        }
+        Text(label, color = cs.onSurfaceVariant, fontSize = 13.sp, modifier = Modifier.padding(bottom = 2.dp))
         // Single-line with a "Done" action so the keyboard closes (a multi-line field leaves
         // the tester stuck - Enter just inserts a newline). Comments are short anyway.
         OutlinedTextField(value, onChange, Modifier.fillMaxWidth(), singleLine = true,
