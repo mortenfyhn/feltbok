@@ -586,9 +586,8 @@ fun DetailScreen(vm: MainViewModel) {
             horizontalArrangement = Arrangement.spacedBy(10.dp),
         ) {
             if (vm.isEditing) {
-                Button(onClick = { confirmDelete = true },
-                    colors = ButtonDefaults.buttonColors(containerColor = cs.error),
-                    modifier = Modifier.weight(1f)) { Text(Strings.Detail.delete) }
+                TextButton(onClick = { confirmDelete = true },
+                    modifier = Modifier.weight(1f)) { Text(Strings.Detail.delete, color = cs.error) }
             }
             Button(onClick = { vm.save() },
                 enabled = vm.dSpecies.isNotBlank() && (vm.dLoc != null || vm.nearest() != null),
