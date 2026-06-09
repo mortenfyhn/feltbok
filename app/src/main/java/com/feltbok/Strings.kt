@@ -38,8 +38,8 @@ object Strings {
 
     object Feedback {
         const val title = "Tilbakemelding"
-        const val body = "Ta gjerne kontakt om du har tilbakemelding eller spørsmål:"
-        const val githubIssue = "GitHub Issue"
+        const val body = "Ta kontakt om du finner feil, lurer på noe eller har tilbakemelding:"
+        const val githubIssue = "Bruk GitHub"
         const val email = "Send e-post"
         const val mailSubject = "Feltbok-tilbakemelding"
         const val mailHint = "Legg gjerne ved et skjermbilde."
