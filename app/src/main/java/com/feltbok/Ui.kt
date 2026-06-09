@@ -578,17 +578,21 @@ fun DetailScreen(vm: MainViewModel) {
             FieldRow(Strings.Detail.time, onClick = { showTime = true }) { Text(displayTimeRange(tMs, vm.dEndTime)) }
             if (showTime) TimeDialog(vm) { showTime = false }
         }
-        if (vm.isEditing) {
-            HorizontalDivider(color = cs.outline.copy(alpha = 0.4f))
-            TextButton(
-                onClick = { confirmDelete = true },
-                modifier = Modifier.fillMaxWidth().background(cs.surface).padding(vertical = 4.dp),
-            ) { Text(Strings.Detail.delete, color = cs.error) }
-        }
-        Box(Modifier.fillMaxWidth().background(cs.surface).padding(horizontal = 14.dp, vertical = 11.dp)) {
+        // Delete and save sit side by side - red left, green right - so the destructive action
+        // isn't stacked directly under the thumb's path to Lagre, where it was easy to hit by
+        // mistake (#96).
+        Row(
+            Modifier.fillMaxWidth().background(cs.surface).padding(horizontal = 14.dp, vertical = 11.dp),
+            horizontalArrangement = Arrangement.spacedBy(10.dp),
+        ) {
+            if (vm.isEditing) {
+                Button(onClick = { confirmDelete = true },
+                    colors = ButtonDefaults.buttonColors(containerColor = cs.error),
+                    modifier = Modifier.weight(1f)) { Text(Strings.Detail.delete) }
+            }
             Button(onClick = { vm.save() },
                 enabled = vm.dSpecies.isNotBlank() && (vm.dLoc != null || vm.nearest() != null),
-                modifier = Modifier.fillMaxWidth()) { Text(Strings.Detail.save) }
+                modifier = Modifier.weight(1f)) { Text(Strings.Detail.save) }
         }
     }
 }

@@ -3,6 +3,7 @@
 ## Neste utgivelse
 
 - Observasjoner med kommentar får et lite «i»-merke i lista (blått for åpen, grått for privat).
+- Slett og lagre ligger nå side om side, så det er vanskeligere å slette ved et uhell.
 
 ## v0.9 – 8. juni 2026
 

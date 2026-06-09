@@ -62,7 +62,7 @@ object Strings {
         const val commentPrivate = "Privat kommentar"
         const val asPrevious = "som forrige"
         const val time = "Tid"
-        const val delete = "Slett observasjon"
+        const val delete = "Slett"
         const val save = "Lagre"
         const val dropdownNone = "Ingen"
 
