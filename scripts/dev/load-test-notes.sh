@@ -1,14 +1,16 @@
 #!/usr/bin/env bash
-# Load dev/test-notes.json into the (debug-installed) app on a connected device, then restart it.
-# Requires a *debuggable* build (./gradlew installDebug) so `run-as` can write the app's files dir.
-# WARNING: overwrites the device's notes.json — only use on a throwaway/test install.
+# Load dev/test-notes.json into the debug app on a connected device, then restart it.
+# Targets the .debug build (`just install`) - never the maintainer's real com.feltbok, whose
+# notes.json is real field data. run-as needs a debuggable build, which only the debug one is.
+# WARNING: overwrites the debug app's notes.json — fine, it's a throwaway test install.
 set -euo pipefail
-PKG=com.feltbok
+PKG=com.feltbok.debug
 SRC="$(dirname "$0")/test-notes.json"
 
 adb push "$SRC" /data/local/tmp/notes.json >/dev/null
 adb shell "run-as $PKG sh -c 'mkdir -p files && cat /data/local/tmp/notes.json > files/notes.json'"
 adb shell rm /data/local/tmp/notes.json
 adb shell am force-stop "$PKG"
-adb shell am start -n "$PKG/.MainActivity" >/dev/null
+# The activity class stays com.feltbok.MainActivity; the .debug suffix only changes the package id.
+adb shell am start -n "$PKG/com.feltbok.MainActivity" >/dev/null
 echo "Loaded $(grep -c '"id"' "$SRC") test observations and restarted $PKG."
