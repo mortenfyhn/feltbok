@@ -314,7 +314,7 @@ private fun StatusBadge(code: String) {
 private fun CommentBadge(n: Note) {
     val hasPublic = n.publicComment.isNotBlank()
     if (!hasPublic && n.privateComment.isBlank()) return
-    val color = if (hasPublic) Color(0xFF2196F3) else Color(0xFF9E9E9E)
+    val color = if (hasPublic) BadgeBlue else BadgeGrey
     Box(
         Modifier.padding(start = 6.dp).size(15.dp).background(color, CircleShape),
         contentAlignment = Alignment.Center,

@@ -11,6 +11,10 @@ import androidx.compose.ui.graphics.Color
 private val Moss = Color(0xFF5B7A2B)
 private val MossDark = Color(0xFF41591D)
 
+/** The comment "i" badge: a soft blue when the note has a public comment, pale grey for private-only. */
+val BadgeBlue = Color(0xFF4985D4)
+val BadgeGrey = Color(0xFFB0B5B8)
+
 private val MossColors = lightColorScheme(
     primary = Moss,
     onPrimary = Color.White,
