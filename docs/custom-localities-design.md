@@ -5,6 +5,35 @@ while keeping the app offline-in-field and zero-login. Notes from an evening of 
 probing — treat the Artskart specifics as "promising, needs one more reverse-engineering
 pass", not settled.
 
+## Behaviour (as built) — the custom-locality lifecycle
+
+A **brand-new spot** is a `Locality` with `newLoc = true`, empty `id`, `public = false`,
+`mine = false`, created via "Ny lokalitet her" (map-centre pin + chosen radius + optional name).
+
+**Storage / lifetime.** A new spot is never persisted on its own — it is *not* written to
+`my-localities.csv` (that file only holds synced `mine` localities). It lives in the in-memory
+picker for the session, and is re-derived at startup solely from the observations that reference
+it (each `Note` copies the spot's name, coords, `newLoc`, and radius). So:
+- created but unused → selectable for the rest of the session, gone after restart;
+- used by ≥1 observation → re-derived on every launch for as long as any such observation exists;
+- last referencing observation deleted → still selectable for the rest of the session, gone on
+  the next restart.
+
+This is deliberate: no separate persistence and no orphan cleanup to maintain — the observations
+*are* the source of truth for which new spots still matter.
+
+**Sync ("Synk mine lokaliteter").** Pulling from Artsobs replaces only the `mine` set
+(`removeAll { it.mine }`, add the freshly synced set, persist to `my-localities.csv`). Public
+localities and in-progress new spots are left untouched, and **observations are never modified**.
+Online is the source of truth for `mine`.
+
+**Export.** A new-spot observation exports with coordinates + radius (Nøyaktighet), which mints
+the locality on Artsobs; registry/`mine` localities export by name only. Clearing observations
+after import removes the notes (and with them the only anchor for any new spots). A minted spot is
+**not** auto-converted to a `mine` locality — the next manual sync pulls it back with a real id.
+Accepted consequence: between minting and the next sync, if the observation is kept and
+re-exported, a temporary duplicate can appear. This is tolerated, not specially handled.
+
 ## ✅ SOLVED (2026-06-04): the new mobile API — `mobil.artsobservasjoner.no`
 
 **This is the way to fetch a user's own localities, and likely the future for harvest too.**

@@ -281,6 +281,45 @@ class ModelTest {
     }
 
     @Test
+    fun parseMySitesKeepsOnlyPrivateRowsWithCoordsAndMapsFields() {
+        // The sync ingestion path: /core/Sites/ByUser returns public + private rows; only the
+        // isPrivate ones are the user's own customs (public ones are already bundled). A row
+        // without usable coordinates is skipped rather than minting a locality at (0,0).
+        val json = """
+            {"data":[
+              {"id":11,"name":"Min vik","presentationName":"Min vik, Frøya, Tø",
+               "latitude":63.7,"longitude":8.3,"isPrivate":true,"accuracy":50,
+               "municipalityName":"Frøya","isPolygon":false},
+              {"id":22,"name":"Allmenn","latitude":63.0,"longitude":8.0,"isPrivate":false},
+              {"id":33,"name":"Uten koordinat","isPrivate":true}
+            ]}
+        """.trimIndent()
+        val sites = parseMySites(json)
+        assertEquals("only the private, coordinate-bearing row", 1, sites.size)
+        val s = sites[0]
+        assertEquals("11", s.id)
+        assertEquals("Min vik", s.lokalitet)
+        assertEquals("presentationName -> fullname", "Min vik, Frøya, Tø", s.fullname)
+        assertEquals(63.7, s.lat, 1e-9); assertEquals(8.3, s.lon, 1e-9)
+        assertEquals("accuracy -> radius", 50.0, s.radius, 1e-9)
+        assertTrue("mine, not public", s.mine && !s.public)
+    }
+
+    @Test
+    fun parseMySitesConvertsPolygonRingFromLonLatToLatLon() {
+        // polygonCoordinates is a JSON string of [lon,lat] vertices (WGS84); our polygon
+        // convention is [lat,lon], so the pair order must flip on the way in.
+        val json = """
+            {"data":[{"id":1,"name":"Polygon","latitude":63.5,"longitude":8.5,"isPrivate":true,
+              "isPolygon":true,"polygonCoordinates":"[[8.0,63.0],[9.0,63.0],[9.0,64.0]]"}]}
+        """.trimIndent()
+        val poly = parseMySites(json).single().polygon
+        assertEquals(3, poly.size)
+        assertEquals("lat first", 63.0, poly[0][0], 1e-9)
+        assertEquals("lon second", 8.0, poly[0][1], 1e-9)
+    }
+
+    @Test
     fun contextualFrequencyFollowsMonthAndPlace() {
         val summer = Species("Sommerfugl", "Aestas aestas", count = 1000)
         val winter = Species("Vinterfugl", "Hiems hiems", count = 1000)
