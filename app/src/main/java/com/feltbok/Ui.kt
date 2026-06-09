@@ -28,6 +28,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.text.KeyboardActions
@@ -39,6 +40,7 @@ import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.LocalTextStyle
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
@@ -62,6 +64,7 @@ import androidx.compose.ui.platform.LocalClipboardManager
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.text.AnnotatedString
+import androidx.compose.ui.text.PlatformTextStyle
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.TextRange
 import androidx.compose.ui.text.buildAnnotatedString
@@ -305,6 +308,23 @@ private fun StatusBadge(code: String) {
         modifier = Modifier.padding(start = 6.dp))
 }
 
+// An "i" badge marking a note that carries a comment, like Artsobservasjoner: blue for a public
+// comment (visible to all), muted grey when only a private comment is set.
+@Composable
+private fun CommentBadge(n: Note) {
+    val hasPublic = n.publicComment.isNotBlank()
+    if (!hasPublic && n.privateComment.isBlank()) return
+    val color = if (hasPublic) Color(0xFF2196F3) else Color(0xFF9E9E9E)
+    Box(
+        Modifier.padding(start = 6.dp).size(15.dp).background(color, CircleShape),
+        contentAlignment = Alignment.Center,
+    ) {
+        // Drop the line-height font padding so the lone "i" sits in the visual centre of the circle.
+        Text("i", color = Color.White, fontWeight = FontWeight.Bold, fontSize = 10.sp, lineHeight = 10.sp,
+            style = LocalTextStyle.current.copy(platformStyle = PlatformTextStyle(includeFontPadding = false)))
+    }
+}
+
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
 private fun NoteRow(n: Note, status: String, selected: Boolean, onClick: () -> Unit, onLongClick: () -> Unit) {
@@ -326,6 +346,7 @@ private fun NoteRow(n: Note, status: String, selected: Boolean, onClick: () -> U
                     maxLines = 1, overflow = TextOverflow.Ellipsis,
                 )
                 StatusBadge(status)
+                CommentBadge(n)
             }
             // End-align so a truncated name's "…" hugs the right edge instead of leaving the
             // ellipsized box's trailing slack, keeping every locality flush against the timestamp.

@@ -1,5 +1,9 @@
 # Endringslogg
 
+## Neste utgivelse
+
+- Observasjoner med kommentar får et lite «i»-merke i lista (blått for åpen, grått for privat).
+
 ## v0.9 – 8. juni 2026
 
 - Forbedra artssøk, burde finne riktig fugl ganske lett.

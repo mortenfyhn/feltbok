@@ -7,7 +7,9 @@ capturing bird observations in Norway and exporting a TSV to paste into Artsobse
 ## Build / test / run
 Recipes live in `just --list` — the notes below are only the why's and gotchas that aren't in there.
 - `just install` / `just run` verify a change in the real app on a connected device (`adb devices`);
-  drive the UI with `adb shell input tap/text` and inspect with `adb exec-out screencap`.
+  drive the UI with `adb shell input tap/text` and inspect with `adb exec-out screencap`. **Ask before
+  testing on the phone** — the maintainer's device isn't always attached and they often prefer to drive
+  the UI themselves; don't install/run on the device unless they've okayed it.
 - Always run `./gradlew test` (Kotlin units) before opening a PR; `just test` also runs the Python tests.
 - `./gradlew assembleRelease` — signed release, needs the keystore (no `just` recipe for it).
 - **Two builds coexist on the device.** The dev build carries the `.debug` applicationId suffix
@@ -52,8 +54,10 @@ Recipes live in `just --list` — the notes below are only the why's and gotchas
   at v1.0 — don't add entries before then. The v1.0 entry is a quick overview of the main features;
   v1.1 onward are proper per-version entries with short, benefit-framed highlights (fold minor/cosmetic
   tweaks into one "Ymse småforbedringer" line rather than listing each). When landing a user-visible
-  change, add a bullet under the current unreleased version. The same per-version text is pasted into
-  the GitHub release ("Nytt i …", see `docs/release.md`).
+  change, add a bullet under the standing **"Neste utgivelse"** section at the top (it has no version
+  number yet). At release time that heading is renamed by hand to `## vX – date` during `release.sh`'s
+  pause step — the script pulls notes from the `## v<version>` section and aborts if it's missing. The
+  same per-version text is pasted into the GitHub release ("Nytt i …", see `docs/release.md`).
 - Norwegian (Bokmål) for user-facing strings.
 - **Worktrees are opt-in.** Work in the main checkout by default. Only reach for EnterWorktree when
   the user explicitly asks, or when you know another session is editing the same files concurrently —
