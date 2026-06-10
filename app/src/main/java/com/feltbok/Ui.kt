@@ -380,7 +380,7 @@ private fun NoteRow(n: Note, status: String, selected: Boolean, onClick: () -> U
 // ============================ SEARCH ============================
 
 /** The blank-search quick list: your recent picks first, then your most-used species,
- *  then the most common ones to fill the screen. */
+ *  then a fill of what's likely here and now (current month + location). */
 private fun speciesQuickList(vm: MainViewModel): List<Species> {
     val recentList = vm.recent.mapNotNull { name -> vm.species.firstOrNull { it.norsk == name } }
     val seen = recentList.mapTo(HashSet()) { it.norsk }
@@ -388,8 +388,8 @@ private fun speciesQuickList(vm: MainViewModel): List<Species> {
         .filter { it.norsk !in seen && vm.useCount(it.norsk) > 0 }
         .sortedByDescending { vm.useCount(it.norsk) }
     frequent.forEach { seen.add(it.norsk) }
-    val common = vm.species.filter { it.norsk !in seen }   // already in Norway-wide frequency order
-    return (recentList + frequent + common).take(40)
+    val fill = vm.contextRanked(vm.species.filter { it.norsk !in seen })
+    return (recentList + frequent + fill).take(40)
 }
 
 @Composable

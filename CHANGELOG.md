@@ -2,6 +2,7 @@
 
 ## Neste utgivelse
 
+- Artsforslagene før du søker tar nå hensyn til årstid og hvor du er, så det som er sannsynlig her og nå kommer høyere.
 - Observasjoner med kommentar får et lite «i»-merke i lista (blått for åpen, grått for privat).
 - Slett og lagre ligger nå side om side, så det er vanskeligere å slette ved et uhell.
 

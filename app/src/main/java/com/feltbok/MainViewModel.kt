@@ -68,6 +68,15 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
      *  in rank but stay findable (tiers/folding still match). */
     private val ctxFreq = ContextualFrequency(species, loadSpeciesMonths(app), loadSpeciesRegions(app))
 
+    /** Order [candidates] by what's reported here and now (current month + GPS fix), so the
+     *  blank-search quick list's fill reflects the season/place rather than static all-time order.
+     *  Same context signal the typed search uses, just without a query. */
+    fun contextRanked(candidates: List<Species>): List<Species> {
+        val month = java.time.LocalDate.now().monthValue
+        val f = fix
+        return candidates.sortedByDescending { ctxFreq.weight(it, month, f?.lat, f?.lon) }
+    }
+
     /** Ranked matches for a typed query: the tiered scorer (prefix/suffix/initialism/typo + diacritic
      *  folding + frequency), with your regulars boosted. Ranking lives in Search.kt so it's
      *  unit-benchmarked. Month + location are snapshotted once per query into the provider - not
