@@ -1,15 +1,15 @@
 # Endringslogg
 
-## v0.10 – 10. juni 2026
+## v0.10 (10. juni 2026)
 
-- Enda bedre artssøk.
+- Bedre forhåndsvalg i artssøket for du begynner å skrive.
 - Du kan kopiere observasjoner.
-- Eksporter per kommune, for å unngå kolliderende lokalitetsnavn.
+- Kommunevis eksport, for å unngå kolliderende lokalitetsnavn.
 - Indiker hvilke observasjoner som har kommentar.
 - _Columba livia_ heter nå «bydue», ikke «klippedue», slik Artsobservasjoner befaler.
 - Ymse småforbedringer og feilrettinger.
 
-## v0.9 – 8. juni 2026
+## v0.9 (8. juni 2026)
 
 - Forbedra artssøk, burde finne riktig fugl ganske lett.
 - Vis/skjul private lokaliteter i kartet.
@@ -21,7 +21,7 @@
 - Enklere og ryddigere redigering av tidspunkt på en observasjon.
 - Ymse småforbedringer og feilrettinger.
 
-## v0.8 – 6. juni 2026
+## v0.8 (6. juni 2026)
 
 - Marker og slett flere observasjoner samtidig.
 - Fremmedartstatus vises ved siden av rødlistestatus.
@@ -29,6 +29,6 @@
 - Nytt, tåpelig appikon. Ser du hvilken fugl det er?
 - Ymse småforbedringer og feilrettinger.
 
-## v0.7 og eldre
+## v0.7 (5. juni 2026) og før
 
 - Den spede begynnelse.
