@@ -3,6 +3,8 @@
 package com.feltbok
 
 import androidx.activity.compose.BackHandler
+import androidx.compose.animation.core.Animatable
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -59,6 +61,7 @@ import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.SolidColor
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.Layout
 import androidx.compose.ui.platform.LocalClipboardManager
@@ -520,6 +523,18 @@ fun DetailScreen(vm: MainViewModel) {
     // inside DetailScreen, so it shadows the app-level one only while the editor is open.
     BackHandler { leave() }
     val focus = LocalFocusManager.current
+    // Copying stays on this screen with a near-identical form, so slide the new draft in from the
+    // right to make clear a fresh observation was created (#110). Fires only on copyToken changes,
+    // not on a normal open: a fresh DetailScreen re-seeds `seen` to the current token.
+    val slide = remember { Animatable(0f) }
+    var seen by remember { mutableStateOf(vm.copyToken) }
+    LaunchedEffect(vm.copyToken) {
+        if (vm.copyToken != seen) {
+            seen = vm.copyToken
+            slide.snapTo(1f)
+            slide.animateTo(0f, tween(durationMillis = 250))
+        }
+    }
     if (confirmDiscard) {
         AlertDialog(
             onDismissRequest = { confirmDiscard = false },
@@ -551,9 +566,17 @@ fun DetailScreen(vm: MainViewModel) {
             if (vm.isEditing) Strings.Detail.titleEdit else Strings.Detail.titleNew,
             onCancel = leave,
             cancelContent = { Text("✕", color = Color.White, fontSize = 22.sp) },
+            // Copying an existing note keeps its time + locality (and every other field), so you can
+            // quickly add a sighting you remembered to the same batch (#110).
+            trailing = {
+                if (vm.isEditing)
+                    TextButton(onClick = { vm.copyAsNew() }) { Text(Strings.Detail.copy, color = Color.White) }
+            },
         )
         Column(
-            Modifier.weight(1f).verticalScroll(rememberScrollState())
+            Modifier.weight(1f)
+                .graphicsLayer { translationX = slide.value * size.width }
+                .verticalScroll(rememberScrollState())
                 // Tapping empty space drops focus/caret out of any text field (the number
                 // keyboard has no Done key, so this is the only way out of it). Taps on the
                 // rows are consumed by their own clickables and never reach here.

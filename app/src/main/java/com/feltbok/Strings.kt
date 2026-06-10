@@ -62,6 +62,7 @@ object Strings {
         const val commentPrivate = "Privat kommentar"
         const val time = "Tid"
         const val delete = "Slett"
+        const val copy = "Kopier"
         const val save = "Lagre"
         const val dropdownNone = "Ingen"
 

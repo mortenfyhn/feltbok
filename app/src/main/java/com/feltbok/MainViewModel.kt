@@ -116,7 +116,9 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
     fun toggleShowPrivate() { showPrivate = !showPrivate; saveShowPrivate(ctx, showPrivate) }
 
     // ---- draft (current add/edit) ----
-    private var editingId: Long? = null
+    // Observable so isEditing recomposes the editor when it changes without a screen switch -
+    // e.g. copyAsNew turning an edit into a fresh observation in place (#110).
+    private var editingId by mutableStateOf<Long?>(null)
     private var changingSpecies = false
     var dSpecies by mutableStateOf("")
     var dLatin by mutableStateOf("")
@@ -268,6 +270,15 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
             ?: Locality("", n.locName, "", "", n.lat, n.lon, n.locFull, 0, 0.0)
         screen = Screen.DETAIL
     }
+
+    /** Bumped on each copyAsNew so the editor can play a slide-in: copying stays on the DETAIL
+     *  screen, so without this cue the near-identical form makes it unclear a new copy was made. */
+    var copyToken by mutableStateOf(0); private set
+
+    /** Turn the open edit into a brand-new observation: keep every field as-is (species, count,
+     *  location, time, …) but drop the editing link so [save] mints a new note instead of
+     *  overwriting. For adding a remembered sighting to an existing batch (#110). */
+    fun copyAsNew() { editingId = null; changingSpecies = false; copyToken++ }
 
     // True while the picker was opened from the list to set the "current" locality, rather than
     // from the observation draft. Routes selection/back to the list instead of the detail screen.
