@@ -7,6 +7,7 @@
 - Eksporten er delt opp per kommune, så observasjoner i flere kommuner importeres riktig (kopiér én kommune om gangen).
 - Observasjoner med kommentar får et lite «i»-merke i lista (blått for åpen, grått for privat).
 - Slett og lagre ligger nå side om side, så det er vanskeligere å slette ved et uhell.
+- Bydue heter nå «bydue» (ikke «klippedue»), så den lar seg importere til Artsobservasjoner.
 
 ## v0.9 – 8. juni 2026
 

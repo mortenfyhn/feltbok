@@ -97,6 +97,9 @@ OVERRIDES = {
     "Corvus corone": "svartkråke",
     "Lanius isabellinus": "isabellavarsler",
     "Acanthis hornemanni": "polarsisik",
+    # Artsnavnebasen calls Columba livia "klippedue" (the species as a whole), but Norway only has
+    # the feral form, so Artsobservasjoner only accepts "bydue" on import. Use the name Artsobs takes.
+    "Columba livia": "bydue",
 }
 
 
