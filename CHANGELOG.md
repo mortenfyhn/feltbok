@@ -4,6 +4,7 @@
 
 - Artsforslagene før du søker tar nå hensyn til årstid og hvor du er, så det som er sannsynlig her og nå kommer høyere.
 - Kopier en observasjon for å raskt legge til en til på samme sted og tid – nyttig når du husker noe i etterkant.
+- Eksporten er delt opp per kommune, så observasjoner i flere kommuner importeres riktig (kopiér én kommune om gangen).
 - Observasjoner med kommentar får et lite «i»-merke i lista (blått for åpen, grått for privat).
 - Slett og lagre ligger nå side om side, så det er vanskeligere å slette ved et uhell.
 

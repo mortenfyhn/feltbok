@@ -248,6 +248,40 @@ class ModelTest {
         assertTrue(!localityContains(point, 63.0, 8.0))                // a point has no footprint
     }
 
+    @Test
+    fun groupNotesByKommuneResolvesByAllThreePathsAndOrders() {
+        // Path 1: the note's stamped kommune wins outright - no registry, no fullname needed.
+        val nStamped = noteAt(noonMs).copy(locName = "Testdammen", locFull = "", newLoc = true, kommune = "Ørland")
+        // Path 2: an unstamped (legacy) note reads kommune from its registered fullname.
+        val nFromName = noteAt(noonMs).copy(locFull = "Titran, Frøya, Tø", kommune = "")
+        // Path 3: a legacy new spot with neither falls back to the nearest registry kommune (Ørland).
+        // The registry also holds the spot itself as a kommune-less locality at distance 0; it must
+        // NOT match itself, so blank-kommune candidates are excluded.
+        val hovde = Locality("1", "Hovde", "", "Ørland", 63.70, 9.60, "Hovde, Ørland, Tø", 0, 0.0)
+        val newSelf = Locality("2", "Testdammen", "", "", 63.71, 9.61, "Testdammen", 0, 0.0, public = false, mine = true)
+        val nNearest = noteAt(noonMs).copy(locName = "Testdammen", locFull = "", kommune = "", lat = 63.71, lon = 9.61, newLoc = true)
+
+        val groups = groupNotesByKommune(listOf(nNearest, nStamped, nFromName), listOf(hovde, newSelf))
+        assertEquals(listOf("Frøya", "Ørland"), groups.map { it.kommune })
+        assertEquals("stamped + nearest-resolved both land in Ørland", 2,
+            groups.first { it.kommune == "Ørland" }.notes.size)
+    }
+
+    @Test
+    fun groupNotesByKommuneSingleKommuneYieldsOneGroup() {
+        val groups = groupNotesByKommune(listOf(noteAt(noonMs), noteAt(noonMs + 1)), emptyList())
+        assertEquals(1, groups.size)
+        assertEquals("Frøya", groups[0].kommune)   // noteAt's locFull is "Titran, Frøya, Tø"
+    }
+
+    @Test
+    fun groupNotesByKommuneFallsBackToBlankForNewSpotWithoutRegistry() {
+        // A brand-new spot with no stamp and no fullname, and no localities loaded: kommune unknown.
+        val n = noteAt(noonMs).copy(newLoc = true, locName = "Testdammen", locFull = "", kommune = "")
+        val groups = groupNotesByKommune(listOf(n), emptyList())
+        assertEquals(listOf(""), groups.map { it.kommune })
+    }
+
     private fun mine(id: String, name: String = "Lok $id", lat: Double = 63.0, radius: Double = 0.0) =
         Locality(id, name, "", "", lat, 8.0, name, 0, radius, public = false, mine = true)
 

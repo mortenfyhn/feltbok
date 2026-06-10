@@ -132,7 +132,11 @@ data class Note(
     val lon: Double,
     val newLoc: Boolean = false, // a brand-new spot: export with coordinates so the import mints it
     val locRadius: Int = 0, // chosen radius in metres for a new spot (-> Nøyaktighet)
-    val uncertain: Boolean = false,  // uncertain species determination (-> "Usikker artsbestemming")
+    val uncertain: Boolean = false, // uncertain species determination (-> "Usikker artsbestemming")
+    // Kommune the obs belongs to, stamped at save for the per-kommune export grouping. A new spot
+    // resolves it from the nearest registry locality at creation; blank on notes saved before this
+    // existed (grouping then falls back to the locFull / nearest-locality lookup).
+    val kommune: String = "",
 )
 
 // ---- distance ----
@@ -521,6 +525,7 @@ fun noteToJson(n: Note): JSONObject = JSONObject().apply {
     put("locName", n.locName); put("locFull", n.locFull)
     put("lat", n.lat); put("lon", n.lon)
     put("newLoc", n.newLoc); put("locRadius", n.locRadius); put("uncertain", n.uncertain)
+    if (n.kommune.isNotBlank()) put("kommune", n.kommune)
 }
 
 fun noteFromJson(o: JSONObject): Note = Note(
@@ -542,6 +547,7 @@ fun noteFromJson(o: JSONObject): Note = Note(
     newLoc = o.optBoolean("newLoc"),
     locRadius = o.optInt("locRadius"),
     uncertain = o.optBoolean("uncertain"),
+    kommune = o.optString("kommune"),
 )
 
 fun loadNotes(ctx: Context): List<Note> {
@@ -681,4 +687,42 @@ fun exportTsv(notes: List<Note>): String {
         }
     }
     return (listOf(EXPORT_COLS.joinToString("\t")) + rows).joinToString("\n")
+}
+
+/** A kommune's worth of notes, for a self-contained per-kommune paste block. */
+data class ExportGroup(val kommune: String, val notes: List<Note>)
+
+/** The registered fullname is "Lok[, Hovedlok…], Kommune, Fylke", so the kommune is the
+ *  second-to-last comma field. Blank for an unqualified or empty name (e.g. a brand-new spot). */
+private fun kommuneFromFullname(locFull: String): String {
+    val parts = locFull.split(",")
+    return if (parts.size >= 3) parts[parts.size - 2].trim() else ""
+}
+
+/** Kommune of the registry locality nearest [lat]/[lon], for stamping a brand-new spot with the
+ *  kommune around it. Only localities that carry a kommune count (a new spot is itself a
+ *  kommune-less private locality, so it can't be its own answer). Blank until localities load. */
+fun nearestKommune(lat: Double, lon: Double, localities: List<Locality>): String =
+    localities.filter { it.kommune.isNotBlank() }
+        .minByOrNull { haversine(it.lat, it.lon, lat, lon) }?.kommune ?: ""
+
+/**
+ * Group notes by kommune so each block can be pasted with the import form scoped to that
+ * kommune. The form takes one kommune scope per paste, so a multi-kommune batch must be
+ * split (see docs/artsobs-import.md).
+ *
+ * The kommune is stamped on each note at save time, so grouping is instant and needs no
+ * registry. Notes saved before that field existed fall back to their registered fullname, then
+ * (only for an unqualified brand-new spot) to the nearest registry locality. A spot whose
+ * kommune still can't be resolved falls into a trailing blank group.
+ */
+fun groupNotesByKommune(notes: List<Note>, localities: List<Locality>): List<ExportGroup> {
+    fun kommuneFor(n: Note): String =
+        n.kommune
+            .ifBlank { kommuneFromFullname(n.locFull) }
+            .ifBlank { nearestKommune(n.lat, n.lon, localities) }
+    return notes.groupBy { kommuneFor(it) }
+        .map { (kommune, ns) -> ExportGroup(kommune, ns) }
+        // Sort by kommune name, but keep the unresolved (blank) group last.
+        .sortedWith(compareBy({ it.kommune.isBlank() }, { it.kommune }))
 }

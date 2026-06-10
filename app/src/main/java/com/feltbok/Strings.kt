@@ -85,22 +85,27 @@ object Strings {
 
     object Export {
         const val title = "Eksporter"
+        const val unknownKommune = "Ukjent kommune"
         const val step1 = "Kopier observasjoner"
         const val copy = "Kopiér"
         const val copied = "Kopiert ✓"
         const val step2 = "Åpne Artsobservasjoner"
         const val open = "Kjør"
         const val step3 = "Lim inn og importer"
-        const val pasteBefore = "Lim inn den kopierte teksten på Artsobservasjoner og trykk "
+
+        // Step 3 reads: pasteBefore + <kommune, bold> + pasteAfter + <pasteEmphasis, italic>.
+        // Naming the kommune is the point of the per-kommune flow: the form must be scoped to it.
+        const val pasteBefore = "Lim inn observasjonene, prioriter "
+        const val pasteAfter = " i skjemaet, og trykk "
         const val pasteEmphasis = "Importer"
         const val step4 = "Kontroller funn"
         const val step4Body = "Sjekk at observasjonene vises i Artsobservasjoner"
         const val step5 = "Slett fra appen"
         const val step5Body = "Når alt er på plass, kan du slette observasjonene fra appen"
-        const val clear = "Slett alle observasjoner"
-        const val clearTitle = "Slett alle observasjoner?"
-        const val clearBody = "Sørg for alt er på plass i Artsobservasjoner først!"
-        const val clearConfirm = "Slett alle"
+        fun clear(kommune: String) = "Slett dine $kommune-observasjoner"
+        fun clearTitle(kommune: String) = "Slett alle observasjoner fra $kommune?"
+        const val clearBody = "Sørg for alt er på plass i Artsobservasjoner!"
+        const val clearConfirm = "Slett"
     }
 
     object Sync {

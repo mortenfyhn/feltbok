@@ -182,7 +182,7 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
         // Re-add brand-new spots from saved notes, so a custom locality stays selectable
         // across restarts (until it's been uploaded and adjusted on the website).
         for (n in notes) if (n.newLoc && n.locName.isNotBlank())
-            addNewLocality(Locality("", n.locName, "", "", n.lat, n.lon, n.locName, 0,
+            addNewLocality(Locality("", n.locName, "", n.kommune, n.lat, n.lon, n.locName, 0,
                 n.locRadius.toDouble(), public = false, newLoc = true))
         nearestFix = null   // invalidate the fix-keyed memo so nearest() rescans now that we have data
     }
@@ -326,8 +326,10 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
      *  blank gets a placeholder you can rename later on the website. */
     fun createNewLocality(lat: Double, lon: Double, radiusM: Int, name: String) {
         val finalName = name.trim().ifBlank { "Ny lokalitet" }
-        val loc = Locality("", finalName, "", "", lat, lon, finalName, 0, radiusM.toDouble(),
-            public = false, newLoc = true)
+        // Stamp the surrounding kommune now (localities are loaded - you just placed it on the map),
+        // so its observations export under the right kommune without a later lookup.
+        val loc = Locality("", finalName, "", nearestKommune(lat, lon, localities), lat, lon, finalName, 0,
+            radiusM.toDouble(), public = false, newLoc = true)
         addNewLocality(loc)        // make it immediately selectable for further observations
         dLoc = loc
         screen = Screen.DETAIL
@@ -358,7 +360,7 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
             locName = loc?.lokalitet ?: "", locFull = loc?.fullname ?: "",
             lat = loc?.lat ?: 0.0, lon = loc?.lon ?: 0.0,
             newLoc = loc?.newLoc == true, locRadius = if (loc?.newLoc == true) loc.radius.toInt() else 0,
-            uncertain = dUncertain,
+            uncertain = dUncertain, kommune = loc?.kommune ?: "",
         )
         if (isEditing) {
             val i = notes.indexOfFirst { it.id == n.id }
@@ -379,12 +381,23 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
         screen = Screen.LIST
     }
 
-    fun openExport() { showExport = true }
-    fun closeExport() { showExport = false }
-    fun exportText(): String = exportTsv(notes)
+    // Export runs one kommune at a time: the form scopes the whole paste to a single kommune, so
+    // [exportKommune] is the group being worked through. Null when the export screen is closed.
+    var exportKommune by mutableStateOf<String?>(null); private set
+    fun openExport(kommune: String) { exportKommune = kommune; showExport = true }
+    fun closeExport() { showExport = false; exportKommune = null }
 
-    /** Clear the day's notes - after they've been imported and published. */
-    fun clearAll() { notes.clear(); persist() }
+    /** The notes in one kommune's group, for its self-contained paste block. */
+    fun exportNotesFor(kommune: String): List<Note> =
+        groupNotesByKommune(notes, localities).firstOrNull { it.kommune == kommune }?.notes ?: emptyList()
+
+    /** Clear one kommune's notes - after they've been imported and published, so the group drops
+     *  off the list and you work down to an empty list one kommune at a time. */
+    fun clearKommune(kommune: String) {
+        val ids = exportNotesFor(kommune).map { it.id }.toSet()
+        notes.removeAll { it.id in ids }
+        persist()
+    }
 
     private fun persist() {
         saveNotes(ctx, notes)
