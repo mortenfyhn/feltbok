@@ -2,7 +2,7 @@
 
 ## v0.10 (10. juni 2026)
 
-- Bedre forhåndsvalg i artssøket for du begynner å skrive.
+- Bedre forhåndsvalg i artssøket før du begynner å skrive.
 - Du kan kopiere observasjoner.
 - Kommunevis eksport, for å unngå kolliderende lokalitetsnavn.
 - Indiker hvilke observasjoner som har kommentar.
