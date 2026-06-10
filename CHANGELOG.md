@@ -29,6 +29,6 @@
 - Nytt, tåpelig appikon. Ser du hvilken fugl det er?
 - Ymse småforbedringer og feilrettinger.
 
-## v0.7 or eldre
+## v0.7 og eldre
 
-- En slags begynnelse.
+- Den spede begynnelse.
