@@ -45,17 +45,14 @@ git tag "$tag"
 apk="feltbok-$tag.apk"   # a recognisable name, not Gradle's app-release.apk
 cp app/build/outputs/apk/release/app-release.apk "$apk"
 
-# Release notes = install steps + this version's changelog; --generate-notes appends
-# the auto "What's Changed" list below.
+# Release notes = this version's changelog, then the install steps below it.
 notes=$(mktemp)
-{ cat docs/release-notes-install.md; printf '\n## Nytt i %s\n%s\n' "$tag" "$notes_body"; } > "$notes"
+{ printf '## Nytt i %s\n%s\n\n' "$tag" "$notes_body"; cat docs/release-notes-install.md; } > "$notes"
 
-# Push before creating the release so its auto-generated notes can resolve the tag + commits.
 git push origin master "$tag"
 gh release create "$tag" "$apk" \
     --title "Feltbok $tag" \
-    --notes-file "$notes" \
-    --generate-notes
+    --notes-file "$notes"
 
 rm -f "$apk" "$notes"
 echo "Released $tag → https://github.com/mortenfyhn/feltbok/releases/tag/$tag"
