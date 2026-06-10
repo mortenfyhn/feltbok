@@ -1,13 +1,13 @@
 # Endringslogg
 
-## Neste utgivelse
+## v0.10 – kommer
 
-- Artsforslagene før du søker tar nå hensyn til årstid og hvor du er, så det som er sannsynlig her og nå kommer høyere.
-- Kopier en observasjon for å raskt legge til en til på samme sted og tid – nyttig når du husker noe i etterkant.
-- Eksporten er delt opp per kommune, så observasjoner i flere kommuner importeres riktig (kopiér én kommune om gangen).
-- Observasjoner med kommentar får et lite «i»-merke i lista (blått for åpen, grått for privat).
-- Slett og lagre ligger nå side om side, så det er vanskeligere å slette ved et uhell.
-- Bydue heter nå «bydue» (ikke «klippedue»), så den lar seg importere til Artsobservasjoner.
+- Enda bedre artssøk.
+- Du kan kopiere observasjoner.
+- Eksporter per kommune, for å unngå kolliderende lokalitetsnavn.
+- Indiker hvilke observasjoner som har kommentar.
+- _Columba livia_ heter nå «bydue», ikke «klippedue», slik Artsobservasjoner befaler.
+- Ymse småforbedringer og feilrettinger.
 
 ## v0.9 – 8. juni 2026
 
