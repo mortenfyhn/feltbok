@@ -1,6 +1,6 @@
 # Endringslogg
 
-## v0.10 – kommer
+## v0.10 – 10. juni 2026
 
 - Enda bedre artssøk.
 - Du kan kopiere observasjoner.

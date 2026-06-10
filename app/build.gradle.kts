@@ -46,8 +46,8 @@ android {
         applicationId = "com.feltbok"
         minSdk = 26
         targetSdk = 34
-        versionCode = 9
-        versionName = "0.9"
+        versionCode = 10
+        versionName = "0.10"
         buildConfigField("String", "GIT_VERSION", "\"$gitVersion\"")
         // app_name lives here (not strings.xml) so the debug build type can override it.
         resValue("string", "app_name", "Feltbok (beta)")
