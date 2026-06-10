@@ -46,8 +46,10 @@ Recipes live in `just --list` — the notes below are only the why's and gotchas
 - **Closing issues.** When a commit resolves an issue, put a closing keyword (`Fix #50`, `Closes #50`)
   in the commit message so GitHub auto-closes the issue when it lands on `master`.
 - **Merging.** PRs are the exception, not the rule. The usual flow is: do the work on a branch, test
-  it quickly by hand, then merge to `master` and push `master` directly — no PR. Only open a PR when
-  explicitly asked.
+  it quickly by hand, then merge to `master` — no PR. Only open a PR when explicitly asked.
+- **Never push without my explicit consent.** Committing and merging to local `master` is fine on
+  request, but leave pushing to me — never `git push` (any branch, including `master`) unless I've
+  explicitly told you to in that moment.
 - **Disclose AI authorship.** When an agent files an issue or opens a PR, state upfront that the
   body is AI-generated so a human reader doesn't mistake it for human-written text.
 - **Changelog.** `CHANGELOG.md` is the user-facing changelog (Bokmål, casual `du`-tone). It starts
