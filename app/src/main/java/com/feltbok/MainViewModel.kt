@@ -166,23 +166,10 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
 
     /** Localities-dependent startup, run once they've finished loading. */
     private fun onLocalitiesLoaded() {
-        // Backfill qualified locality names on notes saved before `locFull` existed,
-        // so re-exporting an earlier day links instead of failing on the bare name.
-        var migrated = false
-        for (i in notes.indices) {
-            val n = notes[i]
-            if (n.locFull.isBlank() && n.locName.isNotBlank()) {
-                val loc = localities.firstOrNull { it.lokalitet == n.locName && it.lat == n.lat && it.lon == n.lon }
-                    ?: localities.filter { it.lokalitet == n.locName }   // same name across kommuner:
-                        .minByOrNull { haversine(it.lat, it.lon, n.lat, n.lon) }  // pick the nearest, not the first
-                if (loc != null) { notes[i] = n.copy(locFull = loc.fullname); migrated = true }
-            }
-        }
-        if (migrated) saveNotes(ctx, notes)
         // Re-add brand-new spots from saved notes, so a custom locality stays selectable
         // across restarts (until it's been uploaded and adjusted on the website).
         for (n in notes) if (n.newLoc && n.locName.isNotBlank())
-            addNewLocality(Locality("", n.locName, "", n.kommune, n.lat, n.lon, n.locName, 0,
+            addNewLocality(Locality("", n.locName, "", n.kommune, n.lat, n.lon, 0,
                 n.locRadius.toDouble(), public = false, newLoc = true))
         nearestFix = null   // invalidate the fix-keyed memo so nearest() rescans now that we have data
     }
@@ -267,7 +254,7 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
         dPub = n.publicComment; dPriv = n.privateComment
         dTime = n.time; dEndTime = n.endTime; dUncertain = n.uncertain
         dLoc = localities.firstOrNull { it.lokalitet == n.locName && it.lat == n.lat && it.lon == n.lon }
-            ?: Locality("", n.locName, "", "", n.lat, n.lon, n.locFull, 0, 0.0)
+            ?: Locality("", n.locName, "", "", n.lat, n.lon, 0, 0.0)
         screen = Screen.DETAIL
     }
 
@@ -328,7 +315,7 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
         val finalName = name.trim().ifBlank { "Ny lokalitet" }
         // Stamp the surrounding kommune now (localities are loaded - you just placed it on the map),
         // so its observations export under the right kommune without a later lookup.
-        val loc = Locality("", finalName, "", nearestKommune(lat, lon, localities), lat, lon, finalName, 0,
+        val loc = Locality("", finalName, "", nearestKommune(lat, lon, localities), lat, lon, 0,
             radiusM.toDouble(), public = false, newLoc = true)
         addNewLocality(loc)        // make it immediately selectable for further observations
         dLoc = loc
@@ -357,7 +344,7 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
             species = dSpecies, latin = dLatin, count = dCount,
             age = dAge, activity = dAct, sex = dSex,
             publicComment = dPub, privateComment = dPriv,
-            locName = loc?.lokalitet ?: "", locFull = loc?.fullname ?: "",
+            locName = loc?.lokalitet ?: "", locFull = "",
             lat = loc?.lat ?: 0.0, lon = loc?.lon ?: 0.0,
             newLoc = loc?.newLoc == true, locRadius = if (loc?.newLoc == true) loc.radius.toInt() else 0,
             uncertain = dUncertain, kommune = loc?.kommune ?: "",
