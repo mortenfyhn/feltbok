@@ -13,7 +13,7 @@ The bundled APK ships **public localities only** - the maintainer's own customs
 First draft the version's entry in `CHANGELOG.md` (terse, user-facing highlights only). Then:
 
 ```sh
-just release 0.8          # or: ./release.sh 0.8
+./release.sh 0.8
 ```
 
 The script bumps `versionCode`+`versionName` in `app/build.gradle.kts`, then **pauses** so you
