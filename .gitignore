@@ -3,6 +3,7 @@
 /app/build/
 /.gradle/
 /app/.cxx/
+/.kotlin/
 
 # Claude Code session/config dir
 /.claude/
