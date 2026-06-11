@@ -19,15 +19,6 @@ test:
     .venv/bin/python -m unittest discover -s scripts -p 'test_*.py'
     ./gradlew testDebugUnitTest
 
-# --rerun-tasks: the env-var gate isn't a tracked input, so Gradle would else skip a no-change rerun.
-# Run the search scoreboard (opt-in; off the default test path) - prints one table A/B-ing all scorers.
-bench:
-    BENCH_SEARCH=1 ./gradlew testDebugUnitTest --tests "*SearchBenchmark.scoreboard" --rerun-tasks
-
-# Grid-search the tiered scorer's weights (~1 min); prints the best combos as a proposal to eyeball.
-tune:
-    TUNE_SEARCH=1 ./gradlew testDebugUnitTest --tests "*SearchBenchmark.tuneWeights" --rerun-tasks
-
 # Auto-format Kotlin (ktlint) + Python (ruff); run before committing manual tweaks
 format:
     ./gradlew ktlintFormat
@@ -58,10 +49,6 @@ run: install
 # Show device logs for the app
 log:
     adb logcat -s Feltbok:* AndroidRuntime:* --format=brief
-
-# Cut a signed release: bump version, build+sign, publish the GitHub release, push (see docs/release.md)
-release version:
-    ./release.sh {{version}}
 
 # Uninstall the dev build from device (NOT the release app)
 uninstall:
