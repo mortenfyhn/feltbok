@@ -231,9 +231,9 @@ class ModelTest {
     fun localityContainsPrefersFootprintOverNearerCentre() {
         // The #63 case: a tap inside polygon A but closer to point-locality B's centre. A contains
         // the tap; B (a point, no footprint) does not - so the picker keeps A.
-        val a = Locality("a", "Polygon A", "", "", 63.5, 8.5, "A", 0, 0.0,
+        val a = Locality("a", "Polygon A", "", "", 63.5, 8.5, 0, 0.0,
             polygon = square(63.0, 64.0, 8.0, 9.0))
-        val b = Locality("b", "Point B", "", "", 64.05, 9.05, "B", 0, 0.0)  // just outside A, nearer the corner
+        val b = Locality("b", "Point B", "", "", 64.05, 9.05, 0, 0.0)  // just outside A, nearer the corner
         val tapLat = 63.98; val tapLon = 8.98          // inside A, near its NE corner, close to B
         assertTrue(localityContains(a, tapLat, tapLon))
         assertTrue(!localityContains(b, tapLat, tapLon))
@@ -241,7 +241,7 @@ class ModelTest {
 
     @Test
     fun localityContainsUsesRadiusForCircles() {
-        val circle = Locality("c", "Circle", "", "", 63.0, 8.0, "C", 0, 200.0)  // 200 m radius
+        val circle = Locality("c", "Circle", "", "", 63.0, 8.0, 0, 200.0)  // 200 m radius
         assertTrue(localityContains(circle, 63.0, 8.0))                 // dead centre
         assertTrue(!localityContains(circle, 63.1, 8.0))               // ~11 km away
         val point = circle.copy(radius = 0.0)
@@ -257,8 +257,8 @@ class ModelTest {
         // Path 3: a legacy new spot with neither falls back to the nearest registry kommune (Ørland).
         // The registry also holds the spot itself as a kommune-less locality at distance 0; it must
         // NOT match itself, so blank-kommune candidates are excluded.
-        val hovde = Locality("1", "Hovde", "", "Ørland", 63.70, 9.60, "Hovde, Ørland, Tø", 0, 0.0)
-        val newSelf = Locality("2", "Testdammen", "", "", 63.71, 9.61, "Testdammen", 0, 0.0, public = false, mine = true)
+        val hovde = Locality("1", "Hovde", "", "Ørland", 63.70, 9.60, 0, 0.0)
+        val newSelf = Locality("2", "Testdammen", "", "", 63.71, 9.61, 0, 0.0, public = false, mine = true)
         val nNearest = noteAt(noonMs).copy(locName = "Testdammen", locFull = "", kommune = "", lat = 63.71, lon = 9.61, newLoc = true)
 
         val groups = groupNotesByKommune(listOf(nNearest, nStamped, nFromName), listOf(hovde, newSelf))
@@ -283,7 +283,7 @@ class ModelTest {
     }
 
     private fun mine(id: String, name: String = "Lok $id", lat: Double = 63.0, radius: Double = 0.0) =
-        Locality(id, name, "", "", lat, 8.0, name, 0, radius, public = false, mine = true)
+        Locality(id, name, "", "", lat, 8.0, 0, radius, public = false, mine = true)
 
     @Test
     fun diffCountsAddedRemovedAndModifiedAsOneSum() {
@@ -333,7 +333,6 @@ class ModelTest {
         val s = sites[0]
         assertEquals("11", s.id)
         assertEquals("Min vik", s.lokalitet)
-        assertEquals("presentationName -> fullname", "Min vik, Frøya, Tø", s.fullname)
         assertEquals(63.7, s.lat, 1e-9); assertEquals(8.3, s.lon, 1e-9)
         assertEquals("accuracy -> radius", 50.0, s.radius, 1e-9)
         assertTrue("mine, not public", s.mine && !s.public)

@@ -79,7 +79,6 @@ data class Locality(
     val kommune: String,
     val lat: Double,
     val lon: Double,
-    val fullname: String, // qualified "Lok, Hovedlok, Kommune, Fylke" - what the import matches
     val observers: Int, // distinct observers - a public-establishedness signal for the map
     val radius: Double, // the locality's map footprint radius in metres (0 = unknown)
     val polygon: List<DoubleArray> = emptyList(), // real footprint as [lat,lon] vertices, when it is an area
@@ -352,20 +351,22 @@ private fun myLocalitiesFile(ctx: Context) = File(ctx.filesDir, "my-localities.c
 private fun fastDouble(s: String): Double? =
     if (s.isEmpty()) null else try { s.toDouble() } catch (e: NumberFormatException) { null }
 
-/** Columns: id,lokalitet,hovedlokalitet,kommune,fylke,lat,lon,count,observers,fullname,radius,geometry,public,mine */
+/** Columns: id,lokalitet,hovedlokalitet,kommune,fylke,lat,lon,count,observers,radius,geometry,public,mine */
 private fun parseLocalityRow(c: List<String>): Locality? {
     if (c.size < 7) return null
     val lat = fastDouble(c[5]) ?: return null
     val lon = fastDouble(c[6]) ?: return null
-    val full = c.getOrElse(9) { "" }.ifBlank { c[1] }   // fall back to bare name pre-fullname
     val obs = c.getOrElse(8) { "" }.toIntOrNull() ?: 0
-    val radius = fastDouble(c.getOrElse(10) { "" }) ?: 0.0
-    val poly = parsePolygon(c.getOrElse(11) { "" })
-    val public = c.getOrElse(12) { "1" } != "0"
-    val mine = c.getOrElse(13) { "0" } == "1"
+    // radius..mine sit one column later in legacy CSVs that still carry a `fullname` at index 9
+    // (older bundles + a not-yet-resynced my-localities.csv); detect by row width.
+    val b = if (c.size >= 14) 10 else 9
+    val radius = fastDouble(c.getOrElse(b) { "" }) ?: 0.0
+    val poly = parsePolygon(c.getOrElse(b + 1) { "" })
+    val public = c.getOrElse(b + 2) { "1" } != "0"
+    val mine = c.getOrElse(b + 3) { "0" } == "1"
     // Show public (allmenn) localities and the user's own customs; drop anything else.
     if (!public && !mine) return null
-    return Locality(c[0], c[1], c[2], c[3], lat, lon, full, obs, radius, poly, public = public, mine = mine)
+    return Locality(c[0], c[1], c[2], c[3], lat, lon, obs, radius, poly, public = public, mine = mine)
 }
 
 /** Public localities from the bundled (or pushed) `localities.csv`, plus the user's own
@@ -382,7 +383,7 @@ data class SyncDiff(val total: Int, val changed: Int, val firstSync: Boolean)
 // The fields whose change we treat as a meaningful edit to an existing locality (name, place,
 // footprint). id is the identity, so it is excluded; polygon is flattened to compare by value.
 private fun localitySig(l: Locality) =
-    listOf(l.lokalitet, l.fullname, l.lat, l.lon, l.radius, l.polygon.flatMap { it.toList() })
+    listOf(l.lokalitet, l.lat, l.lon, l.radius, l.polygon.flatMap { it.toList() })
 
 /** Diff old vs new "mine" localities by id: count added + removed + content-changed. */
 fun diffMySites(old: List<Locality>, new: List<Locality>): SyncDiff {
@@ -414,7 +415,6 @@ fun parseMySites(json: String): List<Locality> {
             hovedlokalitet = "",
             kommune = o.optString("municipalityName"),
             lat = lat, lon = lon,
-            fullname = o.optString("presentationName").ifBlank { o.optString("name") },
             observers = 0, radius = o.optDouble("accuracy", 0.0),
             polygon = poly, public = false, mine = true,
         ))
@@ -443,13 +443,13 @@ private fun csvField(s: String): String =
  *  so they survive restarts. Polygons are written back as WKT for [parsePolygon]. */
 fun saveMyLocalities(ctx: Context, sites: List<Locality>) {
     val sb = StringBuilder()
-    sb.append("id,lokalitet,hovedlokalitet,kommune,fylke,lat,lon,count,observers,fullname,radius,geometry,public,mine\n")
+    sb.append("id,lokalitet,hovedlokalitet,kommune,fylke,lat,lon,count,observers,radius,geometry,public,mine\n")
     for (s in sites) {
         val geom = if (s.polygon.isEmpty()) ""
         else "POLYGON((" + s.polygon.joinToString(", ") { "${it[1]} ${it[0]}" } + "))"
         sb.append(listOf(
             s.id, s.lokalitet, s.hovedlokalitet, s.kommune, "",
-            s.lat.toString(), s.lon.toString(), "0", "0", s.fullname,
+            s.lat.toString(), s.lon.toString(), "0", "0",
             s.radius.toString(), geom, "0", "1",
         ).joinToString(",", postfix = "\n") { csvField(it) })
     }

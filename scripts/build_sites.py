@@ -53,7 +53,6 @@ COLS = [
     "lon",
     "count",
     "observers",
-    "fullname",
     "radius",
     "geometry",
     "public",
@@ -67,7 +66,7 @@ def wgs(x, y):
 
 
 def make_row(
-    site_id, lok, hoved, kom, fylke, lat, lon, full, radius, geom, is_private, overrides
+    site_id, lok, hoved, kom, fylke, lat, lon, radius, geom, is_private, overrides
 ):
     """Common row assembly + the public/mine filter. The harvest returns public (allmenn)
     sites + the logged-in user's OWN private ones; ship both (others' privates never appear).
@@ -86,7 +85,6 @@ def make_row(
         "lon": lon,
         "count": 0,
         "observers": 0,
-        "fullname": full,
         "radius": radius,
         "geometry": geom,
         "public": public,
@@ -107,7 +105,13 @@ def rows_from_mobil(raw, overrides):
             )  # already parsed on this endpoint
             if coords and coords[0] != coords[-1]:  # close the ring for valid WKT
                 coords = coords + [coords[0]]
-            geom = "POLYGON((" + ", ".join(f"{lon} {lat}" for lon, lat in coords) + "))"
+            # 6 decimals (~0.1 m) matches the point lat/lon precision and is plenty for a
+            # locality outline; the raw feed's 8 decimals were dead weight in the bundled CSV.
+            geom = (
+                "POLYGON(("
+                + ", ".join(f"{round(lon, 6)} {round(lat, 6)}" for lon, lat in coords)
+                + "))"
+            )
         lok = r["name"] or ""
         hoved = names.get(r.get("parentSiteId"), "") or ""
         row = make_row(
@@ -118,7 +122,6 @@ def rows_from_mobil(raw, overrides):
             r.get("countyName") or "",
             round(r["latitude"], 6),
             round(r["longitude"], 6),
-            r.get("presentationName") or lok,
             int(r.get("accuracy") or 0),
             geom,
             r["isPrivate"],
@@ -148,7 +151,6 @@ def rows_from_geojson(features, fylke, fylke_abbr, overrides):
             geom = "POLYGON((" + ", ".join(f"{b} {a}" for a, b in pts) + "))"
         lok = p["siteName"] or ""
         kom = p["siteAreaName"] if p.get("siteAreaDescription") == "Kommune" else ""
-        full = ", ".join(x for x in (lok, p["parentName"] or "", kom, fylke_abbr) if x)
         row = make_row(
             p["siteId"],
             lok,
@@ -157,7 +159,6 @@ def rows_from_geojson(features, fylke, fylke_abbr, overrides):
             fylke,
             lat,
             lon,
-            full,
             int(p["accuracy"]),
             geom,
             p["isPrivate"],
