@@ -108,3 +108,9 @@ dependencies {
     // JSON round-trip test (noteToJson/noteFromJson) needs the actual implementation.
     testImplementation("org.json:json:20240303")
 }
+
+// Stream test stdout to the console so the (opt-in) SearchBenchmark scoreboard table is readable
+// in the terminal, not just the HTML report. Normal tests are silent, so this adds no noise.
+tasks.withType<Test> {
+    testLogging.showStandardStreams = true
+}

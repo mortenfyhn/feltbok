@@ -52,6 +52,10 @@ class SearchBenchmark {
 
     @Test
     fun scoreboard() {
+        // A reporting tool, not a pass/fail test (no perf threshold) - so it's skipped by default
+        // rather than burning ~17s on every unit-test/CI run. Run it deliberately (see KDoc) with:
+        //   BENCH_SEARCH=1 ./gradlew testDebugUnitTest --tests "*SearchBenchmark.scoreboard" --rerun-tasks
+        assumeTrue("set BENCH_SEARCH=1 to run the search scoreboard", System.getenv("BENCH_SEARCH") != null)
         require(species.size > 100) { "expected the real checklist; got ${species.size} species" }
         val scorers = Scorers.all(species, suffixes = suffixes)
         println(render(scorers.map { measure(it) }))
