@@ -357,7 +357,7 @@ private fun NoteRow(n: Note, status: String, selected: Boolean, onClick: () -> U
             // ellipsized box's trailing slack, keeping every locality flush against the timestamp.
             Text(n.locName, color = cs.onSurface, fontSize = 13.sp, textAlign = TextAlign.End,   // [1] locality
                 maxLines = 1, overflow = TextOverflow.Ellipsis)
-            Text(shortTime(n.time), color = cs.onSurfaceVariant, fontSize = 13.sp)   // [2] timestamp
+            Text(rowTime(n.time), color = cs.onSurfaceVariant, fontSize = 13.sp)   // [2] timestamp
         },
         modifier = Modifier.fillMaxWidth()
             .combinedClickable(onClick = onClick, onLongClick = onLongClick)

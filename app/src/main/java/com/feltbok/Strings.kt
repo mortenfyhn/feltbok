@@ -16,10 +16,8 @@ object Strings {
 
     object Notes {
         const val empty = "Ingen observasjoner enda.\nTrykk + for å legge til."
-        const val today = "I dag"
-        const val yesterday = "I går"
 
-        // Per-day section header on the notes list; [label] is the day ("I dag", a date, …).
+        // Per-kommune section header on the notes list; [label] is the kommune name.
         fun header(label: String, n: Int) = "$label · $n ${if (n == 1) "observasjon" else "observasjoner"}"
         const val feedback = "Gi tilbakemelding"
         const val export = "Eksporter"
