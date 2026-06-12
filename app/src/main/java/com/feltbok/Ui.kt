@@ -461,6 +461,18 @@ fun SearchScreen(vm: MainViewModel) {
                         .padding(horizontal = 16.dp, vertical = 9.dp),
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
+                    // Experiment behind SHOW_SUGGESTION_SOURCE_TAGS (dev build only): tag which quick-list
+                    // layer this bird came from, to eyeball the recents/regulars/here-now split. Only
+                    // meaningful with a blank query.
+                    if (BuildConfig.SHOW_SUGGESTION_SOURCE_TAGS && q.isBlank()) {
+                        val (tag, color) = when {
+                            s.norsk in vm.recent -> "nylig" to Color(0xFF1976D2)
+                            vm.useCount(s.norsk) > 0 -> "fast" to Color(0xFF388E3C)
+                            else -> "her/nå" to Color(0xFF9E6B00)
+                        }
+                        Text(tag, color = color, fontSize = 11.sp, fontWeight = FontWeight.Bold,
+                            modifier = Modifier.padding(end = 8.dp))
+                    }
                     Text(s.norsk, fontWeight = FontWeight.Medium, maxLines = 1, overflow = TextOverflow.Ellipsis)
                     StatusBadge(s.status)
                     if (s.latin.isNotBlank()) {

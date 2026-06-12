@@ -49,6 +49,8 @@ android {
         versionCode = 10
         versionName = "0.10"
         buildConfigField("String", "GIT_VERSION", "\"$gitVersion\"")
+        // Feature flags default off (release); the debug build type flips experiments on below.
+        buildConfigField("Boolean", "SHOW_SUGGESTION_SOURCE_TAGS", "false")
         // app_name lives here (not strings.xml) so the debug build type can override it.
         resValue("string", "app_name", "Feltbok (beta)")
     }
@@ -76,6 +78,7 @@ android {
             // Mark the in-app version string too (footer + feedback), so a dev build is
             // recognisable from inside the app, not just by its launcher label.
             buildConfigField("String", "GIT_VERSION", "\"$gitVersion (dev)\"")
+            buildConfigField("Boolean", "SHOW_SUGGESTION_SOURCE_TAGS", "true")
         }
     }
 
