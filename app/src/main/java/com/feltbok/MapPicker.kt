@@ -573,11 +573,12 @@ private class LocalityOverlay(
         picked?.let { pl ->                           // selected: bold outline, drawn on top
             proj.toPixels(GeoPoint(pl.lat, pl.lon), p)
             val cx = p.x.toFloat(); val cy = p.y.toFloat()
-            // Areas get a faint fill (so localities inside stay visible) + a bold outline;
-            // small points get a solid fill so the dot stands out.
-            val area = pl.polygon.isNotEmpty()
-            val fp = if (pl.public) (if (area) selFillFaint else selFill)
-            else (if (area) selFillFaintPriv else selFillPriv)
+            // Any large pick — a polygon OR a wide circle like Uttian — gets a faint fill so the
+            // localities sitting inside it stay visible and tappable; only small dots get a solid
+            // fill so they stand out. (Same 140px footprint threshold the unselected loop fades on.)
+            val big = pl.polygon.isNotEmpty() || screenSpanPx(pl, ppm) > 140f
+            val fp = if (pl.public) (if (big) selFillFaint else selFill)
+            else (if (big) selFillFaintPriv else selFillPriv)
             val sp = if (pl.public) selStroke else selStrokePriv
             drawShape(c, proj, pl, cx, cy, radiusPx(pl, ppm), fp, sp)
             if (labelVisible(pl, ppm)) drawLabel(c, pl.lokalitet, cx, cy, radiusPx(pl, ppm))

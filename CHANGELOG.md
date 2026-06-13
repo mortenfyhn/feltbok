@@ -6,6 +6,8 @@
   registrerte ligger lett tilgjengelig øverst en stund.
 - Etter henting av lokaliteter blir du nå værende på skjermen til du selv går tilbake.
 - Appen er mer enn halvert i størrelse, så den laster ned og installerer raskere.
+- En valgt stor lokalitet (som «Uttian») fylles nå gjennomsiktig, så lokalitetene som ligger
+  inni den fortsatt er synlige og lette å velge.
 
 ## v0.10 (10. juni 2026)
 
