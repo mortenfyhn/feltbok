@@ -2,6 +2,8 @@
 
 ## Neste utgivelse
 
+- Artssøkets forhåndsvalg tar nå mer hensyn til hva du har sett nylig, og fugler du nettopp
+  registrerte ligger lett tilgjengelig øverst en stund.
 - Etter henting av lokaliteter blir du nå værende på skjermen til du selv går tilbake.
 
 ## v0.10 (10. juni 2026)

@@ -52,14 +52,16 @@ Recipes live in `just --list` — the notes below are only the why's and gotchas
   explicitly told you to in that moment.
 - **Disclose AI authorship.** When an agent files an issue or opens a PR, state upfront that the
   body is AI-generated so a human reader doesn't mistake it for human-written text.
-- **Changelog.** `CHANGELOG.md` is the user-facing changelog (Bokmål, casual `du`-tone). It starts
-  at v1.0 — don't add entries before then. The v1.0 entry is a quick overview of the main features;
-  v1.1 onward are proper per-version entries with short, benefit-framed highlights (fold minor/cosmetic
-  tweaks into one "Ymse småforbedringer" line rather than listing each). When landing a user-visible
-  change, add a bullet under the standing **"Neste utgivelse"** section at the top (it has no version
-  number yet). At release time that heading is renamed by hand to `## vX – date` during `release.sh`'s
-  pause step — the script pulls notes from the `## v<version>` section and aborts if it's missing. The
-  same per-version text is pasted into the GitHub release ("Nytt i …", see `docs/release.md`).
+- **Docs & changelog — keep them in sync, in the same commit, without being asked.** When a change
+  alters user-visible behavior or makes a doc inaccurate, update the relevant doc (especially
+  `docs/behavior.md`) and add a `CHANGELOG.md` entry as part of that same commit — don't defer it.
+- **Changelog.** `CHANGELOG.md` is the user-facing changelog (Bokmål, casual `du`-tone), kept as
+  per-version sections with short, benefit-framed highlights (fold minor/cosmetic tweaks into one
+  "Ymse småforbedringer" line rather than listing each). When landing a user-visible change, add a
+  bullet under the standing **"Neste utgivelse"** section at the top (it has no version number yet).
+  At release time that heading is renamed by hand to `## vX – date` during `release.sh`'s pause step —
+  the script pulls notes from the `## v<version>` section and aborts if it's missing. The same
+  per-version text is pasted into the GitHub release ("Nytt i …", see `docs/release.md`).
 - Norwegian (Bokmål) for user-facing strings.
 - **Worktrees are opt-in.** Work in the main checkout by default. Only reach for EnterWorktree when
   the user explicitly asks, or when you know another session is editing the same files concurrently —
