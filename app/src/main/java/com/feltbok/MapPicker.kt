@@ -344,6 +344,28 @@ private const val DECLUTTER_MIN_SPAN_PX = 24f
 private const val LABEL_MIN_SPAN_PX = 34f
 private const val POINT_LABEL_EXTENT_M = 60.0
 
+/** Footprint (px half-extent) above which a locality is treated as "large": faded when
+ *  unselected so it doesn't dominate, and drawn translucent when selected so the localities
+ *  inside it stay visible. */
+private const val LARGE_FOOTPRINT_PX = 140f
+
+/** Roughly how big the locality's real footprint is on screen (px half-extent): the polygon's
+ *  extent, the circle's true radius, or 0 for a point locality. Drives fading big localities,
+ *  culling tiny ones when zoomed far out, and the selected-pick fill choice. */
+internal fun screenSpanPx(loc: Locality, ppm: Double): Float {
+    val b = loc.polyBounds ?: return (loc.radius * ppm).toFloat()
+    val mLat = (b[1] - b[0]) * 111_320.0
+    val mLon = (b[3] - b[2]) * 111_320.0 * cos(Math.toRadians((b[0] + b[1]) / 2))
+    return (max(mLat, mLon) / 2.0 * ppm).toFloat()
+}
+
+/** A selected locality is drawn with a translucent fill when its footprint is large — a polygon
+ *  area OR a wide circle like Uttian — so the localities sitting inside stay visible and tappable;
+ *  only small dots get a solid fill so they stand out. The wide-circle case is the regression to
+ *  guard: a circle is radius-based, not a polygon, so a polygon-only test paints over its insides. */
+internal fun selectedFillIsFaint(loc: Locality, ppm: Double): Boolean =
+    loc.polygon.isNotEmpty() || screenSpanPx(loc, ppm) > LARGE_FOOTPRINT_PX
+
 /** Antialiased fill/stroke Paints from an ARGB literal, to cut the overlays' Paint boilerplate. */
 private fun fillPaint(argb: Long) =
     Paint().apply { style = Paint.Style.FILL; color = argb.toInt(); isAntiAlias = true }
@@ -472,16 +494,6 @@ private class LocalityOverlay(
         return (loc.radius * ppm).toFloat().coerceAtLeast(POINT_DOT_PX)  // circle of the real radius
     }
 
-    /** Roughly how big the locality's real footprint is on screen (px half-extent): the
-     *  polygon's extent, the circle's true radius, or 0 for a point locality. Drives both
-     *  fading big localities and culling tiny ones when zoomed far out. */
-    private fun screenSpanPx(loc: Locality, ppm: Double): Float {
-        val b = loc.polyBounds ?: return (loc.radius * ppm).toFloat()
-        val mLat = (b[1] - b[0]) * 111_320.0
-        val mLon = (b[3] - b[2]) * 111_320.0 * cos(Math.toRadians((b[0] + b[1]) / 2))
-        return (max(mLat, mLon) / 2.0 * ppm).toFloat()
-    }
-
     /** Does the locality's geographic footprint overlap the visible map bounds? Uses the
      *  polygon's vertex extent (or the circle's radius), so a large shape whose centre is
      *  off-screen still draws while it covers the view. */
@@ -564,7 +576,7 @@ private class LocalityOverlay(
             val px = p.x.toFloat(); val py = p.y.toFloat()
             // Fade large localities (big circles/polygons) so they don't dominate the map.
             // New spots have public=false, so they draw yellow like the user's own.
-            val big = span > 140f
+            val big = span > LARGE_FOOTPRINT_PX
             val fp = if (loc.public) (if (big) fillPale else fill) else (if (big) privFillPale else privFill)
             drawShape(c, proj, loc, px, py, rPx, fp, if (loc.public) stroke else privStroke)
             // Reveal the name by footprint size, not a flat zoom: big areas label early, tiny spots late.
@@ -575,10 +587,10 @@ private class LocalityOverlay(
             val cx = p.x.toFloat(); val cy = p.y.toFloat()
             // Any large pick — a polygon OR a wide circle like Uttian — gets a faint fill so the
             // localities sitting inside it stay visible and tappable; only small dots get a solid
-            // fill so they stand out. (Same 140px footprint threshold the unselected loop fades on.)
-            val big = pl.polygon.isNotEmpty() || screenSpanPx(pl, ppm) > 140f
-            val fp = if (pl.public) (if (big) selFillFaint else selFill)
-            else (if (big) selFillFaintPriv else selFillPriv)
+            // fill so they stand out.
+            val faint = selectedFillIsFaint(pl, ppm)
+            val fp = if (pl.public) (if (faint) selFillFaint else selFill)
+            else (if (faint) selFillFaintPriv else selFillPriv)
             val sp = if (pl.public) selStroke else selStrokePriv
             drawShape(c, proj, pl, cx, cy, radiusPx(pl, ppm), fp, sp)
             if (labelVisible(pl, ppm)) drawLabel(c, pl.lokalitet, cx, cy, radiusPx(pl, ppm))
