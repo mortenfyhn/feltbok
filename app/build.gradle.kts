@@ -74,7 +74,12 @@ android {
 
     buildTypes {
         release {
-            isMinifyEnabled = false
+            isMinifyEnabled = true
+            isShrinkResources = true
+            proguardFiles(
+                getDefaultProguardFile("proguard-android-optimize.txt"),
+                "proguard-rules.pro",
+            )
             if (signStore != null) signingConfig = signingConfigs.getByName("release")
         }
         // Separate applicationId so a dev build installs alongside the release build I use daily,
