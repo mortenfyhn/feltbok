@@ -2,27 +2,42 @@
 
 Plain-language notes on user-visible behaviour that isn't obvious from the UI —
 the kind of thing a field user might wonder about. The why and the tuning knobs
-live in the code (`Search.kt`, `MainViewModel.kt`); this is the short version.
+live in the code (`Search.kt`, `MainViewModel.kt`, `UseScore.kt`); this is the
+short version.
 
 ## Species search
 
 ### Before you type (the quick list)
 
-Open the search screen and you get a list before touching the keyboard. It's
-built in three layers (`speciesQuickList` in `Ui.kt`):
+Open the search screen and you get a list before touching the keyboard. It has a
+small **pinned batch** on top, then every species ranked by a single score
+(`blankQuickList` in `MainViewModel.kt`).
 
-1. **Your recent picks** — the species you last chose, most-recent first (kept to
-   the last 8, and it survives app restarts). A fresh install seeds this with the
-   most common species so the list isn't empty.
-2. **Your regulars** — anything else you've picked before, ordered by how often
-   you've picked it.
-3. **Likely here and now** — the rest, ordered by what's reported in the current
-   month near your location (same season/location signal the typed search uses;
-   see below), to fill the screen.
+**The pinned batch** is your current outing's birds kept one tap away. A species is
+pinned only while *both* hold: you picked it **within the last 6 hours**, *and*
+it's among your **4 most-recently-picked** such species. So pins fall off on their
+own — 6 hours after you last pick a species it drops out (an outing's batch clears
+itself by next morning), and picking a 5th species bumps the oldest pin back down
+into the ranked list. The pinned rows are ordered by recency, not score, so a
+just-picked bird can sit above a higher-scored one. (Tuning: `PIN_WINDOW_MS`,
+`PIN_MAX` in `UseScore.kt`.)
 
-Each bird comes from exactly one of these layers — your picks stay pinned on top,
-and the season/location ranking only orders the fill, so it never buries a bird
-you choose often.
+**Everything below** is ranked by one blended score, so your regulars and what's
+likely here-and-now compete in a single list instead of being stacked in tiers:
+
+- **How much you use it** — each pick bumps a per-species score that **fades with a
+  ~2-week half-life**, so a bird you logged a lot recently ranks high, while one you
+  logged heavily but long ago has decayed away. This replaces a plain "recent list"
+  and "all-time counts" with one recency-aware signal (persisted in `uses.json`).
+- **Likely here and now** — what's reported in the current month near your location
+  (the same season/location signal the typed search uses; see below).
+
+The two are blended (currently leaning on your own history; see `PERSONAL_W` /
+`CONTEXT_W` / `PERSONAL_MIDPOINT` in `UseScore.kt`). In practice the here-and-now
+term is fairly flat across common in-season birds, so it mainly pushes off-season
+or out-of-region birds *down* rather than reordering the likely ones — and because
+your use score already fades over weeks, it carries most of the "what's relevant
+now" signal on its own.
 
 ### Once you start typing
 
