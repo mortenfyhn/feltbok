@@ -12,6 +12,14 @@ Recipes live in `just --list` — the notes below are only the why's and gotchas
   the UI themselves; don't install/run on the device unless they've okayed it.
 - Always run `./gradlew test` (Kotlin units) before opening a PR; `just test` also runs the Python tests.
 - `./gradlew assembleRelease` — signed release, needs the keystore (no `just` recipe for it).
+- **Release runs through R8** (`isMinifyEnabled` + resource shrinking; keep rules in
+  `app/proguard-rules.pro`). R8 tree-shakes by *static* reachability, so anything reached by
+  reflection/name (a new library that loads classes reflectively, a reflective JSON/serialization
+  mapper, `Class.forName`, a new WebView JS bridge) can be stripped and break the **release** build
+  *at runtime*, not at build time. The dev build is unaffected (it doesn't minify). So: when adding a
+  dependency or any reflective code, skim `assembleRelease` output for R8 `Missing class`/`-dontwarn`
+  notes, add a keep rule if needed, and smoke-test that one feature on the release build. No need to
+  re-test the whole app every release — the R8 surface only changes when you add a reflective dep.
 - **Two builds coexist on the device.** The dev build carries the `.debug` applicationId suffix
   (`com.feltbok.debug`), so it installs alongside the maintainer's daily **release** app
   (`com.feltbok`). `just install`/`just run`/`just uninstall` all target the **debug** package — so
