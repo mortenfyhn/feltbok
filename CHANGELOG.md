@@ -1,5 +1,9 @@
 # Endringslogg
 
+## Neste utgivelse
+
+- Etter henting av lokaliteter blir du nå værende på skjermen til du selv går tilbake.
+
 ## v0.10 (10. juni 2026)
 
 - Bedre forhåndsvalg i artssøket før du begynner å skrive.

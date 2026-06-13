@@ -115,6 +115,7 @@ object Strings {
         const val fetching = "Henter lokaliteter…"
         const val error = "Noe gikk galt under henting."
         const val retry = "Prøv igjen"
+        const val done = "OK"                                // DONE-stage button back to the list
         const val doneGeneric = "Ferdig ✓"
         fun doneFirst(total: Int) = "Hentet $total lokaliteter ✓"
         fun doneChanged(total: Int, changed: Int) = "Hentet $total lokaliteter ($changed endret) ✓"

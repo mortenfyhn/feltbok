@@ -33,7 +33,6 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
@@ -108,7 +107,6 @@ fun SyncScreen(vm: MainViewModel) {
                                     CookieManager.getInstance().flush()   // persist the session for next time
                                     result = diff
                                     stage = Stage.DONE
-                                    delay(1600); vm.closeSync()
                                 } else stage = Stage.ERROR
                             }
                         }
@@ -154,7 +152,8 @@ fun SyncScreen(vm: MainViewModel) {
             AndroidView(factory = { webView }, modifier = Modifier.fillMaxSize())
             if (stage != Stage.LOGIN) StageContent(stage, result, cs,
                 onLogin = { stage = Stage.LOGIN; webView.loadUrl(LOGIN_URL) },
-                onRetry = { stage = Stage.CHECKING; webView.loadUrl("$SITES_HOST/my-sites") })
+                onRetry = { stage = Stage.CHECKING; webView.loadUrl("$SITES_HOST/my-sites") },
+                onDone = { vm.closeSync() })
         }
     }
 }
@@ -174,6 +173,7 @@ private fun StageContent(
     cs: androidx.compose.material3.ColorScheme,
     onLogin: () -> Unit,
     onRetry: () -> Unit,
+    onDone: () -> Unit,
 ) {
     Column(
         Modifier.fillMaxSize().background(cs.background).padding(24.dp),
@@ -195,8 +195,12 @@ private fun StageContent(
                 Spacer(Modifier.height(12.dp))
                 Text(Strings.Sync.fetching, color = cs.onSurfaceVariant)
             }
-            Stage.DONE -> Text(doneMessage(result), textAlign = TextAlign.Center,
-                color = cs.primary, fontWeight = FontWeight.SemiBold)
+            Stage.DONE -> {
+                Text(doneMessage(result), textAlign = TextAlign.Center,
+                    color = cs.primary, fontWeight = FontWeight.SemiBold)
+                Spacer(Modifier.height(20.dp))
+                Button(onClick = onDone) { Text(Strings.Sync.done) }
+            }
             Stage.ERROR -> {
                 Text(Strings.Sync.error, color = cs.onSurface, textAlign = TextAlign.Center)
                 Spacer(Modifier.height(20.dp))
