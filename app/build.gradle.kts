@@ -80,6 +80,11 @@ android {
         // Separate applicationId so a dev build installs alongside the release build I use daily,
         // rather than overwriting it. Distinct name + version suffix to tell them apart on-device.
         debug {
+            // Run at release speed: the debuggable flag makes ART skip optimizations and adds
+            // instrumentation, which is the bulk of the dev build's runtime sluggishness. We drive
+            // this build by hand (adb) rather than attaching a JVM/Compose debugger, so we don't
+            // need it. Still a distinct .debug install alongside the daily release build.
+            isDebuggable = false
             applicationIdSuffix = ".debug"
             versionNameSuffix = "-debug"
             resValue("string", "app_name", "Feltbok (dev)")
