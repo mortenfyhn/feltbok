@@ -383,29 +383,16 @@ private fun NoteRow(n: Note, status: String, selected: Boolean, onClick: () -> U
 
 // ============================ SEARCH ============================
 
-/** The blank-search quick list: your recent picks first, then your most-used species,
- *  then a fill of what's likely here and now (current month + location). */
-private fun speciesQuickList(vm: MainViewModel): List<Species> {
-    val recentList = vm.recent.mapNotNull { name -> vm.species.firstOrNull { it.norsk == name } }
-    val seen = recentList.mapTo(HashSet()) { it.norsk }
-    val frequent = vm.species
-        .filter { it.norsk !in seen && vm.useCount(it.norsk) > 0 }
-        .sortedByDescending { vm.useCount(it.norsk) }
-    frequent.forEach { seen.add(it.norsk) }
-    val fill = vm.contextRanked(vm.species.filter { it.norsk !in seen })
-    return (recentList + frequent + fill).take(40)
-}
-
 @Composable
 fun SearchScreen(vm: MainViewModel) {
     val cs = MaterialTheme.colorScheme
     var q by remember { mutableStateOf("") }
     // Suggestions are computed off the typing path: the field updates instantly while a
     // debounced effect refreshes `results` a moment later, so keystrokes never wait on it.
-    var results by remember { mutableStateOf(speciesQuickList(vm)) }
+    var results by remember { mutableStateOf(vm.blankQuickList()) }
     LaunchedEffect(q) {
         if (q.isBlank()) {
-            results = speciesQuickList(vm)
+            results = vm.blankQuickList()
         } else {
             delay(70)  // coalesce fast keystrokes
             results = vm.searchResults(q)
@@ -461,16 +448,14 @@ fun SearchScreen(vm: MainViewModel) {
                         .padding(horizontal = 16.dp, vertical = 9.dp),
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
-                    // Experiment behind SHOW_SUGGESTION_SOURCE_TAGS (dev build only): tag which quick-list
-                    // layer this bird came from, to eyeball the recents/regulars/here-now split. Only
-                    // meaningful with a blank query.
-                    if (BuildConfig.SHOW_SUGGESTION_SOURCE_TAGS && q.isBlank()) {
-                        val (tag, color) = when {
-                            s.norsk in vm.recent -> "nylig" to Color(0xFF1976D2)
-                            vm.useCount(s.norsk) > 0 -> "fast" to Color(0xFF388E3C)
-                            else -> "her/nå" to Color(0xFF9E6B00)
-                        }
-                        Text(tag, color = color, fontSize = 11.sp, fontWeight = FontWeight.Bold,
+                    // Dev build only (SHOW_SEARCH_TAGS): show each blank-list row's two rank
+                    // contributions - your history (eg) vs here-and-now context (her), which sum to the
+                    // rank - to eyeball the blend. Only meaningful with a blank query.
+                    if (BuildConfig.SHOW_SEARCH_TAGS && q.isBlank()) {
+                        val tag = vm.searchTag(s.norsk)
+                        val pin = if (tag.pinned) "📌 " else ""
+                        Text("${pin}min %.2f · her %.2f".format(tag.personal, tag.context),
+                            color = cs.onSurfaceVariant, fontSize = 11.sp, fontWeight = FontWeight.Bold,
                             modifier = Modifier.padding(end = 8.dp))
                     }
                     Text(s.norsk, fontWeight = FontWeight.Medium, maxLines = 1, overflow = TextOverflow.Ellipsis)

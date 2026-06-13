@@ -570,24 +570,35 @@ fun backupExport(ctx: Context, notes: List<Note>) {
     }
 }
 
-// ---- recent species (most-recent first), persisted so the quick list survives restarts ----
+// ---- per-species use scores: a pick count that fades with time (see UseScore.kt), so recent
+//      picks rank above once-frequent-now-stale ones. Replaces the old recent.json + int uses.json. ----
 
-private fun recentFile(ctx: Context) = File(ctx.filesDir, "recent.json")
+private fun usesFile(ctx: Context) = File(ctx.filesDir, "uses.json")
 
-fun loadRecent(ctx: Context): List<String> {
-    val f = recentFile(ctx)
-    if (!f.exists()) return emptyList()
+fun loadUses(ctx: Context, now: Long = System.currentTimeMillis()): Map<String, UseEntry> {
+    val f = usesFile(ctx)
+    if (!f.exists()) return emptyMap()
     return runCatching {
-        val arr = JSONArray(f.readText())
-        (0 until arr.length()).map { arr.getString(it) }
-    }.getOrDefault(emptyList())
+        val o = JSONObject(f.readText())
+        o.keys().asSequence().associateWith { k ->
+            when (val v = o.get(k)) {
+                is JSONObject -> UseEntry(v.getDouble("s"), v.getLong("t"))
+                // Legacy format was a bare count, no timestamp. Seed it a day back: clear of the pin
+                // window (so migrated regulars aren't mistaken for the current batch), and the tiny
+                // uniform decay doesn't change their relative order.
+                else -> UseEntry((v as Number).toDouble(), now - 24L * 60 * 60 * 1000)
+            }
+        }
+    }.getOrDefault(emptyMap())
 }
 
-fun saveRecent(ctx: Context, names: List<String>) {
-    recentFile(ctx).writeText(JSONArray(names.toList()).toString())
+fun saveUses(ctx: Context, uses: Map<String, UseEntry>) {
+    val o = JSONObject()
+    uses.forEach { (k, e) -> o.put(k, JSONObject().put("s", e.score).put("t", e.lastTouched)) }
+    usesFile(ctx).writeText(o.toString())
 }
 
-// ---- per-species use counts, so your own regulars rank to the top ----
+// ---- per-activity use counts, so your most-used activities rank to the top ----
 
 private fun loadCounts(ctx: Context, file: String): Map<String, Int> {
     val f = File(ctx.filesDir, file)
@@ -604,8 +615,6 @@ private fun saveCounts(ctx: Context, file: String, counts: Map<String, Int>) {
     File(ctx.filesDir, file).writeText(o.toString())
 }
 
-fun loadUses(ctx: Context) = loadCounts(ctx, "uses.json")
-fun saveUses(ctx: Context, uses: Map<String, Int>) = saveCounts(ctx, "uses.json", uses)
 fun loadActUses(ctx: Context) = loadCounts(ctx, "act_uses.json")
 fun saveActUses(ctx: Context, uses: Map<String, Int>) = saveCounts(ctx, "act_uses.json", uses)
 

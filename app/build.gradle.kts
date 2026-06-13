@@ -38,6 +38,13 @@ fun signingValue(prop: String, env: String): String? =
     keystoreProps?.getProperty(prop) ?: System.getenv(env)
 val signStore = signingValue("storeFile", "KEYSTORE_FILE")
 
+// Flip an experiment on/off for a build without editing source: e.g. SHOW_SEARCH_TAGS=1
+// ./gradlew installRelease. 1/true forces on, 0/false forces off (any build type); unset falls back
+// to the per-build-type default below.
+fun featureFlag(env: String): Boolean? =
+    System.getenv(env)?.let { it == "1" || it.equals("true", ignoreCase = true) }
+val showSearchTags = featureFlag("SHOW_SEARCH_TAGS")
+
 android {
     namespace = "com.feltbok"
     compileSdk = 34
@@ -50,7 +57,8 @@ android {
         versionName = "0.10"
         buildConfigField("String", "GIT_VERSION", "\"$gitVersion\"")
         // Feature flags default off (release); the debug build type flips experiments on below.
-        buildConfigField("Boolean", "SHOW_SUGGESTION_SOURCE_TAGS", "false")
+        // An env var (see featureFlag above) overrides the default for any build type.
+        buildConfigField("Boolean", "SHOW_SEARCH_TAGS", (showSearchTags ?: false).toString())
         // app_name lives here (not strings.xml) so the debug build type can override it.
         resValue("string", "app_name", "Feltbok (beta)")
     }
@@ -78,7 +86,7 @@ android {
             // Mark the in-app version string too (footer + feedback), so a dev build is
             // recognisable from inside the app, not just by its launcher label.
             buildConfigField("String", "GIT_VERSION", "\"$gitVersion (dev)\"")
-            buildConfigField("Boolean", "SHOW_SUGGESTION_SOURCE_TAGS", "true")
+            buildConfigField("Boolean", "SHOW_SEARCH_TAGS", (showSearchTags ?: true).toString())
         }
     }
 

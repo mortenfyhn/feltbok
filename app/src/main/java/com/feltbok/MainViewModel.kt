@@ -51,30 +51,55 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
         persist()
     }
 
-    /** Recently chosen species (norsk), most-recent first - the quick list when search is empty.
-     *  Persisted, so it survives restarts; seeds with the most common species first run. */
-    val recent = mutableStateListOf<String>().apply {
-        val saved = loadRecent(app)
-        addAll(if (saved.isNotEmpty()) saved else species.take(6).map { it.norsk })
-    }
+    /** Per-species use score (norsk): a pick count that fades with time (see [UseEntry]), so your
+     *  recent picks rank above ones you logged a lot but long ago. Persisted. */
+    private val uses = mutableStateMapOf<String, UseEntry>().apply { putAll(loadUses(app)) }
 
-    /** How many times each species (norsk) has been picked, so your own regulars
-     *  rank to the top of the quick list and of typed results. Persisted. */
-    private val uses = mutableStateMapOf<String, Int>().apply { putAll(loadUses(app)) }
-    fun useCount(norsk: String): Int = uses[norsk] ?: 0
+    /** Your decayed personal score for [norsk] as of [now] - the soft boost folded into rankings. */
+    fun useScore(norsk: String, now: Long = System.currentTimeMillis()): Double =
+        uses[norsk]?.let { decayedScore(it, now) } ?: 0.0
 
     /** Context-aware report frequency for ranking: what's reported in the current month and near the
      *  current GPS fix, behind the pluggable [FrequencyProvider]. Off-season/elsewhere/rare birds drop
      *  in rank but stay findable (tiers/folding still match). */
     private val ctxFreq = ContextualFrequency(species, loadSpeciesMonths(app), loadSpeciesRegions(app))
 
-    /** Order [candidates] by what's reported here and now (current month + GPS fix), so the
-     *  blank-search quick list's fill reflects the season/place rather than static all-time order.
-     *  Same context signal the typed search uses, just without a query. */
-    fun contextRanked(candidates: List<Species>): List<Species> {
+    private fun contextWeight(s: Species, month: Int): Double = ctxFreq.weight(s, month, fix?.lat, fix?.lon)
+
+    /** The blank-search quick list. Your current batch - the last few picks from the past few hours -
+     *  is pinned on top (and auto-clears); below it, every species is ranked by a single blend of your
+     *  decayed use score and what's likely here and now. No recent/regular/context tiers: they fold
+     *  into one score, so the visible top rows mix your regulars with in-season birds rather than
+     *  burying one under the other. */
+    fun blankQuickList(now: Long = System.currentTimeMillis()): List<Species> {
+        val byNorsk = species.associateBy { it.norsk }
+        val pinned = pinnedNorsk(now).mapNotNull { byNorsk[it] }
+        val pinnedSet = pinned.mapTo(HashSet()) { it.norsk }
         val month = java.time.LocalDate.now().monthValue
-        val f = fix
-        return candidates.sortedByDescending { ctxFreq.weight(it, month, f?.lat, f?.lon) }
+        val rest = species
+            .filter { it.norsk !in pinnedSet }
+            .sortedByDescending { blendedWeight(contextWeight(it, month), useScore(it.norsk, now)) }
+        return (pinned + rest).take(40)
+    }
+
+    /** The current batch pinned on top of the blank list: your last [PIN_MAX] picks from the past few
+     *  hours, most-recent first. */
+    private fun pinnedNorsk(now: Long): List<String> =
+        uses.entries
+            .filter { now - it.value.lastTouched <= PIN_WINDOW_MS }
+            .sortedByDescending { it.value.lastTouched }
+            .map { it.key }
+            .take(PIN_MAX)
+
+    /** Dev-only (SHOW_SEARCH_TAGS): a blank-list row's two rank contributions - how much your history
+     *  (min) vs the here-and-now context (her) added, which sum to the blended rank - plus whether the
+     *  row is pinned (in the current batch) rather than ranked by score. */
+    data class SearchTag(val personal: Double, val context: Double, val pinned: Boolean)
+
+    fun searchTag(norsk: String, now: Long = System.currentTimeMillis()): SearchTag {
+        val s = species.firstOrNull { it.norsk == norsk } ?: return SearchTag(0.0, 0.0, false)
+        val ctx = contextWeight(s, java.time.LocalDate.now().monthValue)
+        return SearchTag(PERSONAL_W * personalWeight(useScore(norsk, now)), CONTEXT_W * ctx, norsk in pinnedNorsk(now))
     }
 
     /** Ranked matches for a typed query: the tiered scorer (prefix/suffix/initialism/typo + diacritic
@@ -84,12 +109,11 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
     suspend fun searchResults(query: String): List<Species> = withContext(Dispatchers.Default) {
         val month = java.time.LocalDate.now().monthValue
         val f = fix
+        val now = System.currentTimeMillis()
+        // Snapshot context + your decayed use score into one blend per species (see blendedWeight) -
+        // computed once per query here, not re-read for each of ~600 species, off the main thread.
         val freq = FrequencyProvider { s ->
-            // DELIBERATE: your regulars are a *soft* additive boost (pre-scorer this was a hard
-            // tiebreak). It lifts your picks but context/season/place can still outrank them - that's
-            // intended, not a lost invariant. Clamps at 1.0 to stay within the provider's [0,1] range.
-            val picks = useCount(s.norsk)
-            minOf(1.0, ctxFreq.weight(s, month, f?.lat, f?.lon) + if (picks == 0) 0.0 else minOf(0.5, 0.15 * picks))
+            blendedWeight(ctxFreq.weight(s, month, f?.lat, f?.lon), useScore(s.norsk, now))
         }
         TieredScorer(freq).search(query, prepared).map { it.species }
     }
@@ -234,13 +258,11 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
 
     fun pickSpecies(s: Species) {
         dSpecies = s.norsk; dLatin = s.latin
-        recent.remove(s.norsk); recent.add(0, s.norsk)
-        while (recent.size > 8) recent.removeAt(recent.size - 1)
-        saveRecent(ctx, recent)
-        uses[s.norsk] = (uses[s.norsk] ?: 0) + 1
+        val now = System.currentTimeMillis()
+        uses[s.norsk] = bumpUse(uses[s.norsk], now)
         saveUses(ctx, uses)
         if (!changingSpecies && !isEditing) {
-            dTime = System.currentTimeMillis()  // stamp the entry time now
+            dTime = now  // stamp the entry time now
             dLoc = currentLocality()
         }
         changingSpecies = false
