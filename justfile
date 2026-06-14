@@ -14,9 +14,9 @@ default:
 build:
     ./gradlew assembleDebug
 
-# Run all tests: Python locality heuristics + Kotlin units
+# Run all tests: Python units (if any) + Kotlin units
 test:
-    .venv/bin/python -m unittest discover -s scripts -p 'test_*.py'
+    .venv/bin/python -m unittest discover -s scripts -p 'test_*.py' || [ "$?" -eq 5 ]  # 5 = no tests collected
     ./gradlew testDebugUnitTest
 
 # Auto-format Kotlin (ktlint) + Python (ruff); run before committing manual tweaks
@@ -56,7 +56,7 @@ uninstall:
 
 # ---- Locality / species data, rebuilt on the maintainer's machine ----
 
-# Harvest the official site list from Artsobservasjoner's mobile API (auth + usage in the script header)
+# Harvest the official site list from Artsobservasjoner's mobile API (no auth; usage in the script header)
 sites *args:
     .venv/bin/python scripts/harvest_sites_mobil.py {{args}}
 

@@ -61,17 +61,20 @@ The new mobile site is an Angular SPA backed by a **Duende BFF**:
 
 ### ✅ DONE (2026-06-04): harvest migrated to `Sites/ByBoundingBox` (issue #16)
 
-`scripts/harvest_sites_mobil.py` (`just sites`) now harvests from the mobile API; the old
-`GetSitesGeoJson` harvest stays as the documented fallback (`just sites-legacy`). The
-reverse-engineered contract:
+`scripts/harvest_sites_mobil.py` (`just sites`) harvests from the mobile API; the old
+`GetSitesGeoJson` harvest and its GBIF/flag heuristics have been removed (the `isPrivate`
+flag is now ground truth). The reverse-engineered contract:
 
     GET /core/Sites/ByBoundingBox?MinX=&MinY=&MaxX=&MaxY=&MaxSites=&IncludePublicSites=true
-    Header: X-CSRF: 1   + the BFF cookies (same auth as ByUser above)
+    Header: X-CSRF: 1   (no auth — see below)
 
+- **No auth needed** (verified 2026-06-14): the endpoint answers an unauthenticated GET,
+  returning the public allmenn registry — and, in fact, everyone's private sites too.
+  `build_sites.py` keeps only the public ones for the bundled CSV, so the harvest needs no
+  BFF cookie. (Your own privates come from the in-app `ByUser` sync below, not this harvest.)
 - **`Min/Max X/Y` are WGS84 lon/lat** (X=lon, Y=lat) — no reprojection.
-- **`IncludePublicSites=true` is essential**: without it the endpoint returns only the
-  caller's OWN sites (effectively a spatial `ByUser`); with it you get the public allmenn
-  registry + your own privates, like the old Report map.
+- **`IncludePublicSites=true` is essential**: without it the endpoint returns only private
+  sites; with it you also get the public allmenn registry, like the old Report map.
 - **Two server limits drive the tiling:** a box may span at most **~50 km in Web Mercator
   per side** (else `400 "BoundingBox too large"`, errorCode G8), and a response returns at
   most **1000 sites** (`MaxSites` caps at 1000; no paging). So the harvester tiles in Web
@@ -98,6 +101,11 @@ Why this beats the legacy harvest: native WGS84 (drops the reprojection), a real
 
 ## ✅ SOLVED (2026-06-02): the authoritative allmenn flag — `FindSitesByName`
 
+> **Superseded:** the mobile-API harvest now carries the authoritative `isPrivate` flag per
+> row, so `build_sites.py` reads the allmenn flag straight from the harvest — no separate
+> name-by-name fetch. `fetch_public_flags.py` has been removed. Kept below as a reference to
+> the `FindSitesByName` contract in case the per-name flag is ever needed again.
+
 The public observation-search page (`/ViewSighting/SearchSighting`, no login) drives its
 locality autocomplete with:
 
@@ -111,9 +119,8 @@ locality autocomplete with:
 - An **empty 200 body = no public match = private** (a valid answer, not an error).
 - At most **15 results** per term, so for a generic name our site may be public yet not in
   the top 15 — only demote when a name is fully enumerated (<15 hits).
-- `scripts/fetch_public_flags.py` (`just public-flags`) queries every locality name and sets
-  the real flag, retiring the observer/polygon heuristic (kept only as a capped/failed
-  fallback). A periodic "Uttian" canary aborts the run if the server starts throttling.
+- The retired `fetch_public_flags.py` queried every locality name to set this flag, with an
+  "Uttian" canary to back off on throttling — before the mobile harvest made it unnecessary.
 
 This **supersedes the Artskart `List` dead-end below** for the public/private question.
 

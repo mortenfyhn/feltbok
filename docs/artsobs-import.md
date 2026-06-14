@@ -56,12 +56,10 @@ Key nuances learned the hard way:
    (iGoTerra reportedly uploads cleanly with no kommune scope and that box left on — so it
    must encode the locality some other way: own established localities, coordinates, or an
    id. Getting a real iGoTerra export is the open lead; see `custom-localities-design.md`.)
-3. **`build_localities.py` must store the exact registered name.** Its `split_name()`
-   only kept the first comma-token, so it stored `Sørøyan` and dropped ", Uttian". The
-   correct split: the *last* token of the place part is the superlokalitet, everything
-   before it is the (possibly comma-containing) name. The messy doubled-token GBIF strings
-   (`Strandfjæra, Hitra, Strand, Hitra, Tø`, ~12 of them) can't all be recovered cleanly
-   from the flattened string — canonical names from iGoTerra/the API would settle those.
+3. **The list must store the exact registered name.** (The old GBIF builder's `split_name()`
+   mangled this — it kept only the first comma-token, storing `Sørøyan` and dropping
+   ", Uttian".) The mobile API settles it: its `name` field *is* the exact registered
+   locality name, so `build_sites.py` stores it verbatim — no splitting guesswork.
 
 **Consequence:** export the registered name, append nothing, no coordinates. The user
 scopes the import form to the kommune; truly-public names link, the user's own/unknown
@@ -73,29 +71,15 @@ only; coordinates stay for GPS-nearest picking, never exported (they only mint d
 > not reach (a locality **id**, or the **v3.0** template). Inspecting a real iGoTerra
 > export is the next lead. See `docs/custom-localities-design.md`.
 
-## Why the locality list still needs filtering
+## Why the locality list ships public-only
 
-Paste can't link to public localities (see above), but the list should still be mostly
+Paste can't link to public localities (see above), but the list should still be the
 **public, established** sites — that's what the user recognises in the picker and what
-the kommune-scoped import is most likely to resolve. The GBIF export Feltbok builds its
-list from (`build_localities.py`) carries **no public/private flag** — that lives only in
-Artsobservasjoner's own DB — so we approximate "public" with heuristics (also used for
-the map's green/yellow colouring), each covering a failure mode seen in the data:
-
-1. **Distinct-observer count** (`--min-observers`, default 2): a private locality has a
-   single owner. Drops the long tail of one-person sites.
-2. **Name-collision / route filter** (`drop_name_collisions`, `--public-min`,
-   `--cluster-km`): a birder laying out a personal route stamps many same-named points
-   in one sitting — consecutive site ids, a few records each, often co-observed so they
-   clear the observer filter (e.g. seven `Sildskjærbugen` within 2 km). A real public
-   locality is **one** canonical site. For any name used at >1 site we keep a point only
-   if it looks public on its own (record count ≥ `--public-min`) and is >`--cluster-km`
-   from every kept same-name site.
-
-These are proxies. The residual gap — a **uniquely-named** private locality with a
-couple of co-observers (e.g. "Skogholt ved Børaunet") — looks identical to a small
-public locality in GBIF data and can only be filtered out reliably with the real
-allmenn flag from the Artsobservasjoner API (build-time download, requested separately).
+the kommune-scoped import is most likely to resolve. This used to need heuristics (a
+GBIF distinct-observer count and a name-collision/route filter) because the GBIF export
+carried no public/private flag. That's gone now: the mobile-API harvest carries the
+authoritative `isPrivate` flag per site, so `build_sites.py` simply keeps the public
+(allmenn) ones — no proxies, no residual gap of look-alike private localities.
 
 ## Field mapping the app emits (paste TSV, old site)
 

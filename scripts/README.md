@@ -1,8 +1,7 @@
 # Locality tooling
 
 The Feltbok app matches each observation to an official Artsobservasjoner
-locality. These scripts build the locality table the app ships, and verify how
-the import matches names.
+locality. These scripts build the public locality table the app ships.
 
 ## Setup
 
@@ -11,24 +10,24 @@ python3 -m venv .venv && . .venv/bin/activate
 pip install -r scripts/requirements.txt
 ```
 
-## `build_localities.py` — the official locality table
-
-Reconstructs the Artsobservasjoner locality registry from the **Artsdatabanken /
-GBIF** Darwin Core Archive of the Norwegian Species Observation Service. Every
-record carries the qualified locality name, its stable site id (`locationID`),
-the site's canonical coordinates, and kommune/fylke — so one row per `locationID`
-*is* the registry.
+## The pipeline: `harvest_sites_mobil.py` → `build_sites.py`
 
 ```sh
-just localities                      # national (downloads the ~3 GB archive once)
-just localities --county Trøndelag   # one fylke only (same download, smaller output)
-# or directly:
-python scripts/build_localities.py [--archive a.zip] [--bbox minlon,minlat,maxlon,maxlat] [--min-count 2]
+just sites          # harvest the official site list from the mobile API (no auth)
+just build-sites    # write app/src/main/assets/localities.csv from the harvest
 ```
 
-Output `localities.csv`:
-`id,lokalitet,hovedlokalitet,kommune,fylke,lat,lon,count,observers,fullname,radius,geometry,public`.
-Then `just footprints` (adds `geometry`) and `just mark-public` (adds `public`).
+`harvest_sites_mobil.py` queries Artsobservasjoner's mobile API
+(`GET /core/Sites/ByBoundingBox`) over a tiled bounding box of Norway and saves a
+flat JSON array of every site — already WGS84, with a per-row county and the
+authoritative `isPrivate` flag. No login needed; the harvest is resumable. Extra
+`--bbox` passes accumulate into the same file (e.g. to add Svalbard).
+
+`build_sites.py` keeps the **public (allmenn)** sites and writes
+`localities.csv` (`id,lokalitet,hovedlokalitet,kommune,fylke,lat,lon,count,observers,radius,geometry,public,mine`).
+`hovedlokalitet` is resolved from each site's `parentSiteId`; manual public/private
+corrections in `locality_overrides.csv` (keyed by siteId) win over the flag.
+
 Push onto the device with `just push-data` — it overrides the bundled asset, no
 rebuild.
 
@@ -38,18 +37,6 @@ rebuild.
 kommune/fylke hard-fails, and **any coordinate mints a private duplicate**. So the
 app emits the bare registered name and no coordinates. Coordinates stay in the
 table only for GPS-nearest picking.
-
-## `make_locality_sheets.py` — import-matching probes
-
-Builds small no-/with-coordinate sheets (`lokalitetstest-gammel.xlsx` for the old
-v2.20 site, `lokalitetstest-ny.xlsx` for the new v3.0 site) to confirm how the
-import resolves locality names. Paste into *Rapportere → Importer observasjoner*
-(don't publish) and read the per-row validation. This is how the recipe above was
-established; keep it for re-testing if the import behaviour ever changes.
-
-```sh
-python scripts/make_locality_sheets.py
-```
 
 The Artsobservasjoner import templates live in `docs/` (`artsobs-template-v2.20.xlsx`,
 `artsobs-template-v3.0.xlsx`).

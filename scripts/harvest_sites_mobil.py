@@ -3,20 +3,17 @@
 
 The modern mobile site (mobil.artsobservasjoner.no, an Angular SPA over a Duende BFF) calls
 GET /core/Sites/ByBoundingBox. With IncludePublicSites=true it returns every selectable site
-in a bbox - PUBLIC (allmenn) sites plus *your own* private ones - as a flat JSON array, each
+in a bbox - public (allmenn) sites and private ones alike - as a flat JSON array, each
 row carrying id, name, presentationName (the qualified "Name, Parent, Kommune, FylkeAbbr"),
 longitude/latitude (WGS84 - no reprojection), isPrivate, accuracy (= radius m),
 municipalityName, countyName, parentSiteId, isPolygon and polygonCoordinates.
 
-This supersedes the legacy harvest_sites.py (POST /Map/GetSitesGeoJson), kept as a fallback:
-the data is already WGS84 (no Web-Mercator reprojection), carries the fylke per row (the old
-build had to assume one), and a single call returns every tier - so none of the old multi-zoom
-union hack. Process the output into localities.csv with build_sites.py (it detects this shape).
+The data is already WGS84 (no Web-Mercator reprojection), carries the fylke per row, and a
+single call returns every tier. Process the output into localities.csv with build_sites.py.
 
-AUTH: the BFF uses HttpOnly cookies you cannot read from JS. Capture them from the browser:
-log in at https://mobil.artsobservasjoner.no/, open DevTools -> Network, click any /core/
-request, and copy its entire `Cookie:` request-header value (it must contain `__Host-bff`)
-into COOKIE_FILE. Sessions expire; the harvest is resumable, so just refresh and rerun.
+No auth needed: the endpoint serves the public allmenn registry over a plain GET (it also
+returns private sites - other people's included - but build_sites.py keeps only the public
+ones for the bundled localities.csv; your own privates come from the in-app ByUser sync).
 
 Two server limits drive the tiling: a bbox may span at most ~50 km in Web Mercator per side,
 and a response returns at most 1000 sites (no paging). So we tile in Web Mercator at a safe
@@ -37,7 +34,6 @@ import time
 import requests
 
 URL = "https://mobil.artsobservasjoner.no/core/Sites/ByBoundingBox"
-COOKIE_FILE = os.environ.get("BFF_COOKIE_FILE", "/tmp/bff_cookie.txt")
 # Where the raw rows are written (kept out of the repo - it's large). Override with
 # FELTBOK_DATA_DIR; pass --out to point at a specific file.
 DATA_DIR = os.environ.get(
@@ -72,13 +68,12 @@ def merc_inv(x, y):
     return lon, lat
 
 
-def make_session(cookie_str):
+def make_session():
     s = requests.Session()
     s.headers.update(
         {
             "Accept": "application/json",
             "X-CSRF": "1",
-            "Cookie": cookie_str,
             "User-Agent": "Mozilla/5.0 (X11; Linux x86_64; rv:151.0) Gecko/20100101 Firefox/151.0",
         }
     )
@@ -87,7 +82,7 @@ def make_session(cookie_str):
 
 def fetch(session, mx0, my0, mx1, my1, tries=4):
     """Query one Web-Mercator box (corners given in mercator metres). Returns the row list,
-    or None on a transient failure. Exits on an expired session so a refresh can resume."""
+    or None on a transient failure (the tile is skipped; rerun resumes it)."""
     lon0, lat0 = merc_inv(mx0, my0)
     lon1, lat1 = merc_inv(mx1, my1)
     params = {
@@ -100,18 +95,9 @@ def fetch(session, mx0, my0, mx1, my1, tries=4):
     }
     for attempt in range(tries):
         try:
-            r = session.get(URL, params=params, timeout=60, allow_redirects=False)
+            r = session.get(URL, params=params, timeout=60)
             if r.status_code == 200:
                 return r.json()
-            if r.status_code in (301, 302, 401, 403):
-                print(
-                    f"\nSession expired (status {r.status_code}). Refresh the cookie in "
-                    f"{COOKIE_FILE} and rerun - the harvest resumes.",
-                    file=sys.stderr,
-                )
-                raise SystemExit(2)  # 2 = cookie expired -> caller should stop
-        except SystemExit:
-            raise
         except Exception:
             pass
         time.sleep(1.5 * (attempt + 1))
@@ -129,7 +115,7 @@ def main() -> int:
     args = ap.parse_args()
     bbox = tuple(float(x) for x in args.bbox.split(",")) if args.bbox else DEFAULT_BBOX
     lon0, lat0, lon1, lat1 = bbox
-    session = make_session(pathlib.Path(COOKIE_FILE).read_text().strip())
+    session = make_session()
 
     rows = {}  # id -> row; ACCUMULATES across runs
     if pathlib.Path(args.out).exists():
