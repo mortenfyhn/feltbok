@@ -30,6 +30,22 @@ abstract class GitVersion : ValueSource<String, ValueSourceParameters.None> {
 }
 val gitVersion: String = providers.of(GitVersion::class) {}.get()
 
+// Branch name, shown only in the dev build so a working-branch build is identifiable on-device.
+// Same ValueSource rationale as GitVersion: re-run each build so it tracks branch switches.
+abstract class GitBranch : ValueSource<String, ValueSourceParameters.None> {
+    @get:Inject abstract val exec: ExecOperations
+    override fun obtain(): String = try {
+        val out = ByteArrayOutputStream()
+        exec.exec {
+            commandLine("git", "rev-parse", "--abbrev-ref", "HEAD")
+            standardOutput = out
+            isIgnoreExitValue = true
+        }
+        out.toString().trim().ifEmpty { "?" }
+    } catch (e: Exception) { "?" }
+}
+val gitBranch: String = providers.of(GitBranch::class) {}.get()
+
 // Release signing: keystore.properties (local, gitignored) or env vars (Semaphore CI).
 // Absent in either -> release stays unsigned, so a plain checkout still builds.
 val keystoreProps = rootProject.file("keystore.properties").takeIf { it.exists() }
@@ -95,7 +111,7 @@ android {
             resValue("string", "app_name", "Feltbok (dev)")
             // Mark the in-app version string too (footer + feedback), so a dev build is
             // recognisable from inside the app, not just by its launcher label.
-            buildConfigField("String", "GIT_VERSION", "\"$gitVersion (dev)\"")
+            buildConfigField("String", "GIT_VERSION", "\"$gitVersion (dev, $gitBranch)\"")
             buildConfigField("Boolean", "SHOW_SEARCH_TAGS", (showSearchTags ?: true).toString())
         }
     }
