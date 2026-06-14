@@ -550,28 +550,44 @@ private class LocalityOverlay(
 
     private val lineH = 32f
 
-    /** A label queued for the greedy collision pass: its wrapped lines, anchor, the screen-space
-     *  box used for overlap tests, and a priority (higher wins a contested spot). */
+    /** A label queued for the greedy collision pass: its wrapped lines, the first baseline to draw
+     *  from, the screen-space box used for overlap tests, and a priority (higher wins a contested spot). */
     private class LabelCandidate(
-        val lines: List<String>, val cx: Float, val cy: Float,
-        val markerOff: Float, val box: RectF, val priority: Float,
+        val lines: List<String>, val cx: Float, val firstBaseline: Float,
+        val box: RectF, val priority: Float,
     )
 
-    /** Build a [LabelCandidate] for [name] anchored below a marker of pixel radius [markerR],
-     *  measuring its wrapped text into a padded box so the placement pass can test overlap. */
-    private fun makeLabel(name: String, cx: Float, cy: Float, markerR: Float, priority: Float): LabelCandidate {
+    /** Build a [LabelCandidate] for [name] anchored at (cx,cy). A real footprint (polygon, or a
+     *  circle drawn bigger than the dot) gets the name *centred on* the anchor so it reads as
+     *  belonging to the shape (#135); a bare dot gets it just below [markerR] so the dot stays
+     *  visible. Wrapped text is measured into a padded box for the overlap test. */
+    private fun makeLabel(name: String, cx: Float, cy: Float, markerR: Float, centred: Boolean, priority: Float): LabelCandidate {
         val lines = wrapLabel(name, 210f)
-        val off = markerR.coerceAtMost(40f)
         var maxW = 0f
         for (l in lines) maxW = max(maxW, labelFill.measureText(l))
         val halfW = maxW / 2f + LABEL_PAD
-        val box = RectF(cx - halfW, cy + off - LABEL_PAD, cx + halfW, cy + off + lines.size * lineH + LABEL_PAD)
-        return LabelCandidate(lines, cx, cy, off, box, priority)
+        // First baseline: centred vertically on the anchor, or one line below the marker.
+        val first = if (centred) cy - (lines.size - 1) * lineH / 2f + lineH * 0.32f
+        else cy + markerR.coerceAtMost(40f) + lineH
+        val top = first - lineH * 0.8f
+        val bottom = first + (lines.size - 1) * lineH + lineH * 0.2f
+        val box = RectF(cx - halfW, top - LABEL_PAD, cx + halfW, bottom + LABEL_PAD)
+        return LabelCandidate(lines, cx, first, box, priority)
     }
 
-    /** Draw a queued label below its marker, wrapped. Below, not centred, so it never hides a small dot. */
+    /** Build the label for [loc], anchored at its [Locality.labelAnchor] (a polygon's interior
+     *  pole, else its point). Centre the name on a real footprint - a polygon or a circle drawn
+     *  bigger than the bare dot - so it sits on the shape; a dot keeps the name just below it. */
+    private fun labelFor(loc: Locality, proj: Projection, ppm: Double, markerR: Float, priority: Float): LabelCandidate {
+        val a = loc.labelAnchor
+        proj.toPixels(GeoPoint(a[0], a[1]), p)
+        val centred = loc.polygon.isNotEmpty() || (loc.radius > 0.0 && loc.radius * ppm >= POINT_DOT_PX)
+        return makeLabel(loc.lokalitet, p.x.toFloat(), p.y.toFloat(), markerR, centred, priority)
+    }
+
+    /** Draw a queued label, wrapped, from its first baseline down. */
     private fun drawLabel(c: Canvas, cand: LabelCandidate) {
-        var ty = cand.cy + cand.markerOff + lineH    // first baseline clears the marker
+        var ty = cand.firstBaseline
         for (line in cand.lines) {
             c.drawText(line, cand.cx, ty, labelHalo)
             c.drawText(line, cand.cx, ty, labelFill)
@@ -623,7 +639,7 @@ private class LocalityOverlay(
             drawShape(c, proj, loc, px, py, rPx, fp, if (loc.public) stroke else privStroke)
             // Candidate priority is footprint size, so big areas win a contested spot over tiny ones.
             val labelSpan = labelSpanPx(loc, ppm)
-            if (labelSpan >= LABEL_MIN_SPAN_PX) labels += makeLabel(loc.lokalitet, px, py, rPx, labelSpan)
+            if (labelSpan >= LABEL_MIN_SPAN_PX) labels += labelFor(loc, proj, ppm, rPx, labelSpan)
         }
         picked?.let { pl ->                           // selected: bold outline, drawn on top
             proj.toPixels(GeoPoint(pl.lat, pl.lon), p)
@@ -637,7 +653,7 @@ private class LocalityOverlay(
             val sp = if (pl.public) selStroke else selStrokePriv
             drawShape(c, proj, pl, cx, cy, radiusPx(pl, ppm), fp, sp)
             // The pick always gets its name (top priority), so selecting a locality confirms which it is.
-            labels += makeLabel(pl.lokalitet, cx, cy, radiusPx(pl, ppm), Float.MAX_VALUE)
+            labels += labelFor(pl, proj, ppm, radiusPx(pl, ppm), Float.MAX_VALUE)
         }
         // Greedy placement: highest priority first; draw a label only if its box clears every
         // already-placed one. Tens of candidates on a phone, so naïve O(n²) overlap testing is fine.

@@ -13,6 +13,8 @@
   velger den minste lokaliteten under fingeren, i stedet for stadig å lande på den store rundt.
 - Lokalitetsnavn på kartet roter seg ikke lenger oppå hverandre: navn som ville kollidert
   skjules, så du ser flere navn der det er plass og færre der det blir trangt.
+- Navn på områdelokaliteter (flater) plasseres nå inne i selve området, så det er lett å se
+  hvilket navn som hører til hvilken flate – også for buede og uregelmessige områder.
 - Posisjonsprikken på kartet er større, så det er lettere å se hvor du er.
 - «Kopier» lagrer nå observasjonen du holder på med før den lager en kopi, så du kan taste inn
   mange like observasjoner på rad uten å miste det du nettopp skreiv.

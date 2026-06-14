@@ -97,6 +97,12 @@ data class Locality(
         doubleArrayOf(laMin, laMax, loMin, loMax)
     }
 
+    /** [lat, lon] to anchor the map label on: a polygon's pole of inaccessibility (so the name
+     *  sits on the shape even when concave, #135), else the locality's own point. Computed once. */
+    val labelAnchor: DoubleArray by lazy {
+        if (polygon.isEmpty()) doubleArrayOf(lat, lon) else poleOfInaccessibility(polygon)
+    }
+
     /** [latMin, latMax, lonMin, lonMax] for viewport culling - the polygon extent, or the
      *  radius circle's box for point localities. Computed once (the trig was per-frame before). */
     val cullBounds: DoubleArray by lazy {
@@ -177,6 +183,75 @@ fun pointInPolygon(lat: Double, lon: Double, polygon: List<DoubleArray>): Boolea
 fun localityContains(loc: Locality, lat: Double, lon: Double): Boolean =
     if (loc.polygon.isNotEmpty()) pointInPolygon(lat, lon, loc.polygon)
     else loc.radius > 0.0 && haversine(lat, lon, loc.lat, loc.lon) <= loc.radius
+
+/** Squared distance from point (px,py) to segment a->b, in planar coords. */
+private fun segDistSq(px: Double, py: Double, ax: Double, ay: Double, bx: Double, by: Double): Double {
+    var x = ax; var y = ay
+    val dx = bx - ax; val dy = by - ay
+    if (dx != 0.0 || dy != 0.0) {
+        val t = ((px - ax) * dx + (py - ay) * dy) / (dx * dx + dy * dy)
+        if (t > 1.0) { x = bx; y = by } else if (t > 0.0) { x += dx * t; y += dy * t }
+    }
+    return (px - x) * (px - x) + (py - y) * (py - y)
+}
+
+/** Signed distance from (px,py) to the polygon edges (negative outside), in planar coords. */
+private fun pointToPolygonDist(px: Double, py: Double, pts: Array<DoubleArray>): Double {
+    var inside = false
+    var minSq = Double.MAX_VALUE
+    var j = pts.size - 1
+    for (i in pts.indices) {
+        val ax = pts[i][0]; val ay = pts[i][1]; val bx = pts[j][0]; val by = pts[j][1]
+        if ((ay > py) != (by > py) && px < (bx - ax) * (py - ay) / (by - ay) + ax) inside = !inside
+        minSq = minOf(minSq, segDistSq(px, py, ax, ay, bx, by))
+        j = i
+    }
+    return (if (inside) 1.0 else -1.0) * sqrt(minSq)
+}
+
+/** Pole of inaccessibility: the interior point of [polygon] ([lat,lon] vertices) furthest from any
+ *  edge - the natural spot to anchor an area's label so the name sits ON the shape, even for a
+ *  concave/banana outline (#135). Mapbox's "polylabel": grid-subdivide, always refine the most
+ *  promising cell. Returned as [lat, lon]. Worked in a lon-scaled planar space so a degree east and
+ *  a degree north count about equally at this latitude; computed once per locality (it's lazy). */
+fun poleOfInaccessibility(polygon: List<DoubleArray>): DoubleArray {
+    var laMin = 90.0; var laMax = -90.0; var loMin = 180.0; var loMax = -180.0
+    for (v in polygon) {
+        laMin = minOf(laMin, v[0]); laMax = maxOf(laMax, v[0])
+        loMin = minOf(loMin, v[1]); loMax = maxOf(loMax, v[1])
+    }
+    val k = cos(Math.toRadians((laMin + laMax) / 2))         // lon scale at this latitude
+    val cyMid = (laMin + laMax) / 2; val cxMid = (loMin + loMax) / 2 * k
+    val w = (loMax - loMin) * k; val h = laMax - laMin
+    val cellSize = minOf(w, h)
+    if (polygon.size < 3 || cellSize <= 0.0) return doubleArrayOf(cyMid, cxMid / k)
+    val pts = Array(polygon.size) { doubleArrayOf(polygon[it][1] * k, polygon[it][0]) }  // [x=lon*k, y=lat]
+
+    // A cell as [x, y, half, dist, potential]; potential = dist + half*√2 bounds any point in it.
+    fun cell(x: Double, y: Double, half: Double): DoubleArray {
+        val d = pointToPolygonDist(x, y, pts)
+        return doubleArrayOf(x, y, half, d, d + half * 1.4142135623730951)
+    }
+    val precision = cellSize / 100.0
+    val half = cellSize / 2
+    val queue = java.util.PriorityQueue<DoubleArray>(8) { a, b -> b[4].compareTo(a[4]) }
+    var x = loMin * k
+    while (x < loMax * k) {
+        var y = laMin
+        while (y < laMax) { queue.add(cell(x + half, y + half, half)); y += cellSize }
+        x += cellSize
+    }
+    var best = cell(cxMid, cyMid, 0.0)                       // bbox centre as the initial best guess
+    while (queue.isNotEmpty()) {
+        val c = queue.poll()
+        if (c[3] > best[3]) best = c
+        if (c[4] - best[3] <= precision) continue            // this cell can't beat the best by enough
+        val q = c[2] / 2
+        queue.add(cell(c[0] - q, c[1] - q, q)); queue.add(cell(c[0] + q, c[1] - q, q))
+        queue.add(cell(c[0] - q, c[1] + q, q)); queue.add(cell(c[0] + q, c[1] + q, q))
+    }
+    return doubleArrayOf(best[1], best[0] / k)               // back to [lat, lon]
+}
 
 // ---- species search ----
 

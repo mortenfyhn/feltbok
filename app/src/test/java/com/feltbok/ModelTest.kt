@@ -249,6 +249,30 @@ class ModelTest {
     }
 
     @Test
+    fun poleOfInaccessibilityCentresASquare() {
+        val pole = poleOfInaccessibility(square(63.0, 64.0, 8.0, 9.0))
+        assertEquals(63.5, pole[0], 0.02)
+        assertEquals(8.5, pole[1], 0.02)
+    }
+
+    @Test
+    fun poleOfInaccessibilityLandsInsideConcavePolygon() {
+        // #135: the banana-shaped "Gaula, Bråleiret-Leinøra, sone 3.3". Its bbox centre falls in the
+        // bay of the curve (outside the shape); the pole of inaccessibility must land inside.
+        val banana = ("10.184541 63.341189, 10.193424 63.338936, 10.197716 63.34067, " +
+            "10.211878 63.343635, 10.22089 63.343019, 10.229387 63.340785, 10.232606 63.340747, " +
+            "10.234408 63.340515, 10.235395 63.340535, 10.237584 63.340207, 10.239043 63.34256, " +
+            "10.237627 63.342788, 10.233893 63.34383, 10.22737 63.34452, 10.225654 63.344597, " +
+            "10.225396 63.344482, 10.221405 63.345021, 10.218487 63.345098, 10.214925 63.345486, " +
+            "10.211792 63.346195, 10.211105 63.346061, 10.210762 63.346099").split(",").map {
+            val (lo, la) = it.trim().split(" "); doubleArrayOf(la.toDouble(), lo.toDouble())
+        }
+        assertTrue("bbox centre is outside (the bug)", !pointInPolygon(63.3426, 10.2118, banana))
+        val pole = poleOfInaccessibility(banana)
+        assertTrue("pole must be inside the polygon", pointInPolygon(pole[0], pole[1], banana))
+    }
+
+    @Test
     fun groupNotesByKommuneResolvesByAllThreePathsAndOrders() {
         // Path 1: the note's stamped kommune wins outright - no registry, no fullname needed.
         val nStamped = noteAt(noonMs).copy(locName = "Testdammen", locFull = "", newLoc = true, kommune = "Ørland")
