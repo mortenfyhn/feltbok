@@ -83,6 +83,7 @@ data class Locality(
     val polygon: List<DoubleArray> = emptyList(), // real footprint as [lat,lon] vertices, when it is an area
     val public: Boolean = true, // an allmenn (public) locality, vs one of the user's own
     val mine: Boolean = false, // the user's own custom locality (private to them; links by bare name)
+    val isSuper: Boolean = false, // a superlocality (has sublocalities) - drawn in a deeper green
     val newLoc: Boolean = false,  // a brand-new spot the user just placed - exported WITH coords to mint it
 ) {
     /** [latMin, latMax, lonMin, lonMax] of the footprint, computed once (the map needs it
@@ -398,22 +399,25 @@ private fun myLocalitiesFile(ctx: Context) = File(ctx.filesDir, "my-localities.c
 private fun fastDouble(s: String): Double? =
     if (s.isEmpty()) null else try { s.toDouble() } catch (e: NumberFormatException) { null }
 
-/** Columns: id,lokalitet,hovedlokalitet,kommune,fylke,lat,lon,count,observers,radius,geometry,public,mine */
+/** Columns: id,lokalitet,hovedlokalitet,kommune,fylke,lat,lon,count,observers,radius,geometry,public,mine,super */
 private fun parseLocalityRow(c: List<String>): Locality? {
     if (c.size < 7) return null
     val lat = fastDouble(c[5]) ?: return null
     val lon = fastDouble(c[6]) ?: return null
     val obs = c.getOrElse(8) { "" }.toIntOrNull() ?: 0
-    // radius..mine sit one column later in legacy CSVs that still carry a `fullname` at index 9
-    // (older bundles + a not-yet-resynced my-localities.csv); detect by row width.
-    val b = if (c.size >= 14) 10 else 9
+    // radius onward sit one column later in legacy CSVs that still carry a text `fullname` at
+    // index 9 (older bundles + a not-yet-resynced my-localities.csv). Detect by content, not
+    // width: the standard layout has the numeric radius at 9, a legacy fullname is non-numeric
+    // there - a width test would mistake the newer `super` column for the legacy shift.
+    val b = if (c.size >= 14 && fastDouble(c.getOrElse(9) { "" }) == null) 10 else 9
     val radius = fastDouble(c.getOrElse(b) { "" }) ?: 0.0
     val poly = parsePolygon(c.getOrElse(b + 1) { "" })
     val public = c.getOrElse(b + 2) { "1" } != "0"
     val mine = c.getOrElse(b + 3) { "0" } == "1"
+    val isSuper = c.getOrElse(b + 4) { "0" } == "1"
     // Show public (allmenn) localities and the user's own customs; drop anything else.
     if (!public && !mine) return null
-    return Locality(c[0], c[1], c[2], c[3], lat, lon, obs, radius, poly, public = public, mine = mine)
+    return Locality(c[0], c[1], c[2], c[3], lat, lon, obs, radius, poly, public = public, mine = mine, isSuper = isSuper)
 }
 
 /** Public localities from the bundled (or pushed) `localities.csv`, plus the user's own

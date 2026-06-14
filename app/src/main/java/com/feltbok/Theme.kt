@@ -45,6 +45,11 @@ object MapPalette {
     const val GreenFillPale = 0x1E3C8C28L     // big ones, so they don't dominate
     const val GreenStroke = 0xFF2E7D32L
 
+    // Public superlocality (has sublocalities) — a deeper emerald, mimicking the website
+    const val SuperFill = 0x550F6B4FL
+    const val SuperFillPale = 0x1E0F6B4FL
+    const val SuperStroke = 0xFF0A4D38L
+
     // Your own locality — yellow
     const val YellowFill = 0x55E0A100L
     const val YellowFillPale = 0x1EE0A100L
@@ -69,5 +74,6 @@ object MapPalette {
     // Locality labels — dark text with a halo tinted by type (pale so the text stays legible).
     const val LabelText = 0xFF18250FL
     const val LabelHaloGreen = 0xF2DCEFC6L    // public
+    const val LabelHaloSuper = 0xF2C7E8D6L    // public superlocality
     const val LabelHaloYellow = 0xF2FFF7D8L   // your own
 }

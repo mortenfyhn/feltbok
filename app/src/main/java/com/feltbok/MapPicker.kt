@@ -415,6 +415,8 @@ private class PreviewOverlay : Overlay() {
 
     private val fill = fillPaint(MapPalette.GreenFill)
     private val stroke = strokePaint(MapPalette.GreenStroke, 3f)
+    private val superFill = fillPaint(MapPalette.SuperFill)
+    private val superStroke = strokePaint(MapPalette.SuperStroke, 3f)
     private val privFill = fillPaint(MapPalette.YellowFill)
     private val privStroke = strokePaint(MapPalette.YellowStroke, 3f)
     private val accFill = fillPaint(MapPalette.GpsAccFill)
@@ -432,8 +434,8 @@ private class PreviewOverlay : Overlay() {
         val b = proj.toPixels(GeoPoint(center.latitude + 100.0 / 111_320.0, center.longitude), null)
         val ppm = abs(a.y - b.y) / 100.0
         loc?.let {
-            val fp = if (it.public) fill else privFill
-            val sp = if (it.public) stroke else privStroke
+            val fp = if (!it.public) privFill else if (it.isSuper) superFill else fill
+            val sp = if (!it.public) privStroke else if (it.isSuper) superStroke else stroke
             if (it.polygon.isNotEmpty()) {            // real footprint
                 tracePolygon(path, it.polygon, proj, p)
                 c.drawPath(path, fp)
@@ -485,6 +487,9 @@ private class LocalityOverlay(
     private val fill = fillPaint(MapPalette.GreenFill)
     private val fillPale = fillPaint(MapPalette.GreenFillPale)
     private val stroke = strokePaint(MapPalette.GreenStroke, 2f)
+    private val superFill = fillPaint(MapPalette.SuperFill)
+    private val superFillPale = fillPaint(MapPalette.SuperFillPale)
+    private val superStroke = strokePaint(MapPalette.SuperStroke, 2f)
     private val privFill = fillPaint(MapPalette.YellowFill)
     private val privFillPale = fillPaint(MapPalette.YellowFillPale)
     private val privStroke = strokePaint(MapPalette.YellowStroke, 2f)
@@ -500,10 +505,12 @@ private class LocalityOverlay(
     private val accStroke = strokePaint(MapPalette.GpsAccStrokeFaint, 2f)
     private val gps = fillPaint(MapPalette.Gps)
     private val gpsRing = strokePaint(MapPalette.GpsRing, 3f)
+
     // Dark, legible text over a halo tinted by type, so the outline tells you which kind of
     // locality the name belongs to: green for public, yellow for the user's own - matching the disks.
     private val labelFill = Paint().apply { color = MapPalette.LabelText.toInt(); textSize = 38f; textAlign = Paint.Align.CENTER; isAntiAlias = true }
     private val labelHalo = Paint().apply { color = MapPalette.LabelHaloGreen.toInt(); textSize = 38f; textAlign = Paint.Align.CENTER; isAntiAlias = true; style = Paint.Style.STROKE; strokeWidth = 5f }
+    private val labelHaloSuper = Paint().apply { color = MapPalette.LabelHaloSuper.toInt(); textSize = 38f; textAlign = Paint.Align.CENTER; isAntiAlias = true; style = Paint.Style.STROKE; strokeWidth = 5f }
     private val labelHaloPriv = Paint().apply { color = MapPalette.LabelHaloYellow.toInt(); textSize = 38f; textAlign = Paint.Align.CENTER; isAntiAlias = true; style = Paint.Style.STROKE; strokeWidth = 5f }
     private val p = Point()
     private val path = Path()
@@ -557,14 +564,14 @@ private class LocalityOverlay(
      *  from, the screen-space box used for overlap tests, and a priority (higher wins a contested spot). */
     private class LabelCandidate(
         val lines: List<String>, val cx: Float, val firstBaseline: Float,
-        val box: RectF, val priority: Float, val public: Boolean,
+        val box: RectF, val priority: Float, val public: Boolean, val isSuper: Boolean,
     )
 
     /** Build a [LabelCandidate] for [name] anchored at (cx,cy). A real footprint (polygon, or a
      *  circle drawn bigger than the dot) gets the name *centred on* the anchor so it reads as
      *  belonging to the shape (#135); a bare dot gets it just below [markerR] so the dot stays
      *  visible. Wrapped text is measured into a padded box for the overlap test. */
-    private fun makeLabel(name: String, cx: Float, cy: Float, markerR: Float, centred: Boolean, public: Boolean, priority: Float): LabelCandidate {
+    private fun makeLabel(name: String, cx: Float, cy: Float, markerR: Float, centred: Boolean, public: Boolean, isSuper: Boolean, priority: Float): LabelCandidate {
         val lines = wrapLabel(name, 210f)
         var maxW = 0f
         for (l in lines) maxW = max(maxW, labelFill.measureText(l))
@@ -575,7 +582,7 @@ private class LocalityOverlay(
         val top = first - lineH * 0.8f
         val bottom = first + (lines.size - 1) * lineH + lineH * 0.2f
         val box = RectF(cx - halfW, top - LABEL_PAD, cx + halfW, bottom + LABEL_PAD)
-        return LabelCandidate(lines, cx, first, box, priority, public)
+        return LabelCandidate(lines, cx, first, box, priority, public, isSuper)
     }
 
     /** Build the label for [loc], anchored at its [Locality.labelAnchor] (a polygon's interior
@@ -585,13 +592,17 @@ private class LocalityOverlay(
         val a = loc.labelAnchor
         proj.toPixels(GeoPoint(a[0], a[1]), p)
         val centred = loc.polygon.isNotEmpty() || (loc.radius > 0.0 && loc.radius * ppm >= POINT_DOT_PX)
-        return makeLabel(loc.lokalitet, p.x.toFloat(), p.y.toFloat(), markerR, centred, loc.public, priority)
+        return makeLabel(loc.lokalitet, p.x.toFloat(), p.y.toFloat(), markerR, centred, loc.public, loc.isSuper, priority)
     }
 
     /** Draw a queued label, wrapped, from its first baseline down - dark text over a halo tinted
      *  by type (green public, yellow private). */
     private fun drawLabel(c: Canvas, cand: LabelCandidate) {
-        val halo = if (cand.public) labelHalo else labelHaloPriv
+        val halo = when {
+            !cand.public -> labelHaloPriv
+            cand.isSuper -> labelHaloSuper
+            else -> labelHalo
+        }
         var ty = cand.firstBaseline
         for (line in cand.lines) {
             c.drawText(line, cand.cx, ty, halo)
@@ -640,8 +651,17 @@ private class LocalityOverlay(
             // Fade large localities (big circles/polygons) so they don't dominate the map.
             // New spots have public=false, so they draw yellow like the user's own.
             val big = span > LARGE_FOOTPRINT_PX
-            val fp = if (loc.public) (if (big) fillPale else fill) else (if (big) privFillPale else privFill)
-            drawShape(c, proj, loc, px, py, rPx, fp, if (loc.public) stroke else privStroke)
+            val fp = when {
+                !loc.public -> if (big) privFillPale else privFill
+                loc.isSuper -> if (big) superFillPale else superFill
+                else -> if (big) fillPale else fill
+            }
+            val sp = when {
+                !loc.public -> privStroke
+                loc.isSuper -> superStroke
+                else -> stroke
+            }
+            drawShape(c, proj, loc, px, py, rPx, fp, sp)
             // Candidate priority is footprint size, so big areas win a contested spot over tiny ones.
             val labelSpan = labelSpanPx(loc, ppm)
             if (labelSpan >= LABEL_MIN_SPAN_PX) labels += labelFor(loc, proj, ppm, rPx, labelSpan)

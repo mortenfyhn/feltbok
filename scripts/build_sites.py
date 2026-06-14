@@ -59,6 +59,7 @@ COLS = [
     "geometry",
     "public",
     "mine",
+    "super",
 ]
 
 
@@ -66,6 +67,9 @@ def rows_from_mobil(raw, overrides):
     """A flat list of mobile-API site rows, already WGS84 with a per-row county. Returns the
     CSV rows for sites that are public (or forced public by an override)."""
     names = {r["id"]: r["name"] for r in raw}  # resolve parentSiteId -> parent name
+    # A site is a superlocality (has sublocalities) iff some other site names it as parent.
+    # Derived from the FULL harvest, so a public super with only private children still counts.
+    supers = {r["parentSiteId"] for r in raw if r.get("parentSiteId")}
     out = []
     for r in raw:
         public = overrides.get(str(r["id"]), "0" if r["isPrivate"] else "1")
@@ -101,6 +105,7 @@ def rows_from_mobil(raw, overrides):
                 "geometry": geom,
                 "public": "1",
                 "mine": "0",  # public build never ships privates; mine comes from ByUser sync
+                "super": "1" if r["id"] in supers else "0",
             }
         )
     return out
