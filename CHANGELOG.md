@@ -8,6 +8,8 @@
 - Appen er mer enn halvert i størrelse, så den laster ned og installerer raskere.
 - En valgt stor lokalitet (som «Uttian») fylles nå gjennomsiktig, så lokalitetene som ligger
   inni den fortsatt er synlige og lette å velge.
+- Det er nå lett å treffe en liten lokalitet eller et punkt som ligger inni en større: et trykk
+  velger den minste lokaliteten under fingeren, i stedet for stadig å lande på den store rundt.
 - Posisjonsprikken på kartet er større, så det er lettere å se hvor du er.
 - «Kopier» lagrer nå observasjonen du holder på med før den lager en kopi, så du kan taste inn
   mange like observasjoner på rad uten å miste det du nettopp skreiv.

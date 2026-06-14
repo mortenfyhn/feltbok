@@ -337,6 +337,12 @@ private const val POINT_DOT_PX = 15f
 private const val DECLUTTER_ZOOM = 14.0
 private const val DECLUTTER_MIN_SPAN_PX = 24f
 
+/** A locality is decluttered - hidden when zoomed far out and its on-screen footprint is tiny.
+ *  Shared by the draw cull and tap resolution, so you can only tap what's actually drawn (#126:
+ *  otherwise a hidden point could steal a tap meant for a visible polygon). */
+internal fun declutteredAtZoom(zoom: Double, spanPx: Float): Boolean =
+    zoom < DECLUTTER_ZOOM && spanPx < DECLUTTER_MIN_SPAN_PX
+
 /** A locality's name appears once its on-screen footprint reaches this px half-extent, so a
  *  huge area ("Sjøområdene utenfor Østmarkneset") reveals its name at a low zoom while a cluster
  *  of small private spots (Festningsparken) only labels up once you zoom right in. Point
@@ -365,6 +371,20 @@ internal fun screenSpanPx(loc: Locality, ppm: Double): Float {
  *  guard: a circle is radius-based, not a polygon, so a polygon-only test paints over its insides. */
 internal fun selectedFillIsFaint(loc: Locality, ppm: Double): Boolean =
     loc.polygon.isNotEmpty() || screenSpanPx(loc, ppm) > LARGE_FOOTPRINT_PX
+
+/** How close (px) a tap must land to a footprint-less point's dot to count as hitting it, and the
+ *  reach of the near-miss fallback. ~Material's minimum touch target, so points stay tappable. */
+internal const val TAP_SLOP_PX = 44f
+
+/** A locality a tap landed on, with its on-screen footprint span and the tap->centre distance (px). */
+internal class TapCandidate(val loc: Locality, val spanPx: Float, val centreDistPx: Float)
+
+/** Resolve a tap to a locality: the SMALLEST footprint among the hits wins, so a point or small
+ *  polygon nested inside a big container (a wide circle like Uttian, or a polygon) stays selectable
+ *  instead of always losing to the container (#126). Nearest centre only breaks ties between hits
+ *  of equal size (e.g. two overlapping point dots). */
+internal fun resolveTap(candidates: List<TapCandidate>): Locality? =
+    candidates.minWithOrNull(compareBy({ it.spanPx }, { it.centreDistPx }))?.loc
 
 /** Antialiased fill/stroke Paints from an ARGB literal, to cut the overlays' Paint boilerplate. */
 private fun fillPaint(argb: Long) =
@@ -563,14 +583,13 @@ private class LocalityOverlay(
         // Zoomed far out, thousands of point/small localities collapse to a clutter of dots.
         // Hide the small ones until the view is zoomed in; big footprints (areas, wide
         // circles) still read as shapes and keep drawing. The active pick is culled-exempt.
-        val showSmall = map.zoomLevelDouble >= DECLUTTER_ZOOM
         for (loc in localities) {
             if (loc === picked) continue              // drawn highlighted on top, after the loop
             // Cull by the locality's geographic bounds, not just its centre: a big polygon
             // (or wide circle) can fill the view while its centre point sits off-screen.
             if (bb != null && !boundsVisible(loc, bb)) continue
             val span = screenSpanPx(loc, ppm)
-            if (!showSmall && span < DECLUTTER_MIN_SPAN_PX) continue   // declutter the far-out view
+            if (declutteredAtZoom(map.zoomLevelDouble, span)) continue   // declutter the far-out view
             proj.toPixels(GeoPoint(loc.lat, loc.lon), p)
             val rPx = radiusPx(loc, ppm)
             val px = p.x.toFloat(); val py = p.y.toFloat()
@@ -626,25 +645,35 @@ private class LocalityOverlay(
         val proj = map.projection
         val ppm = pxPerMeter(map)
         val tap = proj.fromPixels(e.x.toInt(), e.y.toInt())
-        var best: Locality? = null
-        var bestD = Float.MAX_VALUE
-        // Prefer a locality whose real footprint actually contains the tap, so tapping inside a
-        // polygon near its edge keeps that locality even when a neighbour's centre is closer (#63).
-        // When several footprints contain the tap (overlapping localities) the nearest centre wins -
-        // the tiebreak that already worked well for overlaps.
+        // Collect every locality the tap hits: a real footprint (polygon/circle) that contains it,
+        // or a footprint-less point whose dot is within finger reach. The smallest footprint among
+        // them wins (resolveTap), so a small polygon or a point nested inside a big container stays
+        // selectable instead of always losing to it (#126). Tapping inside only one footprint (e.g.
+        // a polygon's edge, or the part of A not overlapped by B) makes it the sole hit, so it wins
+        // regardless of where its centre sits (#63). Decluttered localities are skipped: you can
+        // only tap what's drawn, or a hidden point would steal a tap meant for a visible polygon.
+        val zoom = map.zoomLevelDouble
+        val hits = ArrayList<TapCandidate>()
         for (loc in localities) {
-            if (!localityContains(loc, tap.latitude, tap.longitude)) continue
+            val span = screenSpanPx(loc, ppm)
+            if (loc !== picked && declutteredAtZoom(zoom, span)) continue
             proj.toPixels(GeoPoint(loc.lat, loc.lon), p)
             val d = hypot((p.x - e.x), (p.y - e.y))
-            if (d < bestD) { bestD = d; best = loc }
+            val hit = if (loc.polygon.isNotEmpty() || loc.radius > 0.0)
+                localityContains(loc, tap.latitude, tap.longitude)   // real footprint: exact containment
+            else d <= TAP_SLOP_PX                                    // point: no footprint, so finger reach
+            if (hit) hits.add(TapCandidate(loc, span, d))
         }
+        var best = resolveTap(hits)
         if (best == null) {
-            // Nothing contains the tap: fall back to the nearest centre within a comfortable touch
-            // radius, so point localities and small dots stay tappable.
+            // Nothing hit: fall back to the nearest centre within a comfortable touch radius, so a
+            // near-miss on a small dot or circle still selects instead of doing nothing.
+            var bestD = Float.MAX_VALUE
             for (loc in localities) {
+                if (loc !== picked && declutteredAtZoom(zoom, screenSpanPx(loc, ppm))) continue
                 proj.toPixels(GeoPoint(loc.lat, loc.lon), p)
                 val d = hypot((p.x - e.x), (p.y - e.y))
-                if (d < bestD && d <= maxOf(radiusPx(loc, ppm), 44f)) { bestD = d; best = loc }
+                if (d < bestD && d <= maxOf(radiusPx(loc, ppm), TAP_SLOP_PX)) { bestD = d; best = loc }
             }
         }
         best?.let { onTap(it); return true }
