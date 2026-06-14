@@ -62,6 +62,10 @@ object Strings {
         const val delete = "Slett"
         const val copy = "Kopier"
         const val save = "Lagre"
+        // Copy commits the draft, then makes a fresh copy; confirm the silent save. Wording depends
+        // on whether the commit updated an existing obs or added a new one.
+        fun savedChangesToast(species: String) = "Endringer lagra ($species)"
+        fun savedNewToast(species: String) = "Observasjon lagra ($species)"
         const val dropdownNone = "Ingen"
 
         // Confirm before the header's Forkast throws away an in-progress observation (NN/g: guard

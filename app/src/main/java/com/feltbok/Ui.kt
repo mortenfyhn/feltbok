@@ -2,6 +2,7 @@
 
 package com.feltbok
 
+import android.widget.Toast
 import androidx.activity.compose.BackHandler
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.tween
@@ -511,6 +512,9 @@ internal fun ScreenHeader(
 @Composable
 fun DetailScreen(vm: MainViewModel) {
     val cs = MaterialTheme.colorScheme
+    val ctx = LocalContext.current
+    // Same precondition for saving and for copying (copy commits the draft first).
+    val canSave = vm.dSpecies.isNotBlank() && (vm.dLoc != null || vm.nearest() != null)
     var confirmDiscard by remember { mutableStateOf(false) }
     var confirmDelete by remember { mutableStateOf(false) }
     // Confirm only when leaving would actually lose work (NN/g); editing a note and leaving it
@@ -564,11 +568,26 @@ fun DetailScreen(vm: MainViewModel) {
             if (vm.isEditing) Strings.Detail.titleEdit else Strings.Detail.titleNew,
             onCancel = leave,
             cancelContent = { Text("✕", color = Color.White, fontSize = 22.sp) },
-            // Copying an existing note keeps its time + locality (and every other field), so you can
-            // quickly add a sighting you remembered to the same batch (#110).
+            // Copying commits the current draft, then hands you a prefilled copy to tweak - so you
+            // can rattle off a run of similar observations (every field carries over; #130). Shown
+            // when adding too, not just editing.
             trailing = {
-                if (vm.isEditing)
-                    TextButton(onClick = { vm.copyAsNew() }) { Text(Strings.Detail.copy, color = Color.White) }
+                TextButton(
+                    onClick = {
+                        // Only claim a save when there was something to save - same test as the
+                        // discard prompt. Copying an unchanged edit still makes a copy, silently.
+                        val saved = vm.draftHasChanges()
+                        val editing = vm.isEditing
+                        val species = vm.dSpecies
+                        vm.copyAsNew()
+                        if (saved) {
+                            val msg = if (editing) Strings.Detail.savedChangesToast(species)
+                                      else Strings.Detail.savedNewToast(species)
+                            Toast.makeText(ctx, msg, Toast.LENGTH_SHORT).show()
+                        }
+                    },
+                    enabled = canSave,
+                ) { Text(Strings.Detail.copy, color = if (canSave) Color.White else Color.White.copy(alpha = 0.5f)) }
             },
         )
         Column(
@@ -627,7 +646,7 @@ fun DetailScreen(vm: MainViewModel) {
                     modifier = Modifier.weight(1f)) { Text(Strings.Detail.delete, color = cs.error) }
             }
             Button(onClick = { vm.save() },
-                enabled = vm.dSpecies.isNotBlank() && (vm.dLoc != null || vm.nearest() != null),
+                enabled = canSave,
                 modifier = Modifier.weight(1f)) { Text(Strings.Detail.save) }
         }
     }

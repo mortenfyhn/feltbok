@@ -9,6 +9,8 @@
 - En valgt stor lokalitet (som «Uttian») fylles nå gjennomsiktig, så lokalitetene som ligger
   inni den fortsatt er synlige og lette å velge.
 - Posisjonsprikken på kartet er større, så det er lettere å se hvor du er.
+- «Kopier» lagrer nå observasjonen du holder på med før den lager en kopi, så du kan taste inn
+  mange like observasjoner på rad uten å miste det du nettopp skreiv.
 
 ## v0.10 (10. juni 2026)
 

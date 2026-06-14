@@ -284,10 +284,12 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
      *  screen, so without this cue the near-identical form makes it unclear a new copy was made. */
     var copyToken by mutableStateOf(0); private set
 
-    /** Turn the open edit into a brand-new observation: keep every field as-is (species, count,
-     *  location, time, …) but drop the editing link so [save] mints a new note instead of
-     *  overwriting. For adding a remembered sighting to an existing batch (#110). */
-    fun copyAsNew() { editingId = null; changingSpecies = false; copyToken++ }
+    /** Commit the current draft, then keep every field as-is (species, count, location, time, …)
+     *  while dropping the editing link, so the next [save] mints a new note instead of overwriting.
+     *  Used to enter a run of similar observations: each Kopier saves what you've entered and hands
+     *  you a prefilled copy to tweak. Committing first means editing a note and copying no longer
+     *  silently loses the edits to the original (#130). */
+    fun copyAsNew() { commitDraft(); editingId = null; changingSpecies = false; copyToken++ }
 
     // True while the picker was opened from the list to set the "current" locality, rather than
     // from the observation draft. Routes selection/back to the list instead of the detail screen.
@@ -353,6 +355,14 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
     fun setCount(n: Int) { dCount = if (n < 1) UNKNOWN_COUNT else n }
 
     fun save() {
+        commitDraft()
+        resetDraft()
+        screen = Screen.LIST
+    }
+
+    /** Persist the current draft as a note (insert when adding, replace when editing) without
+     *  touching navigation or the draft, so both [save] and [copyAsNew] share one store path. */
+    private fun commitDraft() {
         val loc = dLoc ?: nearest()   // fall back to GPS-nearest if not picked yet
         val n = Note(
             // id is the stable key; bump past any same-millisecond collision so it stays unique.
@@ -381,8 +391,6 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
             saveActUses(ctx, actUses)
         }
         persist()
-        resetDraft()
-        screen = Screen.LIST
     }
 
     fun delete() {
