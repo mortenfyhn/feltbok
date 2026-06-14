@@ -66,7 +66,8 @@ object MapPalette {
     const val GpsAccFillFaint = 0x222962FFL   // picker screen
     const val GpsAccStrokeFaint = 0x882962FFL
 
-    // Locality labels — dark text with a white halo
+    // Locality labels — dark text with a halo tinted by type (pale so the text stays legible).
     const val LabelText = 0xFF18250FL
-    const val LabelHalo = 0xF2FFFFFFL
+    const val LabelHaloGreen = 0xF2DCEFC6L    // public
+    const val LabelHaloYellow = 0xF2FFF7D8L   // your own
 }

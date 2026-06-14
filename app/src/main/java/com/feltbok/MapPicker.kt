@@ -500,8 +500,11 @@ private class LocalityOverlay(
     private val accStroke = strokePaint(MapPalette.GpsAccStrokeFaint, 2f)
     private val gps = fillPaint(MapPalette.Gps)
     private val gpsRing = strokePaint(MapPalette.GpsRing, 3f)
+    // Dark, legible text over a halo tinted by type, so the outline tells you which kind of
+    // locality the name belongs to: green for public, yellow for the user's own - matching the disks.
     private val labelFill = Paint().apply { color = MapPalette.LabelText.toInt(); textSize = 38f; textAlign = Paint.Align.CENTER; isAntiAlias = true }
-    private val labelHalo = Paint().apply { color = MapPalette.LabelHalo.toInt(); textSize = 38f; textAlign = Paint.Align.CENTER; isAntiAlias = true; style = Paint.Style.STROKE; strokeWidth = 5f }
+    private val labelHalo = Paint().apply { color = MapPalette.LabelHaloGreen.toInt(); textSize = 38f; textAlign = Paint.Align.CENTER; isAntiAlias = true; style = Paint.Style.STROKE; strokeWidth = 5f }
+    private val labelHaloPriv = Paint().apply { color = MapPalette.LabelHaloYellow.toInt(); textSize = 38f; textAlign = Paint.Align.CENTER; isAntiAlias = true; style = Paint.Style.STROKE; strokeWidth = 5f }
     private val p = Point()
     private val path = Path()
 
@@ -554,14 +557,14 @@ private class LocalityOverlay(
      *  from, the screen-space box used for overlap tests, and a priority (higher wins a contested spot). */
     private class LabelCandidate(
         val lines: List<String>, val cx: Float, val firstBaseline: Float,
-        val box: RectF, val priority: Float,
+        val box: RectF, val priority: Float, val public: Boolean,
     )
 
     /** Build a [LabelCandidate] for [name] anchored at (cx,cy). A real footprint (polygon, or a
      *  circle drawn bigger than the dot) gets the name *centred on* the anchor so it reads as
      *  belonging to the shape (#135); a bare dot gets it just below [markerR] so the dot stays
      *  visible. Wrapped text is measured into a padded box for the overlap test. */
-    private fun makeLabel(name: String, cx: Float, cy: Float, markerR: Float, centred: Boolean, priority: Float): LabelCandidate {
+    private fun makeLabel(name: String, cx: Float, cy: Float, markerR: Float, centred: Boolean, public: Boolean, priority: Float): LabelCandidate {
         val lines = wrapLabel(name, 210f)
         var maxW = 0f
         for (l in lines) maxW = max(maxW, labelFill.measureText(l))
@@ -572,7 +575,7 @@ private class LocalityOverlay(
         val top = first - lineH * 0.8f
         val bottom = first + (lines.size - 1) * lineH + lineH * 0.2f
         val box = RectF(cx - halfW, top - LABEL_PAD, cx + halfW, bottom + LABEL_PAD)
-        return LabelCandidate(lines, cx, first, box, priority)
+        return LabelCandidate(lines, cx, first, box, priority, public)
     }
 
     /** Build the label for [loc], anchored at its [Locality.labelAnchor] (a polygon's interior
@@ -582,14 +585,16 @@ private class LocalityOverlay(
         val a = loc.labelAnchor
         proj.toPixels(GeoPoint(a[0], a[1]), p)
         val centred = loc.polygon.isNotEmpty() || (loc.radius > 0.0 && loc.radius * ppm >= POINT_DOT_PX)
-        return makeLabel(loc.lokalitet, p.x.toFloat(), p.y.toFloat(), markerR, centred, priority)
+        return makeLabel(loc.lokalitet, p.x.toFloat(), p.y.toFloat(), markerR, centred, loc.public, priority)
     }
 
-    /** Draw a queued label, wrapped, from its first baseline down. */
+    /** Draw a queued label, wrapped, from its first baseline down - dark text over a halo tinted
+     *  by type (green public, yellow private). */
     private fun drawLabel(c: Canvas, cand: LabelCandidate) {
+        val halo = if (cand.public) labelHalo else labelHaloPriv
         var ty = cand.firstBaseline
         for (line in cand.lines) {
-            c.drawText(line, cand.cx, ty, labelHalo)
+            c.drawText(line, cand.cx, ty, halo)
             c.drawText(line, cand.cx, ty, labelFill)
             ty += lineH
         }

@@ -15,6 +15,8 @@
   skjules, så du ser flere navn der det er plass og færre der det blir trangt.
 - Navn på områdelokaliteter (flater) plasseres nå inne i selve området, så det er lett å se
   hvilket navn som hører til hvilken flate – også for buede og uregelmessige områder.
+- Navn på kartet har nå en svak fargetone i omrisset – grønn for offentlige lokaliteter og gul
+  for dine egne – så det er lettere å se hvilken type et navn hører til.
 - Posisjonsprikken på kartet er større, så det er lettere å se hvor du er.
 - «Kopier» lagrer nå observasjonen du holder på med før den lager en kopi, så du kan taste inn
   mange like observasjoner på rad uten å miste det du nettopp skreiv.
