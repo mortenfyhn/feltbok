@@ -14,6 +14,7 @@
 - Posisjonsprikken på kartet er større, så det er lettere å se hvor du er.
 - «Kopier» lagrer nå observasjonen du holder på med før den lager en kopi, så du kan taste inn
   mange like observasjoner på rad uten å miste det du nettopp skreiv.
+- Ymse småforbedringer.
 
 ## v0.10 (10. juni 2026)
 
