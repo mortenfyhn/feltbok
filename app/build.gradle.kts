@@ -109,9 +109,10 @@ android {
             applicationIdSuffix = ".debug"
             versionNameSuffix = "-debug"
             resValue("string", "app_name", "Feltbok (dev)")
-            // Mark the in-app version string too (footer + feedback), so a dev build is
-            // recognisable from inside the app, not just by its launcher label.
-            buildConfigField("String", "GIT_VERSION", "\"$gitVersion (dev, $gitBranch)\"")
+            // Append the branch to the in-app version string (footer + feedback) so a dev build is
+            // recognisable from inside the app, not just by its launcher label. The release build
+            // has no parenthetical, so the branch alone marks this as a dev build.
+            buildConfigField("String", "GIT_VERSION", "\"$gitVersion ($gitBranch)\"")
             buildConfigField("Boolean", "SHOW_SEARCH_TAGS", (showSearchTags ?: true).toString())
         }
     }
