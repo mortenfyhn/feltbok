@@ -23,10 +23,8 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.Button
-import androidx.compose.material3.Checkbox
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
@@ -42,14 +40,9 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.clipToBounds
-import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.StrokeCap
-import androidx.compose.ui.graphics.StrokeJoin
-import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.unit.dp
@@ -107,11 +100,10 @@ fun LocalityScreen(vm: MainViewModel) {
             .also { mapView.overlays.add(it) }
     }
     // Refresh the overlay's plain-List copy whenever the locality set changes (async load
-    // finishing, or a new spot placed) or the private-locality toggle flips - not every frame.
-    LaunchedEffect(vm.localities.size, vm.showPrivate) {
-        // Always keep your brand-new spots on the map: "Vis private" hides the many synced privates
-        // (#88), but a spot you just placed must stay selectable for the next observation (#99).
-        overlay.localities = vm.localities.filter { vm.showPrivate || it.public || it.newLoc }
+    // finishing, or a new spot placed) - not every frame. Copy out of the SnapshotStateList:
+    // draw() iterates this every frame, and snapshot reads in that hot loop make zoom lag.
+    LaunchedEffect(vm.localities.size) {
+        overlay.localities = vm.localities.toList()
         mapView.invalidate()
     }
     // Flash the tapped locality highlighted, then return to the entry screen.
@@ -162,13 +154,6 @@ fun LocalityScreen(vm: MainViewModel) {
                         m.invalidate()
                     }
                 },
-            )
-            // Toggle private (non-public) localities off the map - they clutter it when reporting
-            // birds (issue #88). Only offered when there are any to hide.
-            if (!newMode && vm.localities.any { !it.public }) PrivateToggle(
-                show = vm.showPrivate,
-                onToggle = vm::toggleShowPrivate,
-                modifier = Modifier.align(Alignment.BottomStart).padding(8.dp),
             )
             // One-handed zoom: thumb-reachable buttons (the new-spot panel covers them).
             if (!newMode) Column(
@@ -237,30 +222,6 @@ private fun fitRadius(map: MapView): Int {
     val ppm = abs(a.y - b.y) / 100.0
     val maxR = minOf(map.width, map.height) * 0.25 / ppm   // radius ~ a quarter of the shorter side
     return RADII.lastOrNull { it <= maxR } ?: RADII.first()
-}
-
-/** Show/hide the private localities (issue #88): a checkbox sitting straight on the map, its label
- *  white-haloed so it stays legible over any tiles. Checked = the user's private spots are shown. */
-@Composable
-private fun PrivateToggle(show: Boolean, onToggle: () -> Unit, modifier: Modifier) {
-    Row(
-        modifier.clickable(onClick = onToggle).padding(8.dp),   // padding enlarges the tap target
-        verticalAlignment = Alignment.CenterVertically,
-    ) {
-        Box(Modifier.scale(1.2f), contentAlignment = Alignment.Center) {
-            // Fill white right up under the checkbox outline so no map shows through the ring.
-            if (!show) Box(Modifier.size(18.dp).background(Color.White, RoundedCornerShape(2.dp)))
-            Checkbox(checked = show, onCheckedChange = null)
-        }
-        val label = TextStyle(fontSize = 16.sp, fontWeight = FontWeight.Bold)
-        Box(Modifier.padding(start = 3.dp)) {       // clear the visually-scaled checkbox
-            // Halo for contrast; round join/cap so sharp corners (e.g. bottom of the "V")
-            // don't grow jagged miter spikes.
-            Text(Strings.Picker.privateToggle, color = Color.White,
-                style = label.copy(drawStyle = Stroke(width = 6f, join = StrokeJoin.Round, cap = StrokeCap.Round)))
-            Text(Strings.Picker.privateToggle, color = Color.Black, style = label)
-        }
-    }
 }
 
 @Composable

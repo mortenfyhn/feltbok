@@ -20,6 +20,8 @@
 - Lokaliteter som rommer underlokaliteter vises nå i en egen, dypere grønnfarge på kartet (som
   på Artsobservasjoner), så det er lettere å kjenne dem igjen.
 - Posisjonsprikken på kartet er større, så det er lettere å se hvor du er.
+- Kartet viser nå alltid både offentlige og dine egne lokaliteter – «Vis private»-avkrysningen
+  trengs ikke lenger nå som navn og prikker ikke roter seg sammen på kartet.
 - «Kopier» lagrer nå observasjonen du holder på med før den lager en kopi, så du kan taste inn
   mange like observasjoner på rad uten å miste det du nettopp skreiv.
 - Ymse småforbedringer.

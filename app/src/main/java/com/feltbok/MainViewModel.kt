@@ -155,11 +155,6 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
     // Remembered locality-picker zoom, so reopening it keeps your last zoom level.
     var mapZoom = 16.0
 
-    /** Whether the picker shows private localities - the user's own (non-public) spots, which
-     *  clutter the map when reporting birds (issue #88). Shown by default; remembered across restarts. */
-    var showPrivate by mutableStateOf(loadShowPrivate(ctx)); private set
-    fun toggleShowPrivate() { showPrivate = !showPrivate; saveShowPrivate(ctx, showPrivate) }
-
     // ---- draft (current add/edit) ----
     // Observable so isEditing recomposes the editor when it changes without a screen switch -
     // e.g. copyAsNew turning an edit into a fresh observation in place (#110).
