@@ -8,6 +8,7 @@
 - Appen er mer enn halvert i størrelse, så den laster ned og installerer raskere.
 - En valgt stor lokalitet (som «Uttian») fylles nå gjennomsiktig, så lokalitetene som ligger
   inni den fortsatt er synlige og lette å velge.
+- Posisjonsprikken på kartet er større, så det er lettere å se hvor du er.
 
 ## v0.10 (10. juni 2026)
 

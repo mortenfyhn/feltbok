@@ -603,8 +603,8 @@ private class LocalityOverlay(
                 c.drawCircle(px, py, rAcc, accFill)
                 c.drawCircle(px, py, rAcc, accStroke)
             }
-            c.drawCircle(px, py, 11f, gps)            // bigger GPS dot
-            c.drawCircle(px, py, 11f, gpsRing)
+            c.drawCircle(px, py, 18f, gps)            // big enough to spot at a glance (#119)
+            c.drawCircle(px, py, 18f, gpsRing)
         }
         if (newRadiusM >= 0.0) {                      // placing a new spot: crosshair + radius
             val cx = map.width / 2f                    // fixed screen position = centre of the
