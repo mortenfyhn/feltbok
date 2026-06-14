@@ -99,19 +99,6 @@ fun ListScreen(vm: MainViewModel) {
     val selecting = vm.selected.isNotEmpty()
     // While marking notes, system Back clears the marks rather than exiting the app.
     BackHandler(enabled = selecting) { vm.clearSelection() }
-    var confirmDelete by remember { mutableStateOf(false) }
-    if (confirmDelete) {
-        AlertDialog(
-            onDismissRequest = { confirmDelete = false },
-            title = { Text(Strings.Notes.deleteTitle(vm.selected.size)) },
-            confirmButton = {
-                TextButton(onClick = { confirmDelete = false; vm.deleteSelected() }) {
-                    Text(Strings.Notes.deleteConfirm, color = cs.error)
-                }
-            },
-            dismissButton = { TextButton(onClick = { confirmDelete = false }) { Text(Strings.cancel) } },
-        )
-    }
     Box(Modifier.fillMaxSize()) {
         Column(Modifier.fillMaxSize()) {
             StatusStrip(vm)
@@ -139,7 +126,7 @@ fun ListScreen(vm: MainViewModel) {
                                     modifier = Modifier.weight(1f).padding(start = 16.dp, top = 9.dp, bottom = 9.dp))
                                 Text(Strings.Notes.deleteSelected, color = cs.error, fontSize = 13.sp,
                                     fontWeight = FontWeight.Medium,
-                                    modifier = Modifier.clickable { confirmDelete = true }
+                                    modifier = Modifier.clickable { vm.deleteSelected() }
                                         .padding(horizontal = 16.dp, vertical = 9.dp))
                                 Text("✕", color = cs.onSurfaceVariant, fontSize = 13.sp,
                                     fontWeight = FontWeight.Medium,
@@ -515,11 +502,9 @@ fun DetailScreen(vm: MainViewModel) {
     val ctx = LocalContext.current
     // Same precondition for saving and for copying (copy commits the draft first).
     val canSave = vm.dSpecies.isNotBlank() && (vm.dLoc != null || vm.nearest() != null)
-    var confirmDiscard by remember { mutableStateOf(false) }
-    var confirmDelete by remember { mutableStateOf(false) }
-    // Confirm only when leaving would actually lose work (NN/g); editing a note and leaving it
-    // untouched just goes back, no pointless prompt.
-    val leave = { if (vm.draftHasChanges()) confirmDiscard = true else vm.cancel() }
+    // Leaving with unsaved work discards it but offers an undo (#122); an untouched edit just goes
+    // back with nothing to undo.
+    val leave = { if (vm.draftHasChanges()) vm.discardDraft() else vm.cancel() }
     // System Back is the natural cancel (NN/g), so it must go through the same path as the ✕ -
     // otherwise an accidental back-swipe drops a started observation silently. This handler sits
     // inside DetailScreen, so it shadows the app-level one only while the editor is open.
@@ -537,33 +522,9 @@ fun DetailScreen(vm: MainViewModel) {
             slide.animateTo(0f, tween(durationMillis = 250))
         }
     }
-    if (confirmDiscard) {
-        AlertDialog(
-            onDismissRequest = { confirmDiscard = false },
-            title = { Text(if (vm.isEditing) Strings.Detail.discardTitleEdit else Strings.Detail.discardTitleNew) },
-            confirmButton = {
-                TextButton(onClick = { confirmDiscard = false; vm.cancel() }) {
-                    Text(Strings.Detail.discardConfirm, color = cs.error)
-                }
-            },
-            dismissButton = { TextButton(onClick = { confirmDiscard = false }) { Text(Strings.Detail.discardKeep) } },
-        )
-    }
-    if (confirmDelete) {
-        AlertDialog(
-            onDismissRequest = { confirmDelete = false },
-            title = { Text(Strings.Detail.deleteTitle) },
-            confirmButton = {
-                TextButton(onClick = { confirmDelete = false; vm.delete() }) {
-                    Text(Strings.Detail.deleteConfirm, color = cs.error)
-                }
-            },
-            dismissButton = { TextButton(onClick = { confirmDelete = false }) { Text(Strings.cancel) } },
-        )
-    }
     Column(Modifier.fillMaxSize()) {
         // This screen composes a draft, so leaving discards it: a bare ✕ (the conventional dismiss)
-        // rather than a back chevron, and confirm before actually throwing the draft away.
+        // rather than a back chevron. No confirm - an undo snackbar catches a misfire instead (#122).
         ScreenHeader(
             if (vm.isEditing) Strings.Detail.titleEdit else Strings.Detail.titleNew,
             onCancel = leave,
@@ -582,7 +543,7 @@ fun DetailScreen(vm: MainViewModel) {
                         vm.copyAsNew()
                         if (saved) {
                             val msg = if (editing) Strings.Detail.savedChangesToast(species)
-                                      else Strings.Detail.savedNewToast(species)
+                            else Strings.Detail.savedNewToast(species)
                             Toast.makeText(ctx, msg, Toast.LENGTH_SHORT).show()
                         }
                     },
@@ -642,7 +603,7 @@ fun DetailScreen(vm: MainViewModel) {
             horizontalArrangement = Arrangement.spacedBy(10.dp),
         ) {
             if (vm.isEditing) {
-                TextButton(onClick = { confirmDelete = true },
+                TextButton(onClick = { vm.delete() },
                     modifier = Modifier.weight(1f)) { Text(Strings.Detail.delete, color = cs.error) }
             }
             Button(onClick = { vm.save() },

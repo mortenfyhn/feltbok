@@ -30,8 +30,10 @@ object Strings {
         // Selection mode: long-press a note to mark it, then tap more, then delete the marked ones.
         fun selected(n: Int) = "$n markert"
         const val deleteSelected = "Slett"
-        fun deleteTitle(n: Int) = "Slett $n ${if (n == 1) "observasjon" else "observasjoner"}?"
-        const val deleteConfirm = "Slett"
+
+        // Undo snackbar shown after a delete (issue #122).
+        fun deleted(n: Int) = "Slettet $n ${if (n == 1) "observasjon" else "observasjoner"}"
+        const val undo = "Angre"
     }
 
     object Feedback {
@@ -62,20 +64,16 @@ object Strings {
         const val delete = "Slett"
         const val copy = "Kopier"
         const val save = "Lagre"
+
         // Copy commits the draft, then makes a fresh copy; confirm the silent save. Wording depends
         // on whether the commit updated an existing obs or added a new one.
         fun savedChangesToast(species: String) = "Endringer lagra ($species)"
         fun savedNewToast(species: String) = "Observasjon lagra ($species)"
         const val dropdownNone = "Ingen"
 
-        // Confirm before the header's Forkast throws away an in-progress observation (NN/g: guard
-        // destructive cancels that lose work).
-        const val discardTitleNew = "Forkast observasjon?"
-        const val discardTitleEdit = "Forkast endringene?"
-        const val discardConfirm = "Forkast"
-        const val discardKeep = "Fortsett"
-        const val deleteTitle = "Slett observasjon?"
-        const val deleteConfirm = "Slett"
+        // Undo snackbar after leaving the editor without saving (#122); wording depends on whether
+        // it was a new observation or edits to an existing one.
+        fun discarded(wasEdit: Boolean) = if (wasEdit) "Endringer forkasta" else "Observasjon forkasta"
     }
 
     object Time {

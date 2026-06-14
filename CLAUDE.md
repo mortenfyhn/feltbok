@@ -74,6 +74,12 @@ Recipes live in `just --list` — the notes below are only the why's and gotchas
 - **Worktrees are opt-in.** Work in the main checkout by default. Only reach for EnterWorktree when
   the user explicitly asks, or when you know another session is editing the same files concurrently —
   the rebase/index tangles they create usually outweigh the isolation benefit.
+- **In a worktree, edit only worktree paths.** When working in a worktree (`.claude/worktrees/<name>/`),
+  every Read/Edit/Write/grep MUST target that path — NOT `…/feltbok/app/…` in the main checkout. The
+  shell cwd follows you into the worktree, but absolute paths in tool calls are NOT rewritten, so a
+  stale main-checkout path silently edits the wrong tree while builds (run from cwd) pass against the
+  correct one. Re-grep inside the worktree after entering; before trusting a build, confirm
+  `git status` shows your edits in the worktree and the main checkout is clean.
 - **Shared working tree.** Sometimes parallel agents run in the same checkout without worktrees, so
   expect unrelated uncommitted changes from another agent's work — that's normal, not a mistake to
   fix. Leave those changes alone and commit only the files that are part of your own task.

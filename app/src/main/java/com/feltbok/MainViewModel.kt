@@ -46,10 +46,31 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
     fun toggleSelect(id: Long) { if (!selected.remove(id)) selected.add(id) }
     fun clearSelection() = selected.clear()
     fun deleteSelected() {
+        setUndo(Undoable.Deleted(notes.filter { it.id in selected }))
         notes.removeAll { it.id in selected }
         selected.clear()
         persist()
     }
+
+    // The pending undo offer (#122). [undoToken] bumps on each new action so the UI shows a fresh
+    // snackbar; [undo] dispatches by kind. State + the "dismiss clears it" rule live in UndoOffer.
+    private val undoOffer = UndoOffer()
+    val undoToken: Int get() = undoOffer.token
+    val undoable: Undoable? get() = undoOffer.current
+
+    private fun setUndo(u: Undoable) = undoOffer.offer(u)
+
+    fun undo() {
+        when (val u = undoOffer.current) {
+            is Undoable.Deleted -> { notes.addAll(u.notes); persist() }   // list sorts by time
+            is Undoable.Discarded -> screen = Screen.DETAIL              // draft is still in the editor
+            null -> {}
+        }
+        undoOffer.clear()
+    }
+
+    /** Drop the pending undo without acting - the snackbar timed out or was dismissed. */
+    fun dismissUndo() = undoOffer.clear()
 
     /** Per-species use score (norsk): a pick count that fades with time (see [UseEntry]), so your
      *  recent picks rank above ones you logged a lot but long ago. Persisted. */
@@ -256,6 +277,10 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
     fun backToDetail() { screen = Screen.DETAIL }
     fun cancel() { screen = Screen.LIST }
 
+    /** Leave the editor, throwing away the in-progress observation/edits - no confirm, but offer an
+     *  undo (#122). The draft is left intact (as [cancel] does), so undo just reopens the editor. */
+    fun discardDraft() { setUndo(Undoable.Discarded(isEditing)); screen = Screen.LIST }
+
     fun pickSpecies(s: Species) {
         dSpecies = s.norsk; dLatin = s.latin
         val now = System.currentTimeMillis()
@@ -394,7 +419,11 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
     }
 
     fun delete() {
-        editingId?.let { id -> notes.removeAll { it.id == id }; persist() }
+        editingId?.let { id ->
+            setUndo(Undoable.Deleted(notes.filter { it.id == id }))
+            notes.removeAll { it.id == id }
+            persist()
+        }
         screen = Screen.LIST
     }
 
@@ -412,6 +441,7 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
      *  off the list and you work down to an empty list one kommune at a time. */
     fun clearKommune(kommune: String) {
         val ids = exportNotesFor(kommune).map { it.id }.toSet()
+        setUndo(Undoable.Deleted(notes.filter { it.id in ids }))   // undoable, like the other deletes (#122)
         notes.removeAll { it.id in ids }
         persist()
     }
