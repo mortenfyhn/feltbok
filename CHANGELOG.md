@@ -11,6 +11,8 @@
   inni den fortsatt er synlige og lette å velge.
 - Det er nå lett å treffe en liten lokalitet eller et punkt som ligger inni en større: et trykk
   velger den minste lokaliteten under fingeren, i stedet for stadig å lande på den store rundt.
+- Lokalitetsnavn på kartet roter seg ikke lenger oppå hverandre: navn som ville kollidert
+  skjules, så du ser flere navn der det er plass og færre der det blir trangt.
 - Posisjonsprikken på kartet er større, så det er lettere å se hvor du er.
 - «Kopier» lagrer nå observasjonen du holder på med før den lager en kopi, så du kan taste inn
   mange like observasjoner på rad uten å miste det du nettopp skreiv.

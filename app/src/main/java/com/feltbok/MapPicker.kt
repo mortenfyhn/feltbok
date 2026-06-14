@@ -6,6 +6,7 @@ import android.graphics.DashPathEffect
 import android.graphics.Paint
 import android.graphics.Path
 import android.graphics.Point
+import android.graphics.RectF
 import android.view.MotionEvent
 import android.view.ViewGroup
 import android.widget.NumberPicker
@@ -343,12 +344,16 @@ private const val DECLUTTER_MIN_SPAN_PX = 24f
 internal fun declutteredAtZoom(zoom: Double, spanPx: Float): Boolean =
     zoom < DECLUTTER_ZOOM && spanPx < DECLUTTER_MIN_SPAN_PX
 
-/** A locality's name appears once its on-screen footprint reaches this px half-extent, so a
- *  huge area ("Sjøområdene utenfor Østmarkneset") reveals its name at a low zoom while a cluster
- *  of small private spots (Festningsparken) only labels up once you zoom right in. Point
- *  localities have no real footprint, so they're treated as [POINT_LABEL_EXTENT_M] across. */
-private const val LABEL_MIN_SPAN_PX = 34f
+/** Footprint (px half-extent) a locality needs before its name becomes a label *candidate*. This
+ *  is only the candidacy gate, not the final show/hide: the greedy collision pass (#121) decides
+ *  which candidates actually draw, so this is set low and geometry does the rest. Point localities
+ *  have no real footprint, so they're treated as [POINT_LABEL_EXTENT_M] across. */
+private const val LABEL_MIN_SPAN_PX = 14f
 private const val POINT_LABEL_EXTENT_M = 60.0
+
+/** Padding (px) added around each label's text box before testing overlap — the main
+ *  "breathing room" knob for how tightly labels may sit next to each other (#121). */
+private const val LABEL_PAD = 8f
 
 /** Footprint (px half-extent) above which a locality is treated as "large": faded when
  *  unselected so it doesn't dominate, and drawn translucent when selected so the localities
@@ -536,25 +541,40 @@ private class LocalityOverlay(
         }
     }
 
-    /** Reveal a locality's name once its footprint is big enough on screen, so huge localities
-     *  show their names at a low zoom and tiny ones only when you zoom right in. Point localities
-     *  have no real size, so they get a nominal extent and appear only when zoomed in close. */
-    private fun labelVisible(loc: Locality, ppm: Double): Boolean {
-        val spanPx = if (loc.polygon.isEmpty() && loc.radius <= 0.0) (POINT_LABEL_EXTENT_M * ppm).toFloat()
+    /** Footprint span used both for label candidacy (vs [LABEL_MIN_SPAN_PX]) and as the priority
+     *  score in the collision pass: bigger footprint = higher priority. Point localities have no
+     *  real size, so they get a nominal extent ([POINT_LABEL_EXTENT_M]). */
+    private fun labelSpanPx(loc: Locality, ppm: Double): Float =
+        if (loc.polygon.isEmpty() && loc.radius <= 0.0) (POINT_LABEL_EXTENT_M * ppm).toFloat()
         else screenSpanPx(loc, ppm)
-        return spanPx >= LABEL_MIN_SPAN_PX
-    }
 
     private val lineH = 32f
 
-    /** Draw [name] below the marker (which has pixel radius [markerR]), wrapped so it
-     *  doesn't get too wide. Below, not centred, so it never hides a small dot. */
-    private fun drawLabel(c: Canvas, name: String, cx: Float, cy: Float, markerR: Float) {
+    /** A label queued for the greedy collision pass: its wrapped lines, anchor, the screen-space
+     *  box used for overlap tests, and a priority (higher wins a contested spot). */
+    private class LabelCandidate(
+        val lines: List<String>, val cx: Float, val cy: Float,
+        val markerOff: Float, val box: RectF, val priority: Float,
+    )
+
+    /** Build a [LabelCandidate] for [name] anchored below a marker of pixel radius [markerR],
+     *  measuring its wrapped text into a padded box so the placement pass can test overlap. */
+    private fun makeLabel(name: String, cx: Float, cy: Float, markerR: Float, priority: Float): LabelCandidate {
         val lines = wrapLabel(name, 210f)
-        var ty = cy + markerR.coerceAtMost(40f) + lineH    // first baseline clears the marker
-        for (line in lines) {
-            c.drawText(line, cx, ty, labelHalo)
-            c.drawText(line, cx, ty, labelFill)
+        val off = markerR.coerceAtMost(40f)
+        var maxW = 0f
+        for (l in lines) maxW = max(maxW, labelFill.measureText(l))
+        val halfW = maxW / 2f + LABEL_PAD
+        val box = RectF(cx - halfW, cy + off - LABEL_PAD, cx + halfW, cy + off + lines.size * lineH + LABEL_PAD)
+        return LabelCandidate(lines, cx, cy, off, box, priority)
+    }
+
+    /** Draw a queued label below its marker, wrapped. Below, not centred, so it never hides a small dot. */
+    private fun drawLabel(c: Canvas, cand: LabelCandidate) {
+        var ty = cand.cy + cand.markerOff + lineH    // first baseline clears the marker
+        for (line in cand.lines) {
+            c.drawText(line, cand.cx, ty, labelHalo)
+            c.drawText(line, cand.cx, ty, labelFill)
             ty += lineH
         }
     }
@@ -583,6 +603,9 @@ private class LocalityOverlay(
         // Zoomed far out, thousands of point/small localities collapse to a clutter of dots.
         // Hide the small ones until the view is zoomed in; big footprints (areas, wide
         // circles) still read as shapes and keep drawing. The active pick is culled-exempt.
+        // Labels aren't drawn inline: we collect candidates here, then place them in one greedy
+        // collision pass after all shapes so overlapping names get gated, not stacked (#121).
+        val labels = ArrayList<LabelCandidate>()
         for (loc in localities) {
             if (loc === picked) continue              // drawn highlighted on top, after the loop
             // Cull by the locality's geographic bounds, not just its centre: a big polygon
@@ -598,8 +621,9 @@ private class LocalityOverlay(
             val big = span > LARGE_FOOTPRINT_PX
             val fp = if (loc.public) (if (big) fillPale else fill) else (if (big) privFillPale else privFill)
             drawShape(c, proj, loc, px, py, rPx, fp, if (loc.public) stroke else privStroke)
-            // Reveal the name by footprint size, not a flat zoom: big areas label early, tiny spots late.
-            if (labelVisible(loc, ppm)) drawLabel(c, loc.lokalitet, px, py, rPx)
+            // Candidate priority is footprint size, so big areas win a contested spot over tiny ones.
+            val labelSpan = labelSpanPx(loc, ppm)
+            if (labelSpan >= LABEL_MIN_SPAN_PX) labels += makeLabel(loc.lokalitet, px, py, rPx, labelSpan)
         }
         picked?.let { pl ->                           // selected: bold outline, drawn on top
             proj.toPixels(GeoPoint(pl.lat, pl.lon), p)
@@ -612,7 +636,17 @@ private class LocalityOverlay(
             else (if (faint) selFillFaintPriv else selFillPriv)
             val sp = if (pl.public) selStroke else selStrokePriv
             drawShape(c, proj, pl, cx, cy, radiusPx(pl, ppm), fp, sp)
-            if (labelVisible(pl, ppm)) drawLabel(c, pl.lokalitet, cx, cy, radiusPx(pl, ppm))
+            // The pick always gets its name (top priority), so selecting a locality confirms which it is.
+            labels += makeLabel(pl.lokalitet, cx, cy, radiusPx(pl, ppm), Float.MAX_VALUE)
+        }
+        // Greedy placement: highest priority first; draw a label only if its box clears every
+        // already-placed one. Tens of candidates on a phone, so naïve O(n²) overlap testing is fine.
+        labels.sortByDescending { it.priority }
+        val placed = ArrayList<RectF>()
+        for (cand in labels) {
+            if (placed.any { RectF.intersects(it, cand.box) }) continue
+            placed += cand.box
+            drawLabel(c, cand)
         }
         fix?.let {
             proj.toPixels(it, p)
