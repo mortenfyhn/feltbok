@@ -53,7 +53,9 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.withFrameNanos
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -85,6 +87,7 @@ import androidx.compose.ui.unit.Constraints
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 
 // ============================ LIST ============================
 
@@ -616,12 +619,13 @@ fun DetailScreen(vm: MainViewModel) {
 @Composable
 private fun AntallRow(vm: MainViewModel) {
     val cs = MaterialTheme.colorScheme
+    val focus = LocalFocusManager.current
+    val scope = rememberCoroutineScope()
 
-    // Local field value; reset when the draft changes. Tapping selects all so a
+    // Local field value; reset when the draft changes. Focusing selects all so a
     // new number replaces the old one instead of appending.
     fun countText(c: Int) = if (c == UNKNOWN_COUNT) "" else c.toString()  // unknown shows a blank field
     var tfv by remember(vm.dTime, vm.isEditing) { mutableStateOf(TextFieldValue(countText(vm.dCount))) }
-    var justFocused by remember { mutableStateOf(false) }
     fun set(n: Int) {
         vm.setCount(n)
         val s = countText(vm.dCount)
@@ -643,27 +647,25 @@ private fun AntallRow(vm: MainViewModel) {
             BasicTextField(
                 value = tfv,
                 onValueChange = { v ->
-                    val digits = v.text.filter { it.isDigit() }.take(4)
-                    if (justFocused && digits == tfv.text) {
-                        // First event after focusing is the tap placing the cursor;
-                        // ignore it and keep everything selected so typing replaces.
-                        justFocused = false
-                        tfv = tfv.copy(selection = TextRange(0, tfv.text.length))
-                    } else {
-                        justFocused = false
-                        tfv = v.copy(text = digits)
-                        // An emptied field means "unknown", matching the field's blank
-                        // display - otherwise dCount keeps its stale value and saves as 1.
-                        vm.setCount(digits.toIntOrNull() ?: UNKNOWN_COUNT)
-                    }
+                    val digits = v.text.filter { it.isDigit() }  // no upper cap; a long number may overflow the box
+                    tfv = v.copy(text = digits)
+                    // An emptied field means "unknown", matching the field's blank
+                    // display - otherwise dCount keeps its stale value and saves as 1.
+                    vm.setCount(digits.toIntOrNull() ?: UNKNOWN_COUNT)
                 },
                 modifier = Modifier.width(64.dp).padding(vertical = 10.dp)
                     .onFocusChanged { f ->
-                        justFocused = f.isFocused
-                        if (f.isFocused) tfv = tfv.copy(selection = TextRange(0, tfv.text.length))
+                        // The focusing tap places the cursor *after* this callback runs, collapsing
+                        // any selection set here - so defer a frame, then select all. Runs only on
+                        // focus (never during typing), so it can't swallow a keystroke.
+                        if (f.isFocused) scope.launch {
+                            withFrameNanos {}
+                            tfv = tfv.copy(selection = TextRange(0, tfv.text.length))
+                        }
                     },
                 singleLine = true,
-                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number, imeAction = ImeAction.Done),
+                keyboardActions = KeyboardActions(onDone = { focus.clearFocus() }),
                 textStyle = androidx.compose.ui.text.TextStyle(
                     textAlign = TextAlign.Center, fontWeight = FontWeight.Bold,
                     fontSize = 18.sp, color = cs.onSurface),
