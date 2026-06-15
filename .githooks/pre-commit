@@ -1,0 +1,8 @@
+#!/bin/sh
+# Run the same lint gate CI enforces (ktlint + ruff), so style slips are caught
+# locally instead of failing a push. Auto-set up with: just hooks (sets core.hooksPath).
+if ! just lint; then
+    echo
+    echo "pre-commit: lint failed — run 'just format' to auto-fix, then re-stage and commit."
+    exit 1
+fi

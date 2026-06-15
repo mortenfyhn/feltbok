@@ -19,6 +19,10 @@ test:
     .venv/bin/python -m unittest discover -s scripts -p 'test_*.py' || [ "$?" -eq 5 ]  # 5 = no tests collected
     ./gradlew testDebugUnitTest
 
+# Wire up the version-controlled git hooks (run once per fresh clone)
+hooks:
+    git config core.hooksPath .githooks
+
 # Auto-format Kotlin (ktlint) + Python (ruff); run before committing manual tweaks
 format:
     ./gradlew ktlintFormat
