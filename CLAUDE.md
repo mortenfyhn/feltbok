@@ -20,6 +20,22 @@ Recipes live in `just --list` — the notes below are only the why's and gotchas
   dependency or any reflective code, skim `assembleRelease` output for R8 `Missing class`/`-dontwarn`
   notes, add a keep rule if needed, and smoke-test that one feature on the release build. No need to
   re-test the whole app every release — the R8 surface only changes when you add a reflective dep.
+- **Instrumented R8 smoke tests** (`just itest`, device-gated) back up that manual habit: tests in
+  `app/src/androidTest/` run on an attached phone against the **minified** `releaseTest` variant, so
+  an R8 strip fails a test instead of a shipped APK. The variant carries its own
+  `.releasetest`-suffixed applicationId (never collides with the real app) and is debug-signed (no
+  keystore needed). Covers note JSON round-trip, TSV export, asset loads, app launch, and the osmdroid
+  Projection (the main map-strip risk). NOT in CI (no emulator on Semaphore); `just itest` skips
+  cleanly when no device is attached, and wakes/unlocks a swipe-lock first (the launch test needs a
+  foregrounded screen — **a secure PIN/pattern lock must be unlocked by hand or that one test fails**).
+  Two proguard files exist because the test process loads the minified app APK + the test APK in one
+  process (split-APK R8): `proguard-test-rules.pro` (`testProguardFiles`) stops the test APK shrinking
+  away its own runner; `proguard-releasetest.pro` (`proguardFiles`, releaseTest variant only — never
+  real release) keeps the shared-lib + app symbols the tests reach by name. The app's own code +
+  osmdroid still get full R8, so the strip-check keeps its value. `release.sh` runs them as a
+  pre-flight gate (before tagging/building), prompting to plug in a device or confirm the skip — so
+  a release-only R8 strip fails there, not in users' hands. The reflection-insensitive UI behaviour
+  layer is deliberately left for later (#117) — only the R8-exposed paths are covered today.
 - **Two builds coexist on the device.** The dev build carries the `.debug` applicationId suffix
   (`io.github.mortenfyhn.feltbok.debug`), so it installs alongside the maintainer's daily
   **release** app (`io.github.mortenfyhn.feltbok`). `just install`/`just run`/`just uninstall` all

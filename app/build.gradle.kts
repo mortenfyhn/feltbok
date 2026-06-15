@@ -72,6 +72,7 @@ android {
         targetSdk = 34
         versionCode = 12
         versionName = "0.12"
+        testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         buildConfigField("String", "GIT_VERSION", "\"$gitVersion\"")
         // BuildConfig.DEBUG tracks the `debuggable` flag, which the debug build type turns OFF for
         // speed - so it's false even in the dev build. Use this DEV flag for dev-only code instead.
@@ -130,7 +131,27 @@ android {
             buildConfigField("String", "GIT_VERSION", "\"$gitVersion ($gitBranch)\"")
             buildConfigField("boolean", "DEV", "true")
         }
+        // Minified variant for the instrumented R8 smoke tests (src/androidTest). It inherits
+        // release's R8 + resource shrinking so the tests run against tree-shaken code — catching
+        // the reflection-strip class of bug that unit tests on a plain JVM can't see. But it
+        // carries its own applicationId (.releasetest) so it can NEVER collide with the
+        // maintainer's real install, and is debug-signed so it builds without the
+        // release keystore (on CI or a fresh checkout). `testBuildType` below aims the
+        // connected tests at it. Run via `just itest` (device-gated, not in CI).
+        create("releaseTest") {
+            initWith(getByName("release"))
+            applicationIdSuffix = ".releasetest"
+            signingConfig = signingConfigs.getByName("debug")
+            matchingFallbacks += "release"
+            // App-APK rules for this variant only (NOT real release): keep the few shared-dep
+            // classes the test runner reaches that the app's R8 would otherwise strip.
+            proguardFiles("proguard-releasetest.pro")
+            // The test APK is minified too (it instruments this variant); test-infra-only rules.
+            testProguardFiles("proguard-test-rules.pro")
+        }
     }
+    // connectedAndroidTest targets this variant, not the default debug (which isn't minified).
+    testBuildType = "releaseTest"
 
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_17
@@ -175,6 +196,14 @@ dependencies {
     // Real org.json on the unit-test classpath: android.jar's stub throws, so the Note
     // JSON round-trip test (noteToJson/noteFromJson) needs the actual implementation.
     testImplementation("org.json:json:20240303")
+    // Instrumented R8 smoke tests (src/androidTest, run on a device against the minified
+    // releaseTest variant). ext:junit pulls the runner + core transitively.
+    androidTestImplementation("androidx.test.ext:junit:1.2.1")
+    androidTestImplementation("androidx.test:core-ktx:1.6.1")
+    // The AndroidJUnitRunner lives here and is NOT pulled transitively by ext:junit/core; without
+    // it the test APK has no runner class and instrumentation crashes on launch.
+    androidTestImplementation("androidx.test:runner:1.6.2")
+    androidTestImplementation("androidx.test:rules:1.6.1") // GrantPermissionRule
 }
 
 // Stream test stdout to the console so the (opt-in) SearchBenchmark scoreboard table is readable

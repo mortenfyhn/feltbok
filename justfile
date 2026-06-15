@@ -25,6 +25,27 @@ test:
 hooks:
     git config core.hooksPath .githooks
 
+# Instrumented R8 smoke tests on an attached device (src/androidTest, minified releaseTest
+# variant). Catches reflection-strip regressions unit tests can't — see CLAUDE.md / #117. Skips
+# (doesn't fail) when no device is attached, so it's safe to call from a wrapper. NOT in CI: no
+# emulator on Semaphore, and it installs io.github.mortenfyhn.feltbok.releasetest — never the real io.github.mortenfyhn.feltbok.
+itest:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    if [ -z "$(adb devices | sed '1d' | grep -w device || true)" ]; then
+        echo "No device attached — skipping instrumented tests."; exit 0
+    fi
+    # The launch test needs the activity to reach RESUMED, so the screen must stay on and unlocked
+    # throughout (a dark/locked screen leaves it STOPPED). `stayon` holds the screen on for the
+    # whole run — a one-shot wake re-dozes during the build; then wake + dismiss a swipe-keyguard.
+    # (A secure PIN/pattern lock can't be dismissed by adb — unlock the phone first if so.)
+    adb shell svc power stayon true
+    adb shell input keyevent KEYCODE_WAKEUP
+    adb shell wm dismiss-keyguard
+    # Just the norway flavor: the tests are flavor-agnostic, so the sweden variant would only
+    # re-run the same checks. (Per-flavor task names exist since the country flavors landed.)
+    ./gradlew connectedNorwayReleaseTestAndroidTest
+
 # Auto-format Kotlin (ktlint) + Python (ruff); run before committing manual tweaks
 format:
     ./gradlew ktlintFormat

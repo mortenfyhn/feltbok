@@ -23,6 +23,17 @@ dirty=$(git status --porcelain | grep -vE ' CHANGELOG\.md$|fastlane/metadata/and
 git rev-parse "$tag" >/dev/null 2>&1 && { echo "Tag $tag already exists."; exit 1; }
 [ -f keystore.properties ] || { echo "keystore.properties missing — release would be unsigned."; exit 1; }
 
+# Pre-flight: run the instrumented R8 smoke tests on an attached device BEFORE anything is
+# tagged/built/pushed, so a release-only R8 strip (e.g. the osmdroid map) fails here instead of
+# in users' hands — and a spurious failure (locked screen) costs nothing this early. Releasing
+# without them is allowed but must be a deliberate choice: plug a phone in and retry, or type skip.
+attached() { [ -n "$(adb devices | sed '1d' | grep -w device || true)" ]; }
+while ! attached; do
+    read -rp "No device for the R8 smoke tests. Plug one in + Enter to retry, or type 'skip' to release without them: " ans
+    [ "$ans" = skip ] && { echo "Skipping R8 smoke tests for $tag."; break; }
+done
+attached && just itest
+
 # versionCode must increase for every release Android should treat as an upgrade; just +1.
 old_code=$(grep -oP 'versionCode = \K\d+' "$gradle")
 new_code=$((old_code + 1))
