@@ -39,8 +39,15 @@ URL = "https://mobil.artsobservasjoner.no/core/Sites/ByBoundingBox"
 DATA_DIR = os.environ.get(
     "FELTBOK_DATA_DIR", "/home/morten/Documents/projects/app-feltbok"
 )
-# All of mainland Norway. --bbox to narrow (Frøya+Hitra was the old default: 8.0,63.5,9.3,63.9).
-DEFAULT_BBOX = (4.0, 57.9, 31.2, 71.3)
+# Norwegian territory as a few land-region boxes, harvested and accumulated into one file.
+# A few boxes beat one giant bbox: they skip the vast empty sea *between* regions (the server
+# caps a request at ~50 km/side, so we can't cheaply probe a huge area in one go anyway).
+# --bbox overrides with a single box.
+DEFAULT_REGIONS = [
+    (4.0, 57.9, 31.2, 71.3),  # mainland
+    (8.0, 74.0, 35.0, 81.5),  # Svalbard + Bjørnøya
+    (-9.5, 70.7, -7.5, 71.3),  # Jan Mayen
+]
 # Web-Mercator tile size in metres. The server rejects a box wider than ~50 km/side
 # ("BoundingBox too large"), so stay safely under it.
 TILE_M = 40_000
@@ -120,50 +127,63 @@ def main() -> int:
         description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter
     )
     ap.add_argument(
-        "--bbox", help="minlon,minlat,maxlon,maxlat (default: all of Norway)"
+        "--bbox",
+        help="minlon,minlat,maxlon,maxlat (default: mainland + Svalbard + Jan Mayen)",
     )
     ap.add_argument("--out", default=f"{DATA_DIR}/artsobs-sites-mobil.json")
     args = ap.parse_args()
-    bbox = tuple(float(x) for x in args.bbox.split(",")) if args.bbox else DEFAULT_BBOX
-    lon0, lat0, lon1, lat1 = bbox
+    regions = (
+        [tuple(float(x) for x in args.bbox.split(","))]
+        if args.bbox
+        else DEFAULT_REGIONS
+    )
     session = make_session()
 
+    def grid(bbox):
+        """Web-Mercator tile grid over a bbox: (mx0, my0, mx1, my1, nx, ny)."""
+        mx0, my0 = merc(bbox[0], bbox[1])
+        mx1, my1 = merc(bbox[2], bbox[3])
+        return (
+            mx0,
+            my0,
+            mx1,
+            my1,
+            max(1, math.ceil((mx1 - mx0) / TILE_M)),
+            max(1, math.ceil((my1 - my0) / TILE_M)),
+        )
+
+    grids = [grid(r) for r in regions]
+    total = sum(g[4] * g[5] for g in grids)
+
     rows = {}  # id -> row; ACCUMULATES across runs
-    ckpt = args.out + ".tiles"  # resume an interrupted run (per-bbox)
-    done = set()
+    ckpt = args.out + ".tiles"  # resume an interrupted run
+    done = [set() for _ in regions]  # done tiles per region
     if pathlib.Path(args.out).exists():
         try:
             for r in json.load(open(args.out)):
                 rows[r["id"]] = r
             if pathlib.Path(ckpt).exists():
                 d = json.load(open(ckpt))
-                if d.get("bbox") == list(
-                    bbox
-                ):  # same area -> resume; new area -> fresh
-                    done = set(tuple(t) for t in d["done"])
+                if d.get("regions") == [
+                    list(r) for r in regions
+                ]:  # same areas -> resume
+                    done = [set(tuple(t) for t in s) for s in d["done"]]
         except (json.JSONDecodeError, OSError) as e:
             # Don't trust a partial rows file + its checkpoint: resuming would skip tiles
             # whose rows are gone, leaving silent gaps. Start fresh and re-fetch everything.
             print(f"\n{args.out} is unreadable ({e}); starting fresh.", file=sys.stderr)
-            rows, done = {}, set()
+            rows, done = {}, [set() for _ in regions]
 
     def save():
         # Atomic: write to a temp file then rename, so a kill mid-write can't corrupt the
         # resume file (a direct json.dump leaves a truncated file if interrupted).
-        for path, data in (
-            (args.out, list(rows.values())),
-            (ckpt, {"bbox": list(bbox), "done": sorted(done)}),
-        ):
+        ck = {"regions": [list(r) for r in regions], "done": [sorted(s) for s in done]}
+        for path, data in ((args.out, list(rows.values())), (ckpt, ck)):
             tmp = path + ".tmp"
             with open(tmp, "w") as f:
                 json.dump(data, f, ensure_ascii=False)
             os.replace(tmp, path)
 
-    # Web-Mercator grid over the bbox; each cell is harvested (and quartered on overflow).
-    mx0, my0 = merc(lon0, lat0)
-    mx1, my1 = merc(lon1, lat1)
-    nx = max(1, math.ceil((mx1 - mx0) / TILE_M))
-    ny = max(1, math.ceil((my1 - my0) / TILE_M))
     stats = {"req": 0}
 
     def harvest(a, b, c, d, depth=0):
@@ -185,37 +205,41 @@ def main() -> int:
             harvest(a, mym, mxm, d, depth + 1)
             harvest(mxm, mym, c, d, depth + 1)
 
-    total = nx * ny
     start = time.time()
+    ndone = sum(
+        len(s) for s in done
+    )  # tiles done across all regions (resumed + this run)
     processed = 0  # tiles harvested THIS run (excludes resumed ones), for the ETA rate
     try:
-        for i in range(nx):
-            for j in range(ny):
-                if (i, j) in done:
-                    continue
-                a = mx0 + (mx1 - mx0) * i / nx
-                c = mx0 + (mx1 - mx0) * (i + 1) / nx
-                b = my0 + (my1 - my0) * j / ny
-                d = my0 + (my1 - my0) * (j + 1) / ny
-                harvest(a, b, c, d)
-                done.add((i, j))
-                processed += 1
-                if len(done) % 10 == 0:
-                    save()
-                    pub = sum(1 for r in rows.values() if not r["isPrivate"])
-                    elapsed = time.time() - start
-                    eta = f", ~{hms(elapsed / processed * (total - len(done)))} left"
-                    print(
-                        f"\r  {len(done)}/{total} tiles | {hms(elapsed)} elapsed{eta} | "
-                        f"{stats['req']} requests | {len(rows)} sites ({pub} public)",
-                        end="",
-                        file=sys.stderr,
-                        flush=True,
-                    )
+        for (mx0, my0, mx1, my1, nx, ny), reg_done in zip(grids, done):
+            for i in range(nx):
+                for j in range(ny):
+                    if (i, j) in reg_done:
+                        continue
+                    a = mx0 + (mx1 - mx0) * i / nx
+                    c = mx0 + (mx1 - mx0) * (i + 1) / nx
+                    b = my0 + (my1 - my0) * j / ny
+                    d = my0 + (my1 - my0) * (j + 1) / ny
+                    harvest(a, b, c, d)
+                    reg_done.add((i, j))
+                    ndone += 1
+                    processed += 1
+                    if ndone % 10 == 0:
+                        save()
+                        pub = sum(1 for r in rows.values() if not r["isPrivate"])
+                        elapsed = time.time() - start
+                        eta = f", ~{hms(elapsed / processed * (total - ndone))} left"
+                        print(
+                            f"\r  {ndone}/{total} tiles | {hms(elapsed)} elapsed{eta} | "
+                            f"{stats['req']} requests | {len(rows)} sites ({pub} public)",
+                            end="",
+                            file=sys.stderr,
+                            flush=True,
+                        )
     except KeyboardInterrupt:
         save()  # progress is safe; the checkpoint stays so a rerun resumes
         print(
-            f"\nStopped at {len(done)}/{total} tiles - rerun to resume.",
+            f"\nStopped at {ndone}/{total} tiles - rerun to resume.",
             file=sys.stderr,
         )
         return 0
