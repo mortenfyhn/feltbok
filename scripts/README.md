@@ -13,8 +13,8 @@ pip install -r scripts/requirements.txt
 ## The pipeline: `harvest_sites_mobil.py` → `build_sites.py`
 
 ```sh
-just sites          # harvest the official site list from the mobile API (no auth)
-just build-sites    # write app/src/main/assets/localities.csv from the harvest
+just harvest          # harvest the official site list from the mobile API (no auth)
+just build-localities # write app/src/main/assets/localities.csv from the harvest
 ```
 
 `harvest_sites_mobil.py` queries Artsobservasjoner's mobile API

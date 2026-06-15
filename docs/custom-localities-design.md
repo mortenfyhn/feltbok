@@ -61,7 +61,7 @@ The new mobile site is an Angular SPA backed by a **Duende BFF**:
 
 ### ✅ DONE (2026-06-04): harvest migrated to `Sites/ByBoundingBox` (issue #16)
 
-`scripts/harvest_sites_mobil.py` (`just sites`) harvests from the mobile API; the old
+`scripts/harvest_sites_mobil.py` (`just harvest`) harvests from the mobile API; the old
 `GetSitesGeoJson` harvest and its GBIF/flag heuristics have been removed (the `isPrivate`
 flag is now ground truth). The reverse-engineered contract:
 

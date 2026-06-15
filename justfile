@@ -57,23 +57,23 @@ uninstall:
 # ---- Locality / species data, rebuilt on the maintainer's machine ----
 
 # Harvest the official site list from Artsobservasjoner's mobile API (no auth; usage in the script header)
-sites *args:
+harvest *args:
     .venv/bin/python scripts/harvest_sites_mobil.py {{args}}
 
 # Build app/src/main/assets/localities.csv from the harvested sites
-build-sites *args:
+build-localities *args:
     .venv/bin/python scripts/build_sites.py {{args}}
 
 # Build app/src/main/assets/species.csv (Norwegian bird checklist, norsk + latin)
-species:
+build-species:
     .venv/bin/python scripts/build_species.py
 
 # Build app/src/main/assets/species_months.csv (per-species monthly report counts, for season ranking)
-species-months:
+build-species-months:
     .venv/bin/python scripts/build_species_months.py
 
 # Build app/src/main/assets/species_regions.csv (per-grid-cell species counts, for locality ranking)
-species-regions:
+build-species-regions:
     .venv/bin/python scripts/build_species_regions.py
 
 # Push the built localities/species CSVs to the device (overrides the bundled assets, no rebuild)
