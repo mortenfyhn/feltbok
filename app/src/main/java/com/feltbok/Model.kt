@@ -428,7 +428,7 @@ fun loadLocalities(ctx: Context): List<Locality> =
 
 // ---- "my localities" sync (from the mobile API's /core/Sites/ByUser) ----
 
-/** What a sync changed versus the previously cached set, for the "Hentet …" confirmation. */
+/** What a sync changed versus the previously cached set, for the "Henta …" confirmation. */
 data class SyncDiff(val total: Int, val changed: Int, val firstSync: Boolean)
 
 // The fields whose change we treat as a meaningful edit to an existing locality (name, place,

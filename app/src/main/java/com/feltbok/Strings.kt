@@ -32,7 +32,7 @@ object Strings {
         const val deleteSelected = "Slett"
 
         // Undo snackbar shown after a delete (issue #122).
-        fun deleted(n: Int) = "Slettet $n ${if (n == 1) "observasjon" else "observasjoner"}"
+        fun deleted(n: Int) = "Sletta $n ${if (n == 1) "observasjon" else "observasjoner"}"
         const val undo = "Angre"
     }
 
@@ -119,8 +119,8 @@ object Strings {
         const val retry = "Prøv igjen"
         const val done = "OK"                                // DONE-stage button back to the list
         const val doneGeneric = "Ferdig ✓"
-        fun doneFirst(total: Int) = "Hentet $total lokaliteter ✓"
-        fun doneChanged(total: Int, changed: Int) = "Hentet $total lokaliteter ($changed endret) ✓"
+        fun doneFirst(total: Int) = "Henta $total lokaliteter ✓"
+        fun doneChanged(total: Int, changed: Int) = "Henta $total lokaliteter ($changed endra) ✓"
         fun doneUnchanged(total: Int) = "Allerede oppdatert ($total lokaliteter) ✓"
     }
 

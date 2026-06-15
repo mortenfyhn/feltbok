@@ -70,7 +70,10 @@ Recipes live in `just --list` — the notes below are only the why's and gotchas
   At release time that heading is renamed by hand to `## vX – date` during `release.sh`'s pause step —
   the script pulls notes from the `## v<version>` section and aborts if it's missing. The same
   per-version text is pasted into the GitHub release ("Nytt i …", see `docs/release.md`).
-- Norwegian (Bokmål) for user-facing strings.
+- Norwegian (Bokmål) for user-facing strings. Aim for **radical bokmål** — `-a` past tense for
+  a-verbs (`lagra`, `henta`, `sletta`, not `lagret`/`hentet`/`slettet`) and `-a` for feminine nouns
+  where natural. Don't be pedantic; nudge, don't churn (`-ere` verbs like `markert`/`halvert` have no
+  `-a` form, so leave them).
 - **Worktrees are opt-in.** Work in the main checkout by default. Only reach for EnterWorktree when
   the user explicitly asks, or when you know another session is editing the same files concurrently —
   the rebase/index tangles they create usually outweigh the isolation benefit.
