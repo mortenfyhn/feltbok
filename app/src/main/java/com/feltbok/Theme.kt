@@ -49,6 +49,7 @@ object MapPalette {
     // darker, the way artsobs marks supers (bright vs deep green on the same hue, not a new hue).
     const val SuperFill = 0x55235015L
     const val SuperFillPale = 0x1E235015L
+
     // Point-dot supers are tiny, so a translucent fill barely reads; paint them near-solid so the
     // deep green actually shows. Only used for 0 m dots — circles/polygons stay pale so the
     // sub-localities inside a super stay visible and tappable.
