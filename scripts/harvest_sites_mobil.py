@@ -118,19 +118,35 @@ def main() -> int:
     session = make_session()
 
     rows = {}  # id -> row; ACCUMULATES across runs
-    if pathlib.Path(args.out).exists():
-        for r in json.load(open(args.out)):
-            rows[r["id"]] = r
     ckpt = args.out + ".tiles"  # resume an interrupted run (per-bbox)
     done = set()
-    if pathlib.Path(ckpt).exists():
-        d = json.load(open(ckpt))
-        if d.get("bbox") == list(bbox):  # same area -> resume; new area -> fresh
-            done = set(tuple(t) for t in d["done"])
+    if pathlib.Path(args.out).exists():
+        try:
+            for r in json.load(open(args.out)):
+                rows[r["id"]] = r
+            if pathlib.Path(ckpt).exists():
+                d = json.load(open(ckpt))
+                if d.get("bbox") == list(
+                    bbox
+                ):  # same area -> resume; new area -> fresh
+                    done = set(tuple(t) for t in d["done"])
+        except (json.JSONDecodeError, OSError) as e:
+            # Don't trust a partial rows file + its checkpoint: resuming would skip tiles
+            # whose rows are gone, leaving silent gaps. Start fresh and re-fetch everything.
+            print(f"\n{args.out} is unreadable ({e}); starting fresh.", file=sys.stderr)
+            rows, done = {}, set()
 
     def save():
-        json.dump(list(rows.values()), open(args.out, "w"), ensure_ascii=False)
-        json.dump({"bbox": list(bbox), "done": sorted(done)}, open(ckpt, "w"))
+        # Atomic: write to a temp file then rename, so a kill mid-write can't corrupt the
+        # resume file (a direct json.dump leaves a truncated file if interrupted).
+        for path, data in (
+            (args.out, list(rows.values())),
+            (ckpt, {"bbox": list(bbox), "done": sorted(done)}),
+        ):
+            tmp = path + ".tmp"
+            with open(tmp, "w") as f:
+                json.dump(data, f, ensure_ascii=False)
+            os.replace(tmp, path)
 
     # Web-Mercator grid over the bbox; each cell is harvested (and quartered on overflow).
     mx0, my0 = merc(lon0, lat0)
