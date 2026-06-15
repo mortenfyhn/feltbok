@@ -104,6 +104,17 @@ def fetch(session, mx0, my0, mx1, my1, tries=4):
     return None
 
 
+def hms(seconds):
+    """Compact duration for progress: 4521 -> '1h15m', 312 -> '5m12s', 8 -> '8s'."""
+    s = int(seconds)
+    h, m, sec = s // 3600, (s % 3600) // 60, s % 60
+    if h:
+        return f"{h}h{m:02d}m"
+    if m:
+        return f"{m}m{sec:02d}s"
+    return f"{sec}s"
+
+
 def main() -> int:
     ap = argparse.ArgumentParser(
         description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter
@@ -174,30 +185,46 @@ def main() -> int:
             harvest(a, mym, mxm, d, depth + 1)
             harvest(mxm, mym, c, d, depth + 1)
 
-    for i in range(nx):
-        for j in range(ny):
-            if (i, j) in done:
-                continue
-            a = mx0 + (mx1 - mx0) * i / nx
-            c = mx0 + (mx1 - mx0) * (i + 1) / nx
-            b = my0 + (my1 - my0) * j / ny
-            d = my0 + (my1 - my0) * (j + 1) / ny
-            harvest(a, b, c, d)
-            done.add((i, j))
-            if len(done) % 10 == 0:
-                save()
-                pub = sum(1 for r in rows.values() if not r["isPrivate"])
-                print(
-                    f"\r  {len(done)}/{nx * ny} tiles | {stats['req']} reqs | "
-                    f"{len(rows)} sites ({pub} public)",
-                    end="",
-                    file=sys.stderr,
-                    flush=True,
-                )
+    total = nx * ny
+    start = time.time()
+    processed = 0  # tiles harvested THIS run (excludes resumed ones), for the ETA rate
+    try:
+        for i in range(nx):
+            for j in range(ny):
+                if (i, j) in done:
+                    continue
+                a = mx0 + (mx1 - mx0) * i / nx
+                c = mx0 + (mx1 - mx0) * (i + 1) / nx
+                b = my0 + (my1 - my0) * j / ny
+                d = my0 + (my1 - my0) * (j + 1) / ny
+                harvest(a, b, c, d)
+                done.add((i, j))
+                processed += 1
+                if len(done) % 10 == 0:
+                    save()
+                    pub = sum(1 for r in rows.values() if not r["isPrivate"])
+                    elapsed = time.time() - start
+                    eta = f", ~{hms(elapsed / processed * (total - len(done)))} left"
+                    print(
+                        f"\r  {len(done)}/{total} tiles | {hms(elapsed)} elapsed{eta} | "
+                        f"{stats['req']} requests | {len(rows)} sites ({pub} public)",
+                        end="",
+                        file=sys.stderr,
+                        flush=True,
+                    )
+    except KeyboardInterrupt:
+        save()  # progress is safe; the checkpoint stays so a rerun resumes
+        print(
+            f"\nStopped at {len(done)}/{total} tiles - rerun to resume.",
+            file=sys.stderr,
+        )
+        return 0
     save()
     pub = sum(1 for r in rows.values() if not r["isPrivate"])
     print(
-        f"\nHarvested {len(rows)} sites ({pub} public) -> {args.out}", file=sys.stderr
+        f"\nHarvested {len(rows)} sites ({pub} public) in {hms(time.time() - start)} "
+        f"-> {args.out}",
+        file=sys.stderr,
     )
     pathlib.Path(ckpt).unlink(missing_ok=True)  # clean finish
     return 0
