@@ -2,6 +2,8 @@
 
 ## Neste utgivelse
 
+- Aktivitet velges nå i en fullskjermsliste i stedet for en liten dialog, så du slipper å
+  skrolle inni en trang boks gjennom den lange lista.
 - Antall-feltet er fiksa: hele tallet markeres når du trykker i feltet (så du skriver rett
   over det gamle), «Ferdig» på tastaturet lukker feltet, og det er ingen øvre grense lenger.
 - Slett eller forkast observasjoner uten bekreftelse, og angre med ett trykk om du bomma.

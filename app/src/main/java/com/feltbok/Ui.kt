@@ -28,6 +28,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.rememberScrollState
@@ -46,6 +47,7 @@ import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.LocalTextStyle
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -86,6 +88,8 @@ import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.Constraints
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.window.Dialog
+import androidx.compose.ui.window.DialogProperties
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
@@ -589,7 +593,7 @@ fun DetailScreen(vm: MainViewModel) {
             AntallRow(vm)
             DropdownRow(Strings.Detail.age, vm.dAge, Options.ages) { vm.dAge = it }
             DropdownRow(Strings.Detail.sex, vm.dSex, Options.sexes) { vm.dSex = it }
-            DropdownRow(Strings.Detail.activity, vm.dAct, vm.activityOptions()) { vm.dAct = it }
+            DropdownRow(Strings.Detail.activity, vm.dAct, vm.activityOptions(), fullScreen = true) { vm.dAct = it }
             CommentField(Strings.Detail.commentPublic, vm.dPub) { vm.dPub = it }
             CommentField(Strings.Detail.commentPrivate, vm.dPriv) { vm.dPriv = it }
             // One row to save space; tap to open the from/to editor (point or range).
@@ -679,21 +683,43 @@ private fun AntallRow(vm: MainViewModel) {
 }
 
 @Composable
-private fun DropdownRow(label: String, value: String, options: List<String>, onSelect: (String) -> Unit) {
+private fun DropdownRow(
+    label: String,
+    value: String,
+    options: List<String>,
+    fullScreen: Boolean = false,
+    onSelect: (String) -> Unit,
+) {
     var open by remember { mutableStateOf(false) }
     FieldRow(label, onClick = { open = true }) {
         if (value.isNotBlank()) Text(value, fontWeight = FontWeight.Medium)
     }
-    if (open) {
+    if (!open) return
+
+    // First row clears the field. A muted dash (rather than the website's truly-blank option or a
+    // worded "Ingen"): it reads as "no value" at a glance without looking like dead space or like
+    // just another option in the list.
+    val rows: LazyListScope.() -> Unit = {
+        item { OptionItem("—", value.isBlank(), fullScreen, none = true) { onSelect(""); open = false } }
+        items(options) { opt -> OptionItem(opt, opt == value, fullScreen) { onSelect(opt); open = false } }
+    }
+    if (fullScreen) {
+        // Aktivitet's list is long; a full-screen selector styled like the species/locality
+        // pickers beats scrolling inside a cramped dialog (#123). The short lists (alder, kjønn)
+        // stay as plain dialogs.
+        Dialog(onDismissRequest = { open = false }, properties = DialogProperties(usePlatformDefaultWidth = false)) {
+            Surface(Modifier.fillMaxSize(), color = MaterialTheme.colorScheme.background) {
+                Column {
+                    ScreenHeader(label, onCancel = { open = false })
+                    LazyColumn(Modifier.weight(1f), content = rows)
+                }
+            }
+        }
+    } else {
         AlertDialog(
             onDismissRequest = { open = false },
             title = { Text(label) },
-            text = {
-                LazyColumn(Modifier.heightIn(max = 400.dp)) {
-                    item { OptionItem(Strings.Detail.dropdownNone, value.isBlank()) { onSelect(""); open = false } }
-                    items(options) { opt -> OptionItem(opt, opt == value) { onSelect(opt); open = false } }
-                }
-            },
+            text = { LazyColumn(Modifier.heightIn(max = 400.dp), content = rows) },
             confirmButton = {},
             dismissButton = { TextButton(onClick = { open = false }) { Text(Strings.cancel) } },
         )
@@ -701,16 +727,22 @@ private fun DropdownRow(label: String, value: String, options: List<String>, onS
 }
 
 @Composable
-private fun OptionItem(text: String, selected: Boolean, onClick: () -> Unit) {
+private fun OptionItem(text: String, selected: Boolean, fullScreen: Boolean, none: Boolean = false, onClick: () -> Unit) {
     val cs = MaterialTheme.colorScheme
     Row(
-        Modifier.fillMaxWidth().clickable(onClick = onClick).padding(vertical = 13.dp, horizontal = 4.dp),
+        // Full screen mirrors the species rows (surface-on-background, dividers); the dialog keeps
+        // its tighter, divider-free list.
+        Modifier.fillMaxWidth().clickable(onClick = onClick)
+            .then(if (fullScreen) Modifier.background(cs.surface) else Modifier)
+            .padding(horizontal = if (fullScreen) 16.dp else 4.dp, vertical = if (fullScreen) 9.dp else 13.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        Text(text, Modifier.weight(1f), color = if (selected) cs.primary else cs.onSurface,
-            fontWeight = if (selected) FontWeight.Bold else FontWeight.Normal)
+        Text(text, Modifier.weight(1f),
+            color = if (selected) cs.primary else if (none) cs.onSurfaceVariant else cs.onSurface,
+            fontWeight = if (selected) FontWeight.Bold else if (fullScreen) FontWeight.Medium else FontWeight.Normal)
         if (selected) Text("✓", color = cs.primary, fontWeight = FontWeight.Bold)
     }
+    if (fullScreen) HorizontalDivider(color = cs.outline.copy(alpha = 0.4f))
 }
 
 @Composable

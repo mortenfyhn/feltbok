@@ -69,7 +69,6 @@ object Strings {
         // on whether the commit updated an existing obs or added a new one.
         fun savedChangesToast(species: String) = "Endringer lagra ($species)"
         fun savedNewToast(species: String) = "Observasjon lagra ($species)"
-        const val dropdownNone = "Ingen"
 
         // Undo snackbar after leaving the editor without saving (#122); wording depends on whether
         // it was a new observation or edits to an existing one.
