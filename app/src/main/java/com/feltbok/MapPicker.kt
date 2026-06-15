@@ -450,6 +450,7 @@ private class LocalityOverlay(
     private val stroke = strokePaint(MapPalette.GreenStroke, 2f)
     private val superFill = fillPaint(MapPalette.SuperFill)
     private val superFillPale = fillPaint(MapPalette.SuperFillPale)
+    private val superFillSolid = fillPaint(MapPalette.SuperFillSolid)
     private val superStroke = strokePaint(MapPalette.SuperStroke, 2f)
     private val privFill = fillPaint(MapPalette.YellowFill)
     private val privFillPale = fillPaint(MapPalette.YellowFillPale)
@@ -614,7 +615,11 @@ private class LocalityOverlay(
             val big = span > LARGE_FOOTPRINT_PX
             val fp = when {
                 !loc.public -> if (big) privFillPale else privFill
-                loc.isSuper -> if (big) superFillPale else superFill
+                loc.isSuper -> when {
+                    big -> superFillPale
+                    loc.polygon.isEmpty() && loc.radius <= 0.0 -> superFillSolid   // tiny dot: paint it solid
+                    else -> superFill
+                }
                 else -> if (big) fillPale else fill
             }
             val sp = when {

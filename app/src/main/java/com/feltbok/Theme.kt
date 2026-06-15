@@ -45,10 +45,15 @@ object MapPalette {
     const val GreenFillPale = 0x1E3C8C28L     // big ones, so they don't dominate
     const val GreenStroke = 0xFF2E7D32L
 
-    // Public superlocality (has sublocalities) — a deeper emerald, mimicking the website
-    const val SuperFill = 0x550F6B4FL
-    const val SuperFillPale = 0x1E0F6B4FL
-    const val SuperStroke = 0xFF0A4D38L
+    // Public superlocality (has sublocalities) — same green hue as a normal locality but clearly
+    // darker, the way artsobs marks supers (bright vs deep green on the same hue, not a new hue).
+    const val SuperFill = 0x55235015L
+    const val SuperFillPale = 0x1E235015L
+    // Point-dot supers are tiny, so a translucent fill barely reads; paint them near-solid so the
+    // deep green actually shows. Only used for 0 m dots — circles/polygons stay pale so the
+    // sub-localities inside a super stay visible and tappable.
+    const val SuperFillSolid = 0xE62E7A33L
+    const val SuperStroke = 0xFF173A14L
 
     // Your own locality — yellow
     const val YellowFill = 0x55E0A100L
@@ -74,6 +79,6 @@ object MapPalette {
     // Locality labels — dark text with a halo tinted by type (pale so the text stays legible).
     const val LabelText = 0xFF18250FL
     const val LabelHaloGreen = 0xF2DCEFC6L    // public
-    const val LabelHaloSuper = 0xF2C7E8D6L    // public superlocality
+    const val LabelHaloSuper = 0xF2CFE5ADL    // public superlocality (deeper green than normal)
     const val LabelHaloYellow = 0xF2FFF7D8L   // your own
 }
