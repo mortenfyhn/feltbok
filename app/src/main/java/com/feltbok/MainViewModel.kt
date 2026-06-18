@@ -406,22 +406,22 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
         screen = Screen.LIST
     }
 
-    // Export runs one kommune at a time: the form scopes the whole paste to a single kommune, so
-    // [exportKommune] is the group being worked through. Null when the export screen is closed.
-    var exportKommune by mutableStateOf<String?>(null); private set
-    fun openExport(kommune: String) { exportKommune = kommune; showExport = true }
-    fun closeExport() { showExport = false; exportKommune = null }
+    // Export is all-at-once: copy every note and paste in one go. A per-kommune flow was dropped on
+    // purpose - scoping the form to a kommune only matters to disambiguate a name shared across
+    // kommuner, and a single-kommune batch can already be scoped via the import hint. Running
+    // without it will show how often that conflict actually bites (fylke scope is a site-side fallback).
+    fun openExport() { showExport = true }
+    fun closeExport() { showExport = false }
 
-    /** The notes in one kommune's group, for its self-contained paste block. */
-    fun exportNotesFor(kommune: String): List<Note> =
-        groupNotesByKommune(notes, localities).firstOrNull { it.kommune == kommune }?.notes ?: emptyList()
+    /** Kommuner present across all notes, for the import hint: a single (non-blank) one can be named
+     *  on the form for safer matching. */
+    fun exportKommuner(): List<String> = groupNotesByKommune(notes, localities).map { it.kommune }
 
-    /** Clear one kommune's notes - after they've been imported and published, so the group drops
-     *  off the list and you work down to an empty list one kommune at a time. */
-    fun clearKommune(kommune: String) {
-        val ids = exportNotesFor(kommune).map { it.id }.toSet()
-        setUndo(Undoable.Deleted(notes.filter { it.id in ids }))   // undoable, like the other deletes (#122)
-        notes.removeAll { it.id in ids }
+    /** Clear every note - after they've been imported and published. Undoable like the other
+     *  deletes (#122), so a mis-tap recovers. */
+    fun clearExported() {
+        setUndo(Undoable.Deleted(notes.toList()))
+        notes.clear()
         persist()
     }
 

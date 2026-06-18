@@ -142,37 +142,16 @@ fun ListScreen(vm: MainViewModel) {
                             }
                         }
                         // Bottom padding so the last row scrolls clear of the floating + button.
-                        // EXPERIMENT (#103): group by kommune instead of by day. Each header's
-                        // Eksporter opens the walkthrough scoped to that kommune (the import form
-                        // takes one kommune per paste), so you run the flow once per group.
+                        // A flat, newest-first list - each row carries its own locality and day, so
+                        // it reads without section headers (#129); export is one button (#140).
                         LazyColumn(Modifier.weight(1f), contentPadding = PaddingValues(bottom = 84.dp)) {
-                            groupNotesByKommune(vm.notes, vm.localities).forEach { group ->
-                                item(key = "kommune:${group.kommune}") {
-                                    Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
-                                        Text(
-                                            Strings.Notes.header(
-                                                group.kommune.ifBlank { Strings.Export.unknownKommune }, group.notes.size),
-                                            color = cs.onSurfaceVariant, fontSize = 13.sp,
-                                            modifier = Modifier.weight(1f).padding(start = 16.dp, top = 9.dp, bottom = 9.dp),
-                                        )
-                                        // A filled (primary green) pill so the per-kommune export
-                                        // reads as the header's action. Shorter than the default
-                                        // button height so it sits neatly in the header row.
-                                        Button(
-                                            onClick = { vm.openExport(group.kommune) },
-                                            contentPadding = PaddingValues(horizontal = 16.dp, vertical = 4.dp),
-                                            modifier = Modifier.padding(end = 8.dp).heightIn(min = 32.dp),
-                                        ) { Text(Strings.Notes.export, fontSize = 13.sp) }
-                                    }
-                                }
-                                items(group.notes.sortedByDescending { it.time }, key = { it.id }) { n ->
-                                    NoteRow(
-                                        n, vm.statusFor(n.latin), selected = n.id in vm.selected,
-                                        // In selection mode a tap toggles the mark; otherwise it edits.
-                                        onClick = { if (selecting) vm.toggleSelect(n.id) else vm.editNote(n) },
-                                        onLongClick = { vm.toggleSelect(n.id) },
-                                    )
-                                }
+                            items(vm.notes.sortedByDescending { it.time }, key = { it.id }) { n ->
+                                NoteRow(
+                                    n, vm.statusFor(n.latin), selected = n.id in vm.selected,
+                                    // In selection mode a tap toggles the mark; otherwise it edits.
+                                    onClick = { if (selecting) vm.toggleSelect(n.id) else vm.editNote(n) },
+                                    onLongClick = { vm.toggleSelect(n.id) },
+                                )
                             }
                         }
                     }
@@ -285,8 +264,19 @@ private fun StatusStrip(vm: MainViewModel) {
             Text(subtitle, color = Color.White.copy(alpha = 0.82f), fontSize = 12.sp,
                 maxLines = 1, overflow = TextOverflow.Ellipsis)
         }
-        // Export now lives per-kommune on each list group's header (the import form scopes one
-        // kommune per paste), so the status strip just shows the current locality.
+        // The one export entry point (#140), top-right. Hidden with nothing to export.
+        // Outlined, not a solid white block: export is a once-per-session action, so it
+        // shouldn't shout for the thumb that's reaching for the + button (#62).
+        if (vm.notes.isNotEmpty()) {
+            Spacer(Modifier.width(10.dp))
+            Box(
+                Modifier.clip(RoundedCornerShape(8.dp))
+                    .border(1.dp, Color.White.copy(alpha = 0.7f), RoundedCornerShape(8.dp))
+                    .clickable { vm.openExport() }.padding(horizontal = 14.dp, vertical = 8.dp),
+            ) {
+                Text(Strings.Notes.export, color = Color.White, fontWeight = FontWeight.Medium, fontSize = 14.sp)
+            }
+        }
     }
 }
 
@@ -860,24 +850,25 @@ private fun Step(n: Int, title: String, body: @Composable () -> Unit) {
 }
 
 /**
- * Full-page export walkthrough for ONE kommune (the import form scopes the whole paste to a single
- * kommune). Opened from a list group's Eksporter, so you run it once per kommune. Field testing
+ * Full-page export walkthrough. Defaults to all-at-once: copy every note, paste once. Field testing
  * showed people reaching for the share sheet, so copy → open → paste is spelled out as numbered
- * steps. Shown as an overlay over the list (via showExport), so it needs its own opaque background.
+ * steps. The paste step adapts to scope - one kommune can be named on the import form (free
+ * disambiguation), several means leaving it blank. Shown as an overlay over the list (via
+ * showExport), so it needs its own opaque background.
  */
 @Composable
 fun ExportScreen(vm: MainViewModel) {
     val cs = MaterialTheme.colorScheme
     val clip = LocalClipboardManager.current
     val ctx = LocalContext.current
-    val kommune = vm.exportKommune ?: return
-    val label = kommune.ifBlank { Strings.Export.unknownKommune }
-    val text = exportTsv(vm.exportNotesFor(kommune))
+    val text = exportTsv(vm.notes)
+    // A single (non-blank) kommune across all notes can be named on the form; otherwise leave it blank.
+    val singleKommune = vm.exportKommuner().singleOrNull()?.takeIf { it.isNotBlank() }
     var copied by remember { mutableStateOf(false) }
     var confirmClear by remember { mutableStateOf(false) }
 
     Column(Modifier.fillMaxSize().background(cs.background)) {
-        ScreenHeader("${Strings.Export.title} ($label)", onCancel = { vm.closeExport() })
+        ScreenHeader(Strings.Export.title, onCancel = { vm.closeExport() })
         Column(Modifier.weight(1f).verticalScroll(rememberScrollState()).padding(horizontal = 16.dp)) {
             Step(1, Strings.Export.step1) {
                 OutlinedTextField(text, {},
@@ -902,11 +893,21 @@ fun ExportScreen(vm: MainViewModel) {
             }
             Step(3, Strings.Export.step3) {
                 Text(buildAnnotatedString {
-                    append(Strings.Export.pasteBefore)
-                    withStyle(SpanStyle(fontWeight = FontWeight.Bold)) { append(label) }
-                    append(Strings.Export.pasteAfter)
+                    append(Strings.Export.pasteBody)
                     withStyle(SpanStyle(fontStyle = FontStyle.Italic)) { append(Strings.Export.pasteEmphasis) }
                 }, fontSize = 13.sp, color = cs.onSurfaceVariant, modifier = Modifier.padding(top = 4.dp))
+                // Only when all notes share one kommune: a soft suggestion to prioritise its
+                // localities on the form. The whole sentence lives in Strings; only the kommune (the
+                // interpolated value) is bolded, located by its position in the rendered string.
+                if (singleKommune != null) {
+                    val tip = Strings.Export.tip(singleKommune)
+                    val at = tip.indexOf(singleKommune)
+                    Text(buildAnnotatedString {
+                        append(tip.substring(0, at))
+                        withStyle(SpanStyle(fontWeight = FontWeight.Bold)) { append(singleKommune) }
+                        append(tip.substring(at + singleKommune.length))
+                    }, fontSize = 13.sp, color = cs.onSurfaceVariant, modifier = Modifier.padding(top = 6.dp))
+                }
             }
             Step(4, Strings.Export.step4) {
                 Text(Strings.Export.step4Body,
@@ -915,7 +916,7 @@ fun ExportScreen(vm: MainViewModel) {
             Step(5, Strings.Export.step5) {
                 Text(Strings.Export.step5Body,
                     fontSize = 13.sp, color = cs.onSurfaceVariant, modifier = Modifier.padding(top = 4.dp))
-                Text(Strings.Export.clear(label), color = cs.error, fontWeight = FontWeight.Medium,
+                Text(Strings.Export.clearAll, color = cs.error, fontWeight = FontWeight.Medium,
                     fontSize = 14.sp,
                     modifier = Modifier.clickable { confirmClear = true }.padding(top = 10.dp))
             }
@@ -925,13 +926,13 @@ fun ExportScreen(vm: MainViewModel) {
     if (confirmClear) {
         AlertDialog(
             onDismissRequest = { confirmClear = false },
-            title = { Text(Strings.Export.clearTitle(label)) },
+            title = { Text(Strings.Export.clearTitle) },
             text = {
                 Text(Strings.Export.clearBody)
             },
             confirmButton = {
                 Button(
-                    onClick = { vm.clearKommune(kommune); confirmClear = false; vm.closeExport() },
+                    onClick = { vm.clearExported(); confirmClear = false; vm.closeExport() },
                     colors = ButtonDefaults.buttonColors(containerColor = cs.error),
                 ) { Text(Strings.Export.clearConfirm) }
             },

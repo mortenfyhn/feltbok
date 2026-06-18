@@ -309,7 +309,7 @@ fun displayTime(ms: Long): String = nbFormat("d. MMM, HH:mm").format(Date(ms))
 fun shortTime(ms: Long): String = nbFormat("HH:mm").format(Date(ms))
 
 /** The notes-list row timestamp: bare "HH:mm" for today, day-prefixed ("7. jun 14:32") otherwise.
- *  The list groups by kommune, not by day, so the row itself has to carry the day. Pure
+ *  The list is flat (not grouped by day), so the row itself carries the day. Pure
  *  ([today]/[zone] injected) for tests. */
 fun rowTime(ms: Long, today: LocalDate = LocalDate.now(), zone: ZoneId = ZoneId.systemDefault()): String =
     if (Instant.ofEpochMilli(ms).atZone(zone).toLocalDate() == today) shortTime(ms)

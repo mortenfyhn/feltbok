@@ -16,9 +16,6 @@ object Strings {
 
     object Notes {
         const val empty = "Trykk + for ny observasjon"
-
-        // Per-kommune section header on the notes list; [label] is the kommune name.
-        fun header(label: String, n: Int) = "$label · $n ${if (n == 1) "observasjon" else "observasjoner"}"
         const val feedback = "Gi tilbakemelding"
         const val export = "Eksporter"
         const val youAreHere = "du er her"
@@ -84,7 +81,6 @@ object Strings {
 
     object Export {
         const val title = "Eksporter"
-        const val unknownKommune = "Ukjent kommune"
         const val step1 = "Kopier observasjoner"
         const val copy = "Kopiér"
         const val copied = "Kopiert ✓"
@@ -92,17 +88,20 @@ object Strings {
         const val open = "Kjør"
         const val step3 = "Lim inn og importer"
 
-        // Step 3 reads: pasteBefore + <kommune, bold> + pasteAfter + <pasteEmphasis, italic>.
-        // Naming the kommune is the point of the per-kommune flow: the form must be scoped to it.
-        const val pasteBefore = "Lim inn observasjonene, prioriter "
-        const val pasteAfter = " i skjemaet, og trykk "
+        // The paste step itself is unconditional, ending in <pasteEmphasis, italic>.
+        const val pasteBody = "Lim inn observasjonene og trykk "
         const val pasteEmphasis = "Importer"
+
+        // A suggestion (not an instruction) shown when every note shares one kommune: prioritising
+        // its localities on the form resolves a name even if the same one exists elsewhere. The
+        // kommune is bolded at render (see ExportScreen); the rest is plain.
+        fun tip(kommune: String) = "(Prioriter lokaliteter i $kommune for å unngå kollisjoner)"
         const val step4 = "Kontroller funn"
         const val step4Body = "Sjekk at observasjonene vises i Artsobservasjoner"
         const val step5 = "Slett fra appen"
         const val step5Body = "Når alt er på plass, kan du slette observasjonene fra appen"
-        fun clear(kommune: String) = "Slett dine $kommune-observasjoner"
-        fun clearTitle(kommune: String) = "Slett alle observasjoner fra $kommune?"
+        const val clearAll = "Slett alle observasjoner"
+        const val clearTitle = "Slett alle observasjoner?"
         const val clearBody = "Sørg for alt er på plass i Artsobservasjoner!"
         const val clearConfirm = "Slett"
     }

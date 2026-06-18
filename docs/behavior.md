@@ -44,3 +44,25 @@ Each result's score combines a few signals (`TieredScorer` in `Search.kt`):
 
 The dataset is tiny (~600 species), so this all runs in well under a millisecond
 per keystroke.
+
+## The notes list
+
+Observations are one flat list, newest first — no grouping by day or kommune. Each
+row stands on its own: species + count on the left, its locality, and the time on
+the right (the time also shows the day once it isn't today).
+
+## Export
+
+One **Eksporter** button (top right of the status strip) opens a step-by-step
+walkthrough: copy *all* your observations as a single block, paste it into
+Artsobservasjoner's "Importer observasjoner", then clear them from the app once
+they're safely in.
+
+Everything pastes in one go, regardless of kommune. A bare locality name links to
+the public locality as long as the name is unambiguous; scoping the import form to a
+kommune only buys you disambiguation of a name that exists in *more than one*
+kommune. So the flow leans on all-at-once: when every observation happens to be in
+one kommune, the walkthrough suggests prioritising that kommune's localities on the
+form (a free safety net); across several kommuner it just pastes everything and lets
+unambiguous names resolve themselves. (The deep why — what links vs. what mints a
+private duplicate — lives in `docs/artsobs-import.md`.)

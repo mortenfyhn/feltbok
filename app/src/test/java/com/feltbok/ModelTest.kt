@@ -398,7 +398,7 @@ class ModelTest {
 
     @Test
     fun rowTimeShowsDayOnlyForOtherDays() {
-        // The notes list groups by kommune, not by day, so the row timestamp carries the day:
+        // The notes list is flat (not grouped by day), so the row timestamp carries the day:
         // bare HH:mm for today, day-prefixed otherwise.
         val today = LocalDate.of(2026, 6, 8)
         val zone = ZoneId.of("UTC")

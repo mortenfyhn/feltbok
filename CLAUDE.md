@@ -89,6 +89,12 @@ Recipes live in `just --list` — the notes below are only the why's and gotchas
 - **Expect last-minute tweaks.** The user often makes small manual edits to the work before asking
   you to commit. Re-check the diff at commit time and include those tweaks; don't revert them or
   assume the tree still matches what you last wrote.
+- **New UI lands through several rounds — defer cleanup until the design settles.** UI work is
+  iterated on (resize this, drop that, move it there), and an early approach is often reversed a
+  couple of messages later. So while the design is still in flux, don't eagerly delete now-unused
+  helpers, rename things, or add/remove tests for the intermediate shape — that just churns code and
+  tests you'll re-add. Keep the diff working at each step, but save the tidy-up (removing dead code,
+  renames, test coverage) for once the user says they're happy with how it looks.
 
 ## Where things live
 - `app/src/main/java/com/feltbok/Model.kt` — data classes, CSV/JSON load+save, TSV export.
