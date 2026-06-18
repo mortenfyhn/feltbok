@@ -9,35 +9,17 @@ short version.
 
 ### Before you type (the quick list)
 
-Open the search screen and you get a list before touching the keyboard. It has a
-small **pinned batch** on top, then every species ranked by a single score
-(`blankQuickList` in `MainViewModel.kt`).
+Open the search screen and you get a list before touching the keyboard: simply your
+**most-recently-picked species, newest first** (up to ~20; `blankQuickList` in
+`MainViewModel.kt`, ordered by each species' last pick from `uses.json`). The idea
+is that if the bird you want isn't right at the top you'd start typing anyway, so a
+short recents list earns its keep more than a ranked season/context blend did.
 
-**The pinned batch** is your current outing's birds kept one tap away. A species is
-pinned only while *both* hold: you picked it **within the last 6 hours**, *and*
-it's among your **4 most-recently-picked** such species. So pins fall off on their
-own — 6 hours after you last pick a species it drops out (an outing's batch clears
-itself by next morning), and picking a 5th species bumps the oldest pin back down
-into the ranked list. The pinned rows are ordered by recency, not score, so a
-just-picked bird can sit above a higher-scored one. (Tuning: `PIN_WINDOW_MS`,
-`PIN_MAX` in `UseScore.kt`.)
-
-**Everything below** is ranked by one blended score, so your regulars and what's
-likely here-and-now compete in a single list instead of being stacked in tiers:
-
-- **How much you use it** — each pick bumps a per-species score that **fades with a
-  ~2-week half-life**, so a bird you logged a lot recently ranks high, while one you
-  logged heavily but long ago has decayed away. This replaces a plain "recent list"
-  and "all-time counts" with one recency-aware signal (persisted in `uses.json`).
-- **Likely here and now** — what's reported in the current month near your location
-  (the same season/location signal the typed search uses; see below).
-
-The two are blended (currently leaning on your own history; see `PERSONAL_W` /
-`CONTEXT_W` / `PERSONAL_MIDPOINT` in `UseScore.kt`). In practice the here-and-now
-term is fairly flat across common in-season birds, so it mainly pushes off-season
-or out-of-region birds *down* rather than reordering the likely ones — and because
-your use score already fades over weeks, it carries most of the "what's relevant
-now" signal on its own.
+When you have **too few recents to fill the list** — a fresh install, or early in an
+outing — the rest is padded with whatever the typed search would surface for an
+**empty query** (the same season + use-score blend described below, just with zero
+letters typed), skipping birds already in your recents. So the list is never sparse,
+and as you log birds your own recents push the padding out.
 
 ### Once you start typing
 

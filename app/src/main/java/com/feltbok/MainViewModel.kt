@@ -85,42 +85,22 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
      *  in rank but stay findable (tiers/folding still match). */
     private val ctxFreq = ContextualFrequency(species, loadSpeciesMonths(app), loadSpeciesRegions(app))
 
-    private fun contextWeight(s: Species, month: Int): Double = ctxFreq.weight(s, month, fix?.lat, fix?.lon)
-
-    /** The blank-search quick list. Your current batch - the last few picks from the past few hours -
-     *  is pinned on top (and auto-clears); below it, every species is ranked by a single blend of your
-     *  decayed use score and what's likely here and now. No recent/regular/context tiers: they fold
-     *  into one score, so the visible top rows mix your regulars with in-season birds rather than
-     *  burying one under the other. */
+    /** The blank-search quick list: your most-recently-picked species, newest first. If the bird isn't
+     *  right at the top you'd start typing anyway, so a short recents list beats a ranked blend. When
+     *  you have too few recents to fill it (a fresh install, early in an outing), it's padded with what
+     *  the typed search shows for an empty query - the season + use-score blend - so it's never sparse. */
     fun blankQuickList(now: Long = System.currentTimeMillis()): List<Species> {
         val byNorsk = species.associateBy { it.norsk }
-        val pinned = pinnedNorsk(now).mapNotNull { byNorsk[it] }
-        val pinnedSet = pinned.mapTo(HashSet()) { it.norsk }
-        val month = java.time.LocalDate.now().monthValue
-        val rest = species
-            .filter { it.norsk !in pinnedSet }
-            .sortedByDescending { blendedWeight(contextWeight(it, month), useScore(it.norsk, now)) }
-        return (pinned + rest).take(40)
-    }
-
-    /** The current batch pinned on top of the blank list: your last [PIN_MAX] picks from the past few
-     *  hours, most-recent first. */
-    private fun pinnedNorsk(now: Long): List<String> =
-        uses.entries
-            .filter { now - it.value.lastTouched <= PIN_WINDOW_MS }
+        val recent = uses.entries
             .sortedByDescending { it.value.lastTouched }
-            .map { it.key }
-            .take(PIN_MAX)
-
-    /** Dev-only (SHOW_SEARCH_TAGS): a blank-list row's two rank contributions - how much your history
-     *  (min) vs the here-and-now context (her) added, which sum to the blended rank - plus whether the
-     *  row is pinned (in the current batch) rather than ranked by score. */
-    data class SearchTag(val personal: Double, val context: Double, val pinned: Boolean)
-
-    fun searchTag(norsk: String, now: Long = System.currentTimeMillis()): SearchTag {
-        val s = species.firstOrNull { it.norsk == norsk } ?: return SearchTag(0.0, 0.0, false)
-        val ctx = contextWeight(s, java.time.LocalDate.now().monthValue)
-        return SearchTag(PERSONAL_W * personalWeight(useScore(norsk, now)), CONTEXT_W * ctx, norsk in pinnedNorsk(now))
+            .mapNotNull { byNorsk[it.key] }
+        if (recent.size >= 20) return recent.take(20)
+        val have = recent.mapTo(HashSet()) { it.norsk }
+        val month = java.time.LocalDate.now().monthValue
+        val filler = species
+            .filter { it.norsk !in have }
+            .sortedByDescending { blendedWeight(ctxFreq.weight(it, month, fix?.lat, fix?.lon), useScore(it.norsk, now)) }
+        return (recent + filler).take(20)
     }
 
     /** Ranked matches for a typed query: the tiered scorer (prefix/suffix/initialism/typo + diacritic

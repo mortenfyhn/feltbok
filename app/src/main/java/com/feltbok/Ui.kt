@@ -443,16 +443,6 @@ fun SearchScreen(vm: MainViewModel) {
                         .padding(horizontal = 16.dp, vertical = 9.dp),
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
-                    // Dev build only (SHOW_SEARCH_TAGS): show each blank-list row's two rank
-                    // contributions - your history (eg) vs here-and-now context (her), which sum to the
-                    // rank - to eyeball the blend. Only meaningful with a blank query.
-                    if (BuildConfig.SHOW_SEARCH_TAGS && q.isBlank()) {
-                        val tag = vm.searchTag(s.norsk)
-                        val pin = if (tag.pinned) "📌 " else ""
-                        Text("${pin}min %.2f · her %.2f".format(tag.personal, tag.context),
-                            color = cs.onSurfaceVariant, fontSize = 11.sp, fontWeight = FontWeight.Bold,
-                            modifier = Modifier.padding(end = 8.dp))
-                    }
                     Text(s.norsk, fontWeight = FontWeight.Medium, maxLines = 1, overflow = TextOverflow.Ellipsis)
                     StatusBadge(s.status)
                     if (s.latin.isNotBlank()) {

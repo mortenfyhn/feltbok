@@ -9,8 +9,8 @@
 - Slett eller forkast observasjoner uten bekreftelse, og angre med ett trykk om du bomma.
 - Når du kopierer en observasjon blir kommentarfeltene nå tømt, så du ikke drar med deg
   kommentarer som hørte til den forrige.
-- Artssøkets forhåndsvalg tar nå mer hensyn til hva du har sett nylig, og fugler du nettopp
-  registrerte ligger lett tilgjengelig øverst en stund.
+- Artssøket viser nå rett og slett de artene du sist valgte øverst, nyeste først, før du
+  begynner å skrive – enklere og mer forutsigbart enn den forrige rangeringa.
 - Etter henting av lokaliteter blir du nå værende på skjermen til du selv går tilbake.
 - Appen er mer enn halvert i størrelse, så den laster ned og installerer raskere.
 - En valgt stor lokalitet (som «Uttian») fylles nå gjennomsiktig, så lokalitetene som ligger

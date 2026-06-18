@@ -9,11 +9,6 @@ import kotlin.math.pow
 /** ~2 weeks: a trip's birds stay hot, last month fades, last year is essentially gone. */
 const val USE_HALF_LIFE_MS = 14L * 24 * 60 * 60 * 1000
 
-// Blank-list "current batch" pin: your last few picks from the past few hours sit on top, then
-// auto-clear so the next day's list leads with here-and-now again rather than yesterday's stragglers.
-const val PIN_WINDOW_MS = 6L * 60 * 60 * 1000
-const val PIN_MAX = 4
-
 data class UseEntry(val score: Double, val lastTouched: Long)
 
 private fun decayFactor(ageMs: Long): Double =
