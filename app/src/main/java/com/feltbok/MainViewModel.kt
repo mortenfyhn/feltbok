@@ -308,8 +308,12 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
      *  while dropping the editing link, so the next [save] mints a new note instead of overwriting.
      *  Used to enter a run of similar observations: each Kopier saves what you've entered and hands
      *  you a prefilled copy to tweak. Committing first means editing a note and copying no longer
-     *  silently loses the edits to the original (#130). */
-    fun copyAsNew() { commitDraft(); editingId = null; changingSpecies = false; copyToken++ }
+     *  silently loses the edits to the original (#130). The comments are observation-specific, so
+     *  clear them rather than carry them into the copy (#136). */
+    fun copyAsNew() {
+        commitDraft(); editingId = null; changingSpecies = false; copyToken++
+        dPub = ""; dPriv = ""
+    }
 
     // True while the picker was opened from the list to set the "current" locality, rather than
     // from the observation draft. Routes selection/back to the list instead of the detail screen.

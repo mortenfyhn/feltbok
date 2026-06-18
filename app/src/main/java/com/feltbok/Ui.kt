@@ -547,6 +547,9 @@ fun DetailScreen(vm: MainViewModel) {
                         val saved = vm.draftHasChanges()
                         val editing = vm.isEditing
                         val species = vm.dSpecies
+                        // Drop focus off any field (comments, count) so nothing stays selected
+                        // on the fresh copy - jarring when copy just cleared the comments (#136).
+                        focus.clearFocus()
                         vm.copyAsNew()
                         if (saved) {
                             val msg = if (editing) Strings.Detail.savedChangesToast(species)

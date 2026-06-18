@@ -7,6 +7,8 @@
 - Antall-feltet er fiksa: hele tallet markeres når du trykker i feltet (så du skriver rett
   over det gamle), «Ferdig» på tastaturet lukker feltet, og det er ingen øvre grense lenger.
 - Slett eller forkast observasjoner uten bekreftelse, og angre med ett trykk om du bomma.
+- Når du kopierer en observasjon blir kommentarfeltene nå tømt, så du ikke drar med deg
+  kommentarer som hørte til den forrige.
 - Artssøkets forhåndsvalg tar nå mer hensyn til hva du har sett nylig, og fugler du nettopp
   registrerte ligger lett tilgjengelig øverst en stund.
 - Etter henting av lokaliteter blir du nå værende på skjermen til du selv går tilbake.
