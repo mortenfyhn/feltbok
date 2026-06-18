@@ -94,6 +94,15 @@ fun LocalityScreen(vm: MainViewModel) {
         MapView(ctx).apply {
             setTileSource(TileSourceFactory.MAPNIK)
             setMultiTouchControls(true)
+            // Clamp zoom: 4 still shows all of Norway; 23 zooms in tight enough to place a 1 m
+            // spot (tiles upscale past MAPNIK's 19, but the geometry stays exact). Disable map
+            // wrapping so zooming out can't tile the world into a grid of Earths, and pin the
+            // scrollable area to a single world so you can't pan off into the grey void around it.
+            setMinZoomLevel(4.0)
+            setMaxZoomLevel(23.0)
+            isHorizontalMapRepetitionEnabled = false
+            isVerticalMapRepetitionEnabled = false
+            setScrollableAreaLimitDouble(BoundingBox(85.0, 180.0, -85.0, -180.0))
             overlays.add(NorwegianCopyrightOverlay(ctx))    // required by the OSM tile policy
             zoomController.setVisibility(CustomZoomButtonsController.Visibility.NEVER)  // use our own buttons
             // Keep the last zoom. When editing an observation or changing the current locality,

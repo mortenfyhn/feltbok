@@ -1,5 +1,10 @@
 # Endringslogg
 
+## Neste utgivelse
+
+- Kartet har nå fornuftige zoom-grenser: du kan ikke lenger zoome så langt ut at du ser
+  hundre jordkloder, og du kan zoome tett nok inn til å plassere en lokalitet på meteren.
+
 ## v0.11 (19. juni 2026)
 
 - Tilbake til enkel eksport, ikke kommunevis.
