@@ -7,7 +7,8 @@
   et tips om å prioritere lokalitetene der, så like navn ikke kolliderer.
 - Observasjonslista er gruppert etter dag igjen, med en datooverskrift over hver bolk (nyeste dag
   øverst).
-- Kartet krediterer nå OpenStreetMap, slik kartvilkåra krever.
+- Trykk på versjonsnummeret nederst for en «Om Feltbok»-boks som krediterer Artsdatabanken,
+  Artsobservasjoner og OpenStreetMap. Kartet og kreditteringa er nå på norsk.
 - Aktivitet velges nå i en fullskjermsliste i stedet for en liten dialog, så du slipper å
   skrolle inni en trang boks gjennom den lange lista.
 - Antall-feltet er fiksa: hele tallet markeres når du trykker i feltet (så du skriver rett

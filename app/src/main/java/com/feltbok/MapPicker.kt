@@ -84,7 +84,8 @@ fun LocalityScreen(vm: MainViewModel) {
         MapView(ctx).apply {
             setTileSource(TileSourceFactory.MAPNIK)
             setMultiTouchControls(true)
-            overlays.add(CopyrightOverlay(ctx))    // "© OpenStreetMap contributors" - required by the OSM tile policy
+            // Required by the OSM tile policy; default notice is English, so set the Norwegian form.
+            overlays.add(CopyrightOverlay(ctx).apply { setCopyrightNotice("© OpenStreetMap-bidragsytere") })
             zoomController.setVisibility(CustomZoomButtonsController.Visibility.NEVER)  // use our own buttons
             // Keep the last zoom. When editing an observation or changing the current locality,
             // centre on that chosen locality so you adjust around it, not your current position.

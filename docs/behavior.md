@@ -67,3 +67,11 @@ one kommune, the walkthrough suggests prioritising that kommune's localities on 
 form (a free safety net); across several kommuner it just pastes everything and lets
 unambiguous names resolve themselves. (The deep why — what links vs. what mints a
 private duplicate — lives in `docs/artsobs-import.md`.)
+
+## About / credits
+
+Tapping the version string in the footer opens a small "Om Feltbok" dialog with the
+maker line and the data credits — Artsdatabanken (species data, CC BY 4.0),
+Artsobservasjoner (localities), and OpenStreetMap (map). The CC BY licence *requires*
+attribution; this is its home. The map also carries an "© OpenStreetMap-bidragsytere"
+corner credit, as the OSM tile policy requires.

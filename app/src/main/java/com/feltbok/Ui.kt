@@ -103,6 +103,8 @@ fun ListScreen(vm: MainViewModel) {
     val cs = MaterialTheme.colorScheme
     var showFeedback by remember { mutableStateOf(false) }
     if (showFeedback) FeedbackDialog { showFeedback = false }
+    var showAbout by remember { mutableStateOf(false) }
+    if (showAbout) AboutDialog { showAbout = false }
     val selecting = vm.selected.isNotEmpty()
     // While marking notes, system Back clears the marks rather than exiting the app.
     BackHandler(enabled = selecting) { vm.clearSelection() }
@@ -178,6 +180,8 @@ fun ListScreen(vm: MainViewModel) {
             // (a weighted slot would centre it between the buttons, which is off-centre since the
             // labels differ in width). It overflows visibly, so the full string stays readable:
             // clean in the gap on release ("v0.7"), spilling over the buttons on a long dev build.
+            // Tapping the version opens the About/credits dialog — the conventional home for the
+            // #139 attribution, stashed where about-info is expected without new chrome.
             Box(Modifier.fillMaxWidth().background(cs.surface), Alignment.Center) {
                 Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
                     // First time it's an invitation; once you've synced some, it's a refresh.
@@ -190,7 +194,7 @@ fun ListScreen(vm: MainViewModel) {
                 }
                 Text(BuildConfig.GIT_VERSION, color = cs.onSurfaceVariant.copy(alpha = 0.6f),
                     fontSize = 11.sp, maxLines = 1, softWrap = false, overflow = TextOverflow.Visible,
-                    modifier = Modifier.align(Alignment.BottomCenter).offset(y = 5.dp))
+                    modifier = Modifier.align(Alignment.BottomCenter).clickable { showAbout = true }.offset(y = 5.dp))
             }
         }
         // Round minimap on the left of the top bar, clipping the top and left edges equally.
@@ -287,6 +291,30 @@ private fun StatusStrip(vm: MainViewModel) {
             }
         }
     }
+}
+
+/** Credits / attribution (#139). The Artsdatabanken data is CC BY 4.0, which requires attribution;
+ *  OSM is credited on the map too but gathered here for one tidy home. */
+@Composable
+private fun AboutDialog(onDismiss: () -> Unit) {
+    val cs = MaterialTheme.colorScheme
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text(Strings.About.title) },
+        text = {
+            Column {
+                Text(Strings.About.madeBy)
+                Text(Strings.About.dataHeader, fontWeight = FontWeight.SemiBold,
+                    modifier = Modifier.padding(top = 14.dp, bottom = 4.dp))
+                Text(Strings.About.artsdatabanken, fontSize = 13.sp, color = cs.onSurfaceVariant)
+                Text(Strings.About.artsobs, fontSize = 13.sp, color = cs.onSurfaceVariant,
+                    modifier = Modifier.padding(top = 6.dp))
+                Text(Strings.About.osm, fontSize = 13.sp, color = cs.onSurfaceVariant,
+                    modifier = Modifier.padding(top = 6.dp))
+            }
+        },
+        confirmButton = { TextButton(onClick = onDismiss) { Text(Strings.About.close) } },
+    )
 }
 
 private val REDLIST_CODES = setOf("RE", "CR", "EN", "VU", "NT", "DD")

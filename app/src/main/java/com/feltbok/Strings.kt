@@ -35,6 +35,18 @@ object Strings {
         const val undo = "Angre"
     }
 
+    // Credits/attribution shown by tapping the footer version (#139). CC BY 4.0 for the
+    // Artsdatabanken data *requires* attribution; OSM is credited on the map but repeated here too.
+    object About {
+        const val title = "Om Feltbok"
+        const val madeBy = "Laga av Morten F. Amundsen"
+        const val dataHeader = "Data og kilder"
+        const val artsdatabanken = "Artsdata fra Artsdatabanken (CC BY 4.0)"
+        const val artsobs = "Lokaliteter fra Artsobservasjoner"
+        const val osm = "Kart © OpenStreetMap"
+        const val close = "Lukk"
+    }
+
     object Feedback {
         const val title = "Tilbakemelding"
         const val body = "Ta kontakt om du finner feil, lurer på noe eller har tilbakemelding:"
