@@ -47,9 +47,10 @@ per keystroke.
 
 ## The notes list
 
-Observations are one flat list, newest first — no grouping by day or kommune. Each
-row stands on its own: species + count on the left, its locality, and the time on
-the right (the time also shows the day once it isn't today).
+Observations are grouped into per-day sections, newest day first, each under a date
+header ("I dag", "I går", else an abbreviated date like "Søn 8. jun"). Within a day,
+newest first. Each row carries species + count on the left, its locality, and the
+time on the right (the day lives in the section header, so the row shows bare HH:mm).
 
 ## Export
 

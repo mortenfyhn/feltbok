@@ -142,16 +142,25 @@ fun ListScreen(vm: MainViewModel) {
                             }
                         }
                         // Bottom padding so the last row scrolls clear of the floating + button.
-                        // A flat, newest-first list - each row carries its own locality and day, so
-                        // it reads without section headers (#129); export is one button (#140).
+                        // Notes are grouped into per-day sections, each under its own date header
+                        // (the contextual bar above replaces only the marking actions, not these).
                         LazyColumn(Modifier.weight(1f), contentPadding = PaddingValues(bottom = 84.dp)) {
-                            items(vm.notes.sortedByDescending { it.time }, key = { it.id }) { n ->
-                                NoteRow(
-                                    n, vm.statusFor(n.latin), selected = n.id in vm.selected,
-                                    // In selection mode a tap toggles the mark; otherwise it edits.
-                                    onClick = { if (selecting) vm.toggleSelect(n.id) else vm.editNote(n) },
-                                    onLongClick = { vm.toggleSelect(n.id) },
-                                )
+                            groupNotesByDay(vm.notes).forEach { group ->
+                                item(key = "day:${group.label}") {
+                                    Text(
+                                        group.label,
+                                        color = cs.onSurfaceVariant, fontSize = 13.sp,
+                                        modifier = Modifier.padding(horizontal = 16.dp, vertical = 4.dp),
+                                    )
+                                }
+                                items(group.notes, key = { it.id }) { n ->
+                                    NoteRow(
+                                        n, vm.statusFor(n.latin), selected = n.id in vm.selected,
+                                        // In selection mode a tap toggles the mark; otherwise it edits.
+                                        onClick = { if (selecting) vm.toggleSelect(n.id) else vm.editNote(n) },
+                                        onLongClick = { vm.toggleSelect(n.id) },
+                                    )
+                                }
                             }
                         }
                     }
@@ -342,7 +351,7 @@ private fun NoteRow(n: Note, status: String, selected: Boolean, onClick: () -> U
             // ellipsized box's trailing slack, keeping every locality flush against the timestamp.
             Text(n.locName, color = cs.onSurface, fontSize = 13.sp, textAlign = TextAlign.End,   // [1] locality
                 maxLines = 1, overflow = TextOverflow.Ellipsis)
-            Text(rowTime(n.time), color = cs.onSurfaceVariant, fontSize = 13.sp)   // [2] timestamp
+            Text(shortTime(n.time), color = cs.onSurfaceVariant, fontSize = 13.sp)   // [2] timestamp
         },
         modifier = Modifier.fillMaxWidth()
             .combinedClickable(onClick = onClick, onLongClick = onLongClick)

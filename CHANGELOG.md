@@ -4,8 +4,9 @@
 
 - Eksport er forenkla: «Eksporter» ligger nå som én knapp øverst, og du limer inn alle
   observasjonene på én gang i stedet for én kommune om gangen. Er alt fra samme kommune, får du
-  et tips om å prioritere lokalitetene der, så like navn ikke kolliderer. Observasjonslista er
-  derfor ikke lenger delt opp etter kommune – én enkel liste med nyeste øverst.
+  et tips om å prioritere lokalitetene der, så like navn ikke kolliderer.
+- Observasjonslista er gruppert etter dag igjen, med en datooverskrift over hver bolk (nyeste dag
+  øverst).
 - Kartet krediterer nå OpenStreetMap, slik kartvilkåra krever.
 - Aktivitet velges nå i en fullskjermsliste i stedet for en liten dialog, så du slipper å
   skrolle inni en trang boks gjennom den lange lista.
