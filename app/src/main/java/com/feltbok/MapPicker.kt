@@ -56,6 +56,7 @@ import org.osmdroid.util.GeoPoint
 import org.osmdroid.views.CustomZoomButtonsController
 import org.osmdroid.views.MapView
 import org.osmdroid.views.Projection
+import org.osmdroid.views.overlay.CopyrightOverlay
 import org.osmdroid.views.overlay.Overlay
 import java.io.File
 import kotlin.math.abs
@@ -83,6 +84,7 @@ fun LocalityScreen(vm: MainViewModel) {
         MapView(ctx).apply {
             setTileSource(TileSourceFactory.MAPNIK)
             setMultiTouchControls(true)
+            overlays.add(CopyrightOverlay(ctx))    // "© OpenStreetMap contributors" - required by the OSM tile policy
             zoomController.setVisibility(CustomZoomButtonsController.Visibility.NEVER)  // use our own buttons
             // Keep the last zoom. When editing an observation or changing the current locality,
             // centre on that chosen locality so you adjust around it, not your current position.

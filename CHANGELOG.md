@@ -2,6 +2,7 @@
 
 ## Neste utgivelse
 
+- Kartet krediterer nå OpenStreetMap, slik kartvilkåra krever.
 - Aktivitet velges nå i en fullskjermsliste i stedet for en liten dialog, så du slipper å
   skrolle inni en trang boks gjennom den lange lista.
 - Antall-feltet er fiksa: hele tallet markeres når du trykker i feltet (så du skriver rett
