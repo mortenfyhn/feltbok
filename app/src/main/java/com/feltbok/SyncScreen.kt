@@ -85,6 +85,10 @@ fun SyncScreen(vm: MainViewModel) {
 
     val webView = remember {
         WebView(ctx).apply {
+            // Default WebView background is white; on first attach it flashes full-bleed for a frame
+            // before Compose settles it into its slot, briefly whitening the green header area. A
+            // transparent background lets the grey behind show through instead of that white flash.
+            setBackgroundColor(android.graphics.Color.TRANSPARENT)
             CookieManager.getInstance().setAcceptCookie(true)
             CookieManager.getInstance().setAcceptThirdPartyCookies(this, true)
             settings.javaScriptEnabled = true

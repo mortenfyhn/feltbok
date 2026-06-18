@@ -305,7 +305,7 @@ private fun AboutDialog(onDismiss: () -> Unit) {
             Column {
                 Text(Strings.About.madeBy)
                 Text(Strings.About.dataHeader, fontWeight = FontWeight.SemiBold,
-                    modifier = Modifier.padding(top = 14.dp, bottom = 4.dp))
+                    modifier = Modifier.padding(top = 24.dp, bottom = 4.dp))
                 Text(Strings.About.artsdatabanken, fontSize = 13.sp, color = cs.onSurfaceVariant)
                 Text(Strings.About.artsobs, fontSize = 13.sp, color = cs.onSurfaceVariant,
                     modifier = Modifier.padding(top = 6.dp))

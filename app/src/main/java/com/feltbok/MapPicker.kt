@@ -64,6 +64,16 @@ import kotlin.math.cos
 import kotlin.math.hypot
 import kotlin.math.max
 
+/** osmdroid's [CopyrightOverlay] re-reads the tile source's (English) notice on every frame in
+ *  draw(Canvas, MapView, Boolean), clobbering any setCopyrightNotice. Override that overload to draw
+ *  our fixed Norwegian credit instead. */
+private class NorwegianCopyrightOverlay(ctx: android.content.Context) : CopyrightOverlay(ctx) {
+    init { setCopyrightNotice("© OpenStreetMap-bidragsytere") }
+    override fun draw(c: Canvas, map: MapView, shadow: Boolean) {
+        if (!shadow) draw(c, map.projection)
+    }
+}
+
 /**
  * The locality picker, as a map. Localities are drawn as green disks at their real
  * radius (like the Artsobservasjoner site) over OpenStreetMap tiles, which osmdroid
@@ -84,8 +94,7 @@ fun LocalityScreen(vm: MainViewModel) {
         MapView(ctx).apply {
             setTileSource(TileSourceFactory.MAPNIK)
             setMultiTouchControls(true)
-            // Required by the OSM tile policy; default notice is English, so set the Norwegian form.
-            overlays.add(CopyrightOverlay(ctx).apply { setCopyrightNotice("© OpenStreetMap-bidragsytere") })
+            overlays.add(NorwegianCopyrightOverlay(ctx))    // required by the OSM tile policy
             zoomController.setVisibility(CustomZoomButtonsController.Visibility.NEVER)  // use our own buttons
             // Keep the last zoom. When editing an observation or changing the current locality,
             // centre on that chosen locality so you adjust around it, not your current position.
