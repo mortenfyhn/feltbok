@@ -16,7 +16,7 @@ build:
 
 # Run all tests: Python units (if any) + Kotlin units
 test:
-    .venv/bin/python -m unittest discover -s scripts -p 'test_*.py' || [ "$?" -eq 5 ]  # 5 = no tests collected
+    .venv/bin/python -m unittest discover -s scripts -p 'test_*.py'
     ./gradlew testDebugUnitTest
 
 # Wire up the version-controlled git hooks (run once per fresh clone)
