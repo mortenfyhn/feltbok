@@ -1,45 +1,22 @@
 # Endringslogg
 
-## Neste utgivelse
+## v0.11 (19. juni 2026)
 
-- Eksport er forenkla: «Eksporter» ligger nå som én knapp øverst, og du limer inn alle
-  observasjonene på én gang i stedet for én kommune om gangen. Er alt fra samme kommune, får du
-  et tips om å prioritere lokalitetene der, så like navn ikke kolliderer.
-- Observasjonslista er gruppert etter dag igjen, med en datooverskrift over hver bolk (nyeste dag
-  øverst).
-- Trykk på versjonsnummeret nederst for en «Om Feltbok»-boks som krediterer Artsdatabanken,
-  Artsobservasjoner og OpenStreetMap. Kartet og kreditteringa er nå på norsk.
-- Aktivitet velges nå i en fullskjermsliste i stedet for en liten dialog, så du slipper å
-  skrolle inni en trang boks gjennom den lange lista.
-- Antall-feltet er fiksa: hele tallet markeres når du trykker i feltet (så du skriver rett
-  over det gamle), «Ferdig» på tastaturet lukker feltet, og det er ingen øvre grense lenger.
-- Slett eller forkast observasjoner uten bekreftelse, og angre med ett trykk om du bomma.
-- Når du kopierer en observasjon blir kommentarfeltene nå tømt, så du ikke drar med deg
-  kommentarer som hørte til den forrige.
-- Artssøket viser nå rett og slett de artene du sist valgte øverst, nyeste først, før du
-  begynner å skrive – enklere og mer forutsigbart enn den forrige rangeringa.
-- Etter henting av lokaliteter blir du nå værende på skjermen til du selv går tilbake.
-- Appen er mer enn halvert i størrelse, så den laster ned og installerer raskere.
-- En valgt stor lokalitet (som «Uttian») fylles nå gjennomsiktig, så lokalitetene som ligger
-  inni den fortsatt er synlige og lette å velge.
-- Det er nå lett å treffe en liten lokalitet eller et punkt som ligger inni en større: et trykk
-  velger den minste lokaliteten under fingeren, i stedet for stadig å lande på den store rundt.
-- Lokalitetsnavn på kartet roter seg ikke lenger oppå hverandre: navn som ville kollidert
-  skjules, så du ser flere navn der det er plass og færre der det blir trangt.
-- Navn på områdelokaliteter (flater) plasseres nå inne i selve området, så det er lett å se
-  hvilket navn som hører til hvilken flate – også for buede og uregelmessige områder.
-- Navn på kartet har nå en svak fargetone i omrisset – grønn for offentlige lokaliteter og gul
-  for dine egne – så det er lettere å se hvilken type et navn hører til.
-- Lokaliteter som rommer underlokaliteter vises nå i en egen, dypere grønnfarge på kartet (som
-  på Artsobservasjoner), så det er lettere å kjenne dem igjen.
-- Posisjonsprikken på kartet er større, så det er lettere å se hvor du er.
-- Kartet viser nå alltid både offentlige og dine egne lokaliteter – «Vis private»-avkrysningen
-  trengs ikke lenger nå som navn og prikker ikke roter seg sammen på kartet.
-- «Kopier» lagrer nå observasjonen du holder på med før den lager en kopi, så du kan taste inn
-  mange like observasjoner på rad uten å miste det du nettopp skreiv.
-- Lokalitetene er oppdatert: Svalbard, Jan Mayen og de andre arktiske områdene er nå med, og
-  over tusen nye fastlandslokaliteter er lagt til. Flere lokaliteter vises også riktig som
-  superlokaliteter (mørkere grønt).
+- Tilbake til enkel eksport, ikke kommunevis.
+- Observasjonslista er gruppert etter dag igjen.
+- Aktivitetsvelger i fullskjerm.
+- Noen feilrettinger og forbedringer på antall-feltet.
+- Angre-funksjon heller enn bekreftelse ved sletting.
+- Artssøket er marginalt bedre.
+- Appen tar mindre plass.
+- Vesentlig enklere å treffe riktig lokalitet på kartet.
+- Lokalitetsnavn på kartet roter seg ikke lenger oppå hverandre.
+- Bedre plassering av lokalitetsnavn på kartet.
+- Superlokaliteter vises i mørkere grønnfarge.
+- GPS-prikken er større.
+- Lokaliteter dekker ikke for hverandre i kartet.
+- Kjappere og bedre kopier-funksjon.
+- Oppdaterte lokaliteter og superlokaliteter inkludert Svalbard.
 - Ymse småforbedringer.
 
 ## v0.10 (10. juni 2026)
