@@ -4,7 +4,7 @@
 
 En Android-app for å kjapt taste inn fugleobservasjoner i felt. Deretter kan de enkelt lastes opp til artsobservasjoner.no. Fungerer uten innlogging og uten nett.
 
-https://github.com/user-attachments/assets/c015955c-f46c-406e-b654-841331e380f1
+https://github.com/user-attachments/assets/0a44913d-b87a-47dd-a254-30bc7e5fab57
 
 ## Egenskaper
 
