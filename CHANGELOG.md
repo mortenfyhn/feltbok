@@ -37,6 +37,9 @@
   trengs ikke lenger nå som navn og prikker ikke roter seg sammen på kartet.
 - «Kopier» lagrer nå observasjonen du holder på med før den lager en kopi, så du kan taste inn
   mange like observasjoner på rad uten å miste det du nettopp skreiv.
+- Lokalitetene er oppdatert: Svalbard, Jan Mayen og de andre arktiske områdene er nå med, og
+  over tusen nye fastlandslokaliteter er lagt til. Flere lokaliteter vises også riktig som
+  superlokaliteter (mørkere grønt).
 - Ymse småforbedringer.
 
 ## v0.10 (10. juni 2026)
