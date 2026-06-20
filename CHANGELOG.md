@@ -1,11 +1,9 @@
 # Endringslogg
 
-## Neste utgivelse
+## v0.12 (20. juni 2026)
 
-- Kartet har nå fornuftige zoom-grenser: du kan ikke lenger zoome så langt ut at du ser
-  hundre jordkloder, og du kan zoome tett nok inn til å plassere en lokalitet på meteren.
-- Appen har fått ny pakke-id før lanseringa på F-Droid. Oppdaterer du fra en eldre utgave,
-  må du avinstallere og installere på nytt – husk å eksportere notatene først.
+- Kartet har nå fornuftige zoom-grenser.
+- Appen har fått ny pakke-id for lansering på F-Droid.
 
 ## v0.11 (19. juni 2026)
 
