@@ -245,7 +245,7 @@ fun poleOfInaccessibility(polygon: List<DoubleArray>): DoubleArray {
     }
     var best = cell(cxMid, cyMid, 0.0)                       // bbox centre as the initial best guess
     while (queue.isNotEmpty()) {
-        val c = queue.poll()
+        val c = queue.poll()!!                              // never null - the loop guards isNotEmpty()
         if (c[3] > best[3]) best = c
         if (c[4] - best[3] <= precision) continue            // this cell can't beat the best by enough
         val q = c[2] / 2
