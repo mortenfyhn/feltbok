@@ -414,4 +414,25 @@ class ModelTest {
         // Within a day, the latest observation comes first.
         assertEquals(groups[0].notes.map { it.time }.sortedDescending(), groups[0].notes.map { it.time })
     }
+
+    @Test
+    fun shortAgeAbbreviatesWordyAgesAndLeavesKAges() {
+        assertEquals("Ad", shortAge("Adult"))
+        assertEquals("Pu", shortAge("Pulli"))
+        assertEquals("Eg", shortAge("Egg"))
+        assertEquals("2K+", shortAge("2K+")) // K-ages are already short - passed through
+    }
+
+    @Test
+    fun sexSymbolKeepsVariationSelectorForTextPresentation() {
+        // The list-row preview shows ♂/♀ as symbols. Each must carry a trailing VS15 (U+FE0E) to
+        // force *text* presentation - without it Android renders them as tall colour emoji that
+        // inflate the row height. The selector is invisible in source, so a "cleanup" could silently
+        // drop it; spell the codepoints out so this test can't be corrupted the same way. Hunnfarget
+        // keeps its parens around the selector-bearing symbol.
+        assertEquals("\u2642\uFE0E", sexSymbol("Hann")) // ♂ + VS15
+        assertEquals("\u2640\uFE0E", sexSymbol("Hunn")) // ♀ + VS15
+        assertEquals("(\u2640\uFE0E)", sexSymbol("Hunnfarget"))
+        assertEquals("\u2642\uFE0E\u2640\uFE0E", sexSymbol("I par"))
+    }
 }
