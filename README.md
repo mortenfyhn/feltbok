@@ -17,7 +17,9 @@ https://github.com/user-attachments/assets/0a44913d-b87a-47dd-a254-30bc7e5fab57
 
 ## Installer
 
-Gå til [siste utgave](https://github.com/mortenfyhn/feltbok/releases/latest).
+[<img src="https://fdroid.gitlab.io/artwork/badge/get-it-on.png" alt="Få den på F-Droid" height="80">](https://f-droid.org/packages/io.github.mortenfyhn.feltbok/)
+
+Eller gå til [siste utgave](https://github.com/mortenfyhn/feltbok/releases/latest) på GitHub.
 
 ## Utvikling
 
