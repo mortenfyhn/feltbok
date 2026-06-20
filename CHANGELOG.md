@@ -3,6 +3,7 @@
 ## Neste utgivelse
 
 - Lista beholder nå rulleposisjonen når du redigerer en observasjon.
+- Observasjonslista viser nå kjønn og alder, så like observasjoner er lettere å skille.
 
 ## v0.12 (20. juni 2026)
 

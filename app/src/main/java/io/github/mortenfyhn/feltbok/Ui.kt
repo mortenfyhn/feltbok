@@ -42,6 +42,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.ColorScheme
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.HorizontalDivider
@@ -324,16 +325,18 @@ private val REDLIST_CODES = setOf("RE", "CR", "EN", "VU", "NT", "DD")
  *  concern at a glance: Rødlista 2021 red (vulnerable), Fremmedartslista 2023 SE/HI/PH black (invasive,
  *  high risk), LO/NK grey. Purely a label - no tap target, so it never swallows a tap meant for the
  *  row it sits in (e.g. opening/marking a note). */
+/** Badge colour for a status code: Rødlista 2021 red, Fremmedartslista 2023 SE/HI/PH black, rest grey. */
+private fun statusColor(code: String, cs: ColorScheme): Color = when {
+    code in REDLIST_CODES -> cs.error
+    code == "SE" || code == "HI" || code == "PH" -> Color.Black
+    else -> cs.onSurfaceVariant   // LO/NK (and any unknown)
+}
+
 @Composable
 private fun StatusBadge(code: String) {
     if (code.isBlank()) return
-    val color = when {
-        code in REDLIST_CODES -> MaterialTheme.colorScheme.error
-        code == "SE" || code == "HI" || code == "PH" -> Color.Black
-        else -> MaterialTheme.colorScheme.onSurfaceVariant   // LO/NK (and any unknown)
-    }
-    Text(code, color = color, fontWeight = FontWeight.Bold, fontSize = 11.sp, letterSpacing = 0.5.sp,
-        modifier = Modifier.padding(start = 6.dp))
+    Text(code, color = statusColor(code, MaterialTheme.colorScheme), fontWeight = FontWeight.Bold,
+        fontSize = 11.sp, letterSpacing = 0.5.sp, modifier = Modifier.padding(start = 6.dp))
 }
 
 // An "i" badge marking a note that carries a comment, like Artsobservasjoner: blue for a public
@@ -353,34 +356,71 @@ private fun CommentBadge(n: Note) {
     }
 }
 
+/** Append [text] bolding only the ♂/♀ glyphs (with their trailing VS15), so a "(♀)" form keeps its
+ *  parens at regular weight — bold parens would dwarf the thin symbol, which barely thickens itself. */
+private fun AnnotatedString.Builder.appendBoldSymbols(text: String) {
+    var i = 0
+    while (i < text.length) {
+        val c = text[i]
+        if (c == '♂' || c == '♀') {   // ♂ / ♀
+            val end = if (i + 1 < text.length && text[i + 1] == '︎') i + 2 else i + 1   // keep VS15 attached
+            withStyle(SpanStyle(fontWeight = FontWeight.Bold)) { append(text.substring(i, end)) }
+            i = end
+        } else {
+            append(c)
+            i++
+        }
+    }
+}
+
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
 private fun NoteRow(n: Note, status: String, selected: Boolean, onClick: () -> Unit, onLongClick: () -> Unit) {
     val cs = MaterialTheme.colorScheme
     val hasLoc = n.locName.isNotBlank()
+    // sex + age (sex symbol bolded so the thin ♂/♀ glyphs read at a glance), each shown only when
+    // set. Lowest priority of the four pieces: it's the first to ellipsize/drop when space is tight.
+    val preview = buildList {
+        sexSymbol(n.sex).takeIf { it.isNotBlank() }?.let { add(it to true) }
+        shortAge(n.age).takeIf { it.isNotBlank() }?.let { add(it to false) }
+    }
     // A plain Row can't split width by need: weights divide the slack by ratio and never hand one
-    // child's leftover to another. So we measure by hand — time pinned right, species first claim on
-    // the rest, locality takes what's left. A short species lets a long locality fill the gap; a long
-    // species pushes the locality to ellipsize. Whoever is short frees its room for the other.
+    // child's leftover to another. So we measure by hand, in priority order: time pinned right, then
+    // the name+status, then the locality (kept flush before the time), and finally the sex/age
+    // preview gets whatever room is left between name and locality (ellipsized, or dropped).
     Layout(
         content = {
-            Row(verticalAlignment = Alignment.CenterVertically) {   // [0] count + species + red status
+            Row(verticalAlignment = Alignment.CenterVertically) {   // [0] count + species + status + comment
                 Text(
                     buildAnnotatedString {
                         val count = if (n.count == UNKNOWN_COUNT) "?" else n.count.toString()
                         withStyle(SpanStyle(color = cs.onPrimaryContainer, fontWeight = FontWeight.Bold)) { append("$count ") }
                         append(if (n.uncertain) "${n.species}?" else n.species)
+                        // Status code (VU/SE/…) inline right after the name, coloured like the badge.
+                        if (status.isNotBlank()) {
+                            withStyle(SpanStyle(color = statusColor(status, cs), fontWeight = FontWeight.Bold, fontSize = 11.sp, letterSpacing = 0.5.sp)) {
+                                append(" $status")
+                            }
+                        }
                     },
                     maxLines = 1, overflow = TextOverflow.Ellipsis,
                 )
-                StatusBadge(status)
                 CommentBadge(n)
             }
+            Text(   // [1] sex/age preview
+                buildAnnotatedString {
+                    preview.forEachIndexed { i, (text, bold) ->
+                        if (i > 0) append(" ")
+                        if (bold) appendBoldSymbols(text) else append(text)
+                    }
+                },
+                color = cs.onSurfaceVariant, fontSize = 13.sp, maxLines = 1, overflow = TextOverflow.Ellipsis,
+            )
             // End-align so a truncated name's "…" hugs the right edge instead of leaving the
             // ellipsized box's trailing slack, keeping every locality flush against the timestamp.
-            Text(n.locName, color = cs.onSurface, fontSize = 13.sp, textAlign = TextAlign.End,   // [1] locality
+            Text(n.locName, color = cs.onSurface, fontSize = 13.sp, textAlign = TextAlign.End,   // [2] locality
                 maxLines = 1, overflow = TextOverflow.Ellipsis)
-            Text(shortTime(n.time), color = cs.onSurfaceVariant, fontSize = 13.sp)   // [2] timestamp
+            Text(shortTime(n.time), color = cs.onSurfaceVariant, fontSize = 13.sp)   // [3] timestamp
         },
         modifier = Modifier.fillMaxWidth()
             .combinedClickable(onClick = onClick, onLongClick = onLongClick)
@@ -389,16 +429,30 @@ private fun NoteRow(n: Note, status: String, selected: Boolean, onClick: () -> U
     ) { measurables, constraints ->
         val w = constraints.maxWidth
         val gap = 8.dp.roundToPx()
-        val time = measurables[2].measure(Constraints(maxWidth = w))
+        val time = measurables[3].measure(Constraints(maxWidth = w))
         val leftBudget = (w - time.width - gap).coerceAtLeast(0)               // room left of the timestamp
         val species = measurables[0].measure(Constraints(maxWidth = leftBudget))
-        val locBudget = if (hasLoc) (leftBudget - species.width - gap).coerceAtLeast(0) else 0
-        val loc = measurables[1].measure(Constraints(maxWidth = locBudget))
-        val h = maxOf(species.height, loc.height, time.height)
+        // Locality keeps its room ahead of the preview: it's measured against everything left of the
+        // name, before the preview gets a look in.
+        val afterName = (leftBudget - species.width - gap).coerceAtLeast(0)
+        val locBudget = if (hasLoc) afterName else 0
+        val loc = measurables[2].measure(Constraints(maxWidth = locBudget))
+        // Only count the locality toward the row height when it's actually shown: a Text measured at
+        // width 0 (no locality, or a long name leaving no room) balloons to two lines, which would
+        // inflate the row and leave the content floating in a too-tall box.
+        val showLoc = hasLoc && locBudget > 0
+        // Preview is last in line: it gets whatever sits between the name and the locality. It's
+        // short (sex + age), so show it all-or-nothing — measured at its natural width and dropped
+        // whole (dot included) when it won't fit, rather than collapsing to a stray "· …".
+        val previewBudget = (afterName - (if (showLoc) loc.width + gap else 0)).coerceAtLeast(0)
+        val prev = measurables[1].measure(Constraints())
+        val showPreview = preview.isNotEmpty() && prev.width <= previewBudget
+        val h = maxOf(species.height, time.height, if (showLoc) loc.height else 0, if (showPreview) prev.height else 0)
         layout(w, h) {
             species.placeRelative(0, (h - species.height) / 2)
             time.placeRelative(w - time.width, (h - time.height) / 2)
-            if (hasLoc) loc.placeRelative(w - time.width - gap - loc.width, (h - loc.height) / 2)
+            if (showPreview) prev.placeRelative(species.width + gap, (h - prev.height) / 2)
+            if (showLoc) loc.placeRelative(w - time.width - gap - loc.width, (h - loc.height) / 2)
         }
     }
     HorizontalDivider(color = cs.outline.copy(alpha = 0.4f))

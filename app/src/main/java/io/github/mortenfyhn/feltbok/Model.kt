@@ -315,6 +315,26 @@ fun displayTimeRange(start: Long, end: Long?): String {
     return if (end == null) fmt.format(Date(start)) else "${fmt.format(Date(start))} – ${fmt.format(Date(end))}"
 }
 
+// Compact forms of age/sex for the list-row preview, so two near-identical observations are
+// tellable apart at a glance (which is the chicks, which the parents). The row builds the preview
+// itself (it bolds the thin sex symbol), so these stay as small reusable formatters.
+fun shortAge(age: String): String = when (age) {
+    "Adult" -> "Ad"
+    "Pulli" -> "Pu"
+    "Egg" -> "Eg"
+    else -> age // the K-ages (1K, 2K+, …) are already short
+}
+
+// The trailing ︎ (VS15) forces text presentation, so ♂/♀ render from the regular text font
+// instead of the emoji font — without it they come out as tall colour emoji that inflate the row.
+fun sexSymbol(sex: String): String = when (sex) {
+    "Hann" -> "♂︎"
+    "Hunn" -> "♀︎"
+    "Hunnfarget" -> "(♀︎)"
+    "I par" -> "♂︎♀︎"
+    else -> sex
+}
+
 fun exportDate(ms: Long): String = nbFormat("dd.MM.yyyy").format(Date(ms))
 
 /** Friendlier date for the editor (export keeps the strict dd.MM.yyyy). */
