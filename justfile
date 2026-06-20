@@ -88,3 +88,12 @@ push-data:
     -adb push app/src/main/assets/species_months.csv {{data_dir}}/species_months.csv
     -adb push app/src/main/assets/species_regions.csv {{data_dir}}/species_regions.csv
     -adb push my-localities.csv {{data_dir}}/my-localities.csv   # maintainer's own customs (device-only)
+
+# Seed the DEBUG app with varied sample observations (overwrites its notes!). The debug build ships
+# non-debuggable (release speed), so run-as can't reach internal storage; instead push a seed file
+# to the external dir, which the dev build imports on next launch (see importSeedNotes). Targets the
+# .debug app only — never the release app with the maintainer's real field notes.
+seed-notes:
+    .venv/bin/python scripts/dev/make_sample_notes.py > /tmp/feltbok-seed-notes.json
+    adb push /tmp/feltbok-seed-notes.json {{data_dir}}/seed-notes.json
+    adb shell am force-stop {{app_id}}

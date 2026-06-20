@@ -649,6 +649,23 @@ fun noteFromJson(o: JSONObject): Note = Note(
     kommune = o.optString("kommune"),
 )
 
+/**
+ * Dev seeding. The debug build ships non-debuggable (it runs at release speed), so `run-as` can't
+ * reach its files, and notes.json lives in internal storage that `adb push` can't write either. So
+ * `just seed-notes` pushes a seed file to the external files dir (which adb push *can* reach), and
+ * the dev build imports it into notes.json on the next launch and deletes it. Gated to the `.debug`
+ * package so the real release app never imports a pushed file. Call before [loadNotes].
+ */
+fun importSeedNotes(ctx: Context) {
+    if (!ctx.packageName.endsWith(".debug")) return
+    val seed = File(ctx.getExternalFilesDir(null), "seed-notes.json")
+    if (!seed.exists()) return
+    runCatching {
+        notesFile(ctx).writeText(seed.readText())
+        seed.delete()
+    }
+}
+
 fun loadNotes(ctx: Context): List<Note> {
     val f = notesFile(ctx)
     if (!f.exists()) return emptyList()

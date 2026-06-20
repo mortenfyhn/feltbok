@@ -38,7 +38,10 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
         species.filter { it.status.isNotBlank() }.associate { it.latin to it.status }
     fun statusFor(latin: String): String = statusByLatin[latin] ?: ""
 
-    val notes = mutableStateListOf<Note>().apply { addAll(loadNotes(app)) }
+    val notes = mutableStateListOf<Note>().apply {
+        importSeedNotes(app)   // dev-build only: import a pushed seed file, if any (see importSeedNotes)
+        addAll(loadNotes(app))
+    }
 
     /** Notes marked for bulk delete. Non-empty => the list is in selection mode: a tap toggles a
      *  mark instead of opening the editor (entered by long-pressing a note). See [toggleSelect]. */
