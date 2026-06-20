@@ -1,4 +1,4 @@
-package com.feltbok
+package io.github.mortenfyhn.feltbok
 
 import android.Manifest
 import android.content.pm.PackageManager

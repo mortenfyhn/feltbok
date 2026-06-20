@@ -44,7 +44,7 @@ Signed the same way as the APK (keystore.properties / env vars; see `release.md`
 
 With **Play App Signing**, Google holds the final signing key; you upload with an
 *upload key* and Google re-signs. So the Play install has yet another signature for
-`com.feltbok` (GitHub keystore / F-Droid key / Play key are all different). This is
+`io.github.mortenfyhn.feltbok` (GitHub keystore / F-Droid key / Play key are all different). This is
 a non-issue here — Android won't cross-upgrade between channels, but switching means
 uninstall + reinstall, and notes are short-lived (exported then deleted), so there's
 nothing to migrate. Just set the upload key from `feltbok-release.keystore` so future

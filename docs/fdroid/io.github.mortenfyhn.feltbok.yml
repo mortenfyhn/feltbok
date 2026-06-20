@@ -12,14 +12,14 @@ RepoType: git
 Repo: https://github.com/mortenfyhn/feltbok.git
 
 Builds:
-  - versionName: '0.8'
-    versionCode: 8
-    commit: v0.8
+  - versionName: '0.12'
+    versionCode: 12
+    commit: v0.12
     subdir: app
     gradle:
       - yes
 
 AutoUpdateMode: Version
 UpdateCheckMode: Tags ^v[0-9.]+$
-CurrentVersion: '0.8'
-CurrentVersionCode: 8
+CurrentVersion: '0.12'
+CurrentVersionCode: 12

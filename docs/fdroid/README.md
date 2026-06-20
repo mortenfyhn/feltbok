@@ -10,7 +10,7 @@ to *unsigned* when no keystore is present — exactly what the buildserver needs
 
 ## What lives where
 
-- `com.feltbok.yml` (this folder) — the build recipe. It is **not** used by our own
+- `io.github.mortenfyhn.feltbok.yml` (this folder) — the build recipe. It is **not** used by our own
   Gradle build; it's the file we submit to fdroiddata. Versioned here so it's easy
   to keep in sync when a new tag ships. Kept in F-Droid's **canonical form** (no
   comments, specific field order) because fdroiddata CI rejects anything that isn't
@@ -24,17 +24,17 @@ to *unsigned* when no keystore is present — exactly what the buildserver needs
 ## Submitting (one-time)
 
 1. Fork <https://gitlab.com/fdroid/fdroiddata> and clone your fork.
-2. Copy `com.feltbok.yml` to `metadata/com.feltbok.yml` in that checkout.
+2. Copy `io.github.mortenfyhn.feltbok.yml` to `metadata/io.github.mortenfyhn.feltbok.yml` in that checkout.
 3. Run the same checks the fdroiddata CI runs (from the fdroiddata root):
    ```sh
-   fdroid lint com.feltbok                                                # recipe sanity
-   fdroid rewritemeta com.feltbok && git diff --exit-code metadata/       # must be a no-op
-   pipx run check-jsonschema --schemafile schemas/metadata.json metadata/com.feltbok.yml
-   fdroid build -v -l com.feltbok      # full source build, needs the fdroidserver toolchain
+   fdroid lint io.github.mortenfyhn.feltbok                                                # recipe sanity
+   fdroid rewritemeta io.github.mortenfyhn.feltbok && git diff --exit-code metadata/       # must be a no-op
+   pipx run check-jsonschema --schemafile schemas/metadata.json metadata/io.github.mortenfyhn.feltbok.yml
+   fdroid build -v -l io.github.mortenfyhn.feltbok      # full source build, needs the fdroidserver toolchain
    ```
    The middle two are the CI gates that are easy to miss — `lint` and `build`
    passing does **not** imply the file is canonical or schema-valid.
-4. Open a merge request (branch `com.feltbok`, commit `New App: com.feltbok` per the
+4. Open a merge request (branch `com.feltbok`, commit `New app: io.github.mortenfyhn.feltbok (Feltbok)` per the
    F-Droid Quick Start Guide). A maintainer reviews it; they may add an
    `AntiFeatures` tag (e.g. `NonFreeNet` for the optional WebView sync to
    Artsobservasjoner) — that's cosmetic, not a blocker.

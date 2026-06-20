@@ -1,8 +1,8 @@
 export ANDROID_HOME := env("ANDROID_HOME", home_directory() / "Android/Sdk")
 
 # Dev build carries the .debug applicationId suffix so it installs alongside the release app
-# I use daily. Every device-facing recipe targets this id, not the release "com.feltbok".
-app_id := "com.feltbok.debug"
+# I use daily. Every device-facing recipe targets this id, not the release "io.github.mortenfyhn.feltbok".
+app_id := "io.github.mortenfyhn.feltbok.debug"
 apk := "app/build/outputs/apk/debug/app-debug.apk"
 data_dir := "/sdcard/Android/data/" + app_id + "/files"
 
@@ -43,12 +43,13 @@ ci: lint test build
 install: build
     adb install -r -d {{apk}}
 
-# The activity class stays com.feltbok.MainActivity (the suffix changes the package id, not the
-# code namespace), so spell out the full component rather than the /.MainActivity shorthand.
+# The activity class is io.github.mortenfyhn.feltbok.MainActivity (the .debug suffix changes the
+# package id, not the code namespace), so spell out the full component rather than the
+# /.MainActivity shorthand.
 
 # Build, install, and launch the app
 run: install
-    adb shell am start -n {{app_id}}/com.feltbok.MainActivity
+    adb shell am start -n {{app_id}}/io.github.mortenfyhn.feltbok.MainActivity
 
 # Show device logs for the app
 log:

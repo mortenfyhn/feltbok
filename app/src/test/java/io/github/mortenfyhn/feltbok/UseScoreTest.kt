@@ -1,4 +1,4 @@
-package com.feltbok
+package io.github.mortenfyhn.feltbok
 
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue

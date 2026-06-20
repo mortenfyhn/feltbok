@@ -1,4 +1,4 @@
-package com.feltbok
+package io.github.mortenfyhn.feltbok
 
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.lightColorScheme

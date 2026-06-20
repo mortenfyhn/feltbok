@@ -1,4 +1,4 @@
-package com.feltbok
+package io.github.mortenfyhn.feltbok
 
 import android.content.Context
 import android.graphics.Canvas

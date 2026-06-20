@@ -1,4 +1,4 @@
-package com.feltbok
+package io.github.mortenfyhn.feltbok
 
 import android.annotation.SuppressLint
 import android.content.Context

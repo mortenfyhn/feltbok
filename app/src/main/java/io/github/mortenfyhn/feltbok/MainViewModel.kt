@@ -1,4 +1,4 @@
-package com.feltbok
+package io.github.mortenfyhn.feltbok
 
 import android.app.Application
 import androidx.compose.runtime.getValue

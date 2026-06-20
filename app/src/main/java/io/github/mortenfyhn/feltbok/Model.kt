@@ -1,4 +1,4 @@
-package com.feltbok
+package io.github.mortenfyhn.feltbok
 
 import android.content.ContentUris
 import android.content.ContentValues

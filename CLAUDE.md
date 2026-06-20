@@ -1,6 +1,6 @@
 # Feltbok — repo guide
 
-Offline-first Android app (Kotlin + Jetpack Compose, package `com.feltbok`, minSdk 26) for
+Offline-first Android app (Kotlin + Jetpack Compose, package `io.github.mortenfyhn.feltbok`, minSdk 26) for
 capturing bird observations in Norway and exporting a TSV to paste into Artsobservasjoner's
 "Importer observasjoner". Zero-login and shareable; works fully offline in the field.
 
@@ -21,11 +21,14 @@ Recipes live in `just --list` — the notes below are only the why's and gotchas
   notes, add a keep rule if needed, and smoke-test that one feature on the release build. No need to
   re-test the whole app every release — the R8 surface only changes when you add a reflective dep.
 - **Two builds coexist on the device.** The dev build carries the `.debug` applicationId suffix
-  (`com.feltbok.debug`), so it installs alongside the maintainer's daily **release** app
-  (`com.feltbok`). `just install`/`just run`/`just uninstall` all target the **debug** package — so
-  always go through `just` (or use `com.feltbok.debug` explicitly) when installing, launching
-  (`am start -n com.feltbok.debug/com.feltbok.MainActivity`), or clearing data. NEVER
-  `adb uninstall com.feltbok` or `pm clear com.feltbok`: that is the maintainer's real app and wipes
+  (`io.github.mortenfyhn.feltbok.debug`), so it installs alongside the maintainer's daily
+  **release** app (`io.github.mortenfyhn.feltbok`). `just install`/`just run`/`just uninstall` all
+  target the **debug** package — so always go through `just` (or use
+  `io.github.mortenfyhn.feltbok.debug` explicitly) when installing, launching
+  (`am start -n io.github.mortenfyhn.feltbok.debug/io.github.mortenfyhn.feltbok.MainActivity` — the
+  class keeps the un-suffixed namespace even on the debug build), or clearing data.
+  NEVER `adb uninstall io.github.mortenfyhn.feltbok` or `pm clear io.github.mortenfyhn.feltbok`:
+  that is the maintainer's real app and wipes
   their actual field notes (`notes.json` lives in internal storage, lost on uninstall). The two
   builds are distinguishable by the footer version string (`… (dev)` = debug) and the app label
   (`Feltbok (dev)` for debug vs `Feltbok (beta)` for release).

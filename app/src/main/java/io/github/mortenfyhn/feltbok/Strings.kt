@@ -1,4 +1,4 @@
-package com.feltbok
+package io.github.mortenfyhn.feltbok
 
 /**
  * All user-facing chrome strings, in one place so the wording stays consistent and easy to edit.

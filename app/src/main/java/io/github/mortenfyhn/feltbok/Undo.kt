@@ -1,4 +1,4 @@
-package com.feltbok
+package io.github.mortenfyhn.feltbok
 
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf

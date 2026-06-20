@@ -1,4 +1,4 @@
-package com.feltbok
+package io.github.mortenfyhn.feltbok
 
 /**
  * Deterministic synthetic query generator for the search benchmark.

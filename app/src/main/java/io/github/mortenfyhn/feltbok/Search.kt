@@ -1,4 +1,4 @@
-package com.feltbok
+package io.github.mortenfyhn.feltbok
 
 import kotlin.math.abs
 import kotlin.math.floor

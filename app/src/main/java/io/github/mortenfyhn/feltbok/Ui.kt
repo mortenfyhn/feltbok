@@ -1,6 +1,6 @@
 @file:OptIn(ExperimentalMaterial3Api::class)
 
-package com.feltbok
+package io.github.mortenfyhn.feltbok
 
 import android.widget.Toast
 import androidx.activity.compose.BackHandler

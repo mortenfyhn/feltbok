@@ -61,7 +61,7 @@ or future-proof it.
 
 - **Free Limited Distribution Account** (Android developer verification). Early access
   June 2026; **no government ID**, **up to 20 devices**. Register the release signing key
-  + `com.feltbok`. Doesn't silence today's scan prompt, but future-proofs installability
+  + `io.github.mortenfyhn.feltbok`. Doesn't silence today's scan prompt, but future-proofs installability
   in Norway when verification enforcement reaches Europe (2027+), and is the same identity
   reused for Play later.
   See <https://support.google.com/android-developer-console/answer/16561738>.
