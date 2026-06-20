@@ -1,5 +1,9 @@
 # Endringslogg
 
+## Neste utgivelse
+
+- Lista beholder nå rulleposisjonen når du redigerer en observasjon.
+
 ## v0.12 (20. juni 2026)
 
 - Kartet har nå fornuftige zoom-grenser.

@@ -29,6 +29,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListScope
+import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.rememberScrollState
@@ -99,7 +100,7 @@ import kotlinx.coroutines.launch
 private const val SHOW_MINIMAP = false
 
 @Composable
-fun ListScreen(vm: MainViewModel) {
+fun ListScreen(vm: MainViewModel, listState: LazyListState) {
     val cs = MaterialTheme.colorScheme
     var showFeedback by remember { mutableStateOf(false) }
     if (showFeedback) FeedbackDialog { showFeedback = false }
@@ -146,7 +147,7 @@ fun ListScreen(vm: MainViewModel) {
                         // Bottom padding so the last row scrolls clear of the floating + button.
                         // Notes are grouped into per-day sections, each under its own date header
                         // (the contextual bar above replaces only the marking actions, not these).
-                        LazyColumn(Modifier.weight(1f), contentPadding = PaddingValues(bottom = 84.dp)) {
+                        LazyColumn(Modifier.weight(1f), state = listState, contentPadding = PaddingValues(bottom = 84.dp)) {
                             groupNotesByDay(vm.notes).forEach { group ->
                                 item(key = "day:${group.label}") {
                                     Text(

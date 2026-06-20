@@ -8,6 +8,7 @@ import androidx.activity.compose.BackHandler
 import androidx.activity.compose.setContent
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.viewModels
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarDuration
@@ -92,12 +93,16 @@ fun App(vm: MainViewModel) {
             }
             // Transparent Scaffold purely to host the undo snackbar; screens manage their own insets,
             // so the content padding is intentionally ignored.
+            // Hoisted above the screen switch so the list's scroll position survives a trip into the
+            // editor and back (#146) - a LazyListState remembered inside ListScreen is discarded when
+            // that screen leaves composition.
+            val listState = rememberLazyListState()
             Scaffold(
                 snackbarHost = { SnackbarHost(snackbar) },
                 containerColor = Color.Transparent,
             ) { _ ->
                 when (vm.screen) {
-                    Screen.LIST -> ListScreen(vm)
+                    Screen.LIST -> ListScreen(vm, listState)
                     Screen.SEARCH -> SearchScreen(vm)
                     Screen.DETAIL -> DetailScreen(vm)
                     Screen.LOCALITY -> LocalityScreen(vm)
