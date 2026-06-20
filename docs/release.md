@@ -23,8 +23,15 @@ is tagged or pushed until you press Enter. After that it commits (version bump +
 install steps + the changelog entry + the auto-generated "What's Changed" list. No manual
 GitHub edit afterwards.
 
-A drafted (uncommitted) `CHANGELOG.md` is the one thing allowed to be dirty when you start;
-everything else must be committed. `versionCode` auto-increments so each release is an upgrade
+**F-Droid "what's new":** F-Droid shows `fastlane/metadata/android/<locale>/changelogs/<versionCode>.txt`
+inline per version. The script **generates the Norwegian one** (`nb-NO`) from the `## vX` section, so
+`CHANGELOG.md` stays the single source for it — but skips generation if the file already exists, so a
+hand-tuned entry (e.g. one omitting an installer-only note) wins. The **English** one (`en-US`) is
+hand-written each release (Norway-only app, so non-nb users are rare); the script warns if it's
+missing but doesn't block. Write it during the pause.
+
+A drafted (uncommitted) `CHANGELOG.md` — and the per-version `changelogs/*.txt` files — are allowed
+to be dirty when you start; everything else must be committed. `versionCode` auto-increments so each release is an upgrade
 Android will install over the last; the in-app version string comes from `git describe`, so it
 shows `0.8` at the tag. Needs a clean `master`, the keystore (below), and an authenticated `gh`.
 Building locally is much faster than the old cold Semaphore tag build.
