@@ -425,7 +425,7 @@ internal const val TAP_SLOP_DP = 24f
  *  bbox corner can poke off-screen while the shape itself is ~all visible. 1.2 tolerates that;
  *  raise it to be more forgiving, lower it toward 1.0 to require the bbox to fit outright.
  *  Symmetric to [declutteredAtZoom], which gates out footprints that are too small. */
-internal const val MAX_TAP_FIT_FRACTION = 1.2f
+internal const val MAX_TAP_FIT_FRACTION = 4.0f
 
 /** Whether [loc]'s footprint is too big to tap at the current zoom. Compares the footprint's
  *  width and height to the viewport's width and height *separately*, so a tall-but-narrow polygon
