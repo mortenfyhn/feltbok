@@ -2,6 +2,8 @@
 
 # Feltbok (beta)
 
+[<img src="https://fdroid.gitlab.io/artwork/badge/get-it-on.png" alt="Få den på F-Droid" height="60">](https://f-droid.org/packages/io.github.mortenfyhn.feltbok/)
+
 En Android-app for å kjapt taste inn fugleobservasjoner i felt. Deretter kan de enkelt lastes opp til artsobservasjoner.no. Fungerer uten innlogging og uten nett.
 
 https://github.com/user-attachments/assets/0a44913d-b87a-47dd-a254-30bc7e5fab57
@@ -15,18 +17,6 @@ https://github.com/user-attachments/assets/0a44913d-b87a-47dd-a254-30bc7e5fab57
 - Lag nye private lokaliteter i kartet
 - Kan brukes uten nett
 
-## Installer
+## Skaff appen
 
-[<img src="https://fdroid.gitlab.io/artwork/badge/get-it-on.png" alt="Få den på F-Droid" height="80">](https://f-droid.org/packages/io.github.mortenfyhn.feltbok/)
-
-Eller gå til [siste utgave](https://github.com/mortenfyhn/feltbok/releases/latest) på GitHub.
-
-## Utvikling
-
-Behøver Android SDK (`ANDROID_HOME`) og [`just`](https://github.com/casey/just).
-
-```sh
-just run     # bygg, installer og kjør
-```
-
-Kjør `just` alene for å ramse opp alle oppskriftene (bygg, test, installer, etc).
+Last ned fra F-Droid eller installer APK [herfra](https://github.com/mortenfyhn/feltbok/releases/latest).
