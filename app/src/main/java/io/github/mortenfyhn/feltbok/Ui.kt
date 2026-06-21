@@ -149,11 +149,15 @@ fun ListScreen(vm: MainViewModel, listState: LazyListState) {
                         // Notes are grouped into per-day sections, each under its own date header
                         // (the contextual bar above replaces only the marking actions, not these).
                         LazyColumn(Modifier.weight(1f), state = listState, contentPadding = PaddingValues(bottom = 84.dp)) {
-                            groupNotesByDay(vm.notes).forEach { group ->
+                            // The grand total of species rides along on the newest day's header only.
+                            val totalSpecies = vm.notes.map { it.latin }.distinct().size
+                            groupNotesByDay(vm.notes).forEachIndexed { index, group ->
                                 item(key = "day:${group.label}") {
                                     val species = group.notes.map { it.latin }.distinct().size
+                                    val label = "${group.label} · ${Strings.Notes.speciesCount(species)}" +
+                                        if (index == 0) " ${Strings.Notes.speciesTotal(totalSpecies)}" else ""
                                     Text(
-                                        "${group.label} · ${Strings.Notes.speciesCount(species)}",
+                                        label,
                                         color = cs.onSurfaceVariant, fontSize = 13.sp,
                                         modifier = Modifier.padding(horizontal = 16.dp, vertical = 4.dp),
                                     )
