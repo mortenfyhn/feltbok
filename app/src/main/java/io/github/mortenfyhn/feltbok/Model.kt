@@ -743,7 +743,9 @@ fun exportTsv(notes: List<Note>): String {
         val withCoords = Country.alwaysExportCoords || n.newLoc
         val nord = if (withCoords) String.format(Locale.US, "%.6f", n.lat) else ""
         val ost = if (withCoords) String.format(Locale.US, "%.6f", n.lon) else ""
-        val noy = if (withCoords) "${n.locRadius} m" else ""
+        // Nøyaktighet must be a positive integer (a "0 m" row hard-fails import), so a point
+        // locality (radius 0) exports as the 1 m minimum.
+        val noy = if (withCoords) "${maxOf(n.locRadius, 1)} m" else ""
         listOf(
             n.species, if (n.count == UNKNOWN_COUNT) "" else n.count.toString(), n.age, n.sex, n.activity, loc,
             nord, ost, noy, d, t, dEnd, tEnd, n.publicComment, n.privateComment,
