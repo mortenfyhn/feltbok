@@ -69,7 +69,8 @@ Recipes live in `just --list` — the notes below are only the why's and gotchas
 - **Changelog.** `CHANGELOG.md` is the user-facing changelog (Bokmål, casual `du`-tone), kept as
   per-version sections with short, benefit-framed highlights (fold minor/cosmetic tweaks into one
   "Ymse småforbedringer" line rather than listing each). When landing a user-visible change, add a
-  bullet under the standing **"Neste utgivelse"** section at the top (it has no version number yet).
+  bullet under the standing **"Neste utgivelse"** section at the top (it has no version number yet) —
+  err toward adding one, since the maintainer prunes the list by hand before each release.
   At release time that heading is renamed by hand to `## vX – date` during `release.sh`'s pause step —
   the script pulls notes from the `## v<version>` section and aborts if it's missing. The same
   per-version text is pasted into the GitHub release ("Nytt i …", see `docs/release.md`).
