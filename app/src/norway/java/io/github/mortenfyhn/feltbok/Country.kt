@@ -78,6 +78,10 @@ object Country {
     val mapCenterLat = 63.7
     val mapCenterLon = 8.7
     val importUrl = "https://www.artsobservasjoner.no/ImportSighting"
+
+    // Private-locality sync via the mobile API's WebView login. Disabled where unavailable
+    // (the Sweden flavor) so its footer entry point is hidden.
+    val syncEnabled = true
     val sitesHost = "https://mobil.artsobservasjoner.no"
     val adjustHint = "Du kan justere lokaliteten seinere på artsobservasjoner.no"
 }

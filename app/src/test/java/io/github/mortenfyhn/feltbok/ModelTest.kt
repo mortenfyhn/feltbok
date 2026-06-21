@@ -2,6 +2,7 @@ package io.github.mortenfyhn.feltbok
 
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
+import org.junit.Assume.assumeTrue
 import org.junit.Before
 import org.junit.Test
 import java.time.LocalDate
@@ -30,8 +31,14 @@ class ModelTest {
     private val noonMs = LocalDateTime.of(2026, 6, 1, 9, 30, 0)
         .toInstant(ZoneOffset.UTC).toEpochMilli()
 
+    // These golden tests pin the Norwegian Artsobservasjoner export format (dd.MM.yyyy dates,
+    // name-only/blank coordinates, the deliberately-misspelt header). Under another country flavor
+    // Country yields a different format, so they only apply to the Norway build.
+    private val isNorwayExport = "Artsnavn" in Country.exportCols
+
     @Test
     fun exportRowHasColumnsInOrderWithBlankCoords() {
+        assumeTrue(isNorwayExport)
         val lines = exportTsv(listOf(noteAt(noonMs))).split("\n")
         assertEquals("header + one row", 2, lines.size)
         val c = lines[1].split("\t")
@@ -60,6 +67,7 @@ class ModelTest {
     fun uncertainExportsUnderTheRegisteredMisspeltHeader() {
         // Paste-import matches columns by header name; the header must reproduce the
         // template's "artsbestemming" misspelling or a flagged row fails validation.
+        assumeTrue(isNorwayExport)
         val lines = exportTsv(listOf(noteAt(noonMs).copy(uncertain = true))).split("\n")
         assertEquals("Usikker artsbestemming", lines[0].split("\t")[15])
         assertEquals("Ja", lines[1].split("\t")[15])
@@ -76,6 +84,7 @@ class ModelTest {
     @Test
     fun exportUsesEndTimeForTilWhenSet() {
         // A range spanning into the next day: Fra and Til must differ on both date and time.
+        assumeTrue(isNorwayExport)
         val end = noonMs + 16 * 3_600_000  // +16h -> next day 01:30
         val c = exportTsv(listOf(noteAt(noonMs).copy(endTime = end))).split("\n")[1].split("\t")
         assertEquals("01.06.2026", c[9]); assertEquals("09:30", c[10])

@@ -68,8 +68,21 @@ android {
         // BuildConfig.DEBUG tracks the `debuggable` flag, which the debug build type turns OFF for
         // speed - so it's false even in the dev build. Use this DEV flag for dev-only code instead.
         buildConfigField("boolean", "DEV", "false")
-        // app_name lives here (not strings.xml) so the debug build type can override it.
-        resValue("string", "app_name", "Feltbok (beta)")
+    }
+
+    // One flavor per country: a separate app per Artsobservasjoner-family site (issue #127), so
+    // Swedish field notes never mix with Norwegian ones and each ships only its own data. Norway
+    // keeps the original applicationId untouched (the maintainer's real app + field notes).
+    flavorDimensions += "country"
+    productFlavors {
+        create("norway") {
+            dimension = "country"
+            // applicationId stays the defaultConfig value: io.github.mortenfyhn.feltbok
+        }
+        create("sweden") {
+            dimension = "country"
+            applicationId = "io.github.mortenfyhn.feltbok.se"
+        }
     }
 
     signingConfigs {
@@ -101,7 +114,6 @@ android {
             isDebuggable = false
             applicationIdSuffix = ".debug"
             versionNameSuffix = "-debug"
-            resValue("string", "app_name", "Feltbok (dev)")
             // Append the branch to the in-app version string (footer + feedback) so a dev build is
             // recognisable from inside the app, not just by its launcher label. The release build
             // has no parenthetical, so the branch alone marks this as a dev build.
@@ -123,6 +135,20 @@ android {
     buildFeatures {
         compose = true
         buildConfig = true
+    }
+}
+
+// app_name combines the flavor base ("Feltbok"/"Feltbok SE") with a build-type marker
+// ("(dev)"/"(beta)") so all four installs are tellable apart on-device. Done via the variant API
+// because a resValue set per-flavor and per-build-type would override rather than combine.
+androidComponents {
+    onVariants { variant ->
+        val base = if (variant.flavorName == "sweden") "Feltbok SE" else "Feltbok"
+        val marker = if (variant.buildType == "debug") " (dev)" else " (beta)"
+        variant.resValues.put(
+            variant.makeResValueKey("string", "app_name"),
+            com.android.build.api.variant.ResValue(base + marker),
+        )
     }
 }
 

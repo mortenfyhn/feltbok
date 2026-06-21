@@ -262,7 +262,9 @@ class SearchBenchmark {
     // ---- data loading (off disk, no Android Context) ----
 
     private fun loadSpeciesFromDisk(): List<Species> {
-        val f = listOf("src/main/assets/species.csv", "app/src/main/assets/species.csv")
+        // The golden queries are Norwegian, so benchmark the (shared) search ranking against the
+        // Norway flavor's checklist regardless of which flavor's tests are running.
+        val f = listOf("src/norway/assets/species.csv", "app/src/norway/assets/species.csv")
             .map(::File).firstOrNull { it.exists() }
             ?: error("species.csv not found (cwd=${File(".").absolutePath})")
         return f.readLines().drop(1).filter { it.isNotBlank() }.mapNotNull { line ->
