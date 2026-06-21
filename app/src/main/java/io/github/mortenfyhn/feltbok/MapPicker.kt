@@ -552,6 +552,14 @@ private class LocalityOverlay(
     private val gps = fillPaint(MapPalette.Gps)
     private val gpsRing = strokePaint(MapPalette.GpsRing, 3f)
 
+    // DEBUG-only (throwaway) hitbox overlay: magenta ring = a point's finger-reach hitbox;
+    // blue outline = a footprint (polygon/circle) whose exact shape is its tap area; red dashed
+    // outline = a footprint the zoom-in size gate (tooBigToTap) has excluded from selection.
+    private val dbgSlop = strokePaint(0xFFFF00FF, 6f)
+    private val dbgFootprint = strokePaint(0xFF0066FF, 4f)
+    private val dbgBlocked = strokePaint(0xFFFF0000, 8f)
+        .apply { pathEffect = DashPathEffect(floatArrayOf(24f, 16f), 0f) }
+
     // Dark, legible text over a halo tinted by type, so the outline tells you which kind of
     // locality the name belongs to: green for public, yellow for the user's own - matching the disks.
     private val labelFill = Paint().apply { color = MapPalette.LabelText.toInt(); textSize = 38f; textAlign = Paint.Align.CENTER; isAntiAlias = true }
@@ -678,6 +686,8 @@ private class LocalityOverlay(
         val proj = map.projection
         val ppm = pxPerMeter(map)
         val bb = map.boundingBox
+        val viewMin = minOf(map.width, map.height)
+        val slop = TAP_SLOP_DP * map.context.resources.displayMetrics.density
         // Zoomed far out, thousands of point/small localities collapse to a clutter of dots.
         // Hide the small ones until the view is zoomed in; big footprints (areas, wide
         // circles) still read as shapes and keep drawing. The active pick is culled-exempt.
@@ -712,6 +722,14 @@ private class LocalityOverlay(
                 else -> stroke
             }
             drawShape(c, proj, loc, px, py, rPx, fp, sp)
+            if (BuildConfig.DEV) {                   // throwaway hitbox overlay
+                val fpPaint = if (tooBigToTap(span, viewMin)) dbgBlocked else dbgFootprint
+                when {
+                    loc.polygon.isEmpty() && loc.radius <= 0.0 -> c.drawCircle(px, py, slop, dbgSlop)
+                    loc.polygon.isNotEmpty() -> { tracePolygon(path, loc.polygon, proj, p); c.drawPath(path, fpPaint) }
+                    else -> c.drawCircle(px, py, rPx, fpPaint)
+                }
+            }
             // Candidate priority is footprint size, so big areas win a contested spot over tiny ones.
             val labelSpan = labelSpanPx(loc, ppm)
             if (labelSpan >= LABEL_MIN_SPAN_PX) labels += labelFor(loc, proj, ppm, rPx, labelSpan)

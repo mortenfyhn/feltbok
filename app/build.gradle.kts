@@ -65,6 +65,9 @@ android {
         versionCode = 12
         versionName = "0.12"
         buildConfigField("String", "GIT_VERSION", "\"$gitVersion\"")
+        // BuildConfig.DEBUG tracks the `debuggable` flag, which the debug build type turns OFF for
+        // speed - so it's false even in the dev build. Use this DEV flag for dev-only code instead.
+        buildConfigField("boolean", "DEV", "false")
         // app_name lives here (not strings.xml) so the debug build type can override it.
         resValue("string", "app_name", "Feltbok (beta)")
     }
@@ -103,6 +106,7 @@ android {
             // recognisable from inside the app, not just by its launcher label. The release build
             // has no parenthetical, so the branch alone marks this as a dev build.
             buildConfigField("String", "GIT_VERSION", "\"$gitVersion ($gitBranch)\"")
+            buildConfigField("boolean", "DEV", "true")
         }
     }
 
