@@ -416,15 +416,34 @@ internal fun selectedFillIsFaint(loc: Locality, ppm: Double): Boolean =
  *  target is the same physical size on any screen; ~Material's minimum touch target as a radius. */
 internal const val TAP_SLOP_DP = 24f
 
-/** A locality whose on-screen footprint half-extent exceeds this fraction of the viewport's
- *  short side is too big to tap: zoomed in tight it just fills the screen with no visible edge
+/** A locality whose on-screen footprint (bounding box) exceeds this fraction of the viewport along
+ *  *either* axis is too big to tap: zoomed in tight it overflows the screen with no visible edge
  *  or centre to aim at, so a tap near a small locality at the rim of a huge one (Hønstadvatnet
- *  on the edge of Jonsvatnet) must never grab the giant. Zoom out until it reads as a shape to
- *  select it. Symmetric to [declutteredAtZoom], which gates out footprints that are too small. */
-internal const val MAX_TAP_SPAN_FRACTION = 0.75f
+ *  on the edge of Jonsvatnet) must never grab the giant. Zoom out until it fits to select it.
+ *  Set above 1.0 so a polygon that *nearly* fits stays tappable: an irregular shape (a diagonal
+ *  lake like "sjøen mellom Sistranda og Inntian") only half-fills its bounding box, so an empty
+ *  bbox corner can poke off-screen while the shape itself is ~all visible. 1.2 tolerates that;
+ *  raise it to be more forgiving, lower it toward 1.0 to require the bbox to fit outright.
+ *  Symmetric to [declutteredAtZoom], which gates out footprints that are too small. */
+internal const val MAX_TAP_FIT_FRACTION = 1.2f
 
-internal fun tooBigToTap(spanPx: Float, viewMinPx: Int): Boolean =
-    spanPx > viewMinPx * MAX_TAP_SPAN_FRACTION
+/** Whether [loc]'s footprint is too big to tap at the current zoom. Compares the footprint's
+ *  width and height to the viewport's width and height *separately*, so a tall-but-narrow polygon
+ *  (or vice versa) that fits within the screen stays tappable instead of being judged against the
+ *  short side only. A circle is symmetric (diameter on both axes); a point has no footprint. */
+internal fun tooBigToTap(loc: Locality, ppm: Double, viewWpx: Int, viewHpx: Int): Boolean {
+    val b = loc.polyBounds
+    val wPx: Double
+    val hPx: Double
+    if (b == null) {
+        val d = loc.radius * ppm * 2.0   // circle diameter; a point (radius 0) is never too big
+        wPx = d; hPx = d
+    } else {
+        hPx = (b[1] - b[0]) * 111_320.0 * ppm
+        wPx = (b[3] - b[2]) * 111_320.0 * cos(Math.toRadians((b[0] + b[1]) / 2)) * ppm
+    }
+    return wPx > viewWpx * MAX_TAP_FIT_FRACTION || hPx > viewHpx * MAX_TAP_FIT_FRACTION
+}
 
 /** A locality a tap landed on, with its on-screen footprint span and the tap->centre distance (px). */
 internal class TapCandidate(val loc: Locality, val spanPx: Float, val centreDistPx: Float)
@@ -686,7 +705,6 @@ private class LocalityOverlay(
         val proj = map.projection
         val ppm = pxPerMeter(map)
         val bb = map.boundingBox
-        val viewMin = minOf(map.width, map.height)
         val slop = TAP_SLOP_DP * map.context.resources.displayMetrics.density
         // Zoomed far out, thousands of point/small localities collapse to a clutter of dots.
         // Hide the small ones until the view is zoomed in; big footprints (areas, wide
@@ -723,7 +741,7 @@ private class LocalityOverlay(
             }
             drawShape(c, proj, loc, px, py, rPx, fp, sp)
             if (BuildConfig.DEV) {                   // throwaway hitbox overlay
-                val fpPaint = if (tooBigToTap(span, viewMin)) dbgBlocked else dbgFootprint
+                val fpPaint = if (tooBigToTap(loc, ppm, map.width, map.height)) dbgBlocked else dbgFootprint
                 when {
                     loc.polygon.isEmpty() && loc.radius <= 0.0 -> c.drawCircle(px, py, slop, dbgSlop)
                     loc.polygon.isNotEmpty() -> { tracePolygon(path, loc.polygon, proj, p); c.drawPath(path, fpPaint) }
@@ -796,12 +814,11 @@ private class LocalityOverlay(
         // regardless of where its centre sits (#63). Decluttered localities are skipped: you can
         // only tap what's drawn, or a hidden point would steal a tap meant for a visible polygon.
         val zoom = map.zoomLevelDouble
-        val viewMin = minOf(map.width, map.height)
         val slop = TAP_SLOP_DP * map.context.resources.displayMetrics.density
         val hits = ArrayList<TapCandidate>()
         for (loc in localities) {
             val span = screenSpanPx(loc, ppm)
-            if (loc !== picked && (declutteredAtZoom(zoom, span) || tooBigToTap(span, viewMin))) continue
+            if (loc !== picked && (declutteredAtZoom(zoom, span) || tooBigToTap(loc, ppm, map.width, map.height))) continue
             proj.toPixels(GeoPoint(loc.lat, loc.lon), p)
             val d = hypot((p.x - e.x), (p.y - e.y))
             val hit = if (loc.polygon.isNotEmpty() || loc.radius > 0.0)
@@ -819,7 +836,7 @@ private class LocalityOverlay(
             for (loc in localities) {
                 if (loc.polygon.isNotEmpty()) continue
                 val span = screenSpanPx(loc, ppm)
-                if (loc !== picked && (declutteredAtZoom(zoom, span) || tooBigToTap(span, viewMin))) continue
+                if (loc !== picked && (declutteredAtZoom(zoom, span) || tooBigToTap(loc, ppm, map.width, map.height))) continue
                 proj.toPixels(GeoPoint(loc.lat, loc.lon), p)
                 val d = hypot((p.x - e.x), (p.y - e.y))
                 if (d < bestD && d <= maxOf(radiusPx(loc, ppm), slop)) { bestD = d; best = loc }
