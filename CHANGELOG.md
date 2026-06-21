@@ -5,6 +5,7 @@
 - Lista beholder nå rulleposisjonen når du redigerer en observasjon.
 - Observasjonslista viser nå kjønn og alder, så like observasjoner er lettere å skille.
 - Datooverskriftene i lista viser nå antall arter den dagen, og øverst totalt antall arter.
+- Ny knapp i kartet for å sentrere på din egen posisjon.
 
 ## v0.12 (20. juni 2026)
 

@@ -11,6 +11,7 @@ import android.view.MotionEvent
 import android.view.ViewGroup
 import android.widget.NumberPicker
 import androidx.activity.compose.BackHandler
+import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -41,6 +42,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
@@ -50,6 +52,9 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.ui.viewinterop.AndroidView
 import kotlinx.coroutines.delay
 import org.osmdroid.config.Configuration
+import org.osmdroid.events.MapListener
+import org.osmdroid.events.ScrollEvent
+import org.osmdroid.events.ZoomEvent
 import org.osmdroid.tileprovider.tilesource.TileSourceFactory
 import org.osmdroid.util.BoundingBox
 import org.osmdroid.util.GeoPoint
@@ -130,9 +135,27 @@ fun LocalityScreen(vm: MainViewModel) {
     // Flash the tapped locality highlighted, then return to the entry screen.
     LaunchedEffect(tapped) { tapped?.let { delay(300); vm.pickLocality(it) } }
 
+    // Whether the map is already (about) centred on the GPS fix — drives the re-centre button's
+    // enabled state. Recomputed when the map moves (listener) and when a new fix arrives.
+    var centered by remember { mutableStateOf(false) }
+    fun recomputeCentered() {
+        val f = vm.fix
+        centered = f != null && mapView.width > 0 && run {
+            val pt = mapView.projection.toPixels(GeoPoint(f.lat, f.lon), null)
+            hypot((pt.x - mapView.width / 2).toFloat(), (pt.y - mapView.height / 2).toFloat()) < 24f
+        }
+    }
+    LaunchedEffect(vm.fix) { recomputeCentered() }
+
     DisposableEffect(Unit) {
         mapView.onResume()
+        val listener = object : MapListener {
+            override fun onScroll(e: ScrollEvent?): Boolean { recomputeCentered(); return false }
+            override fun onZoom(e: ZoomEvent?): Boolean { recomputeCentered(); return false }
+        }
+        mapView.addMapListener(listener)
         onDispose {
+            mapView.removeMapListener(listener)
             vm.mapZoom = mapView.zoomLevelDouble     // keep the zoom for next time
             mapView.onPause(); mapView.onDetach()
         }
@@ -176,11 +199,19 @@ fun LocalityScreen(vm: MainViewModel) {
                     }
                 },
             )
-            // One-handed zoom: thumb-reachable buttons (the new-spot panel covers them).
+            // One-handed zoom + re-centre: thumb-reachable buttons (the new-spot panel covers them).
             if (!newMode) Column(
                 Modifier.align(Alignment.BottomEnd).padding(16.dp),
                 verticalArrangement = Arrangement.spacedBy(12.dp),
             ) {
+                // Re-centre on the current GPS fix (keeps the current zoom); only shown when there's
+                // a fix and the map isn't already there.
+                if (vm.fix != null && !centered) RecenterButton {
+                    vm.fix?.let {
+                        mapView.controller.stopPanning()   // kill any fling momentum, else it fights the animateTo
+                        mapView.controller.animateTo(GeoPoint(it.lat, it.lon))
+                    }
+                }
                 ZoomButton("+") { mapView.controller.zoomIn() }
                 ZoomButton("−") { mapView.controller.zoomOut() }
             }
@@ -253,6 +284,27 @@ private fun ZoomButton(label: String, onClick: () -> Unit) {
             .border(1.dp, cs.outline, CircleShape).clickable(onClick = onClick),
         contentAlignment = Alignment.Center,
     ) { Text(label, color = cs.primary, fontSize = 28.sp, fontWeight = FontWeight.Bold) }
+}
+
+/** Re-centre control: the same round white button as the zoom ones, but drawing the map's
+ *  GPS location dot (blue dot + white ring) as its icon. */
+@Composable
+private fun RecenterButton(onClick: () -> Unit) {
+    val cs = MaterialTheme.colorScheme
+    val dotColor = Color(MapPalette.Gps)
+    Box(
+        Modifier.size(52.dp).clip(CircleShape).background(Color.White)
+            .border(1.dp, cs.outline, CircleShape)
+            .clickable(onClick = onClick),
+        contentAlignment = Alignment.Center,
+    ) {
+        Canvas(Modifier.size(22.dp)) {
+            val r = size.minDimension / 2f
+            drawCircle(dotColor, radius = r)                                  // outer dot
+            drawCircle(Color.White, radius = r * 0.62f, style = Stroke(r * 0.28f))  // white ring
+            drawCircle(dotColor, radius = r * 0.34f)                          // inner dot
+        }
+    }
 }
 
 internal fun configureOsmdroid(ctx: Context) {
