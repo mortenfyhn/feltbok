@@ -378,11 +378,11 @@ private fun AnnotatedString.Builder.appendBoldSymbols(text: String) {
 private fun NoteRow(n: Note, status: String, selected: Boolean, onClick: () -> Unit, onLongClick: () -> Unit) {
     val cs = MaterialTheme.colorScheme
     val hasLoc = n.locName.isNotBlank()
-    // sex + age (sex symbol bolded so the thin ♂/♀ glyphs read at a glance), each shown only when
+    // age + sex (sex symbol bolded so the thin ♂/♀ glyphs read at a glance), each shown only when
     // set. Lowest priority of the four pieces: it's the first to ellipsize/drop when space is tight.
     val preview = buildList {
-        sexSymbol(n.sex).takeIf { it.isNotBlank() }?.let { add(it to true) }
         shortAge(n.age).takeIf { it.isNotBlank() }?.let { add(it to false) }
+        sexSymbol(n.sex).takeIf { it.isNotBlank() }?.let { add(it to true) }
     }
     // A plain Row can't split width by need: weights divide the slack by ratio and never hand one
     // child's leftover to another. So we measure by hand, in priority order: time pinned right, then
