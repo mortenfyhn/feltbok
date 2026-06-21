@@ -8,19 +8,17 @@ import androidx.compose.ui.graphics.Color
 // The app's single style sheet: every colour the UI uses lives here, so the look
 // stays coherent and is easy to restyle from one place.
 
-private val Moss = Color(0xFF5B7A2B)
-private val MossDark = Color(0xFF41591D)
-
 /** The comment "i" badge: a soft blue when the note has a public comment, pale grey for private-only. */
 val BadgeBlue = Color(0xFF4985D4)
 val BadgeGrey = Color(0xFFB0B5B8)
 
-private val MossColors = lightColorScheme(
-    primary = Moss,
+// Brand (chrome) colours come from the flavor (Brand.kt): moss green for Norway, blue for Sweden.
+private val BrandColors = lightColorScheme(
+    primary = Brand.primary,
     onPrimary = Color.White,
-    primaryContainer = Color(0xFFDCE8C6),
-    onPrimaryContainer = MossDark,
-    secondary = MossDark,
+    primaryContainer = Brand.container,
+    onPrimaryContainer = Brand.dark,
+    secondary = Brand.dark,
     onSecondary = Color.White,
     background = Color(0xFFEEF1F0),
     onBackground = Color(0xFF1C2624),
@@ -35,7 +33,7 @@ private val MossColors = lightColorScheme(
 /** Wraps the app in its colour scheme. */
 @Composable
 fun AppTheme(content: @Composable () -> Unit) =
-    MaterialTheme(colorScheme = MossColors, content = content)
+    MaterialTheme(colorScheme = BrandColors, content = content)
 
 /** The map overlays' semantic colours (ARGB), in one place so the palette stays coherent:
  *  public localities are green, your own ones yellow, the GPS fix blue, a new spot magenta. */
