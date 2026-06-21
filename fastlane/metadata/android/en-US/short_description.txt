@@ -1,1 +1,1 @@
-Log bird sightings in the field and export them to Artsobservasjoner
+An app to quickly log bird sightings in the field and export them to Artsobservasjoner

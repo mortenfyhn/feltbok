@@ -1,13 +1,12 @@
-Feltbok is a simple app for jotting down bird observations while you are out in the field – fast, with no sign-in, and fully offline.
-
-When you get home you export the observations as a snippet that you paste straight into "Importer observasjoner" on Artsobservasjoner.
+Feltbok is an app to quickly log Norwegian bird sightings in the field and export them to Artsobservasjoner.
 
 Features:
+
 * Quick entry of observations in the field
 * Easy export to Artsobservasjoner
-* Pick a locality on a map
+* Choose locality in a ma
 * Fetch your private localities from Artsobservasjoner
 * Create new private localities on the map
 * Works without a network connection
 
-Feltbok is free and open source (AGPL-3.0). The app is made for Norwegian birders, and the user interface is in Norwegian.
+Feltbok is free and open source (AGPL-3.0). The app is made for use in Norway, and the interface is Norwegian only.
