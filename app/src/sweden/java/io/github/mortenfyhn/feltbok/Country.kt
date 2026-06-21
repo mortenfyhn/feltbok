@@ -1,5 +1,7 @@
 package io.github.mortenfyhn.feltbok
 
+import java.util.Locale
+
 /**
  * Sweden (Artportalen) build configuration — the Swedish counterpart of the Norway Country.
  * Values verified against the official Artportalen import template (docs/artportalen-template-sv-v4.17.xls)
@@ -8,6 +10,9 @@ package io.github.mortenfyhn.feltbok
  * the *export format* are Swedish.
  */
 object Country {
+    // Locale for *display* date/time (weekday + month names in the UI); export dates are numeric.
+    val displayLocale: Locale = Locale("sv", "SE")
+
     // ---- export (paste) format ----
     // Like Norway: a picked registry locality exports name-only (the import links it to the public
     // site), and a minted map-spot exports name + coordinates + radius (creates a new private

@@ -261,9 +261,10 @@ fun fuzzyRank(q: String, t: String): Int? {
 
 // ---- date/time formatting ----
 
-private val NB = Locale("nb", "NO")
+// Display locale for weekday/month names, from the flavor (nb-NO for Norway, sv-SE for Sweden).
+private val NB = Country.displayLocale
 
-// Norwegian's abbreviated months carry a trailing dot ("jun."); we render them dotless everywhere.
+// The abbreviated months carry a trailing dot ("jun."); we render them dotless everywhere.
 private val NB_SYMBOLS = DateFormatSymbols(NB).apply {
     shortMonths = shortMonths.map { it.trimEnd('.') }.toTypedArray()
 }

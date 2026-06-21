@@ -1,5 +1,7 @@
 package io.github.mortenfyhn.feltbok
 
+import java.util.Locale
+
 /**
  * Per-country (build flavor) configuration: everything that differs between the Norwegian
  * (Artsobservasjoner) build and the Swedish (Artportalen) one. This file is the Norway
@@ -10,6 +12,9 @@ package io.github.mortenfyhn.feltbok
  * picked value is exported verbatim — no per-country translation at export time.
  */
 object Country {
+    // Locale for *display* date/time (weekday + month names in the UI); export dates are numeric.
+    val displayLocale: Locale = Locale("nb", "NO")
+
     // ---- export (paste) format ----
     val exportDateFmt = "dd.MM.yyyy"
     val exportTimeFmt = "HH:mm"

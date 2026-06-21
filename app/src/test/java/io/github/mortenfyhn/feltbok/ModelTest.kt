@@ -407,6 +407,7 @@ class ModelTest {
 
     @Test
     fun groupNotesByDaySplitsLabelsAndOrdersByTimeNotEntry() {
+        assumeTrue(isNorwayExport) // labels are locale-specific (Bokmål here); Sweden renders Swedish
         // Regression for #44: notes spanning days land in separate, correctly-labelled sections,
         // ordered newest-day-first by observation time — a note dated in the past must NOT jump to
         // the top just because it was entered last (input here is deliberately out of order).
