@@ -23,7 +23,9 @@ import requests
 GBIF = "https://api.gbif.org/v1"
 DYNTAXA = "de8934f4-a136-481c-a87a-b0b202b80a31"  # Dyntaxa checklist on GBIF (CC0)
 DYNTAXA_AVES = 159935840  # class Aves *within Dyntaxa* (not the backbone key 212)
-ARTPORTALEN = "38b4c89f-584c-41bb-bd8f-cd1def33e92f"  # Artportalen occurrences, for ranking
+ARTPORTALEN = (
+    "38b4c89f-584c-41bb-bd8f-cd1def33e92f"  # Artportalen occurrences, for ranking
+)
 AVES = 212  # backbone Aves key, for the occurrence facet
 
 
@@ -32,8 +34,11 @@ def aves_counts():
     r = requests.get(
         f"{GBIF}/occurrence/search",
         params={
-            "datasetKey": ARTPORTALEN, "taxonKey": AVES, "limit": 0,
-            "facet": "speciesKey", "facetLimit": 5000,
+            "datasetKey": ARTPORTALEN,
+            "taxonKey": AVES,
+            "limit": 0,
+            "facet": "speciesKey",
+            "facetLimit": 5000,
         },
         timeout=120,
     )
@@ -50,8 +55,12 @@ def dyntaxa_birds():
         r = requests.get(
             f"{GBIF}/species/search",
             params={
-                "datasetKey": DYNTAXA, "highertaxonKey": DYNTAXA_AVES,
-                "rank": "SPECIES", "status": "ACCEPTED", "limit": 1000, "offset": offset,
+                "datasetKey": DYNTAXA,
+                "highertaxonKey": DYNTAXA_AVES,
+                "rank": "SPECIES",
+                "status": "ACCEPTED",
+                "limit": 1000,
+                "offset": offset,
             },
             timeout=120,
         )
@@ -60,8 +69,11 @@ def dyntaxa_birds():
         for rec in d.get("results", []):
             latin = rec.get("species") or rec.get("scientificName", "")
             swe = next(
-                (v["vernacularName"] for v in rec.get("vernacularNames", [])
-                 if v.get("language") == "swe"),
+                (
+                    v["vernacularName"]
+                    for v in rec.get("vernacularNames", [])
+                    if v.get("language") == "swe"
+                ),
                 "",
             )
             out.append((latin, swe, rec.get("nubKey")))
