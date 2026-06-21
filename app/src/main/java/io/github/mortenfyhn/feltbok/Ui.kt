@@ -151,8 +151,9 @@ fun ListScreen(vm: MainViewModel, listState: LazyListState) {
                         LazyColumn(Modifier.weight(1f), state = listState, contentPadding = PaddingValues(bottom = 84.dp)) {
                             groupNotesByDay(vm.notes).forEach { group ->
                                 item(key = "day:${group.label}") {
+                                    val species = group.notes.map { it.latin }.distinct().size
                                     Text(
-                                        group.label,
+                                        "${group.label} · ${Strings.Notes.speciesCount(species)}",
                                         color = cs.onSurfaceVariant, fontSize = 13.sp,
                                         modifier = Modifier.padding(horizontal = 16.dp, vertical = 4.dp),
                                     )

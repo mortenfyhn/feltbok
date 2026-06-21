@@ -20,6 +20,7 @@ object Strings {
         const val yesterday = "I går"
         const val feedback = "Gi tilbakemelding"
         const val export = "Eksporter"
+        fun speciesCount(n: Int) = if (n == 1) "1 art" else "$n arter"
         const val youAreHere = "du er her"
         fun distanceAway(d: String) = "$d unna"
         const val searchingGps = "søker GPS"
