@@ -812,9 +812,12 @@ private class LocalityOverlay(
         var best = resolveTap(hits)
         if (best == null) {
             // Nothing hit: fall back to the nearest centre within a comfortable touch radius, so a
-            // near-miss on a small dot or circle still selects instead of doing nothing.
+            // near-miss on a small dot or circle still selects instead of doing nothing. Skip
+            // polygons: their exact traced shape is the hitbox (tested above), so a centre-distance
+            // slop would let a tap register surprisingly far outside the drawn polygon.
             var bestD = Float.MAX_VALUE
             for (loc in localities) {
+                if (loc.polygon.isNotEmpty()) continue
                 val span = screenSpanPx(loc, ppm)
                 if (loc !== picked && (declutteredAtZoom(zoom, span) || tooBigToTap(span, viewMin))) continue
                 proj.toPixels(GeoPoint(loc.lat, loc.lon), p)
