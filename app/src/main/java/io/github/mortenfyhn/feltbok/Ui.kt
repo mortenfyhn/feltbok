@@ -535,9 +535,13 @@ fun SearchScreen(vm: MainViewModel) {
                 ) {
                     Text(s.norsk, fontWeight = FontWeight.Medium, maxLines = 1, overflow = TextOverflow.Ellipsis)
                     StatusBadge(s.status)
-                    if (s.latin.isNotBlank()) {
+                    // Secondary name: the alt (Norwegian) name when present, else the Latin name.
+                    // Latin is italic (scientific convention); a common name is not.
+                    val secondary = s.alt.ifBlank { s.latin }
+                    if (secondary.isNotBlank()) {
                         Spacer(Modifier.width(8.dp))
-                        Text(s.latin, color = cs.onSurfaceVariant, fontStyle = FontStyle.Italic,
+                        Text(secondary, color = cs.onSurfaceVariant,
+                            fontStyle = if (s.alt.isBlank()) FontStyle.Italic else FontStyle.Normal,
                             fontSize = 13.sp, maxLines = 1, overflow = TextOverflow.Ellipsis,
                             modifier = Modifier.weight(1f))
                     }
