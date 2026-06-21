@@ -37,8 +37,8 @@ Each result's score combines a few signals (`TieredScorer` in `Search.kt`):
 - **What's likely here and now.** Among comparable matches, species reported in
   the current month and near your current GPS location rank higher — spring
   migrants in May, southern birds in the south. Birds that are off-season or
-  far away rank lower but stay findable. With no GPS fix it falls back to season
-  + all-time commonness.
+  far away rank lower but stay findable. With no GPS fix it falls back to
+  season + all-time commonness.
 - **Your regulars get a nudge.** Species you pick often get a soft boost, so your
   usual birds tend to surface — but season and location can still outrank them.
 
