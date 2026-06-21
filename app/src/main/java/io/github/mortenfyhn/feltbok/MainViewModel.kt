@@ -127,7 +127,7 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
 
     /** Aktivitet options with your most-used first, then the rest in the default order. */
     fun activityOptions(): List<String> {
-        val (used, rest) = Options.activities.partition { (actUses[it] ?: 0) > 0 }
+        val (used, rest) = Country.activities.partition { (actUses[it] ?: 0) > 0 }
         return used.sortedByDescending { actUses[it] ?: 0 } + rest
     }
 

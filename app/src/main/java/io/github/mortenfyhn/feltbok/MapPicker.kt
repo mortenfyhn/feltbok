@@ -116,8 +116,8 @@ fun LocalityScreen(vm: MainViewModel) {
             // (falling back to the picked/nearest locality, then a default).
             controller.setZoom(if (vm.mapZoom >= 1.0) vm.mapZoom else 16.0)
             val focus = if (vm.isEditing || vm.pickingCurrent) vm.pickerFocus else null
-            val lat = focus?.lat ?: vm.fix?.lat ?: vm.dLoc?.lat ?: vm.nearest()?.lat ?: 63.7
-            val lon = focus?.lon ?: vm.fix?.lon ?: vm.dLoc?.lon ?: vm.nearest()?.lon ?: 8.7
+            val lat = focus?.lat ?: vm.fix?.lat ?: vm.dLoc?.lat ?: vm.nearest()?.lat ?: Country.mapCenterLat
+            val lon = focus?.lon ?: vm.fix?.lon ?: vm.dLoc?.lon ?: vm.nearest()?.lon ?: Country.mapCenterLon
             controller.setCenter(GeoPoint(lat, lon))
         }
     }
@@ -235,7 +235,7 @@ fun LocalityScreen(vm: MainViewModel) {
                         label = { Text(Strings.Picker.nameLabel) },
                         placeholder = { Text(Strings.Picker.namePlaceholder) }, modifier = Modifier.fillMaxWidth(),
                     )
-                    Text(Strings.Picker.adjustHint, color = cs.onSurfaceVariant, fontSize = 12.sp)
+                    Text(Country.adjustHint, color = cs.onSurfaceVariant, fontSize = 12.sp)
                     Button(
                         onClick = {
                             val gp = mapView.projection.fromPixels(mapView.width / 2, (mapView.height - sheetH) / 2)

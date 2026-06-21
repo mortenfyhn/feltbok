@@ -671,8 +671,8 @@ fun DetailScreen(vm: MainViewModel) {
                 }
             }
             AntallRow(vm)
-            DropdownRow(Strings.Detail.age, vm.dAge, Options.ages) { vm.dAge = it }
-            DropdownRow(Strings.Detail.sex, vm.dSex, Options.sexes) { vm.dSex = it }
+            DropdownRow(Strings.Detail.age, vm.dAge, Country.ages) { vm.dAge = it }
+            DropdownRow(Strings.Detail.sex, vm.dSex, Country.sexes) { vm.dSex = it }
             DropdownRow(Strings.Detail.activity, vm.dAct, vm.activityOptions(), fullScreen = true) { vm.dAct = it }
             CommentField(Strings.Detail.commentPublic, vm.dPub) { vm.dPub = it }
             CommentField(Strings.Detail.commentPrivate, vm.dPriv) { vm.dPriv = it }
@@ -982,7 +982,7 @@ fun ExportScreen(vm: MainViewModel) {
                         runCatching {
                             ctx.startActivity(android.content.Intent(
                                 android.content.Intent.ACTION_VIEW,
-                                android.net.Uri.parse("https://www.artsobservasjoner.no/ImportSighting")))
+                                android.net.Uri.parse(Country.importUrl)))
                         }
                     },
                     modifier = Modifier.padding(top = 6.dp),

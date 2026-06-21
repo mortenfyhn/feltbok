@@ -36,8 +36,8 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
-private const val SITES_HOST = "https://mobil.artsobservasjoner.no"
-private const val LOGIN_URL = "$SITES_HOST/bff/login?returnUrl=/my-page"
+private val SITES_HOST = Country.sitesHost
+private val LOGIN_URL = "$SITES_HOST/bff/login?returnUrl=/my-page"
 
 // Pages /core/Sites/ByUser from inside the logged-in WebView (the session cookies ride along
 // automatically, so we never read or store them), accumulates the rows, and hands them back to

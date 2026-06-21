@@ -22,52 +22,7 @@ import kotlin.math.cos
 import kotlin.math.sin
 import kotlin.math.sqrt
 
-/** Valid Artsobservasjoner option values for birds (Fugl), exactly as the import
- *  expects them. Common ones first so they're quick to reach in the field. */
-object Options {
-    val ages = listOf(
-        "Egg", "Pulli", "Adult",
-        "1K", "1K+", "2K", "2K+", "2K-", "3K", "3K+", "3K-", "4K", "4K+", "4K-",
-        "5K", "5K+", "5K-", "6K", "6K+", "6K-", "7K", "7K+", "7K-",
-    )
-
-    // The everyday non-breeding activities, surfaced first so the long list below
-    // doesn't have to be scrolled for the common case.
-    private val commonActivities = listOf(
-        "Rastende", "Stasjonær", "Overflygende", "Næringssøkende", "Trekkende",
-        "Sang/spill, ikke hekking", "Lokkelyd, øvrige lyder", "Ved fôring",
-        "Revir, ikke hekking", "Permanent revir",
-    )
-
-    // The full Fugl activity list, in the template/website order.
-    private val allActivities = listOf(
-        "Reir med egg eller unger", "Reir, unger hørt", "Rugende", "Mat til unger",
-        "Bar ekskrementpose", "Reir i bruk", "Besøker bebodd reir",
-        "Unger utenfor reir, ikke utvokste", "Brukt reir", "Eggeskall",
-        "Avledningsmanøver", "Mislykket hekking", "Reirbygging", "Rugeflekker",
-        "Engstelig adferd, indikasjon på hekking", "Reirbesøk?",
-        "Paring/kurtise på mulig hekkeplass", "Permanent revir",
-        "Par i passende hekkebiotop", "Sang/spill i hekketid og passende hekkebiotop",
-        "Observasjon i hekketid, passende biotop", "Rastende", "Stasjonær",
-        "Overflygende", "Næringssøkende", "Ved fôring", "Sang/spill, ikke hekking",
-        "Lokkelyd, øvrige lyder", "Revir, ikke hekking", "Ringmerket",
-        "Individmerket (kontroll)", "Trekkforsøk", "Trekkende", "Trekkende mot N",
-        "Trekkende mot NØ", "Trekkende mot Ø", "Trekkende mot SØ", "Trekkende mot S",
-        "Trekkende mot SV", "Trekkende mot V", "Trekkende mot NV", "Syk",
-        "Død - kollisjon med kraftledning", "Død - kollisjon med vindturbin",
-        "Død - kollisjon med vindu", "Død - kollisjon med fyr", "Død - kollisjon med fly",
-        "Død - kollisjon med gjerde", "Drept av elektrokusjon (strømslag)",
-        "Drept av olje", "Trafikkdrept", "Garndød", "Skadet av fiskeredskap",
-        "Drept av predator", "Død av sykdom/sult", "Skutt/avlivet",
-        "Død - ukjent dødsårsak", "Ferske spor", "Eldre spor", "Fersk møkk", "Eldre møkk",
-    )
-    val activities = commonActivities + allActivities.filterNot { it in commonActivities }
-    val sexes = listOf("Hann", "Hunn", "Hunnfarget", "I par")
-
-    /** Nøyaktighet written for every row - the locality's own coordinate is exact
-     *  enough that the import snaps to the registered locality. */
-    const val accuracy = "100 m"
-}
+// Per-country option vocabularies, export format, geography and service URLs now live in Country.kt.
 
 /** One registered Artsobservasjoner locality (from build_localities.py). We emit
  *  [lokalitet] (the bare name the import matches) at [lat]/[lon] (its canonical
@@ -335,11 +290,13 @@ fun sexSymbol(sex: String): String = when (sex) {
     else -> sex
 }
 
-fun exportDate(ms: Long): String = nbFormat("dd.MM.yyyy").format(Date(ms))
+// Export date/time use the country's format with a fixed locale — these patterns are purely
+// numeric (no month names), so the locale doesn't affect the output, only the pattern does.
+fun exportDate(ms: Long): String = SimpleDateFormat(Country.exportDateFmt, Locale.US).format(Date(ms))
+fun exportTime(ms: Long): String = SimpleDateFormat(Country.exportTimeFmt, Locale.US).format(Date(ms))
 
-/** Friendlier date for the editor (export keeps the strict dd.MM.yyyy). */
+/** Friendlier date for the editor (export keeps the strict numeric format). */
 fun displayDate(ms: Long): String = nbFormat("d. MMM yyyy").format(Date(ms))
-fun exportTime(ms: Long): String = nbFormat("HH:mm").format(Date(ms))
 
 // ---- day grouping (the notes list's per-day section headers) ----
 
@@ -469,9 +426,11 @@ private fun parseLocalityRow(c: List<String>): Locality? {
 }
 
 /** Public localities from the bundled (or pushed) `localities.csv`, plus the user's own
- *  customs from the external-only `my-localities.csv` (present only on the maintainer's device). */
+ *  customs from the external-only `my-localities.csv` (present only on the maintainer's device).
+ *  `localities.csv` is optional — the Sweden flavor ships none (its import is coordinate-driven,
+ *  so spots are minted on the map) — so a missing file yields an empty list, not a crash. */
 fun loadLocalities(ctx: Context): List<Locality> =
-    (readData(ctx, "localities.csv") + readMyLocalities(ctx))
+    (runCatching { readData(ctx, "localities.csv") }.getOrDefault(emptyList()) + readMyLocalities(ctx))
         .mapNotNull(::parseLocalityRow)
 
 // ---- "my localities" sync (from the mobile API's /core/Sites/ByUser) ----
@@ -762,18 +721,7 @@ private fun saveCounts(ctx: Context, file: String, counts: Map<String, Int>) {
 fun loadActUses(ctx: Context) = loadCounts(ctx, "act_uses.json")
 fun saveActUses(ctx: Context, uses: Map<String, Int>) = saveCounts(ctx, "act_uses.json", uses)
 
-// ---- export (v2.20 paste format: bare name only, no coords) ----
-
-private val EXPORT_COLS = listOf(
-    "Artsnavn", "Antall", "Alder", "Kjønn", "Aktivitet", "Lokalitetsnavn", "Nord", "Øst",
-    "Nøyaktighet", "Fra dato", "Fra klokkeslett", "Til dato", "Til klokkeslett",
-    "Kommentar (synlig for alle)", "Privat kommentar (kun synlig for deg selv)",
-    // The registered template header is misspelt "artsbestemming" (not "-bestemmelse").
-    // Paste-import matches columns by header name, so the misspelling must be reproduced
-    // verbatim or a flagged row fails validation ("Usikker artsbestemming" = col 40 of the
-    // v2.20 Fugl template; checkbox cells accept «X»/«ja»/«1», so "Ja" is fine).
-    "Usikker artsbestemming",
-)
+// ---- export (paste format; columns/headers per Country) ----
 
 fun exportTsv(notes: List<Note>): String {
     // Emit the *bare* Lokalitetsnavn with no coordinates. Paste-import behaviour
@@ -790,21 +738,23 @@ fun exportTsv(notes: List<Note>): String {
         val dEnd = exportDate(end); val tEnd = exportTime(end)
         val loc = n.locName.ifBlank { n.locFull }
         // A brand-new spot is exported WITH coordinates (+ its radius as Nøyaktighet), which
-        // mints a new custom locality on import; registry localities stay name-only.
-        val nord = if (n.newLoc) String.format(Locale.US, "%.6f", n.lat) else ""
-        val ost = if (n.newLoc) String.format(Locale.US, "%.6f", n.lon) else ""
-        val noy = if (n.newLoc) "${n.locRadius} m" else ""
+        // mints a new custom locality on import; registry localities stay name-only. Sweden's
+        // import is coordinate-driven (Country.alwaysExportCoords), so every row carries coords.
+        val withCoords = Country.alwaysExportCoords || n.newLoc
+        val nord = if (withCoords) String.format(Locale.US, "%.6f", n.lat) else ""
+        val ost = if (withCoords) String.format(Locale.US, "%.6f", n.lon) else ""
+        val noy = if (withCoords) "${n.locRadius} m" else ""
         listOf(
             n.species, if (n.count == UNKNOWN_COUNT) "" else n.count.toString(), n.age, n.sex, n.activity, loc,
             nord, ost, noy, d, t, dEnd, tEnd, n.publicComment, n.privateComment,
-            if (n.uncertain) "Ja" else "",
+            if (n.uncertain) Country.uncertainYes else "",
         ).joinToString("\t") { cell ->
             // A tab or newline in a free-text comment would split the row and desync
             // every following column on paste-import; flatten them to spaces.
             cell.replace('\t', ' ').replace('\n', ' ').replace('\r', ' ')
         }
     }
-    return (listOf(EXPORT_COLS.joinToString("\t")) + rows).joinToString("\n")
+    return (listOf(Country.exportCols.joinToString("\t")) + rows).joinToString("\n")
 }
 
 /** A kommune's worth of notes, for a self-contained per-kommune paste block. */
