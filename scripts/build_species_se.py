@@ -105,7 +105,9 @@ def main():
     for latin, swe, nob, nub in birds:
         if not swe or not latin:
             continue  # need both a Swedish name (for search) and a Latin name (for export)
-        rows.append((swe, latin, "", counts.get(nub, 0), nob))
+        # Norwegian bird names are lowercase by convention; Dyntaxa returns them inconsistently
+        # capitalised, so normalise to lowercase to match the Swedish names.
+        rows.append((swe, latin, "", counts.get(nub, 0), nob.lower()))
     # Most-reported first (common species reachable without scrolling); ties by name.
     rows.sort(key=lambda r: (-r[3], r[0]))
 
