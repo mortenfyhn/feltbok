@@ -10,12 +10,13 @@ to *unsigned* when no keystore is present — exactly what the buildserver needs
 
 ## What lives where
 
-- `io.github.mortenfyhn.feltbok.yml` (this folder) — the build recipe. It is **not** used by our own
-  Gradle build; it's the file we submit to fdroiddata. Versioned here so it's easy
-  to keep in sync when a new tag ships. Kept in F-Droid's **canonical form** (no
-  comments, specific field order) because fdroiddata CI rejects anything that isn't
-  — `fdroid rewritemeta` would rewrite it. After editing, run the checks below so it
-  still passes; put explanations here in this README, not as YAML comments.
+- The build recipe (`metadata/io.github.mortenfyhn.feltbok.yml`) lives **only** in
+  our fdroiddata fork (<https://gitlab.com/fdroid/fdroiddata>), not in this repo —
+  F-Droid never reads a copy from here, and a vendored duplicate just drifts. Edit
+  it in the fork and run the checks below before pushing. It must stay in F-Droid's
+  **canonical form** (no comments, specific field order) or fdroiddata CI rejects it
+  — `fdroid rewritemeta` rewrites anything that isn't. Put explanations here in this
+  README, not as YAML comments.
 - `fastlane/metadata/android/{nb-NO,en-US}/` (repo root) — store listing text and
   changelogs. F-Droid reads these straight from the tag, so the listing stays in
   source control. The same tree is what Play's publishing tools read too (see
@@ -23,21 +24,28 @@ to *unsigned* when no keystore is present — exactly what the buildserver needs
 
 ## Submitting (one-time)
 
+The app is already submitted; this is the recipe of what was done, and the checks
+to re-run after editing the recipe in the fork.
+
 1. Fork <https://gitlab.com/fdroid/fdroiddata> and clone your fork.
-2. Copy `io.github.mortenfyhn.feltbok.yml` to `metadata/io.github.mortenfyhn.feltbok.yml` in that checkout.
+2. Edit `metadata/io.github.mortenfyhn.feltbok.yml` in that checkout.
 3. Run the same checks the fdroiddata CI runs (from the fdroiddata root):
    ```sh
    fdroid lint io.github.mortenfyhn.feltbok                                                # recipe sanity
-   fdroid rewritemeta io.github.mortenfyhn.feltbok && git diff --exit-code metadata/       # must be a no-op
+   fdroid rewritemeta io.github.mortenfyhn.feltbok      # canonical form; re-run, file must be unchanged
    pipx run check-jsonschema --schemafile schemas/metadata.json metadata/io.github.mortenfyhn.feltbok.yml
    fdroid build -v -l io.github.mortenfyhn.feltbok      # full source build, needs the fdroidserver toolchain
    ```
-   The middle two are the CI gates that are easy to miss — `lint` and `build`
-   passing does **not** imply the file is canonical or schema-valid.
-4. Open a merge request (branch `com.feltbok`, commit `New app: io.github.mortenfyhn.feltbok (Feltbok)` per the
-   F-Droid Quick Start Guide). A maintainer reviews it; they may add an
-   `AntiFeatures` tag (e.g. `NonFreeNet` for the optional WebView sync to
-   Artsobservasjoner) — that's cosmetic, not a blocker.
+   `rewritemeta`'s idempotency and the schema check are the CI gates that are easy
+   to miss — `lint` and `build` passing does **not** imply the file is canonical or
+   schema-valid. (`git diff --exit-code` only works once the change is committed;
+   for an uncommitted edit, run `rewritemeta` twice and confirm the file is stable.)
+4. Open a merge request (commit `New app: io.github.mortenfyhn.feltbok (Feltbok)` per
+   the F-Droid Quick Start Guide). We declare two informational `AntiFeatures`:
+   `NonFreeNet` (depends on the proprietary Artsobservasjoner service) and
+   `TetheredNet` (relies on OpenStreetMap tile servers — same as osmdroid and other
+   live-tile apps). Use the **full commit hash** in `Builds:`, not a tag — reviewers
+   require it.
 
 > **`fdroid build` from a pip install** looks for a `gradlew-fdroid` wrapper inside
 > its `site-packages/`, which the PyPI wheel doesn't ship — the build dies with
@@ -51,7 +59,7 @@ release.
 ## Heads-up: signing identity
 
 F-Droid signs with its own key, so the F-Droid build has a different signature from
-the GitHub-released APK even though both are `com.feltbok`. Android won't upgrade
+the GitHub-released APK even though both are `io.github.mortenfyhn.feltbok`. Android won't upgrade
 across signatures, so switching channels means uninstall + reinstall. In practice
 this is a non-issue: notes are short-lived (exported, then deleted), so there's
 nothing to migrate. New F-Droid users just install fresh.
