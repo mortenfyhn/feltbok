@@ -32,6 +32,10 @@ class MapPickerTest {
     private val viewW = 1000
     private val viewH = 2000
 
+    // The tap-gate tests size footprints relative to this so they verify the per-axis logic, not a
+    // specific tuned value - the fraction is a knob the maintainer changes freely.
+    private val f = MAX_TAP_FIT_FRACTION.toDouble()
+
     @Test
     fun wideCircleSelectionIsFaint() {
         // The regression: Uttian is a wide *circle*, not a polygon. A polygon-only test painted it
@@ -76,49 +80,49 @@ class MapPickerTest {
     }
 
     @Test
-    fun tallNarrowPolygonThatFitsIsTappable() {
-        // Småbergan (452 m × 274 m): tall and narrow. It fits comfortably in the screen's long
-        // (vertical) dimension, so it must stay tappable. The earlier bug measured its larger
-        // extent against the *short* side (width) and wrongly excluded it.
-        val smabergan = polygonMeters(widthM = 274.0, heightM = 452.0)
-        assertFalse(tooBigToTap(smabergan, ppm = 2.0, viewW, viewH))  // 548 x 904 px on a 1000 x 2000 screen
+    fun footprintWithinTheBudgetIsTappable() {
+        // A footprint comfortably inside the per-axis budget (f x viewport) on both axes stays
+        // tappable. Småbergan (a tall, narrow polygon that fits the long screen axis) is this case.
+        assertFalse(tooBigToTap(polygonMeters(0.9 * f * viewW, 0.9 * f * viewH), ppm = 1.0, viewW, viewH))
+    }
+
+    @Test
+    fun footprintBeyondTheBudgetOnEitherAxisIsNotTappable() {
+        // Just past the budget on width -> excluded...
+        assertTrue(tooBigToTap(polygonMeters(1.1 * f * viewW, 0.5 * f * viewH), ppm = 1.0, viewW, viewH))
+        // ...and just past it on height -> excluded.
+        assertTrue(tooBigToTap(polygonMeters(0.5 * f * viewW, 1.1 * f * viewH), ppm = 1.0, viewW, viewH))
     }
 
     @Test
     fun gateComparesEachAxisToItsOwnViewportSide() {
-        // The same footprint must be judged per axis: 700 x 1500 px fits a portrait viewport, but
-        // rotated to 1500 x 700 px it overflows the (short) width and is excluded.
-        assertFalse(tooBigToTap(polygonMeters(700.0, 1500.0), ppm = 1.0, viewW, viewH))
-        assertTrue(tooBigToTap(polygonMeters(1500.0, 700.0), ppm = 1.0, viewW, viewH))
+        // The same footprint is judged per axis. A long-and-thin one fits when its long side lies
+        // along the screen's long (tall) axis (Småbergan, upright)...
+        val longSide = 0.9 * f * viewH
+        val shortSide = 0.3 * f * viewW
+        assertFalse(tooBigToTap(polygonMeters(shortSide, longSide), ppm = 1.0, viewW, viewH))
+        // ...but rotated so the long side lies along the short (width) axis, it overflows -> excluded.
+        // (Catches the original bug: measuring the larger extent against the short side regardless.)
+        assertTrue(tooBigToTap(polygonMeters(longSide, shortSide), ppm = 1.0, viewW, viewH))
     }
 
     @Test
-    fun polygonThatNearlyFitsStaysTappable() {
-        // "sjøen mellom Sistranda og Inntian": an irregular lake whose bounding box pokes ~9 % off
-        // the screen edge though the shape itself is ~all visible. The overflow tolerance (1.2)
-        // keeps it tappable...
-        assertFalse(tooBigToTap(polygonMeters(1150.0, 1900.0), ppm = 1.0, viewW, viewH))  // 1.15x width
-        // ...but a footprint that overflows well past the tolerance is still excluded.
-        assertTrue(tooBigToTap(polygonMeters(1400.0, 1900.0), ppm = 1.0, viewW, viewH))   // 1.4x width
-    }
-
-    @Test
-    fun hugePolygonZoomedIntoIsNotTappable() {
-        // The point of the gate (Hønstadvatnet at the rim of Jonsvatnet): a footprint many times
+    fun hugeFootprintZoomedIntoIsNotTappable() {
+        // The point of the gate (Hønstadvatnet at the rim of Jonsvatnet): a footprint that overflows
         // the screen has no visible edge to aim at, so it must never grab a tap meant for a small
-        // locality inside it. Same polygon, zoomed in (higher ppm) -> excluded.
-        val poly = polygonMeters(900.0, 1600.0)
+        // locality inside it. Same polygon fits at low zoom, overflows zoomed in (higher ppm).
+        val poly = polygonMeters(0.5 * f * viewW, 0.5 * f * viewH)
         assertFalse(tooBigToTap(poly, ppm = 1.0, viewW, viewH))  // fits
-        assertTrue(tooBigToTap(poly, ppm = 4.0, viewW, viewH))   // 3600 x 6400 px -> way off-screen
+        assertTrue(tooBigToTap(poly, ppm = 3.0, viewW, viewH))   // 3x on screen -> 1.5x budget -> excluded
     }
 
     @Test
     fun circlesGateOnDiameterAndPointsNeverDo() {
         // A circle is symmetric, so its diameter is gated against the short side; a footprint-less
-        // point has no area and is always tappable.
-        assertFalse(tooBigToTap(circle(400.0), ppm = 1.0, viewW, viewH))  // 800 px diameter, fits
-        assertTrue(tooBigToTap(circle(900.0), ppm = 1.0, viewW, viewH))   // 1800 px > 1.2 * 1000
-        assertFalse(tooBigToTap(circle(0.0), ppm = 1000.0, viewW, viewH)) // point: never too big
+        // point has no area and is always tappable, however far zoomed in.
+        assertFalse(tooBigToTap(circle(0.45 * f * viewW), ppm = 1.0, viewW, viewH))  // diameter 0.9x budget
+        assertTrue(tooBigToTap(circle(0.6 * f * viewW), ppm = 1.0, viewW, viewH))    // diameter 1.2x budget
+        assertFalse(tooBigToTap(circle(0.0), ppm = 1000.0, viewW, viewH))            // point: never too big
     }
 
     @Test
