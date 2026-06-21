@@ -48,8 +48,20 @@ def aves_counts():
     return {int(c["name"]): c["count"] for c in counts}
 
 
+def _vernacular(rec, lang):
+    return next(
+        (
+            v["vernacularName"]
+            for v in rec.get("vernacularNames", [])
+            if v.get("language") == lang
+        ),
+        "",
+    )
+
+
 def dyntaxa_birds():
-    """Every Dyntaxa Aves species: (scientificName, swedishName, nubKey). Paginated."""
+    """Every Dyntaxa Aves species: (scientificName, swedishName, norwegianName, nubKey). Paginated.
+    The Norwegian (nob) name is carried as a secondary searchable name in the Swedish build."""
     out, offset = [], 0
     while True:
         r = requests.get(
@@ -68,15 +80,14 @@ def dyntaxa_birds():
         d = r.json()
         for rec in d.get("results", []):
             latin = rec.get("species") or rec.get("scientificName", "")
-            swe = next(
+            out.append(
                 (
-                    v["vernacularName"]
-                    for v in rec.get("vernacularNames", [])
-                    if v.get("language") == "swe"
-                ),
-                "",
+                    latin,
+                    _vernacular(rec, "swe"),
+                    _vernacular(rec, "nob"),
+                    rec.get("nubKey"),
+                )
             )
-            out.append((latin, swe, rec.get("nubKey")))
         if d.get("endOfRecords", True):
             break
         offset += 1000
@@ -91,17 +102,19 @@ def main():
     print(f"dyntaxa: {len(birds)} Aves species", file=sys.stderr)
 
     rows = []
-    for latin, swe, nub in birds:
+    for latin, swe, nob, nub in birds:
         if not swe or not latin:
             continue  # need both a Swedish name (for search) and a Latin name (for export)
-        rows.append((swe, latin, "", counts.get(nub, 0)))
+        rows.append((swe, latin, "", counts.get(nub, 0), nob))
     # Most-reported first (common species reachable without scrolling); ties by name.
     rows.sort(key=lambda r: (-r[3], r[0]))
 
     w = csv.writer(sys.stdout)
-    w.writerow(["svensk", "latin", "status", "count"])
+    # `norsk` is the secondary searchable name (Norwegian); status stays blank for the MVP.
+    w.writerow(["svensk", "latin", "status", "count", "norsk"])
     w.writerows(rows)
-    print(f"wrote {len(rows)} species", file=sys.stderr)
+    n_nob = sum(1 for r in rows if r[4])
+    print(f"wrote {len(rows)} species ({n_nob} with a Norwegian name)", file=sys.stderr)
 
 
 if __name__ == "__main__":

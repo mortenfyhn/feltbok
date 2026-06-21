@@ -35,10 +35,19 @@ data class PreparedSpecies(
 
 internal fun stripSep(s: String) = s.filterNot { it == ' ' || it == '-' }
 
+private fun preparedFor(s: Species, name: String, index: Int): PreparedSpecies {
+    val folded = fold(name)
+    return PreparedSpecies(s, folded, index, stripSep(folded), stripSep(name.lowercase()))
+}
+
 fun prepare(species: List<Species>): List<PreparedSpecies> =
-    species.mapIndexed { i, s ->
-        val folded = fold(s.norsk)
-        PreparedSpecies(s, folded, i, stripSep(folded), stripSep(s.norsk.lowercase()))
+    species.flatMapIndexed { i, s ->
+        // The primary name plus, when present, the secondary name ([Species.alt], e.g. the Norwegian
+        // name in the Sweden build) as an extra alias entry pointing at the same species, so a query
+        // matches either. Both share the index, so frequency/tiebreak are identical. searchResults
+        // dedupes the species afterwards. No alias in the Norway build (alt is blank).
+        if (s.alt.isBlank()) listOf(preparedFor(s, s.norsk, i))
+        else listOf(preparedFor(s, s.norsk, i), preparedFor(s, s.alt, i))
     }
 
 /** One ranked result. [score] is descending-best (higher = better) within a scorer; not comparable

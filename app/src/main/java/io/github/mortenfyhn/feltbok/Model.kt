@@ -71,7 +71,15 @@ data class Locality(
     }
 }
 
-data class Species(val norsk: String, val latin: String, val status: String = "", val count: Int = 0)
+// `alt` is an optional secondary common name, also searchable (the Sweden flavor fills it with the
+// Norwegian name so a Norwegian birder can fall back to names they know). Blank in the Norway build.
+data class Species(
+    val norsk: String,
+    val latin: String,
+    val status: String = "",
+    val count: Int = 0,
+    val alt: String = "",
+)
 
 const val UNKNOWN_COUNT = -1 // Note.count sentinel: unknown number of individuals
 
@@ -520,8 +528,12 @@ fun loadSpecies(ctx: Context): List<Species> =
         if (c.isEmpty() || c[0].isBlank()) {
             null
         } else {
-            // count (Norway-wide observations) is optional - old/overridden CSVs may lack it.
-            Species(c[0], c.getOrElse(1) { "" }, c.getOrElse(2) { "" }, c.getOrElse(3) { "" }.toIntOrNull() ?: 0)
+            // count (Norway-wide observations) and alt (secondary name) are optional - older or
+            // single-language CSVs may lack them.
+            Species(
+                c[0], c.getOrElse(1) { "" }, c.getOrElse(2) { "" },
+                c.getOrElse(3) { "" }.toIntOrNull() ?: 0, c.getOrElse(4) { "" },
+            )
         }
     }
 

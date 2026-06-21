@@ -119,7 +119,9 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
         val freq = FrequencyProvider { s ->
             blendedWeight(ctxFreq.weight(s, month, f?.lat, f?.lon), useScore(s.norsk, now))
         }
-        TieredScorer(freq).search(query, prepared).map { it.species }
+        // distinct() collapses a species that matched on both its primary and alt name to one row,
+        // keeping the higher-ranked occurrence (results are best-first).
+        TieredScorer(freq).search(query, prepared).map { it.species }.distinct()
     }
 
     /** Per-activity use counts, so each user's most-used activities rise to the top. */
