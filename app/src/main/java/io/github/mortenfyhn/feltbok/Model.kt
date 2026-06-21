@@ -257,13 +257,13 @@ fun poleOfInaccessibility(polygon: List<DoubleArray>): DoubleArray {
 
 // ---- species search ----
 
-/** Fold Norwegian/diacritic letters so typing plain ASCII still matches. The aa/oe collapse also
- *  accepts the digraph spellings people use without å/ø ("graagaas" -> grågås, "roedstrupe" -> rød…);
- *  no real Norwegian bird name carries a literal aa/oe, so collapsing them is safe. */
+/** Fold only the diacritics a Norwegian keyboard can't reach (ô/é/è/ü on loan names) so they still
+ *  match plain ASCII. å/æ/ø are deliberately NOT folded: they're a keystroke away on the user's
+ *  keyboard, so typing the real letter should match precisely ("må" surfaces the måker, not every
+ *  "ma…" bird) and an ASCII stand-in ("ma" for "må") is left to fall through to the typo net like any
+ *  other misspelling. */
 fun fold(s: String) = s.lowercase()
-    .replace("æ", "ae").replace("ø", "o").replace("å", "a")
     .replace("ô", "o").replace("é", "e").replace("è", "e").replace("ü", "u")
-    .replace("aa", "a").replace("oe", "o")
 
 /** Fold a search query and drop its spaces, so "f m" == "fm". */
 fun foldQuery(query: String) = fold(query).filterNot { it.isWhitespace() }

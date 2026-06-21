@@ -30,10 +30,12 @@ Each result's score combines a few signals (`TieredScorer` in `Search.kt`):
 - **Match quality, in tiers.** Best first: exact name → starts-with → ends-with
   (suffix) → initials (e.g. `pf` → Pilfink) → contains → scattered letters →
   typo. A better tier always wins; the rest only reorder *within* a tier.
-- **Forgiving matching.** Diacritics are folded, so `ardfugl` finds Ærfugl and
-  `rorsanger` finds Rørsanger; spaces/hyphens are ignored; and once your query is
-  4+ letters a small typo (one wrong/swapped letter) still matches. Typing the
-  real æ/ø/å gives a small precision bonus but is never required.
+- **Forgiving matching.** Spaces/hyphens are ignored, and once your query is
+  4+ letters a small typo (one wrong/swapped letter) still matches — so `ardfugl`
+  still finds Ærfugl and `rorsanger` Rørsanger. å/æ/ø aren't folded: they're a
+  keystroke away, so typing the real letter matches precisely (`må` surfaces the
+  måker, not every `ma…` bird) while an ASCII stand-in just rides the typo net
+  like any other misspelling.
 - **What's likely here and now.** Among comparable matches, species reported in
   the current month and near your current GPS location rank higher — spring
   migrants in May, southern birds in the south. Birds that are off-season or

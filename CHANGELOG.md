@@ -7,6 +7,7 @@
 - Datooverskriftene i lista viser nå antall arter den dagen, og øverst totalt antall arter.
 - Ny knapp i kartet for å sentrere på din egen posisjon.
 - Lettere å treffe rett lokalitet: appen velger ikke lenger en svær lokalitet når du er zooma langt inn, punktlokaliteter er enklere å trykke på, og trykk et stykke utafor en flate velger den ikke lenger ved en feil.
+- Artssøket skiller nå på å/æ/ø: skriv «må» og du får måkene, ikke alt som starter på «ma».
 
 ## v0.12 (20. juni 2026)
 

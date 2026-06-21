@@ -203,12 +203,12 @@ class ModelTest {
     @Test
     fun searchTieBreaksOnPersonalUseCount() {
         // Frequent personal picks lift a species past a commoner one of equal match quality. Both
-        // Grå-birds prefix-match "gra" and share a length (so completeness can't decide it); without
+        // Grå-birds prefix-match "grå" and share a length (so completeness can't decide it); without
         // picks the commoner Gråspurv leads, but picking Gråtrost often flips it. Stokkand tops
         // frequency order but doesn't match, so it stays out.
         val list = freqOrdered("Stokkand", "Gråspurv", "Gråtrost")
-        assertEquals(listOf("Gråspurv", "Gråtrost"), rank("gra", list))
-        assertEquals("Gråtrost", rank("gra", list) { if (it == "Gråtrost") 5 else 0 }.first())
+        assertEquals(listOf("Gråspurv", "Gråtrost"), rank("grå", list))
+        assertEquals("Gråtrost", rank("grå", list) { if (it == "Gråtrost") 5 else 0 }.first())
     }
 
     // ---- locality tap hit-testing (#63: a tap inside a polygon must pick that polygon) ----
