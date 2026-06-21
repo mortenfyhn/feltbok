@@ -1,0 +1,4 @@
+# Feature branches all append bullets to CHANGELOG.md's "Neste utgivelse" section, so they
+# collide there on every merge/rebase. The union driver keeps both sides' added lines instead
+# of conflicting (eyeball the result for ordering/duplicates).
+CHANGELOG.md merge=union
