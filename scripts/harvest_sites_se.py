@@ -31,7 +31,7 @@ URL = "https://artportalen.se/Map/GetSitesGeoJson"
 SPECIES_GROUP = "8"  # Fåglar (birds) — as the report form sends
 TILE_M = 30_000  # Web-Mercator tile side; quarter on truncation
 MIN_TILE_M = 500  # stop subdividing below this
-DELAY = 0.4
+DELAY = float(os.environ.get("AP_DELAY", "0.4"))  # per-tile pause; raise (AP_DELAY) to be gentle
 
 # (minLat, maxLat, minLon, maxLon) per region the maintainer is visiting (issue #127).
 REGIONS = {
