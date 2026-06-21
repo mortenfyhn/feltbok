@@ -750,14 +750,11 @@ fun exportTsv(notes: List<Note>): String {
         val dEnd = exportDate(end); val tEnd = exportTime(end)
         val loc = n.locName.ifBlank { n.locFull }
         // A brand-new spot is exported WITH coordinates (+ its radius as Nøyaktighet), which
-        // mints a new custom locality on import; registry localities stay name-only. Sweden's
-        // import is coordinate-driven (Country.alwaysExportCoords), so every row carries coords.
-        val withCoords = Country.alwaysExportCoords || n.newLoc
-        val nord = if (withCoords) String.format(Locale.US, "%.6f", n.lat) else ""
-        val ost = if (withCoords) String.format(Locale.US, "%.6f", n.lon) else ""
-        // Nøyaktighet must be a positive integer (a "0 m" row hard-fails import), so a point
-        // locality (radius 0) exports as the 1 m minimum.
-        val noy = if (withCoords) "${maxOf(n.locRadius, 1)} m" else ""
+        // mints a new custom locality on import; registry localities stay name-only so the import
+        // links them to the public site (verified on both Artsobservasjoner and Artportalen).
+        val nord = if (n.newLoc) String.format(Locale.US, "%.6f", n.lat) else ""
+        val ost = if (n.newLoc) String.format(Locale.US, "%.6f", n.lon) else ""
+        val noy = if (n.newLoc) "${n.locRadius} m" else ""
         listOf(
             n.species, if (n.count == UNKNOWN_COUNT) "" else n.count.toString(), n.age, n.sex, n.activity, loc,
             nord, ost, noy, d, t, dEnd, tEnd, n.publicComment, n.privateComment,

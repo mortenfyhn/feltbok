@@ -387,10 +387,7 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
             publicComment = dPub, privateComment = dPriv,
             locName = loc?.lokalitet ?: "", locFull = "",
             lat = loc?.lat ?: 0.0, lon = loc?.lon ?: 0.0,
-            // Carry the locality's radius (minted spot or picked registry locality alike) so a
-            // coordinate-driven export (Sweden) has a real Nøyaktighet; Norway ignores it for
-            // registry localities (it exports name-only).
-            newLoc = loc?.newLoc == true, locRadius = loc?.radius?.toInt() ?: 0,
+            newLoc = loc?.newLoc == true, locRadius = if (loc?.newLoc == true) loc.radius.toInt() else 0,
             uncertain = dUncertain, kommune = loc?.kommune ?: "",
         )
         if (isEditing) {

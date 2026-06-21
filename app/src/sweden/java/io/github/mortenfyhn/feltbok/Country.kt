@@ -9,12 +9,11 @@ package io.github.mortenfyhn.feltbok
  */
 object Country {
     // ---- export (paste) format ----
-    // Artportalen's import is coordinate-driven: every row must carry coordinates + accuracy
-    // (Lokalnamn/Nord/Ost/Noggrannhet/Startdatum are mandatory), so unlike Norway we always export
-    // coordinates. The account's coordinate format must be WGS84 (geografisk) for these to read
-    // right — see issue #149. Column order is positional with exportCols; import matches by header
-    // name, so Nord/Ost order doesn't matter as long as each header sits above its own value.
-    val alwaysExportCoords = true
+    // Like Norway: a picked registry locality exports name-only (the import links it to the public
+    // site), and a minted map-spot exports name + coordinates + radius (creates a new private
+    // locality). For a minted spot's coords to read right, the account's coordinate format must be
+    // WGS84 (geografisk) — see issue #149. Column order is positional with exportCols; the import
+    // matches by header name, so Nord/Ost order doesn't matter as long as each sits above its value.
     val exportDateFmt = "yyyy-MM-dd"
     val exportTimeFmt = "HH:mm"
     val uncertainYes = "Ja"

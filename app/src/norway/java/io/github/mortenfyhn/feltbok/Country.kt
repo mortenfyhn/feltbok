@@ -11,10 +11,6 @@ package io.github.mortenfyhn.feltbok
  */
 object Country {
     // ---- export (paste) format ----
-    // Bare name only, no coordinates: the v2.20 paste matches public localities by name and a
-    // qualified name or appended coords mints a duplicate (see docs/artsobs-import.md). Sweden's
-    // import is coordinate-driven instead, so its flavor sets alwaysExportCoords = true.
-    val alwaysExportCoords = false
     val exportDateFmt = "dd.MM.yyyy"
     val exportTimeFmt = "HH:mm"
     val uncertainYes = "Ja"
