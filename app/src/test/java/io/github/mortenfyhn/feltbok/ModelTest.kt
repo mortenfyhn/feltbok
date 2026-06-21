@@ -128,6 +128,44 @@ class ModelTest {
     }
 
     @Test
+    fun swedenExportUsesSwedishHeadersAndIsoDateAndNameOnly() {
+        assumeTrue(!isNorwayExport) // the Sweden (Artportalen) flavor's export format
+        val lines = exportTsv(listOf(noteAt(noonMs))).split("\n")
+        val header = lines[0].split("\t")
+        assertEquals("Artnamn", header[0])
+        assertEquals("Osäker artbestämning", header.last())
+        val c = lines[1].split("\t")
+        assertEquals("2026-06-01", c[9])        // ISO date, not dd.MM.yyyy
+        assertEquals("", c[6]); assertEquals("", c[7])  // registry locality: name-only, links to public
+    }
+
+    // ---- bilingual species search (the alt/Norwegian name in the Sweden build) ----
+
+    @Test
+    fun secondaryNameIsSearchableAndDedupes() {
+        // A species with a secondary (alt) name is findable by either name, and a query matching
+        // both collapses to one prepared species (two prepared entries, same species).
+        val species = listOf(
+            Species("talgoxe", "Parus major", alt = "kjøttmeis"),
+            Species("blåmes", "Cyanistes caeruleus", alt = "blåmeis"),
+            Species("gräsand", "Anas platyrhynchos", alt = "stokkand"),
+        )
+        val prepared = prepare(species)
+        assertEquals(6, prepared.size) // 3 species × (primary + alt alias)
+        val scorer = TieredScorer(FrequencyProvider { 0.0 })
+        // Typing the Norwegian name surfaces the Swedish species.
+        assertEquals("talgoxe", scorer.search("kjøttmeis", prepared).first().species.norsk)
+        // Both alias entries resolve to the same species, so callers dedupe to one row.
+        assertEquals(1, scorer.search("kjøttmeis", prepared).map { it.species }.distinct().count { it.norsk == "talgoxe" })
+    }
+
+    @Test
+    fun noAliasWhenSecondaryNameBlank() {
+        val prepared = prepare(listOf(Species("kjøttmeis", "Parus major")))
+        assertEquals(1, prepared.size)
+    }
+
+    @Test
     fun withUniqueIdsNudgesCollisionsApartWithoutDroppingOrReorderingNotes() {
         // Regression for #85: two observations minted in the same millisecond shared an id, which
         // is the LazyColumn key - duplicates crashed the list on launch. Healing must keep every
