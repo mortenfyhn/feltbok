@@ -445,6 +445,14 @@ internal fun tooBigToTap(loc: Locality, ppm: Double, viewWpx: Int, viewHpx: Int)
     return wPx > viewWpx * MAX_TAP_FIT_FRACTION || hPx > viewHpx * MAX_TAP_FIT_FRACTION
 }
 
+/** Dev tool: when on (and on a dev build), the map draws each locality's tap hitbox on top —
+ *  magenta ring = a point's finger-reach, blue outline = a footprint's exact tap shape, red dashed
+ *  = a footprint excluded by [tooBigToTap]. A compile-time `const`, so when off it strips out like a
+ *  C `#ifdef` (and [BuildConfig.DEV] keeps it out of release even if left on). Flip to true and
+ *  rebuild the dev app (`just install`) to eyeball hitboxes while tuning [TAP_SLOP_DP] /
+ *  [MAX_TAP_FIT_FRACTION]. */
+private const val SHOW_HITBOXES = false
+
 /** A locality a tap landed on, with its on-screen footprint span and the tap->centre distance (px). */
 internal class TapCandidate(val loc: Locality, val spanPx: Float, val centreDistPx: Float)
 
@@ -571,9 +579,9 @@ private class LocalityOverlay(
     private val gps = fillPaint(MapPalette.Gps)
     private val gpsRing = strokePaint(MapPalette.GpsRing, 3f)
 
-    // DEBUG-only (throwaway) hitbox overlay: magenta ring = a point's finger-reach hitbox;
-    // blue outline = a footprint (polygon/circle) whose exact shape is its tap area; red dashed
-    // outline = a footprint the zoom-in size gate (tooBigToTap) has excluded from selection.
+    // Hitbox overlay paints (drawn only when [SHOW_HITBOXES] is on): magenta ring = a point's
+    // finger-reach hitbox; blue outline = a footprint (polygon/circle) whose exact shape is its tap
+    // area; red dashed outline = a footprint the zoom-in size gate (tooBigToTap) has excluded.
     private val dbgSlop = strokePaint(0xFFFF00FF, 6f)
     private val dbgFootprint = strokePaint(0xFF0066FF, 4f)
     private val dbgBlocked = strokePaint(0xFFFF0000, 8f)
@@ -740,7 +748,7 @@ private class LocalityOverlay(
                 else -> stroke
             }
             drawShape(c, proj, loc, px, py, rPx, fp, sp)
-            if (BuildConfig.DEV) {                   // throwaway hitbox overlay
+            if (BuildConfig.DEV && SHOW_HITBOXES) {  // dev hitbox overlay (off by default)
                 val fpPaint = if (tooBigToTap(loc, ppm, map.width, map.height)) dbgBlocked else dbgFootprint
                 when {
                     loc.polygon.isEmpty() && loc.radius <= 0.0 -> c.drawCircle(px, py, slop, dbgSlop)
