@@ -44,6 +44,7 @@ NOB_OVERRIDE = {
     "Phylloscopus orientalis": "furusanger",
     "Ptyonoprogne rupestris": "klippesvale",
     "Bucanetes githagineus": "trompeterfink",
+    "Cettia cetti": "cettisanger",  # Dyntaxa has "cettis sanger" (two tokens)
     "Limosa haemastica": "hudsonspove",
     "Falco eleonorae": "eleonorafalk",
     "Porzana carolina": "karolinarikse",
