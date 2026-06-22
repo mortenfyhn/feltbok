@@ -33,6 +33,24 @@ ARTPORTALEN = (
 AVES = 212  # backbone Aves key, for the occurrence facet
 REDLIST = "87e639cc-30a9-4007-bd2c-b0cab60326b9"  # The Swedish Red List 2025 (rödlistade arter)
 
+# Dyntaxa stores a handful of Norwegian (nob) names as two names mashed into one string (a data
+# error, e.g. "Furusanger Bonellisanger"). Correct those by scientific name. Genuine two-word names
+# (e.g. "svarthvit fluesnapper") are left alone — only these specific entries are overridden.
+NOB_OVERRIDE = {
+    "Ardea cinerea": "gråhegre",
+    "Pluvialis fulva": "sibirlo",
+    "Pluvialis dominica": "kanadalo",  # verify
+    "Phylloscopus bonelli": "bonellisanger",
+    "Phylloscopus orientalis": "furusanger",
+    "Ptyonoprogne rupestris": "klippesvale",
+    "Bucanetes githagineus": "trompeterfink",
+    "Limosa haemastica": "hudsonspove",
+    "Falco eleonorae": "eleonorafalk",
+    "Porzana carolina": "karolinarikse",
+    "Coloeus dauuricus": "mongolkaie",  # verify
+    "Caprimulgus aegyptius": "egyptisk nattravn",
+}
+
 # IUCN status (full word -> the short code StatusBadge renders). LC/NA/NE aren't in the red-list
 # dataset (it only carries the red-listed categories), so anything else maps to no badge.
 REDLIST_CODE = {
@@ -174,11 +192,16 @@ def main():
     for latin, swe, nob, nub in birds:
         if not swe or not latin:
             continue  # need both a Swedish name (for search) and a Latin name (for export)
+        # Drop hybrids and subspecies/races so the list is species-level, like the Norwegian one.
+        if " x " in swe.lower() or " x " in latin.lower():
+            continue
+        if len(latin.split()) >= 3 or any(m in swe for m in (", rasen", ", underarten", ", formen")):
+            continue
         # Red-list code if native and threatened, else the alien GEIAA risk grade if introduced.
         status = redlist.get(latin) or alien.get(latin, "")
-        # Norwegian bird names are lowercase by convention; Dyntaxa returns them inconsistently
-        # capitalised, so normalise to lowercase to match the Swedish names.
-        rows.append((swe, latin, status, counts.get(nub, 0), nob.lower()))
+        # Correct the few mashed Norwegian names; lowercase the rest (Norwegian names are lowercase).
+        nob = NOB_OVERRIDE.get(latin, nob).lower()
+        rows.append((swe, latin, status, counts.get(nub, 0), nob))
     # Most-reported first (common species reachable without scrolling); ties by name.
     rows.sort(key=lambda r: (-r[3], r[0]))
 
