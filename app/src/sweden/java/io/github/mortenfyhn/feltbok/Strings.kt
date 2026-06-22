@@ -36,7 +36,7 @@ object Strings {
         const val madeBy = "Skapad av Morten F. Amundsen"
         const val dataHeader = "Data och källor"
         const val artsdatabanken = "Artdata från Artdatabanken (CC BY 4.0)"
-        const val artsobs = "Lokaler från Artportalen"
+        const val artsobs = "Fyndplatser från Artportalen"
         const val osm = "Karta © OpenStreetMap"
         const val close = "Stäng"
     }
@@ -58,7 +58,7 @@ object Strings {
         const val titleNew = "Ny observation"
         const val titleEdit = "Ändra observation"
         const val species = "Art"
-        const val locality = "Lokal"
+        const val locality = "Fyndplats"
         const val count = "Antal"
         const val age = "Ålder"
         const val activity = "Aktivitet"
@@ -95,7 +95,7 @@ object Strings {
         const val pasteBody = "Klistra in observationerna och tryck "
         const val pasteEmphasis = "Importera"
 
-        fun tip(kommune: String) = "(Prioritera lokaler i $kommune för att undvika krockar)"
+        fun tip(kommune: String) = "(Prioritera fyndplatser i $kommune för att undvika krockar)"
         const val step4 = "Granska fynd"
         const val step4Body = "Kontrollera att observationerna syns i Artportalen"
         const val step5 = "Ta bort från appen"
@@ -108,27 +108,27 @@ object Strings {
 
     object Sync {
         const val login = "Logga in på Artportalen"
-        const val update = "Uppdatera lokaler"
-        const val fetch = "Hämta mina lokaler"
-        const val afterLogin = "Efter inloggning hämtar vi lokalerna automatiskt."
-        const val intro = "Fältbok kan hämta dina privata lokaler från Artportalen. Tryck på knappen för att logga in, så sköter resten sig själv."
-        const val fetching = "Hämtar lokaler…"
+        const val update = "Uppdatera fyndplatser"
+        const val fetch = "Hämta mina fyndplatser"
+        const val afterLogin = "Efter inloggning hämtar vi fyndplatserna automatiskt."
+        const val intro = "Fältbok kan hämta dina privata fyndplatser från Artportalen. Tryck på knappen för att logga in, så sköter resten sig själv."
+        const val fetching = "Hämtar fyndplatser…"
         const val error = "Något gick fel vid hämtningen."
         const val retry = "Försök igen"
         const val done = "OK"
         const val doneGeneric = "Klar ✓"
-        fun doneFirst(total: Int) = "Hämtade $total lokaler ✓"
-        fun doneChanged(total: Int, changed: Int) = "Hämtade $total lokaler ($changed ändrade) ✓"
-        fun doneUnchanged(total: Int) = "Redan uppdaterad ($total lokaler) ✓"
+        fun doneFirst(total: Int) = "Hämtade $total fyndplatser ✓"
+        fun doneChanged(total: Int, changed: Int) = "Hämtade $total fyndplatser ($changed ändrade) ✓"
+        fun doneUnchanged(total: Int) = "Redan uppdaterad ($total fyndplatser) ✓"
     }
 
     object Picker {
-        const val titleNew = "Ny lokal"
-        const val titlePick = "Välj lokal"
-        const val newButton = "＋ Ny lokal"
+        const val titleNew = "Ny fyndplats"
+        const val titlePick = "Välj fyndplats"
+        const val newButton = "＋ Ny fyndplats"
         fun meters(m: Int) = "$m m"
-        const val nameLabel = "Lokalnamn (valfritt)"
-        const val namePlaceholder = "Ny lokal"
+        const val nameLabel = "Namn (valfritt)"
+        const val namePlaceholder = "Ny fyndplats"
         const val save = "Spara"
     }
 }
