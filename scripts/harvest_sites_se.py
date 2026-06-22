@@ -78,7 +78,8 @@ def make_session():
 
 
 def fetch(session, user_id, mx0, my0, mx1, my1):
-    """One Mercator box -> (features, complete). complete=False means the server truncated."""
+    """One Mercator box -> (point_features, polygon_features, complete). complete=False => truncated.
+    Polygon localities (e.g. nature reserves) come in a separate `polygons` array from the points."""
     body = {
         "zoomLevel": 15,
         "bbox": f"{mx0},{my0},{mx1},{my1}",
@@ -100,12 +101,16 @@ def fetch(session, user_id, mx0, my0, mx1, my1):
                 "application/json"
             ):
                 d = r.json()
-                return d["points"]["features"], d.get("completeResult", True)
+                return (
+                    d["points"]["features"],
+                    d["polygons"]["features"],
+                    d.get("completeResult", True),
+                )
         except requests.RequestException:
             pass
         time.sleep(1.5 * (attempt + 1))
     print(f"  ! tile failed after retries near {mx0:.0f},{my0:.0f} (possible gap)", file=sys.stderr)
-    return [], True
+    return [], [], True
 
 
 def main():
@@ -126,12 +131,20 @@ def main():
     sites = {}  # siteId -> properties (+ lon/lat)
 
     def harvest(a, b, c, d):
-        feats, complete = fetch(session, user_id, a, b, c, d)
+        points, polygons, complete = fetch(session, user_id, a, b, c, d)
         time.sleep(DELAY)
-        for f in feats:
+        for f in points:
             p = f["properties"]
             lon, lat = merc_inv(*f["geometry"]["coordinates"])
-            sites[p["siteId"]] = {**p, "lon": lon, "lat": lat}
+            sites[p["siteId"]] = {**p, "lon": lon, "lat": lat, "wkt": ""}
+        for f in polygons:
+            p = f["properties"]
+            # Outer ring only (matches the Norwegian localities.csv WKT), reprojected to WGS84.
+            outer = [merc_inv(x, y) for x, y in f["geometry"]["coordinates"][0]]
+            wkt = "POLYGON((" + ", ".join(f"{lon:.6f} {lat:.6f}" for lon, lat in outer) + "))"
+            clon = sum(o[0] for o in outer) / len(outer)
+            clat = sum(o[1] for o in outer) / len(outer)
+            sites[p["siteId"]] = {**p, "lon": clon, "lat": clat, "wkt": wkt}
         if not complete and (c - a) > MIN_TILE_M:
             mx, my = (a + c) / 2, (b + d) / 2
             harvest(a, b, mx, my)
@@ -178,7 +191,7 @@ def main():
                 0,
                 0,
                 int(round(s.get("accuracy") or 0)) or 1,
-                "",
+                s.get("wkt", ""),
                 "1",
                 "0",
                 "1" if s.get("siteType") == 2 else "0",
