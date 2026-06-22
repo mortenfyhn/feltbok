@@ -15,10 +15,14 @@ the Sweden MVP (see issue #127). The Red List 2025 (GBIF 87e639cc-…) can fill 
 """
 
 import csv
+import os
 import sys
 import time
 
+import openpyxl
 import requests
+
+ALIEN_XLSX = os.path.join(os.path.dirname(__file__), "se_alien_risk_2024.xlsx")
 
 GBIF = "https://api.gbif.org/v1"
 DYNTAXA = "de8934f4-a136-481c-a87a-b0b202b80a31"  # Dyntaxa checklist on GBIF (CC0)
@@ -71,6 +75,22 @@ def redlist_statuses():
             break
         offset += 1000
         time.sleep(0.3)
+    return out
+
+
+def alien_statuses():
+    """{scientificName -> GEIAA risk code (SE/HI/PH/LO/NK)} for alien birds, from the committed
+    artfakta export (se_alien_risk_2024.xlsx). This grade isn't in any GBIF dataset, so it's a manual
+    download of artfakta.se's risk classification (Riskklassning 2024) filtered to birds."""
+    ws = openpyxl.load_workbook(ALIEN_XLSX, data_only=True).active
+    rows = list(ws.iter_rows(values_only=True))
+    hdr = [str(c) for c in rows[0]]
+    i_latin = next(i for i, h in enumerate(hdr) if "Vetenskapligt namn" in h)
+    i_risk = next(i for i, h in enumerate(hdr) if "GEIAA" in h)
+    out = {}
+    for r in rows[1:]:
+        if r[i_latin] and r[i_risk]:
+            out[str(r[i_latin]).strip()] = str(r[i_risk]).strip()
     return out
 
 
@@ -145,6 +165,8 @@ def main():
     print(f"facet: {len(counts)} species with Swedish occurrences", file=sys.stderr)
     redlist = redlist_statuses()
     print(f"red list: {len(redlist)} red-listed taxa", file=sys.stderr)
+    alien = alien_statuses()
+    print(f"alien list: {len(alien)} alien bird taxa", file=sys.stderr)
     birds = dyntaxa_birds()
     print(f"dyntaxa: {len(birds)} Aves species", file=sys.stderr)
 
@@ -152,19 +174,26 @@ def main():
     for latin, swe, nob, nub in birds:
         if not swe or not latin:
             continue  # need both a Swedish name (for search) and a Latin name (for export)
+        # Red-list code if native and threatened, else the alien GEIAA risk grade if introduced.
+        status = redlist.get(latin) or alien.get(latin, "")
         # Norwegian bird names are lowercase by convention; Dyntaxa returns them inconsistently
         # capitalised, so normalise to lowercase to match the Swedish names.
-        rows.append((swe, latin, redlist.get(latin, ""), counts.get(nub, 0), nob.lower()))
+        rows.append((swe, latin, status, counts.get(nub, 0), nob.lower()))
     # Most-reported first (common species reachable without scrolling); ties by name.
     rows.sort(key=lambda r: (-r[3], r[0]))
 
     w = csv.writer(sys.stdout)
-    # status = Swedish Red List 2025 code (RE/CR/EN/VU/NT/DD), blank if not red-listed.
+    # status = Red List 2025 code (RE/CR/EN/VU/NT/DD) or, for alien species, the GEIAA risk
+    # grade (SE/HI/PH/LO/NK); blank otherwise. StatusBadge colours both.
     w.writerow(["svensk", "latin", "status", "count", "norsk"])
     w.writerows(rows)
     n_nob = sum(1 for r in rows if r[4])
-    n_rl = sum(1 for r in rows if r[2])
-    print(f"wrote {len(rows)} species ({n_nob} Norwegian names, {n_rl} red-listed)", file=sys.stderr)
+    n_rl = sum(1 for r in rows if r[2] in REDLIST_CODE.values())
+    n_al = sum(1 for r in rows if r[2] and r[2] not in REDLIST_CODE.values())
+    print(
+        f"wrote {len(rows)} species ({n_nob} Norwegian names, {n_rl} red-listed, {n_al} alien)",
+        file=sys.stderr,
+    )
 
 
 if __name__ == "__main__":
