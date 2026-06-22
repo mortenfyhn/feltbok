@@ -54,6 +54,14 @@ fun signingValue(prop: String, env: String): String? =
     keystoreProps?.getProperty(prop) ?: System.getenv(env)
 val signStore = signingValue("storeFile", "KEYSTORE_FILE")
 
+// The Sweden flavor's "my localities" sync needs the maintainer's Artportalen userId. Kept out of
+// git (in local.properties, like the signing secrets) so it isn't published; absent -> "0", which
+// just means the personal sync returns nothing useful on a fresh clone/CI. Not a secret per se, but
+// it links to a profile and we'd rather not commit it.
+val localProps = rootProject.file("local.properties").takeIf { it.exists() }
+    ?.let { Properties().apply { load(it.inputStream()) } }
+val seUserId = localProps?.getProperty("feltbok.se.userId") ?: System.getenv("SE_USER_ID") ?: "0"
+
 android {
     namespace = "io.github.mortenfyhn.feltbok"
     compileSdk = 34
@@ -68,6 +76,8 @@ android {
         // BuildConfig.DEBUG tracks the `debuggable` flag, which the debug build type turns OFF for
         // speed - so it's false even in the dev build. Use this DEV flag for dev-only code instead.
         buildConfigField("boolean", "DEV", "false")
+        // Artportalen userId for the Sweden flavor's locality sync (from local.properties; see above).
+        buildConfigField("String", "SE_USER_ID", "\"$seUserId\"")
     }
 
     // One flavor per country: a separate app per Artsobservasjoner-family site (issue #127), so

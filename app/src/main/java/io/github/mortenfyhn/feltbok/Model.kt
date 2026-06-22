@@ -17,8 +17,11 @@ import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 import java.util.Date
 import java.util.Locale
+import kotlin.math.PI
+import kotlin.math.atan
 import kotlin.math.atan2
 import kotlin.math.cos
+import kotlin.math.exp
 import kotlin.math.sin
 import kotlin.math.sqrt
 
@@ -501,6 +504,50 @@ private fun lonLatRingToVertices(s: String): List<DoubleArray> {
             }
         }
     } catch (e: Exception) { emptyList() }
+}
+
+// Web Mercator (EPSG:3857, metres) -> WGS84, for the GeoJSON the Swedish sites API returns.
+private const val MERC_HALF = 20037508.34
+private fun mercToLon(x: Double) = x / MERC_HALF * 180.0
+private fun mercToLat(y: Double) =
+    Math.toDegrees(2 * atan(exp(Math.toRadians(y / MERC_HALF * 180.0))) - PI / 2)
+
+/** The user's own (editable) localities from artportalen.se's GetEditableSitesGeoJson — a GeoJSON
+ *  FeatureCollection of points + polygons in Web Mercator. The Swedish counterpart of [parseMySites]:
+ *  reproject to WGS84 and mark each as the user's own (private). */
+fun parseEditableSitesGeoJson(json: String): List<Locality> {
+    val root = JSONObject(json)
+    val out = ArrayList<Locality>()
+    fun locOf(p: JSONObject, lat: Double, lon: Double, poly: List<DoubleArray>) = Locality(
+        id = p.optLong("siteId").toString(),
+        lokalitet = p.optString("siteName"),
+        hovedlokalitet = "",
+        kommune = if (p.optString("siteAreaDescription") == "Kommun") p.optString("siteAreaName") else "",
+        lat = lat, lon = lon,
+        observers = 0, radius = p.optDouble("accuracy", 0.0),
+        polygon = poly, public = false, mine = true,
+    )
+    root.optJSONObject("points")?.optJSONArray("features")?.let { feats ->
+        for (i in 0 until feats.length()) {
+            val f = feats.getJSONObject(i)
+            val c = f.getJSONObject("geometry").getJSONArray("coordinates")
+            out.add(locOf(f.getJSONObject("properties"), mercToLat(c.getDouble(1)), mercToLon(c.getDouble(0)), emptyList()))
+        }
+    }
+    root.optJSONObject("polygons")?.optJSONArray("features")?.let { feats ->
+        for (i in 0 until feats.length()) {
+            val f = feats.getJSONObject(i)
+            val outer = f.getJSONObject("geometry").getJSONArray("coordinates").getJSONArray(0)
+            val verts = ArrayList<DoubleArray>(outer.length())
+            for (j in 0 until outer.length()) {
+                val p = outer.getJSONArray(j)
+                verts.add(doubleArrayOf(mercToLat(p.getDouble(1)), mercToLon(p.getDouble(0))))
+            }
+            if (verts.isEmpty()) continue
+            out.add(locOf(f.getJSONObject("properties"), verts.sumOf { it[0] } / verts.size, verts.sumOf { it[1] } / verts.size, verts))
+        }
+    }
+    return out
 }
 
 private fun csvField(s: String): String =

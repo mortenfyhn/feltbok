@@ -36,29 +36,10 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
-private val SITES_HOST = Country.sitesHost
-private val LOGIN_URL = "$SITES_HOST/bff/login?returnUrl=/my-page"
-
-// Pages /core/Sites/ByUser from inside the logged-in WebView (the session cookies ride along
-// automatically, so we never read or store them), accumulates the rows, and hands them back to
-// Kotlin via the FeltbokSync bridge. Same-origin, so it only succeeds while on the sites host.
-private val FETCH_JS = """
-(async () => {
-  try {
-    let all = [], page = 1, total = 1;
-    do {
-      const r = await fetch('/core/Sites/ByUser?pageSize=100&pageNumber=' + page,
-                            { headers: { 'X-CSRF': '1' }, credentials: 'same-origin' });
-      if (r.status === 401 || r.status === 403) { FeltbokSync.deliver('{"error":"auth"}'); return; }
-      if (!r.ok) { FeltbokSync.deliver('{"error":"http"}'); return; }
-      const d = await r.json();
-      (d.data || []).forEach(function(x) { all.push(x); });
-      total = d.totalPages || 1; page++;
-    } while (page <= total);
-    FeltbokSync.deliver(JSON.stringify({ data: all }));
-  } catch (e) { FeltbokSync.deliver('{"error":"js"}'); }
-})();
-""".trimIndent()
+// The sites host, login/probe URLs, the my-sites fetch JS, and the response parser are all
+// per-country (see Country.kt): Norway pages /core/Sites/ByUser on mobil.artsobservasjoner.no;
+// Sweden POSTs GetEditableSitesGeoJson on artportalen.se. The fetch runs same-origin inside the
+// logged-in WebView so the session cookie rides along and we never read or store it.
 
 /** The flow the screen walks through. The WebView is only ever shown to the user during [LOGIN];
  *  every other stage covers it with a Feltbok-native surface, so the third-party login never
@@ -105,7 +86,7 @@ fun SyncScreen(vm: MainViewModel) {
                                 if (stage != Stage.LOGIN) stage = Stage.INTRO
                             json.contains("\"error\"") -> stage = Stage.ERROR
                             else -> {
-                                val sites = withContext(Dispatchers.Default) { parseMySites(json) }
+                                val sites = withContext(Dispatchers.Default) { Country.mySitesParse(json) }
                                 val diff = runCatching { vm.applyMySites(sites) }.getOrNull()
                                 if (diff != null) {
                                     CookieManager.getInstance().flush()   // persist the session for next time
@@ -119,20 +100,29 @@ fun SyncScreen(vm: MainViewModel) {
             }, "FeltbokSync")
             webViewClient = object : WebViewClient() {
                 override fun onPageFinished(view: WebView, url: String?) {
-                    if (inFlight || url == null || !url.startsWith(SITES_HOST)) return
+                    if (inFlight || url == null) return
+                    val onSite = url.startsWith(Country.sitesHost)
+                    // A login page is either the same-host login path or, when the site uses an
+                    // external SSO (Sweden -> useradmin-auth.slu.se), any off-site host.
+                    val onLoginPage = !onSite || url.contains(Country.loginPathMarker)
                     when (stage) {
-                        // Probe with the cached cookie on any host page (a 401 routes us to INTRO).
-                        Stage.CHECKING -> { inFlight = true; view.evaluateJavascript(FETCH_JS, null) }
-                        // After login the BFF returns us to a content page; the login page itself
-                        // (/bff/...) must not trigger a premature fetch.
-                        Stage.LOGIN -> if (!url.contains("/bff/")) {
-                            inFlight = true; stage = Stage.FETCHING; view.evaluateJavascript(FETCH_JS, null)
+                        // Probe: on the site, fetch with the cached cookie; bounced to a login page
+                        // means we're not logged in, so explain and offer to log in.
+                        Stage.CHECKING ->
+                            if (onLoginPage) {
+                                stage = Stage.INTRO
+                            } else {
+                                inFlight = true; view.evaluateJavascript(Country.mySitesFetchJs, null)
+                            }
+                        // After login we land back on the site; login pages must not trigger a fetch.
+                        Stage.LOGIN -> if (onSite && !url.contains(Country.loginPathMarker)) {
+                            inFlight = true; stage = Stage.FETCHING; view.evaluateJavascript(Country.mySitesFetchJs, null)
                         }
                         else -> {}
                     }
                 }
             }
-            loadUrl("$SITES_HOST/my-sites")
+            loadUrl(Country.syncProbeUrl)
         }
     }
     DisposableEffect(Unit) { onDispose { webView.destroy() } }
@@ -155,8 +145,8 @@ fun SyncScreen(vm: MainViewModel) {
         Box(Modifier.weight(1f).fillMaxWidth()) {
             AndroidView(factory = { webView }, modifier = Modifier.fillMaxSize())
             if (stage != Stage.LOGIN) StageContent(stage, result, cs,
-                onLogin = { stage = Stage.LOGIN; webView.loadUrl(LOGIN_URL) },
-                onRetry = { stage = Stage.CHECKING; webView.loadUrl("$SITES_HOST/my-sites") },
+                onLogin = { stage = Stage.LOGIN; webView.loadUrl(Country.syncLoginUrl) },
+                onRetry = { stage = Stage.CHECKING; webView.loadUrl(Country.syncProbeUrl) },
                 onDone = { vm.closeSync() })
         }
     }

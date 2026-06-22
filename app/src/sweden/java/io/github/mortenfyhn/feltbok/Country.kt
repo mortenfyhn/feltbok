@@ -66,10 +66,35 @@ object Country {
     val mapCenterLat = 59.5
     val mapCenterLon = 15.0
     val importUrl = "https://www.artportalen.se/ImportSighting"
-
-    // Private-locality sync is out of scope for the Sweden MVP (its mobile API is unverified), so
-    // the footer entry point is hidden. sitesHost is kept only to satisfy the shared SyncScreen.
-    val syncEnabled = false
-    val sitesHost = "https://mobil.artportalen.se"
     val adjustHint = "Du kan justere lokaliteten seinere på artportalen.se"
+
+    // ---- private-locality sync: same WebView pattern as Norway, but against artportalen.se's
+    // GetEditableSitesGeoJson (the user's own editable sites), with the same .ASPXAUTH cookie the
+    // locality harvest uses. userId comes from local.properties (BuildConfig), not committed. ----
+    val syncEnabled = true
+    val sitesHost = "https://artportalen.se"
+    val syncProbeUrl = "$sitesHost/Site/Site"
+    val syncLoginUrl = "$sitesHost/LogOn?ReturnUrl=%2FSite%2FSite"
+    val loginPathMarker = "/LogOn"
+    val userId = BuildConfig.SE_USER_ID
+    val mySitesParse: (String) -> List<Locality> = ::parseEditableSitesGeoJson
+
+    // One POST returns all the user's editable sites within a national bbox (GeoJSON, Web Mercator).
+    val mySitesFetchJs = """
+        (async () => {
+          try {
+            const body = 'zoomLevel=5&bbox=1100000,7300000,2700000,10700000&userId=$userId'
+                       + '&projectIds=undefined&showOnlyProjects=false';
+            const r = await fetch('/Map/GetEditableSitesGeoJson', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8', 'X-Requested-With': 'XMLHttpRequest' },
+              body: body, credentials: 'same-origin'
+            });
+            if (r.redirected || r.url.indexOf('/LogOn') >= 0) { FeltbokSync.deliver('{"error":"auth"}'); return; }
+            if (!r.ok) { FeltbokSync.deliver('{"error":"http"}'); return; }
+            const d = await r.json();
+            FeltbokSync.deliver(JSON.stringify(d));
+          } catch (e) { FeltbokSync.deliver('{"error":"js"}'); }
+        })();
+    """.trimIndent()
 }

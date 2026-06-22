@@ -80,9 +80,31 @@ object Country {
     val mapCenterLon = 8.7
     val importUrl = "https://www.artsobservasjoner.no/ImportSighting"
 
-    // Private-locality sync via the mobile API's WebView login. Disabled where unavailable
-    // (the Sweden flavor) so its footer entry point is hidden.
+    val adjustHint = "Du kan justere lokaliteten seinere på artsobservasjoner.no"
+
+    // ---- private-locality sync: a WebView logs in, then a same-origin fetch pulls the user's own
+    // sites (the session cookie rides along). syncEnabled gates the footer entry point. ----
     val syncEnabled = true
     val sitesHost = "https://mobil.artsobservasjoner.no"
-    val adjustHint = "Du kan justere lokaliteten seinere på artsobservasjoner.no"
+    val syncProbeUrl = "$sitesHost/my-sites"
+    val syncLoginUrl = "$sitesHost/bff/login?returnUrl=/my-page"
+    val loginPathMarker = "/bff/" // while the URL still contains this we're mid-login; don't fetch yet
+    val mySitesParse: (String) -> List<Locality> = ::parseMySites
+    val mySitesFetchJs = """
+        (async () => {
+          try {
+            let all = [], page = 1, total = 1;
+            do {
+              const r = await fetch('/core/Sites/ByUser?pageSize=100&pageNumber=' + page,
+                                    { headers: { 'X-CSRF': '1' }, credentials: 'same-origin' });
+              if (r.status === 401 || r.status === 403) { FeltbokSync.deliver('{"error":"auth"}'); return; }
+              if (!r.ok) { FeltbokSync.deliver('{"error":"http"}'); return; }
+              const d = await r.json();
+              (d.data || []).forEach(function(x) { all.push(x); });
+              total = d.totalPages || 1; page++;
+            } while (page <= total);
+            FeltbokSync.deliver(JSON.stringify({ data: all }));
+          } catch (e) { FeltbokSync.deliver('{"error":"js"}'); }
+        })();
+    """.trimIndent()
 }
