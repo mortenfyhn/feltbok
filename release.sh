@@ -61,9 +61,11 @@ git commit -aqm "Release $tag"
 git tag "$tag"
 
 # Build AFTER tagging so `git describe` bakes the clean tag into the in-app version string.
-./gradlew assembleRelease --console=plain
-apk="feltbok-$tag.apk"   # a recognisable name, not Gradle's app-release.apk
-cp app/build/outputs/apk/release/app-release.apk "$apk"
+# This release pipeline cuts the Norway app (io.github.mortenfyhn.feltbok); the Sweden flavor
+# is released separately if/when it goes public.
+./gradlew assembleNorwayRelease --console=plain
+apk="feltbok-$tag.apk"   # a recognisable name, not Gradle's app-norway-release.apk
+cp app/build/outputs/apk/norway/release/app-norway-release.apk "$apk"
 
 # Release notes = this version's changelog, then the install steps below it.
 notes=$(mktemp)

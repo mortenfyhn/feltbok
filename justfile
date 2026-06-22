@@ -2,22 +2,24 @@ export ANDROID_HOME := env("ANDROID_HOME", home_directory() / "Android/Sdk")
 
 # Dev build carries the .debug applicationId suffix so it installs alongside the release app
 # I use daily. Every device-facing recipe targets this id, not the release "io.github.mortenfyhn.feltbok".
+# Recipes target the Norway flavor (the daily driver). Build the Sweden flavor directly with
+# Gradle when needed: ./gradlew installSwedenDebug (id io.github.mortenfyhn.feltbok.se.debug).
 app_id := "io.github.mortenfyhn.feltbok.debug"
-apk := "app/build/outputs/apk/debug/app-debug.apk"
+apk := "app/build/outputs/apk/norway/debug/app-norway-debug.apk"
 data_dir := "/sdcard/Android/data/" + app_id + "/files"
 
 # List all recipes
 default:
     @just --list
 
-# Build debug APK
+# Build debug APK (Norway flavor)
 build:
-    ./gradlew assembleDebug
+    ./gradlew assembleNorwayDebug
 
-# Run all tests: Python units (if any) + Kotlin units
+# Run all tests: Python units (if any) + Kotlin units (both flavors)
 test:
     .venv/bin/python -m unittest discover -s scripts -p 'test_*.py'
-    ./gradlew testDebugUnitTest
+    ./gradlew testNorwayDebugUnitTest testSwedenDebugUnitTest
 
 # Wire up the version-controlled git hooks (run once per fresh clone)
 hooks:
@@ -83,10 +85,10 @@ build-species-regions:
 
 # Push the built localities/species CSVs to the device (overrides the bundled assets, no rebuild)
 push-data:
-    adb push app/src/main/assets/localities.csv {{data_dir}}/localities.csv
-    -adb push app/src/main/assets/species.csv {{data_dir}}/species.csv
-    -adb push app/src/main/assets/species_months.csv {{data_dir}}/species_months.csv
-    -adb push app/src/main/assets/species_regions.csv {{data_dir}}/species_regions.csv
+    adb push app/src/norway/assets/localities.csv {{data_dir}}/localities.csv
+    -adb push app/src/norway/assets/species.csv {{data_dir}}/species.csv
+    -adb push app/src/norway/assets/species_months.csv {{data_dir}}/species_months.csv
+    -adb push app/src/norway/assets/species_regions.csv {{data_dir}}/species_regions.csv
     -adb push my-localities.csv {{data_dir}}/my-localities.csv   # maintainer's own customs (device-only)
 
 # Seed the DEBUG app with varied sample observations (overwrites its notes!). The debug build ships
