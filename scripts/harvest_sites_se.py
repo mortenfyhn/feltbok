@@ -2,11 +2,12 @@
 """Harvest Swedish public localities ("fyndplatser") from Artportalen's map API.
 
 The website's report map calls POST artportalen.se/Map/GetSitesGeoJson with a Web-Mercator
-bbox and returns the sites in view as GeoJSON points, each carrying the exact registered
-siteName, accuracy (radius m), kommun (siteAreaName), parentId, and the authoritative
-isPrivate flag. We tile a region in Web Mercator and recursively quarter any tile the
-server truncates (completeResult=false), keep the public sites, reproject the Mercator
-points to WGS84, and emit the bundled localities.csv schema (Sweden has no polygons).
+bbox and returns the sites in view as GeoJSON — points plus a separate `polygons` array for
+area localities (nature reserves etc.) — each carrying the exact registered siteName, accuracy
+(radius m), kommun (siteAreaName), parentId, and the authoritative isPrivate flag. We tile a
+region in Web Mercator, recursively quartering any tile the server truncates (completeResult
+=false) or that fails after retries (see FAIL_MIN_M), keep the public sites, reproject the
+Mercator geometry to WGS84 (polygons as WKT), and emit the bundled localities.csv schema.
 
 The endpoint requires a logged-in session, so pass the browser's Cookie and user id:
 
@@ -30,12 +31,24 @@ import requests
 URL = "https://artportalen.se/Map/GetSitesGeoJson"
 SPECIES_GROUP = "8"  # Fåglar (birds) — as the report form sends
 TILE_M = 30_000  # Web-Mercator tile side; quarter on truncation
-MIN_TILE_M = 500  # stop subdividing below this
-DELAY = float(os.environ.get("AP_DELAY", "0.4"))  # per-tile pause; raise (AP_DELAY) to be gentle
+MIN_TILE_M = 500  # stop subdividing a truncated tile below this
+FAIL_MIN_M = (
+    6_000  # a *failed* tile subdivides only while larger than this: a too-big tile that
+)
+# times out often succeeds when quartered, but a consistently-erroring area bottoms out after a few
+# levels instead of exploding into 4^depth requests; below it the tiny gap is just skipped.
+DELAY = float(
+    os.environ.get("AP_DELAY", "0.4")
+)  # per-tile pause; raise (AP_DELAY) to be gentle
 
 # (minLat, maxLat, minLon, maxLon) per region the maintainer is visiting (issue #127).
 REGIONS = {
-    "gotland": (56.85, 58.05, 17.85, 19.45),  # west edge reaches the Karlsö bird islands (~17.9°E)
+    "gotland": (
+        56.85,
+        58.05,
+        17.85,
+        19.45,
+    ),  # west edge reaches the Karlsö bird islands (~17.9°E)
     "stockholm": (58.70, 60.25, 17.00, 19.30),
     "jamtland": (61.70, 64.60, 12.10, 16.50),
 }
@@ -78,8 +91,9 @@ def make_session():
 
 
 def fetch(session, user_id, mx0, my0, mx1, my1):
-    """One Mercator box -> (point_features, polygon_features, complete). complete=False => truncated.
-    Polygon localities (e.g. nature reserves) come in a separate `polygons` array from the points."""
+    """One Mercator box -> (point_features, polygon_features, complete, ok). complete=False => the
+    server truncated the result; ok=False => the request failed after retries. Polygon localities
+    (e.g. nature reserves) come in a separate `polygons` array from the points."""
     body = {
         "zoomLevel": 15,
         "bbox": f"{mx0},{my0},{mx1},{my1}",
@@ -92,11 +106,15 @@ def fetch(session, user_id, mx0, my0, mx1, my1):
     }
     for attempt in range(4):
         try:
-            r = session.post(URL, data=json.dumps(body), timeout=60, allow_redirects=False)
+            r = session.post(
+                URL, data=json.dumps(body), timeout=60, allow_redirects=False
+            )
             # An expired session redirects to the login page. Abort loudly rather than treat
             # every remaining tile as empty and silently ship a half-harvested region.
             if r.status_code in (301, 302) or "/LogOn" in r.headers.get("Location", ""):
-                sys.exit("auth expired (redirected to login) — refresh AP_COOKIE and rerun")
+                sys.exit(
+                    "auth expired (redirected to login) — refresh AP_COOKIE and rerun"
+                )
             if r.status_code == 200 and r.headers.get("content-type", "").startswith(
                 "application/json"
             ):
@@ -105,18 +123,30 @@ def fetch(session, user_id, mx0, my0, mx1, my1):
                     d["points"]["features"],
                     d["polygons"]["features"],
                     d.get("completeResult", True),
+                    True,  # ok: the request succeeded
                 )
         except requests.RequestException:
             pass
         time.sleep(1.5 * (attempt + 1))
-    print(f"  ! tile failed after retries near {mx0:.0f},{my0:.0f} (possible gap)", file=sys.stderr)
-    return [], [], True
+    print(
+        f"  ! tile failed after retries near {mx0:.0f},{my0:.0f} — subdividing",
+        file=sys.stderr,
+    )
+    return (
+        [],
+        [],
+        False,
+        False,
+    )  # complete=False to trigger subdivision; ok=False to bound its depth
 
 
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--region", choices=REGIONS)
-    ap.add_argument("--bbox", help="minlon,minlat,maxlon,maxlat — overrides --region (one-off areas)")
+    ap.add_argument(
+        "--bbox",
+        help="minlon,minlat,maxlon,maxlat — overrides --region (one-off areas)",
+    )
     ap.add_argument("--no-header", action="store_true")
     args = ap.parse_args()
     user_id = int(os.environ.get("AP_USERID", "0")) or sys.exit("set AP_USERID")
@@ -131,7 +161,7 @@ def main():
     sites = {}  # siteId -> properties (+ lon/lat)
 
     def harvest(a, b, c, d):
-        points, polygons, complete = fetch(session, user_id, a, b, c, d)
+        points, polygons, complete, ok = fetch(session, user_id, a, b, c, d)
         time.sleep(DELAY)
         for f in points:
             p = f["properties"]
@@ -141,11 +171,18 @@ def main():
             p = f["properties"]
             # Outer ring only (matches the Norwegian localities.csv WKT), reprojected to WGS84.
             outer = [merc_inv(x, y) for x, y in f["geometry"]["coordinates"][0]]
-            wkt = "POLYGON((" + ", ".join(f"{lon:.6f} {lat:.6f}" for lon, lat in outer) + "))"
+            wkt = (
+                "POLYGON(("
+                + ", ".join(f"{lon:.6f} {lat:.6f}" for lon, lat in outer)
+                + "))"
+            )
             clon = sum(o[0] for o in outer) / len(outer)
             clat = sum(o[1] for o in outer) / len(outer)
             sites[p["siteId"]] = {**p, "lon": clon, "lat": clat, "wkt": wkt}
-        if not complete and (c - a) > MIN_TILE_M:
+        # Subdivide a truncated tile (too many sites) down to MIN_TILE_M; subdivide a *failed* tile
+        # (server error/timeout) only while it's still large, to bound retries (see FAIL_MIN_M).
+        floor = MIN_TILE_M if ok else FAIL_MIN_M
+        if not complete and (c - a) > floor:
             mx, my = (a + c) / 2, (b + d) / 2
             harvest(a, b, mx, my)
             harvest(mx, b, c, my)
