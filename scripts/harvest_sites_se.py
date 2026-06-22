@@ -35,7 +35,7 @@ DELAY = float(os.environ.get("AP_DELAY", "0.4"))  # per-tile pause; raise (AP_DE
 
 # (minLat, maxLat, minLon, maxLon) per region the maintainer is visiting (issue #127).
 REGIONS = {
-    "gotland": (56.85, 58.05, 18.00, 19.45),
+    "gotland": (56.85, 58.05, 17.85, 19.45),  # west edge reaches the Karlsö bird islands (~17.9°E)
     "stockholm": (58.70, 60.25, 17.00, 19.30),
     "jamtland": (61.70, 64.60, 12.10, 16.50),
 }
@@ -110,12 +110,18 @@ def fetch(session, user_id, mx0, my0, mx1, my1):
 
 def main():
     ap = argparse.ArgumentParser()
-    ap.add_argument("--region", choices=REGIONS, required=True)
+    ap.add_argument("--region", choices=REGIONS)
+    ap.add_argument("--bbox", help="minlon,minlat,maxlon,maxlat — overrides --region (one-off areas)")
     ap.add_argument("--no-header", action="store_true")
     args = ap.parse_args()
     user_id = int(os.environ.get("AP_USERID", "0")) or sys.exit("set AP_USERID")
 
-    minlat, maxlat, minlon, maxlon = REGIONS[args.region]
+    if args.bbox:
+        minlon, minlat, maxlon, maxlat = (float(x) for x in args.bbox.split(","))
+    elif args.region:
+        minlat, maxlat, minlon, maxlon = REGIONS[args.region]
+    else:
+        sys.exit("pass --region or --bbox")
     session = make_session()
     sites = {}  # siteId -> properties (+ lon/lat)
 

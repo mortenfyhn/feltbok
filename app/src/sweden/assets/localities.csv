@@ -811,6 +811,7 @@ id,lokalitet,hovedlokalitet,kommune,fylke,lat,lon,count,observers,radius,geometr
 2078438,Rönninge,,Salem,,59.191624,17.734244,0,0,1606,,1,0,1
 2078481,"Fränsta, Torp",,Ånge,,62.500700,16.168103,0,0,1135,,1,0,1
 2078867,Närshamn,,Gotland,,57.224925,18.660865,0,0,130,,1,0,1
+2078871,Stora Karlsö,,Gotland,,57.284599,17.971830,0,0,1127,,1,0,1
 2078872,Tofta strand,,Gotland,,57.493114,18.126448,0,0,750,,1,0,1
 2078873,Gnisvärd,,Gotland,,57.503347,18.118938,0,0,500,,1,0,1
 2078874,Rivviken,,Gotland,,56.912665,18.139618,0,0,750,,1,0,1
@@ -998,6 +999,15 @@ id,lokalitet,hovedlokalitet,kommune,fylke,lat,lon,count,observers,radius,geometr
 2079376,Bodarna,Lilla Karlsö,Gotland,,57.309293,18.072109,0,0,272,,1,0,0
 2079377,Sudervagnhus,Lilla Karlsö,Gotland,,57.312932,18.052418,0,0,189,,1,0,0
 2079378,Norderslätt,Lilla Karlsö,Gotland,,57.318821,18.060207,0,0,433,,1,0,0
+2079379,Älmar,Stora Karlsö,Gotland,,57.281977,17.963665,0,0,100,,1,0,0
+2079380,Marmorberget,Stora Karlsö,Gotland,,57.286550,17.964850,0,0,250,,1,0,0
+2079381,Rojsuhajd,Stora Karlsö,Gotland,,57.287376,17.981173,0,0,400,,1,0,0
+2079382,Linnés ask,Stora Karlsö,Gotland,,57.288279,17.981703,0,0,116,,1,0,0
+2079383,Myren,Stora Karlsö,Gotland,,57.284370,17.959559,0,0,75,,1,0,0
+2079384,Stora Karlsö fyr,Stora Karlsö,Gotland,,57.289618,17.958805,0,0,100,,1,0,0
+2079385,Hien,Stora Karlsö,Gotland,,57.289783,17.963233,0,0,89,,1,0,0
+2079386,Norderhamn,Stora Karlsö,Gotland,,57.289114,17.970438,0,0,150,,1,0,0
+2079387,Norra thuja beståndet,Stora Karlsö,Gotland,,57.288682,17.973546,0,0,50,,1,0,0
 2079388,Ajkesträsk,,Gotland,,57.962547,19.220686,0,0,500,,1,0,1
 2079389,Butleks,,Gotland,,57.970624,19.231798,0,0,130,,1,0,1
 2079390,Ullahau,,Gotland,,57.963610,19.253906,0,0,750,,1,0,1
@@ -4022,6 +4032,7 @@ id,lokalitet,hovedlokalitet,kommune,fylke,lat,lon,count,observers,radius,geometr
 2092109,Styggberg,,Nordanstig,,62.225301,16.287157,0,0,990,,1,0,1
 2092123,Viksjö f.d. kyrka,Viksjö,Järfälla,,59.419383,17.804923,0,0,380,,1,0,0
 2092130,Kvarnsjön Vidja,Lissma,Huddinge,,59.193538,18.083778,0,0,576,,1,0,0
+2092146,Stiudden,Stora Karlsö,Gotland,,57.285084,17.989833,0,0,140,,1,0,0
 2092148,Uthamra,Vallentunasjön,Vallentuna,,59.516314,18.030535,0,0,489,,1,0,0
 2092150,Vitträsk,Ornö,Haninge,,59.032372,18.418311,0,0,408,,1,0,0
 2092152,Hartsön,,Nyköping,,58.712543,17.473211,0,0,288,,1,0,0
@@ -4843,6 +4854,16 @@ id,lokalitet,hovedlokalitet,kommune,fylke,lat,lon,count,observers,radius,geometr
 2096134,Viltvatten Sjudars,Lagga,Knivsta,,59.790767,17.881379,0,0,116,,1,0,0
 2096149,Vikhagen,Slite,Gotland,,57.706229,18.791094,0,0,479,,1,0,0
 2096161,Storängsviken,Valloxen,Knivsta,,59.733948,17.860197,0,0,238,,1,0,0
+2096174,Björkar,Stora Karlsö,Gotland,,57.282720,17.977526,0,0,148,,1,0,0
+2096175,Tallar,Stora Karlsö,Gotland,,57.287594,17.976654,0,0,75,,1,0,0
+2096176,fyrträdgården,Stora Karlsö,Gotland,,57.285623,17.959496,0,0,50,,1,0,0
+2096180,Lauphargi,Stora Karlsö,Gotland,,57.279933,17.961140,0,0,150,,1,0,0
+2096181,Gjaushäll,Stora Karlsö,Gotland,,57.278029,17.970195,0,0,112,,1,0,0
+2096182,Suderslätu,Stora Karlsö,Gotland,,57.279869,17.968327,0,0,111,,1,0,0
+2096183,Stornasar,Stora Karlsö,Gotland,,57.283730,17.956460,0,0,200,,1,0,0
+2096184,Utfall,Stora Karlsö,Gotland,,57.292410,17.978783,0,0,150,,1,0,0
+2096185,Millsnabb,Stora Karlsö,Gotland,,57.290449,17.967240,0,0,89,,1,0,0
+2096186,Hassli,Stora Karlsö,Gotland,,57.289152,17.985817,0,0,25,,1,0,0
 2096204,"Kluk, Alsen",,Krokom,,63.401312,13.808444,0,0,1551,,1,0,1
 2096205,Västra Röda grundet,Jungfruskär,Värmdö,,59.124630,18.701002,0,0,126,,1,0,0
 2096219,Ärentuna,,Uppsala,,59.953399,17.607366,0,0,6163,,1,0,1
@@ -5377,6 +5398,7 @@ id,lokalitet,hovedlokalitet,kommune,fylke,lat,lon,count,observers,radius,geometr
 2098731,"Burusjöns N-ände, Idre",,Älvdalen,,61.963237,12.748531,0,0,390,,1,0,1
 2098737,Odalgården,Funbo,Uppsala,,59.838238,17.878945,0,0,279,,1,0,0
 2098738,Fejan,Rådmansö,Norrtälje,,59.744844,19.163814,0,0,879,,1,0,0
+2098746,Svarthällar,Stora Karlsö,Gotland,,57.282084,17.987263,0,0,140,,1,0,0
 2098747,Sjaustrehammaren,,Gotland,,57.370007,18.806895,0,0,130,,1,0,1
 2098748,Skåls,,Gotland,,57.100589,18.250766,0,0,130,,1,0,1
 2098749,"Lindarve, Sproge",,Gotland,,57.249096,18.177580,0,0,130,,1,0,1
@@ -9755,6 +9777,7 @@ id,lokalitet,hovedlokalitet,kommune,fylke,lat,lon,count,observers,radius,geometr
 2123683,Österväga,Vendel,Tierp,,60.227445,17.669161,0,0,346,,1,0,0
 2123684,Solsta,Frösunda k:a,Vallentuna,,59.604065,18.141747,0,0,225,,1,0,0
 2123686,"Venåsberget, Delsbo",,Hudiksvall,,61.840210,16.395754,0,0,2895,,1,0,1
+2123687,Brygge,Stora Karlsö,Gotland,,57.279500,17.958966,0,0,64,,1,0,0
 2123688,Hamngården,,Gotland,,57.229175,18.662814,0,0,130,,1,0,1
 2123691,Skeppsbrogränd,Visby,Gotland,,57.637543,18.287849,0,0,123,,1,0,0
 2123692,Stangmyr,,Gotland,,57.268146,18.432693,0,0,130,,1,0,1
@@ -13091,6 +13114,8 @@ id,lokalitet,hovedlokalitet,kommune,fylke,lat,lon,count,observers,radius,geometr
 2145259,Bangårdsposten,Norrmalm,Stockholm,,59.329624,18.055751,0,0,50,,1,0,0
 2145263,"Bröckling, Bräcke",,Bräcke,,62.726450,15.513707,0,0,470,,1,0,1
 2145264,"Hemsjö, Bräcke",,Bräcke,,62.720283,15.576320,0,0,1408,,1,0,1
+2145270,Norderslätt,Stora Karlsö,Gotland,,57.286628,17.972935,0,0,111,,1,0,0
+2145271,Suderhamn,Stora Karlsö,Gotland,,57.279389,17.965371,0,0,100,,1,0,0
 2145280,Bokskogen,Stäksön,Upplands-Bro,,59.470210,17.786113,0,0,236,,1,0,0
 2145289,Schildts torn,Tofta skjutfält,Gotland,,57.524586,18.132781,0,0,126,,1,0,0
 2145290,Grönbo,Tofta skjutfält,Gotland,,57.539988,18.130428,0,0,110,,1,0,0
@@ -19945,6 +19970,7 @@ id,lokalitet,hovedlokalitet,kommune,fylke,lat,lon,count,observers,radius,geometr
 2200075,Skarboudden,Vendelsjön,Tierp,,60.182446,17.695994,0,0,401,,1,0,0
 2200128,Nybylunds NR,Kulla sn,Enköping,,59.676692,17.471810,0,0,332,,1,0,0
 2200149,Hemsarve,Hejnumdalen,Gotland,,57.683017,18.635982,0,0,130,,1,0,0
+2200150,"Västerberget, Stora Karlsö",Stora Karlsö,Gotland,,57.290293,17.958832,0,0,10,,1,0,0
 2200163,Fjälltuna,,Dorotea,,64.418289,16.419074,0,0,320,,1,0,1
 2200171,"Öster-Mörtsjön, Fors",,Ragunda,,62.915172,16.420727,0,0,470,,1,0,1
 2200198,Syltbäcken,,Nyköping,,58.723989,17.080199,0,0,75,,1,0,1
@@ -22266,6 +22292,7 @@ id,lokalitet,hovedlokalitet,kommune,fylke,lat,lon,count,observers,radius,geometr
 2229592,Ersboda,Rönninge,Salem,,59.202140,17.717005,0,0,97,,1,0,0
 2229598,"Skalsved, Klövsjö",,Berg,,62.542431,14.316927,0,0,470,,1,0,1
 2229599,Norra Norbybron,Hågadalen-Nåsten NR,Uppsala,,59.831078,17.594008,0,0,250,,1,0,0
+2229639,Aurbacken,Stora Karlsö,Gotland,,57.292308,17.968884,0,0,50,,1,0,0
 2229642,"Börsåsen, Överhogdal",,Härjedalen,,62.377791,14.839962,0,0,570,,1,0,1
 2229669,"Glasögontjärnarna, Bodsjö",,Bräcke,,62.712468,15.250797,0,0,470,,1,0,1
 2229670,"Baksjön, Bodsjö",,Bräcke,,62.724281,15.222033,0,0,470,,1,0,1
@@ -22694,6 +22721,7 @@ id,lokalitet,hovedlokalitet,kommune,fylke,lat,lon,count,observers,radius,geometr
 2241175,Mariehällsdammen,,Strängnäs,,59.340501,17.157948,0,0,200,,1,0,1
 2241316,Fullersta sumpskog,Huddinge,Huddinge,,59.236394,17.966890,0,0,225,,1,0,0
 2241367,Valar gård,Mjölhatteträsk,Gotland,,57.022457,18.220493,0,0,130,,1,0,0
+2241378,Rönnudden,Stora Karlsö,Gotland,,57.291648,17.973555,0,0,134,,1,0,0
 2241422,Röningarna,"Holmvallen, Axhögen",Härjedalen,,62.702784,12.522138,0,0,256,,1,0,0
 2241486,"Saxsjön, Åre",,Åre,,63.569748,12.390103,0,0,1000,,1,0,1
 2241571,"Labbgård, Häggenås",,Östersund,,63.386753,15.031007,0,0,470,,1,0,1
@@ -22827,6 +22855,7 @@ id,lokalitet,hovedlokalitet,kommune,fylke,lat,lon,count,observers,radius,geometr
 2247914,Hedvig Eleonora kyrka,Östermalm,Stockholm,,59.334935,18.080886,0,0,145,,1,0,0
 2255115,Örstaåkern,Angarnssjöängen,Vallentuna,,59.542871,18.161617,0,0,250,,1,0,0
 2258190,Svartsjömaden,Svartsjöviken,Ekerö,,59.364615,17.723042,0,0,100,,1,0,0
+2263963,Spangände,Stora Karlsö,Gotland,,57.291148,17.960035,0,0,10,,1,0,0
 2274079,Stegsholmsviken,Lännåkersviken,Haninge,,59.102749,18.257090,0,0,200,,1,0,0
 2274080,Stegsholms ekhage,Lännåkersviken,Haninge,,59.107020,18.249580,0,0,300,,1,0,0
 2274391,Dysjöbergets Nr,,Ånge,,62.605349,15.553395,0,0,75,,1,0,1
@@ -22929,6 +22958,7 @@ id,lokalitet,hovedlokalitet,kommune,fylke,lat,lon,count,observers,radius,geometr
 2349496,Bunge flygfält,,Gotland,,57.849159,19.035175,0,0,500,,1,0,1
 2350665,Flottiljvägen,,Gotland,,57.673310,18.344137,0,0,150,,1,0,1
 2352015,Törnebyfälten,,Nyköping,,58.864005,17.173596,0,0,500,,1,0,1
+2352917,Stordal,Stora Karlsö,Gotland,,57.282113,17.971121,0,0,200,,1,0,0
 2355204,Stormyrberget,Stormyrskogens NR,Ånge,,62.266686,16.243247,0,0,200,,1,0,0
 2356157,Tvärberget,"Norsjöberget, Undersåker",Åre,,63.351975,13.352972,0,0,250,,1,0,0
 2356158,Röningsberget,"Norsjöberget, Undersåker",Åre,,63.350476,13.360275,0,0,200,,1,0,0
@@ -24032,6 +24062,7 @@ id,lokalitet,hovedlokalitet,kommune,fylke,lat,lon,count,observers,radius,geometr
 2746434,Bangårdsgatan,Visby,Gotland,,57.631739,18.292143,0,0,50,,1,0,0
 2746489,"Stora Hammars, Bro",,Gotland,,57.657622,18.400848,0,0,125,,1,0,1
 2748166,Stora Yxneträsk,,Gotland,,57.715510,18.495764,0,0,150,,1,0,1
+2748200,Äske,Stora Karlsö,Gotland,,57.279228,17.977966,0,0,250,,1,0,0
 2748205,Kube,,Gotland,,57.545986,18.269406,0,0,125,,1,0,1
 2752095,Rågåkre,,Gotland,,57.453052,18.743330,0,0,200,,1,0,1
 2757014,Bärhäll,,Gotland,,57.272119,18.739387,0,0,25,,1,0,1
@@ -24039,6 +24070,7 @@ id,lokalitet,hovedlokalitet,kommune,fylke,lat,lon,count,observers,radius,geometr
 2758804,Ekes,,Gotland,,57.683103,18.499959,0,0,300,,1,0,1
 2759217,Valdarve,,Gotland,,57.484665,18.201251,0,0,150,,1,0,1
 2759218,Gannarve myr,Hall,Gotland,,57.889535,18.707613,0,0,300,,1,0,0
+2759219,Hässelby läde,Stora Karlsö,Gotland,,57.286346,17.971202,0,0,25,,1,0,0
 2761069,Kodings,,Gotland,,57.232399,18.391002,0,0,250,,1,0,1
 2761072,Ekeby,Eskelhem,Gotland,,57.502213,18.178631,0,0,300,,1,0,0
 2761073,Tummelbos,,Gotland,,57.265664,18.293265,0,0,125,,1,0,1
@@ -24054,6 +24086,10 @@ id,lokalitet,hovedlokalitet,kommune,fylke,lat,lon,count,observers,radius,geometr
 2773177,Sles,Grötlingbo,Gotland,,57.100569,18.372578,0,0,125,,1,0,0
 2773181,Alveskogs,Alva,Gotland,,57.180572,18.380474,0,0,200,,1,0,0
 2778976,Binge,Martebo,Gotland,,57.741396,18.511098,0,0,200,,1,0,0
+2783392,Bergshyddan,Stora Karlsö,Gotland,,57.289487,17.960610,0,0,25,,1,0,0
+2783393,Lagårn,Stora Karlsö,Gotland,,57.288997,17.960080,0,0,25,,1,0,0
+2783394,Stora Förvar,Stora Karlsö,Gotland,,57.289915,17.974642,0,0,25,,1,0,0
+2783395,Dödskurvan,Stora Karlsö,Gotland,,57.284366,17.970474,0,0,50,,1,0,0
 2787932,Svarvnäset,Fleringe,Gotland,,57.914065,18.858980,0,0,300,,1,0,0
 2790828,Starks väg,Vibble,Gotland,,57.605428,18.245116,0,0,100,,1,0,0
 2790829,Munthes villa,Vibble,Gotland,,57.607064,18.244685,0,0,75,,1,0,0
@@ -26811,6 +26847,7 @@ id,lokalitet,hovedlokalitet,kommune,fylke,lat,lon,count,observers,radius,geometr
 4008484,"Linuddsmaderna, västra",,Nyköping,,58.730751,17.069536,0,0,125,,1,0,1
 4009209,Rosenkällaskogen,"Rosenkälla, Nyköping",Nyköping,,58.749961,17.049108,0,0,100,,1,0,0
 4010612,Lungretjärnen,"Sjörflon, Kyrkås",Östersund,,63.228439,14.926308,0,0,200,,1,0,0
+4011670,Lerberget,Stora Karlsö,Gotland,,57.287084,17.958409,0,0,100,,1,0,0
 4013012,Skrankan,"Ottsjö, Undersåker",Åre,,63.214504,13.068817,0,0,100,,1,0,0
 4015314,Terrängspåret,"Västbyn, Frösön",Östersund,,63.197310,14.467646,0,0,200,,1,0,0
 4018821,Skogsdungen norr om plattformen,Ängstugeområdet,Nyköping,,58.750749,17.064586,0,0,100,,1,0,0
@@ -28108,6 +28145,8 @@ id,lokalitet,hovedlokalitet,kommune,fylke,lat,lon,count,observers,radius,geometr
 6594663,Brudariv,,Gotland,,57.900621,19.048650,0,0,150,,1,0,1
 6594664,Grönudd,,Gotland,,57.895055,19.021763,0,0,150,,1,0,1
 6594665,Haugrönan,,Gotland,,57.893785,19.020164,0,0,100,,1,0,1
+6597322,Kupro,Stora Karlsö,Gotland,,57.286380,17.988826,0,0,100,,1,0,0
+6597341,Svartsprang,Stora Karlsö,Gotland,,57.289449,17.961913,0,0,25,,1,0,0
 6600062,"Första Håsjön, Sunne",,Östersund,,63.075257,14.482064,0,0,300,,1,0,1
 6600113,"Andra Håsjön, Sunne",,Östersund,,63.068891,14.483636,0,0,400,,1,0,1
 6600424,"Stackris, Sunne",,Östersund,,63.079455,14.509930,0,0,1000,,1,0,1
@@ -28548,6 +28587,7 @@ id,lokalitet,hovedlokalitet,kommune,fylke,lat,lon,count,observers,radius,geometr
 9302388,Spirudden,Åva,Tyresö,,59.172691,18.368589,0,0,125,,1,0,0
 9313132,Svannäsmaden,Hjälstaviken,Enköping,,59.655459,17.392219,0,0,150,,1,0,0
 9313138,Svannäsmaden,,Enköping,,59.655459,17.392219,0,0,150,,1,0,1
+9355344,Södra thuja beståndet,Stora Karlsö,Gotland,,57.286482,17.974121,0,0,75,,1,0,0
 9361928,"Blivande våtmark8, Nyköpings kommun",,Nyköping,,58.822515,17.332589,0,0,100,,1,0,1
 9361929,"Blivande våtmark7, Trosa kommun",,Trosa,,58.843180,17.397340,0,0,100,,1,0,1
 9361932,"Blivande våtmark5, Trosa kommun",,Trosa,,58.844449,17.398642,0,0,100,,1,0,1
