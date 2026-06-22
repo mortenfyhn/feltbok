@@ -32,7 +32,7 @@ object Strings {
     }
 
     object About {
-        const val title = "Om Feltbok"
+        const val title = "Om Fältbok"
         const val madeBy = "Skapad av Morten F. Amundsen"
         const val dataHeader = "Data och källor"
         const val artsdatabanken = "Artdata från Artdatabanken (CC BY 4.0)"
@@ -46,7 +46,7 @@ object Strings {
         const val body = "Hör av dig om du hittar fel, undrar något eller har feedback:"
         const val githubIssue = "Använd GitHub"
         const val email = "Skicka e-post"
-        const val mailSubject = "Feltbok-feedback"
+        const val mailSubject = "Fältbok-feedback"
         const val mailHint = "Bifoga gärna en skärmbild."
     }
 
@@ -111,7 +111,7 @@ object Strings {
         const val update = "Uppdatera lokaler"
         const val fetch = "Hämta mina lokaler"
         const val afterLogin = "Efter inloggning hämtar vi lokalerna automatiskt."
-        const val intro = "Feltbok kan hämta dina privata lokaler från Artportalen. Tryck på knappen för att logga in, så sköter resten sig själv."
+        const val intro = "Fältbok kan hämta dina privata lokaler från Artportalen. Tryck på knappen för att logga in, så sköter resten sig själv."
         const val fetching = "Hämtar lokaler…"
         const val error = "Något gick fel vid hämtningen."
         const val retry = "Försök igen"

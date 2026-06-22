@@ -143,7 +143,7 @@ android {
 // because a resValue set per-flavor and per-build-type would override rather than combine.
 androidComponents {
     onVariants { variant ->
-        val base = if (variant.flavorName == "sweden") "Feltbok SE" else "Feltbok"
+        val base = if (variant.flavorName == "sweden") "Fältbok" else "Feltbok"
         val marker = if (variant.buildType == "debug") " (dev)" else " (beta)"
         variant.resValues.put(
             variant.makeResValueKey("string", "app_name"),
