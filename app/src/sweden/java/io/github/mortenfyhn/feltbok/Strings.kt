@@ -14,7 +14,7 @@ object Strings {
         const val empty = "Tryck + för ny observation"
         const val today = "Idag"
         const val yesterday = "Igår"
-        const val feedback = "Ge feedback"
+        const val feedback = "Tyck till"
         const val export = "Exportera"
         fun speciesCount(n: Int) = if (n == 1) "1 art" else "$n arter"
         fun speciesTotal(n: Int) = "($n totalt)"
@@ -42,7 +42,7 @@ object Strings {
     }
 
     object Feedback {
-        const val title = "Feedback"
+        const val title = "Tyck till"
         const val body = "Hör av dig om du hittar fel, undrar något eller har feedback:"
         const val githubIssue = "Använd GitHub"
         const val email = "Skicka e-post"
@@ -96,7 +96,7 @@ object Strings {
         const val pasteEmphasis = "Importera"
 
         fun tip(kommune: String) = "(Prioritera lokaler i $kommune för att undvika krockar)"
-        const val step4 = "Kontrollera fynd"
+        const val step4 = "Granska fynd"
         const val step4Body = "Kontrollera att observationerna syns i Artportalen"
         const val step5 = "Ta bort från appen"
         const val step5Body = "När allt är på plats kan du ta bort observationerna från appen"
