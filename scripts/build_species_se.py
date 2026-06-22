@@ -27,6 +27,51 @@ ARTPORTALEN = (
     "38b4c89f-584c-41bb-bd8f-cd1def33e92f"  # Artportalen occurrences, for ranking
 )
 AVES = 212  # backbone Aves key, for the occurrence facet
+REDLIST = "87e639cc-30a9-4007-bd2c-b0cab60326b9"  # The Swedish Red List 2025 (rödlistade arter)
+
+# IUCN status (full word -> the short code StatusBadge renders). LC/NA/NE aren't in the red-list
+# dataset (it only carries the red-listed categories), so anything else maps to no badge.
+REDLIST_CODE = {
+    "REGIONALLY_EXTINCT": "RE",
+    "CRITICALLY_ENDANGERED": "CR",
+    "ENDANGERED": "EN",
+    "VULNERABLE": "VU",
+    "NEAR_THREATENED": "NT",
+    "DATA_DEFICIENT": "DD",
+}
+
+
+def redlist_statuses():
+    """{scientificName -> short IUCN code} from the Swedish Red List 2025. The dataset spans all
+    groups and carries only red-listed taxa, so we keep the accepted ones and join by name."""
+    out, offset = {}, 0
+    while True:
+        r = requests.get(
+            f"{GBIF}/species/search",
+            params={
+                "datasetKey": REDLIST,
+                "rank": "SPECIES",
+                "status": "ACCEPTED",
+                "limit": 1000,
+                "offset": offset,
+            },
+            timeout=120,
+        )
+        r.raise_for_status()
+        d = r.json()
+        for rec in d.get("results", []):
+            code = next(
+                (REDLIST_CODE[s] for s in rec.get("threatStatuses", []) if s in REDLIST_CODE),
+                None,
+            )
+            name = rec.get("canonicalName") or rec.get("species")
+            if code and name:
+                out[name] = code
+        if d.get("endOfRecords", True):
+            break
+        offset += 1000
+        time.sleep(0.3)
+    return out
 
 
 def aves_counts():
@@ -98,6 +143,8 @@ def dyntaxa_birds():
 def main():
     counts = aves_counts()
     print(f"facet: {len(counts)} species with Swedish occurrences", file=sys.stderr)
+    redlist = redlist_statuses()
+    print(f"red list: {len(redlist)} red-listed taxa", file=sys.stderr)
     birds = dyntaxa_birds()
     print(f"dyntaxa: {len(birds)} Aves species", file=sys.stderr)
 
@@ -107,16 +154,17 @@ def main():
             continue  # need both a Swedish name (for search) and a Latin name (for export)
         # Norwegian bird names are lowercase by convention; Dyntaxa returns them inconsistently
         # capitalised, so normalise to lowercase to match the Swedish names.
-        rows.append((swe, latin, "", counts.get(nub, 0), nob.lower()))
+        rows.append((swe, latin, redlist.get(latin, ""), counts.get(nub, 0), nob.lower()))
     # Most-reported first (common species reachable without scrolling); ties by name.
     rows.sort(key=lambda r: (-r[3], r[0]))
 
     w = csv.writer(sys.stdout)
-    # `norsk` is the secondary searchable name (Norwegian); status stays blank for the MVP.
+    # status = Swedish Red List 2025 code (RE/CR/EN/VU/NT/DD), blank if not red-listed.
     w.writerow(["svensk", "latin", "status", "count", "norsk"])
     w.writerows(rows)
     n_nob = sum(1 for r in rows if r[4])
-    print(f"wrote {len(rows)} species ({n_nob} with a Norwegian name)", file=sys.stderr)
+    n_rl = sum(1 for r in rows if r[2])
+    print(f"wrote {len(rows)} species ({n_nob} Norwegian names, {n_rl} red-listed)", file=sys.stderr)
 
 
 if __name__ == "__main__":
