@@ -4,6 +4,7 @@
 
 [<img src="https://f-droid.org/badge/get-it-on-nn.png" alt="Få den på F-Droid" height="60">](https://f-droid.org/packages/io.github.mortenfyhn.feltbok/)
 
+<!-- Source of truth for app description is at fastlane/metadata/android/ – this and the GitHub repo "About" field are based on that. Keep them in sync. -->
 En Android-app for å kjapt notere fugleobservasjoner i felt, og etterpå eksportere til Artsobservasjoner. Krever ikke innlogging eller internett.
 
 https://github.com/user-attachments/assets/0a44913d-b87a-47dd-a254-30bc7e5fab57

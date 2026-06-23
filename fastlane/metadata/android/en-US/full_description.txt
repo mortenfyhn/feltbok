@@ -4,7 +4,7 @@ Features:
 
 * Quick entry of observations in the field
 * Easy export to Artsobservasjoner
-* Choose locality in a ma
+* Choose locality on a map
 * Fetch your private localities from Artsobservasjoner
 * Create new private localities on the map
 * Works without a network connection
