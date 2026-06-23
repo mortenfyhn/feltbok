@@ -246,7 +246,7 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
      *  dTime (the id source) can't leak into the next note via a path that skips re-stamping it
      *  - e.g. createNewLocality/changeSpecies - and mint two notes with the same id. */
     private fun resetDraft() {
-        editingId = null; changingSpecies = false
+        editingId = null; changingSpecies = false; fromCopy = false
         dSpecies = ""; dLatin = ""; dCount = 1
         dAge = ""; dAct = ""; dSex = ""; dPub = ""; dPriv = ""; dUncertain = false
         dLoc = null; dTime = 0L; dEndTime = null
@@ -275,7 +275,7 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
     }
 
     fun editNote(n: Note) {
-        editingId = n.id; changingSpecies = false
+        editingId = n.id; changingSpecies = false; fromCopy = false
         dSpecies = n.species; dLatin = n.latin; dCount = n.count
         dAge = n.age; dAct = n.activity; dSex = n.sex
         dPub = n.publicComment; dPriv = n.privateComment
@@ -289,6 +289,11 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
      *  screen, so without this cue the near-identical form makes it unclear a new copy was made. */
     var copyToken by mutableStateOf(0); private set
 
+    // True while the draft is a copy of an existing observation (not editing it, but carrying its
+    // location). Lets the picker focus on that inherited locality like editing does, instead of
+    // re-centring on the GPS fix as it would for a genuinely new observation.
+    var fromCopy by mutableStateOf(false); private set
+
     /** Commit the current draft, then keep every field as-is (species, count, location, time, …)
      *  while dropping the editing link, so the next [save] mints a new note instead of overwriting.
      *  Used to enter a run of similar observations: each Kopier saves what you've entered and hands
@@ -296,7 +301,7 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
      *  silently loses the edits to the original (#130). The comments are observation-specific, so
      *  clear them rather than carry them into the copy (#136). */
     fun copyAsNew() {
-        commitDraft(); editingId = null; changingSpecies = false; copyToken++
+        commitDraft(); editingId = null; changingSpecies = false; copyToken++; fromCopy = true
         dPub = ""; dPriv = ""
     }
 

@@ -110,14 +110,11 @@ fun LocalityScreen(vm: MainViewModel) {
             setScrollableAreaLimitDouble(BoundingBox(85.0, 180.0, -85.0, -180.0))
             overlays.add(NorwegianCopyrightOverlay(ctx))    // required by the OSM tile policy
             zoomController.setVisibility(CustomZoomButtonsController.Visibility.NEVER)  // use our own buttons
-            // Keep the last zoom. When editing an observation or changing the current locality,
-            // centre on that chosen locality so you adjust around it, not your current position.
-            // For a new observation re-centre on the current GPS fix so it shows where you are now
-            // (falling back to the picked/nearest locality, then a default).
-            controller.setZoom(if (vm.mapZoom >= 1.0) vm.mapZoom else 16.0)
-            val focus = if (vm.isEditing || vm.pickingCurrent) vm.pickerFocus else null
-            val lat = focus?.lat ?: vm.fix?.lat ?: vm.dLoc?.lat ?: vm.nearest()?.lat ?: Country.mapCenterLat
-            val lon = focus?.lon ?: vm.fix?.lon ?: vm.dLoc?.lon ?: vm.nearest()?.lon ?: Country.mapCenterLon
+            controller.setZoom(if (vm.mapZoom >= 1.0) vm.mapZoom else 16.0)   // keep the last zoom
+            val (lat, lon) = pickerCenter(
+                focused = vm.isEditing || vm.fromCopy || vm.pickingCurrent,
+                focus = vm.pickerFocus, fix = vm.fix, dLoc = vm.dLoc, nearest = vm.nearest(),
+            )
             controller.setCenter(GeoPoint(lat, lon))
         }
     }
@@ -371,6 +368,25 @@ private const val POINT_DOT_PX = 15f
  *  harvested kommuner isn't a wall of dots. Tune these two to taste. */
 private const val DECLUTTER_ZOOM = 14.0
 private const val DECLUTTER_MIN_SPAN_PX = 24f
+
+/** Where the picker map centres when it opens, as (lat, lon). [focused] is true when editing or
+ *  copying an observation, or changing the current locality: then centre on the chosen [focus]
+ *  locality so you adjust around it, not your current position. A new observation isn't focused, so
+ *  it centres on the current GPS [fix] to show where you are now, falling back to the draft [dLoc],
+ *  the [nearest] locality, then the country default. Copying must focus too: the copy carries the
+ *  original's location but isn't "editing" it, so without [focused] it wrongly re-centred on GPS. */
+internal fun pickerCenter(
+    focused: Boolean,
+    focus: Locality?,
+    fix: GpsFix?,
+    dLoc: Locality?,
+    nearest: Locality?,
+): Pair<Double, Double> {
+    val f = if (focused) focus else null
+    val lat = f?.lat ?: fix?.lat ?: dLoc?.lat ?: nearest?.lat ?: Country.mapCenterLat
+    val lon = f?.lon ?: fix?.lon ?: dLoc?.lon ?: nearest?.lon ?: Country.mapCenterLon
+    return lat to lon
+}
 
 /** A locality is decluttered - hidden when zoomed far out and its on-screen footprint is tiny.
  *  Shared by the draw cull and tap resolution, so you can only tap what's actually drawn (#126:

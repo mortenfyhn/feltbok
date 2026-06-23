@@ -8,6 +8,7 @@
 - Ny knapp i kartet for å sentrere på din egen posisjon.
 - Lettere å treffe rett lokalitet: appen velger ikke lenger en svær lokalitet når du er zooma langt inn, punktlokaliteter er enklere å trykke på, og trykk et stykke utafor en flate velger den ikke lenger ved en feil.
 - Artssøket skiller nå på å/æ/ø: skriv «må» og du får måkene, ikke alt som starter på «ma».
+- Når du endrer lokalitet på en kopiert observasjon, åpner kartet nå på lokaliteten den alt har, ikke på GPS-posisjonen din.
 
 ## v0.12 (20. juni 2026)
 
