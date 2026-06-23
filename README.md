@@ -5,18 +5,18 @@
 [<img src="https://f-droid.org/badge/get-it-on-nn.png" alt="Få den på F-Droid" height="60">](https://f-droid.org/packages/io.github.mortenfyhn.feltbok/)
 
 <!-- Source of truth for app description is at fastlane/metadata/android/ – this and the GitHub repo "About" field are based on that. Keep them in sync. -->
-En Android-app for å kjapt notere fugleobservasjoner i felt, og etterpå eksportere til Artsobservasjoner. Krever ikke innlogging eller internett.
+Feltbok er en Android-app for å kjapt notere fugleobservasjoner i felt og seinere eksportere til Artsobservasjoner. Krever ikke innlogging eller internett.
 
 https://github.com/user-attachments/assets/0a44913d-b87a-47dd-a254-30bc7e5fab57
 
 ## Egenskaper
 
 - Kjapp inntasting av observasjoner i felt
-- Enkel eksport til Artsobservasjoner
-- Velg lokalitet i kart
-- Hent private lokaliteter fra Artsobservasjoner
-- Lag nye private lokaliteter i kartet
-- Kan brukes uten nett
+- Lettvint eksport til Artsobservasjoner
+- Optimalisert artssøk: tast én bokstav for å finne riktig fugl
+- Kartvisning for å velge lokalitet
+- Hent dine private lokaliteter fra Artsobservasjoner
+- Lag nye private lokaliteter
 
 ## Skaff appen
 

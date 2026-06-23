@@ -1,1 +1,1 @@
-Tast inn fugleobservasjoner i felt og eksporter til Artsobservasjoner
+Noter fugleobservasjoner kjapt i felt og eksporter til Artsobservasjoner
