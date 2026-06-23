@@ -25,7 +25,7 @@ and as you log birds your own recents push the padding out.
 
 Search is **scoring, not filtering**: every species gets a score for what you've
 typed and the best ~40 are shown, so you always get *something* even on a near-miss.
-Each result's score combines a few signals (`TieredScorer` in `Search.kt`):
+Each result's score combines a few signals (`rankSpecies` in `Search.kt`):
 
 - **Match quality, in tiers.** Best first: exact name → starts-with → ends-with
   (suffix) → initials (e.g. `pf` → Pilfink) → contains → scattered letters →

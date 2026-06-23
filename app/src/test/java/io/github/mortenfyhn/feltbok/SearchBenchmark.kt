@@ -27,7 +27,7 @@ class SearchBenchmark {
 
     /** Per-target weighting for every metric: the true (log-scaled) commonness, so getting common
      *  birds right counts more. Independent of which scorer is under test. */
-    private val freq: FrequencyProvider by lazy { NumericFrequency(species) }
+    private val freq: NumericFrequency by lazy { NumericFrequency(species) }
     private val names: Set<String> by lazy { species.map { it.norsk }.toSet() }
 
     /** The curated suffix morphemes, fed to the "morpheme" scorer config (see [loadSuffixes]). */
@@ -87,26 +87,26 @@ class SearchBenchmark {
                     for (subseq in listOf(50.0, 100.0, 200.0)) {
                         val w = base.copy(
                             freqStrength = freqStrength, completeness = completeness,
-                            anchoredSubseq = anchored, subseq = subseq,
+                            firstLetterSubseq = anchored, subseq = subseq,
                         )
-                        grid += w to prevalenceTop3(TieredScorer(NumericFrequency(species), w))
+                        grid += w to prevalenceTop3(TieredScorer(NumericFrequency(species)::weight, w))
                     }
                 }
             }
         }
         grid.sortByDescending { it.second }
-        val def = prevalenceTop3(TieredScorer(NumericFrequency(species), base))
+        val def = prevalenceTop3(TieredScorer(NumericFrequency(species)::weight, base))
         println("\nGrid search: ${grid.size} combos. default top3 = ${"%.3f".format(def)}")
         println("best 10:")
         for ((w, s) in grid.take(10)) {
             println(
-                "  top3=%.3f  freqStrength=%.1f completeness=%.1f anchoredSubseq=%.0f subseq=%.0f".format(
-                    s, w.freqStrength, w.completeness, w.anchoredSubseq, w.subseq,
+                "  top3=%.3f  freqStrength=%.1f completeness=%.1f firstLetterSubseq=%.0f subseq=%.0f".format(
+                    s, w.freqStrength, w.completeness, w.firstLetterSubseq, w.subseq,
                 ),
             )
         }
         println("\nwinner, full metrics (verify no column regressed):")
-        println(render(listOf(measure(TieredScorer(NumericFrequency(species), grid.first().first)))))
+        println(render(listOf(measure(TieredScorer(NumericFrequency(species)::weight, grid.first().first)))))
     }
 
     /** A correctness guard that should hold for any sane scorer: an exact full name ranks #1. */

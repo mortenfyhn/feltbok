@@ -152,7 +152,7 @@ class ModelTest {
         )
         val prepared = prepare(species)
         assertEquals(6, prepared.size) // 3 species × (primary + alt alias)
-        val scorer = TieredScorer(FrequencyProvider { 0.0 })
+        val scorer = TieredScorer({ 0.0 })
         // Typing the Norwegian name surfaces the Swedish species.
         assertEquals("talgoxe", scorer.search("kjøttmeis", prepared).first().species.norsk)
         // Both alias entries resolve to the same species, so callers dedupe to one row.
@@ -218,11 +218,11 @@ class ModelTest {
      *  MainViewModel does - a regular nudges up, capped - so the test mirrors real ranking. */
     private fun rank(query: String, list: List<Species>, useCount: (String) -> Int = { 0 }): List<String> {
         val base = RowOrderFrequency(list)
-        val freq = FrequencyProvider { s ->
+        val weight: (Species) -> Double = { s ->
             val picks = useCount(s.norsk)
             minOf(1.0, base.weight(s) + if (picks == 0) 0.0 else minOf(0.5, 0.15 * picks))
         }
-        return TieredScorer(freq).search(query, prepare(list)).map { it.species.norsk }
+        return rankSpecies(query, prepare(list), weight).map { it.species.norsk }
     }
 
     @Test

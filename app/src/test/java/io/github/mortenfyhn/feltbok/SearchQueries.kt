@@ -17,8 +17,8 @@ data class LabeledQuery(val text: String, val target: String, val kind: QueryKin
 
 /**
  * Norwegian-QWERTY (Nordic ISO) key adjacency, for realistic wrong-key substitutions. Built from the
- * three letter rows; horizontal + (approximate) vertical neighbours. Note æ/ø/å sit far from a/o/e -
- * which is exactly why diacritics are folded for free rather than spent from the typo budget.
+ * three letter rows; horizontal + (approximate) vertical neighbours. Note æ/ø/å sit far from a/o/e,
+ * so an ASCII stand-in is a real (multi-edit) misspelling - which is why those letters aren't folded.
  */
 object NorwegianQwerty {
     private val rows = listOf("qwertyuiopå", "asdfghjkløæ", "zxcvbnm")
@@ -56,10 +56,8 @@ fun queriesFor(norsk: String): List<LabeledQuery> {
         add("${name[0]}${name[m / 3]}${name[2 * m / 3]}", QueryKind.SUBSEQ)
     }
 
-    // ASCII-folded full name, for non-Norwegian keyboards (rodstrupe, blameise), plus the digraph
-    // spelling people use without å/ø/æ (graagaas, roedstrupe) - both should resolve.
-    val folded = fold(norsk)
-    if (folded != name) add(folded, QueryKind.FOLDED)
+    // Digraph spelling people use without å/ø/æ (graagaas, roedstrupe) - should still resolve (via
+    // the typo net). ASCII stand-ins like "rodstrupe" are covered by the TYPO kinds below.
     val digraph = name.replace("å", "aa").replace("ø", "oe").replace("æ", "ae")
     if (digraph != name) add(digraph, QueryKind.FOLDED)
 

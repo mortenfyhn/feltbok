@@ -223,44 +223,15 @@ fun poleOfInaccessibility(polygon: List<DoubleArray>): DoubleArray {
 
 // ---- species search ----
 
-/** Fold only the diacritics a Norwegian keyboard can't reach (ô/é/è/ü on loan names) so they still
- *  match plain ASCII. å/æ/ø are deliberately NOT folded: they're a keystroke away on the user's
- *  keyboard, so typing the real letter should match precisely ("må" surfaces the måker, not every
- *  "ma…" bird) and an ASCII stand-in ("ma" for "må") is left to fall through to the typo net like any
- *  other misspelling. */
+/** Normalize a name for matching: just lowercase. No diacritics are folded — å/æ/ø are a keystroke
+ *  away on the user's keyboard, so typing the real letter should match precisely ("må" surfaces the
+ *  måker, not every "ma…" bird) and an ASCII stand-in ("ma" for "må") is left to fall through to the
+ *  typo net like any other misspelling. (No bird name in the data carries a non-keyboard diacritic
+ *  like é/ü, so there's nothing else to fold.) */
 fun fold(s: String) = s.lowercase()
-    .replace("ô", "o").replace("é", "e").replace("è", "e").replace("ü", "u")
 
 /** Fold a search query and drop its spaces, so "f m" == "fm". */
 fun foldQuery(query: String) = fold(query).filterNot { it.isWhitespace() }
-
-/**
- * Rank an already-folded [q] (see [foldQuery]) against an already-folded [t]
- * (see [fold]). Lower is better, or null for no match:
- *  0 = prefix (name starts with the query)
- *  1 = name's first letter matches and the rest is a subsequence - the "initials"
- *      case, so "pf" -> Pilfink beats a mid-word match like Lappfiskand
- *  2 = the query is a contiguous substring elsewhere in the name
- *  3 = the query is a scattered subsequence elsewhere
- * Pre-folding the names once keeps this hot per-keystroke loop allocation-free.
- */
-fun fuzzyRank(q: String, t: String): Int? {
-    if (q.isEmpty()) return 0
-    if (t.startsWith(q)) return 0
-    var qi = 0
-    for (c in t) {
-        if (c == q[qi]) qi++
-        if (qi == q.length) break
-    }
-    val isSubseq = qi == q.length
-    val anchored = q[0] == t.firstOrNull()
-    return when {
-        anchored && isSubseq -> 1
-        t.contains(q) -> 2
-        isSubseq -> 3
-        else -> null
-    }
-}
 
 // ---- date/time formatting ----
 

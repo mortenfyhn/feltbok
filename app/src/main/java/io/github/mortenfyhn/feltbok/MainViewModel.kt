@@ -84,8 +84,8 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
         uses[norsk]?.let { decayedScore(it, now) } ?: 0.0
 
     /** Context-aware report frequency for ranking: what's reported in the current month and near the
-     *  current GPS fix, behind the pluggable [FrequencyProvider]. Off-season/elsewhere/rare birds drop
-     *  in rank but stay findable (tiers/folding still match). */
+     *  current GPS fix. Off-season/elsewhere/rare birds drop in rank but stay findable (tiers still
+     *  match). The app blends this into the commonness weight handed to [rankSpecies]. */
     private val ctxFreq = ContextualFrequency(species, loadSpeciesMonths(app), loadSpeciesRegions(app))
 
     /** The blank-search quick list: your most-recently-picked species, newest first. If the bird isn't
@@ -106,22 +106,22 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
         return (recent + filler).take(20)
     }
 
-    /** Ranked matches for a typed query: the tiered scorer (prefix/suffix/initialism/typo + diacritic
-     *  folding + frequency), with your regulars boosted. Ranking lives in Search.kt so it's
-     *  unit-benchmarked. Month + location are snapshotted once per query into the provider - not
+    /** Ranked matches for a typed query: [rankSpecies] (prefix/suffix/initialism/typo tiers + a
+     *  commonness multiplier), with your regulars boosted. Ranking lives in Search.kt so it's
+     *  unit-benchmarked. Month + location are snapshotted once per query into the weight lambda - not
      *  re-read for each of ~600 species, and not shared across overlapping searches - off the main thread. */
     suspend fun searchResults(query: String): List<Species> = withContext(Dispatchers.Default) {
         val month = java.time.LocalDate.now().monthValue
         val f = fix
         val now = System.currentTimeMillis()
-        // Snapshot context + your decayed use score into one blend per species (see blendedWeight) -
-        // computed once per query here, not re-read for each of ~600 species, off the main thread.
-        val freq = FrequencyProvider { s ->
+        // Snapshot context + your decayed use score into one per-species likelihood (see blendedWeight)
+        // - computed once per query here, off the main thread.
+        val likelihood: (Species) -> Double = { s ->
             blendedWeight(ctxFreq.weight(s, month, f?.lat, f?.lon), useScore(s.norsk, now))
         }
         // distinct() collapses a species that matched on both its primary and alt name to one row,
         // keeping the higher-ranked occurrence (results are best-first).
-        TieredScorer(freq).search(query, prepared).map { it.species }.distinct()
+        rankSpecies(query, prepared, likelihood).map { it.species }.distinct()
     }
 
     /** Per-activity use counts, so each user's most-used activities rise to the top. */
