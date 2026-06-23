@@ -2,7 +2,7 @@
 
 # Feltbok (beta)
 
-[<img src="https://f-droid.org/badge/get-it-on-nn.png" alt="Få den på F-Droid" height="60">](https://f-droid.org/packages/io.github.mortenfyhn.feltbok/)
+Snart [<img src="https://f-droid.org/badge/get-it-on-nn.png" alt="Få den på F-Droid" height="60">](https://f-droid.org/packages/io.github.mortenfyhn.feltbok/)
 
 En Android-app for å kjapt taste inn fugleobservasjoner i felt. Deretter kan de enkelt lastes opp til artsobservasjoner.no. Fungerer uten innlogging og uten nett.
 
