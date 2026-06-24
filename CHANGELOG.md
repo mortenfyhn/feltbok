@@ -2,13 +2,12 @@
 
 ## Neste utgivelse
 
-- Lista beholder nå rulleposisjonen når du redigerer en observasjon.
-- Observasjonslista viser nå kjønn og alder, så like observasjoner er lettere å skille.
-- Datooverskriftene i lista viser nå antall arter den dagen, og øverst totalt antall arter.
-- Ny knapp i kartet for å sentrere på din egen posisjon.
-- Lettere å treffe rett lokalitet: appen velger ikke lenger en svær lokalitet når du er zooma langt inn, punktlokaliteter er enklere å trykke på, og trykk et stykke utafor en flate velger den ikke lenger ved en feil.
-- Artssøket skiller nå på å/æ/ø: skriv «må» og du får måkene, ikke alt som starter på «ma».
-- Når du endrer lokalitet på en kopiert observasjon, åpner kartet nå på lokaliteten den alt har, ikke på GPS-posisjonen din.
+- Kjønn og alder synlig på hovedvisninga.
+- Vis antall ulike arter per dag og totalt.
+- Knapp for å sentrere kartet på GPS-posisjonen.
+- Lettere å treffe rett lokalitet.
+- Små justeringer på artssøk.
+- Ymse småforbedringer og feilrettinger.
 
 ## v0.12 (20. juni 2026)
 
