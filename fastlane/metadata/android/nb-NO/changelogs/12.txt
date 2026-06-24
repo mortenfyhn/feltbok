@@ -1,1 +1,1 @@
-- Kartet har nå fornuftige zoom-grenser.
+• Kartet har nå fornuftige zoom-grenser.

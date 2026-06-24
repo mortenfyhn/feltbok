@@ -1,1 +1,1 @@
-- The map now has sensible zoom limits.
+• The map now has sensible zoom limits.

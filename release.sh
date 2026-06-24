@@ -29,8 +29,9 @@ new_code=$((old_code + 1))
 
 echo "Releasing $tag  (versionCode $old_code → $new_code)"
 echo "Finalize the '## $tag' section in $changelog now — it becomes the release notes,"
-echo "and the Norwegian F-Droid 'what's new' is generated from it."
-echo "Write fastlane/metadata/android/en-US/changelogs/$new_code.txt for the English one."
+echo "and the Norwegian F-Droid 'what's new' is generated from it. The English one gets an"
+echo "auto placeholder; write fastlane/metadata/android/en-US/changelogs/$new_code.txt yourself"
+echo "first if you want real English notes for this version."
 echo "Nothing below the next prompt is reversible without force-pushing."
 read -rp "Press Enter to finalize (tag, build, push, publish) — Ctrl-C to abort " _
 
@@ -40,19 +41,24 @@ notes_body=$(awk -v h="## $tag" '$0 ~ "^"h {g=1; next} g && /^## / {exit} g' "$c
 
 # Mirror the Norwegian notes into F-Droid's per-version changelog (shown inline as the
 # version's "what's new"). Skip if a file already exists, so a hand-tuned entry — e.g. one
-# omitting an installer-only note — wins. De-wrap soft-wrapped bullets back to one line each.
+# omitting an installer-only note — wins. De-wrap soft-wrapped bullets back to one line each,
+# and swap the Markdown "- " for a real "• " bullet (changelogs are plain text, no HTML, so a
+# hyphen just renders as-is).
 fdroid_nb="fastlane/metadata/android/nb-NO/changelogs/$new_code.txt"
 if [ ! -f "$fdroid_nb" ]; then
     printf '%s\n' "$notes_body" | awk '
-        /^- / { if (line != "") print line; line = $0; next }
+        /^- / { if (line != "") print line; line = $0; sub(/^- /, "• ", line); next }
         /^[[:space:]]*$/ { next }
         { sub(/^[[:space:]]+/, " "); line = line $0 }
         END { if (line != "") print line }
     ' > "$fdroid_nb"
 fi
-# English is maintained by hand (Norway-only app — non-nb users are rare). Warn, don't block.
-[ -f "fastlane/metadata/android/en-US/changelogs/$new_code.txt" ] || \
-    echo "Note: en-US changelogs/$new_code.txt missing — non-Norwegian users fall back to the Changelog link."
+# en-US: there's no English source to translate from (CHANGELOG.md is Norwegian), so drop in
+# an English placeholder pointing to the full changelog — better than Norwegian text or a blank
+# "what's new" for non-nb users. Skip if a hand-written English entry already exists.
+fdroid_en="fastlane/metadata/android/en-US/changelogs/$new_code.txt"
+[ -f "$fdroid_en" ] || \
+    echo "See the full changelog at github.com/mortenfyhn/feltbok" > "$fdroid_en"
 git add fastlane/metadata/android/*/changelogs/ 2>/dev/null || true
 
 sed -i "s/versionCode = .*/versionCode = $new_code/" "$gradle"
