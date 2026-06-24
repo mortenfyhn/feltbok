@@ -28,6 +28,7 @@
 # own osmdroid setup rather than calling into io.github.mortenfyhn.feltbok, precisely so MapPicker keeps no keep).
 -keep class io.github.mortenfyhn.feltbok.Note { *; }
 -keep class io.github.mortenfyhn.feltbok.Locality { *; }
+-keep class io.github.mortenfyhn.feltbok.Species { *; }
 -keep class io.github.mortenfyhn.feltbok.ModelKt { *; }
 
 # The Compose UI-flow test (AddObservationFlowTest) hosts App(vm) and drives it by name: the App

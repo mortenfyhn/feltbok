@@ -10,6 +10,9 @@ The bundled APK ships **public localities only** - the maintainer's own customs
 
 ## Cut a release
 
+Soak the build first and walk the [pre-release checklist](pre-release-checklist.md) — the
+interaction paths (map tap-gating especially) that the automated suites can't cover.
+
 First draft the version's entry in `CHANGELOG.md` (terse, user-facing highlights only). Then:
 
 ```sh
