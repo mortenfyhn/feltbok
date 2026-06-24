@@ -53,7 +53,10 @@ Recipes live in `just --list` — the notes below are only the why's and gotchas
   leaves line structure, line length, and naming alone, so it won't churn the terse hand-written
   style. ruff (`scripts/ruff.toml`) is the full black-style formatter for the Python pipelines.
 - In a fresh worktree, copy `local.properties` from the repo root first (it's gitignored, and Gradle
-  needs its `sdk.dir`).
+  needs its `sdk.dir`). Likewise the Python `.venv` is gitignored and absent, so `just lint`/`test`
+  (and the pre-commit hook that runs them) fail until you link it from the main checkout:
+  `ln -s ../../../.venv .venv` from the worktree root. `.venv` is gitignored so the link is never
+  committed.
 - CI runs on Semaphore (`.semaphore/semaphore.yml`): a `Test & build` block (Android container) and a
   parallel `Lint` block (plain VM — no SDK needed for ruff). Releases are cut locally with
   `./release.sh` (see `docs/release.md`), not by CI. Inspect

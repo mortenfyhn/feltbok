@@ -15,7 +15,8 @@
 
 # Python
 scripts/__pycache__/
-.venv/
+# No trailing slash: also ignores a worktree's symlink (not just the dir) to the main venv.
+.venv
 
 # Official locality table + its source archive (built by build_localities.py)
 /localities*.csv
