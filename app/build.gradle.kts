@@ -204,6 +204,13 @@ dependencies {
     // it the test APK has no runner class and instrumentation crashes on launch.
     androidTestImplementation("androidx.test:runner:1.6.2")
     androidTestImplementation("androidx.test:rules:1.6.1") // GrantPermissionRule
+    // Compose UI-flow tests (src/androidTest): drive the real screens and assert on the tree. The
+    // BOM versions ui-test-junit4 to match the app's Compose. ui-test-manifest supplies the empty
+    // ComponentActivity that createComposeRule() hosts App(vm) in - it must land in the variant
+    // under test (releaseTest, per testBuildType), not debug.
+    androidTestImplementation(platform("androidx.compose:compose-bom:2024.12.01"))
+    androidTestImplementation("androidx.compose.ui:ui-test-junit4")
+    add("releaseTestImplementation", "androidx.compose.ui:ui-test-manifest")
 }
 
 // Stream test stdout to the console so the (opt-in) SearchBenchmark scoreboard table is readable
