@@ -22,9 +22,10 @@ First draft the version's entry in `CHANGELOG.md` (terse, user-facing highlights
 The script bumps `versionCode`+`versionName` in `app/build.gradle.kts`, then **pauses** so you
 can finalize the `## v0.8` changelog section — that section becomes the release notes, so nothing
 is tagged or pushed until you press Enter. After that it commits (version bump + changelog), tags
-`v0.8`, builds the signed APK, pushes, and runs `gh release create` with notes assembled from the
-install steps + the changelog entry + the auto-generated "What's Changed" list. No manual
-GitHub edit afterwards.
+`v0.8`, builds both flavors' signed APK (`feltbok-v0.8.apk` for Norway and
+`feltbok-se-v0.8.apk` for Sweden — both attached to the one release), pushes, and runs
+`gh release create` with notes assembled from the install steps + the changelog entry + the
+auto-generated "What's Changed" list. No manual GitHub edit afterwards.
 
 **F-Droid "what's new":** F-Droid shows `fastlane/metadata/android/<locale>/changelogs/<versionCode>.txt`
 inline per version. The script **generates the Norwegian one** (`nb-NO`) from the `## vX` section, so

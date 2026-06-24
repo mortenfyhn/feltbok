@@ -34,8 +34,9 @@ workflow: the action needs `id-token: write` even with an API key, and passing
 `github_token: ${{ secrets.GITHUB_TOKEN }}` avoids having to install the Claude GitHub App.
 
 ## Testing the build
-Semaphore builds the branch on push and publishes the debug APK as a **workflow artifact**
-(`feltbok-debug.apk`, see `.semaphore/semaphore.yml`). Open the PR's Semaphore check → the
+Semaphore builds the branch on push and publishes both flavors' debug APK as **workflow
+artifacts** (`feltbok-<describe>.apk` for Norway, `feltbok-se-<describe>.apk` for Sweden — named
+like the GitHub releases; see `.semaphore/semaphore.yml`). Open the PR's Semaphore check → the
 workflow's **Artifacts** tab → download and sideload it. No need to pull the branch and build
 locally — though `just install` still works if you'd rather.
 

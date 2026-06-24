@@ -78,20 +78,25 @@ git commit -aqm "Release $tag"
 git tag "$tag"
 
 # Build AFTER tagging so `git describe` bakes the clean tag into the in-app version string.
-# This release pipeline cuts the Norway app (io.github.mortenfyhn.feltbok); the Sweden flavor
-# is released separately if/when it goes public.
-./gradlew assembleNorwayRelease --console=plain
-apk="feltbok-$tag.apk"   # a recognisable name, not Gradle's app-norway-release.apk
+# Both flavors ship in the one release: Norway (io.github.mortenfyhn.feltbok) and Sweden
+# (io.github.mortenfyhn.feltbok.se). F-Droid is unaffected — it builds each applicationId from
+# source on its own servers and never redistributes these APKs; the attachments are just for
+# sideloading.
+./gradlew assembleNorwayRelease assembleSwedenRelease --console=plain
+# Recognisable names, not Gradle's app-<flavor>-release.apk. The -se suffix mirrors the .se appId.
+apk="feltbok-$tag.apk"
+apk_se="feltbok-se-$tag.apk"
 cp app/build/outputs/apk/norway/release/app-norway-release.apk "$apk"
+cp app/build/outputs/apk/sweden/release/app-sweden-release.apk "$apk_se"
 
 # Release notes = this version's changelog, then the install steps below it.
 notes=$(mktemp)
 { printf '## Nytt i %s\n%s\n\n' "$tag" "$notes_body"; cat docs/release-notes-install.md; } > "$notes"
 
 git push origin master "$tag"
-gh release create "$tag" "$apk" \
+gh release create "$tag" "$apk" "$apk_se" \
     --title "Feltbok $tag" \
     --notes-file "$notes"
 
-rm -f "$apk" "$notes"
+rm -f "$apk" "$apk_se" "$notes"
 echo "Released $tag → https://github.com/mortenfyhn/feltbok/releases/tag/$tag"
