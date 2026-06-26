@@ -1,0 +1,6 @@
+• Easier to select the correct site on the map.
+• Sex and age are shown in the main view.
+• Species count per day and total shown in the main view.
+• Button to center map on your location.
+• Small improvements to species search.
+• Various minor improvements and fixes.

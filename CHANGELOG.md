@@ -2,10 +2,12 @@
 
 ## Neste utgivelse
 
-- Kjønn og alder synlig på hovedvisninga.
-- Vis antall ulike arter per dag og totalt.
-- Knapp for å sentrere kartet på GPS-posisjonen.
-- Lettere å treffe rett lokalitet.
+## v0.13 (26. juni 2026)
+
+- Lettere å velge rett lokalitet på kartet.
+- Kjønn og alder vises på hovedskjermen.
+- Antall arter per dag og totalt vises på hovedskjermen.
+- Knapp for å sentrere kartet der du er.
 - Små justeringer på artssøk.
 - Ymse småforbedringer og feilrettinger.
 
