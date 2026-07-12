@@ -1,13 +1,11 @@
 Feltbok er en app for å kjapt notere fugleobservasjoner i felt og seinere eksportere dem til Artsobservasjoner. Krever ikke innlogging eller internett.
 
 Egenskaper:
-<ul>
-<li>Kjapp inntasting av observasjoner i felt</li>
-<li>Lettvint eksport til Artsobservasjoner</li>
-<li>Optimalisert artssøk: tast én bokstav for å finne riktig fugl</li>
-<li>Kartvisning for å velge lokalitet</li>
-<li>Hent dine private lokaliteter fra Artsobservasjoner</li>
-<li>Lag nye private lokaliteter</li>
-</ul>
+• Kjapp inntasting av observasjoner i felt
+• Lettvint eksport til Artsobservasjoner
+• Optimalisert artssøk: tast én bokstav for å finne riktig fugl
+• Kartvisning for å velge lokalitet
+• Hent dine private lokaliteter fra Artsobservasjoner
+• Lag nye private lokaliteter
 
 Feltbok er laga for bruk i Norge, og brukergrensesnittet er på norsk.
