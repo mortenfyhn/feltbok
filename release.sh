@@ -39,16 +39,31 @@ old_code=$(grep -oP 'versionCode = \K\d+' "$gradle")
 new_code=$((old_code + 1))
 
 echo "Releasing $tag  (versionCode $old_code → $new_code)"
-echo "Finalize the '## $tag' section in $changelog now — it becomes the release notes,"
-echo "and the Norwegian F-Droid 'what's new' is generated from it. The English one gets an"
-echo "auto placeholder; write fastlane/metadata/android/en-US/changelogs/$new_code.txt yourself"
-echo "first if you want real English notes for this version."
-echo "Nothing below the next prompt is reversible without force-pushing."
-read -rp "Press Enter to finalize (tag, build, push, publish) — Ctrl-C to abort " _
-
-# Pull this version's notes out of the changelog (lines under '## vX' up to the next '## ').
+# Pull this version's notes out of the changelog (lines under '## vX' up to the next '## ') up
+# front, so the pause below either shows exactly what will ship or says exactly what's missing —
+# instead of a vague "go finalize something". A drafted '## $tag' entry left uncommitted is fine;
+# the Release commit further down picks it up.
 notes_body=$(awk -v h="## $tag" '$0 ~ "^"h {g=1; next} g && /^## / {exit} g' "$changelog")
-[ -n "$notes_body" ] || { echo "No '## $tag' section in $changelog — aborting."; exit 1; }
+if [ -z "$notes_body" ]; then
+    cat <<EOF
+No '## $tag' section in $changelog yet. Add it, then re-run ./release.sh $version:
+  - rename the '## Neste utgivelse' heading to '## $tag (<date>)'
+  - list this version's changes under it — they become the GitHub release notes and the
+    F-Droid 'what's new'. Committing it first is optional; the Release commit picks it up.
+EOF
+    exit 1
+fi
+
+# The English F-Droid 'what's new' is hand-written (CHANGELOG.md is Norwegian). Warn, don't block:
+# without it, English users just get the placeholder link generated further down.
+fdroid_en="fastlane/metadata/android/en-US/changelogs/$new_code.txt"
+[ -f "$fdroid_en" ] || echo "Heads-up: no $fdroid_en yet — English F-Droid users get a placeholder link."
+
+echo
+echo "These ship as the $tag release notes / F-Droid 'what's new':"
+printf '%s\n' "----" "$notes_body" "----"
+echo "What follows tags, builds, pushes and publishes — not reversible without force-pushing."
+read -rp "Press Enter to proceed — Ctrl-C to abort " _
 
 # Mirror the Norwegian notes into F-Droid's per-version changelog (shown inline as the
 # version's "what's new"). Skip if a file already exists, so a hand-tuned entry — e.g. one
