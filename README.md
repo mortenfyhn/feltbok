@@ -1,6 +1,6 @@
 [![Build Status](https://fyhn.semaphoreci.com/badges/feltbok/branches/master.svg?key=ebed8946-d053-4da8-ba73-36874709de64)](https://fyhn.semaphoreci.com/projects/feltbok)
 
-# Feltbok (beta)
+# Feltbok
 
 [<img src="https://f-droid.org/badge/get-it-on-nn.png" alt="Få den på F-Droid" height="60">](https://f-droid.org/packages/io.github.mortenfyhn.feltbok/)
 

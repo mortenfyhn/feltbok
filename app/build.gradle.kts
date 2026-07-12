@@ -169,13 +169,18 @@ android {
     }
 }
 
-// app_name combines the flavor base ("Feltbok"/"Feltbok SE") with a build-type marker
-// ("(dev)"/"(beta)") so all four installs are tellable apart on-device. Done via the variant API
-// because a resValue set per-flavor and per-build-type would override rather than combine.
+// app_name combines the flavor base ("Feltbok"/"Fältbok") with a marker so all four installs are
+// tellable apart on-device. Dev builds are always "(dev)". Norway is stable from v1.0, so its
+// release carries no marker; Sweden is still beta, so its release stays "(beta)". Done via the
+// variant API because a resValue set per-flavor and per-build-type would override rather than combine.
 androidComponents {
     onVariants { variant ->
         val base = if (variant.flavorName == "sweden") "Fältbok" else "Feltbok"
-        val marker = if (variant.buildType == "debug") " (dev)" else " (beta)"
+        val marker = when {
+            variant.buildType == "debug" -> " (dev)"
+            variant.flavorName == "sweden" -> " (beta)"
+            else -> ""
+        }
         variant.resValues.put(
             variant.makeResValueKey("string", "app_name"),
             com.android.build.api.variant.ResValue(base + marker),

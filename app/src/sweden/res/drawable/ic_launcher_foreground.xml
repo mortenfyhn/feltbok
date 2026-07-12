@@ -1,3 +1,6 @@
+<!-- Sweden is still beta (Norway went stable at v1.0), so the Fältbok launcher icon keeps the red
+     "beta" scrawl. This overrides the beta-free main/ foreground for the sweden flavor only — drop
+     it when Sweden goes stable. Keep the artwork in sync with main/ic_launcher_foreground.xml. -->
 <vector xmlns:android="http://schemas.android.com/apk/res/android"
     android:width="108dp"
     android:height="108dp"
@@ -61,7 +64,19 @@
             android:pathData="M61,41 a2.3,2.3 0 1,0 4.6,0 a2.3,2.3 0 1,0 -4.6,0 Z" />
         <path android:fillColor="#FFFFFF"
             android:pathData="M62.1,40.2 a0.7,0.7 0 1,0 1.4,0 a0.7,0.7 0 1,0 -1.4,0 Z" />
-        <!-- No "beta" scrawl here: Norway is stable from v1.0. The Sweden flavor still-beta keeps it
-             via its own sweden/res/drawable/ic_launcher_foreground.xml override. -->
+
+        <!-- "beta", scrawled across the cover in red felt marker -->
+        <path android:strokeColor="#E0301E" android:strokeWidth="2.1"
+            android:strokeLineCap="round" android:strokeLineJoin="round"
+            android:pathData="M43,66 L43,80 M43,74 C47,72.5 49.5,75 49.5,77 C49.5,79.5 46.5,80.5 43,79" />
+        <path android:strokeColor="#E0301E" android:strokeWidth="2.1"
+            android:strokeLineCap="round" android:strokeLineJoin="round"
+            android:pathData="M50.5,76.5 L55.5,75.5 C56,72.5 50.5,72 50.5,76.5 C50.5,80.5 53.5,80.5 56,78.5" />
+        <path android:strokeColor="#E0301E" android:strokeWidth="2.1"
+            android:strokeLineCap="round" android:strokeLineJoin="round"
+            android:pathData="M59,67 L59,79 C59,80.5 61,80.5 62,79.5 M56,71 L62,70.5" />
+        <path android:strokeColor="#E0301E" android:strokeWidth="2.1"
+            android:strokeLineCap="round" android:strokeLineJoin="round"
+            android:pathData="M69,73.5 C64.5,72 63,77 65,79.5 C67,81 69.5,79.5 69.5,75.5 L69.5,80.5" />
     </group>
 </vector>

@@ -47,7 +47,8 @@ Recipes live in `just --list` — the notes below are only the why's and gotchas
   that is the maintainer's real app and wipes
   their actual field notes (`notes.json` lives in internal storage, lost on uninstall). The two
   builds are distinguishable by the footer version string (`… (dev)` = debug) and the app label
-  (`Feltbok (dev)` for debug vs `Feltbok (beta)` for release).
+  (`Feltbok (dev)` for debug; the Norway release is plain `Feltbok` — stable from v1.0 — while the
+  Sweden release is still `Fältbok (beta)`).
 - `just format`/`just lint` are gated in CI (ktlint in the Kotlin job, ruff in a parallel block). The
   ktlint ruleset (`.editorconfig`) only fixes whitespace/indentation/import order — it deliberately
   leaves line structure, line length, and naming alone, so it won't churn the terse hand-written
