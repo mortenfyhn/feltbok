@@ -2,6 +2,11 @@
 
 ## Neste utgivelse
 
+- Nytt utseende når du markerer observasjoner: en ring til venstre på hver rad (og
+  på dag-overskriftene, som markerer hele dagen), og felter for antall, Slett og
+  Eksporter øverst – uten at lista lenger hopper nedover.
+- Du kan nå eksportere bare de observasjonene du har markert.
+
 ## v1.0 (16. juli 2026)
 
 - Feltbok er nå ute av beta, etter noen ukers feltbruk. Jippi!

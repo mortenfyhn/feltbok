@@ -43,15 +43,30 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
         addAll(loadNotes(app))
     }
 
-    /** Notes marked for bulk delete. Non-empty => the list is in selection mode: a tap toggles a
-     *  mark instead of opening the editor (entered by long-pressing a note). See [toggleSelect]. */
+    /** True once the list is in selection mode. Kept separate from [selected] being non-empty so the
+     *  mode stays put when you deselect the last mark - you leave it only via the ✕ / Back / an action
+     *  (Jotta-style), not by emptying the set (which would be the Google Photos "auto-exit"). */
+    var selectionMode by mutableStateOf(false); private set
+
+    /** Notes marked for a bulk action (delete/export). A tap toggles a mark instead of opening the
+     *  editor; selection mode is entered by long-pressing a note or a day header. */
     val selected = mutableStateListOf<Long>()
     fun toggleSelect(id: Long) { if (!selected.remove(id)) selected.add(id) }
-    fun clearSelection() = selected.clear()
+    fun clearSelection() { selected.clear(); selectionMode = false }
+
+    /** Long-press entry point: switch into selection mode and mark what was pressed. */
+    fun startSelect(id: Long) { selectionMode = true; if (id !in selected) selected.add(id) }
+    fun startSelectDay(ids: List<Long>) { selectionMode = true; toggleDay(ids) }
+
+    /** Toggle a whole day group at once (the date header's circle): mark all of it, or - when it's
+     *  already fully marked - clear it. Mirrors Material's "parent checkbox" for a section. */
+    fun toggleDay(ids: List<Long>) {
+        if (ids.all { it in selected }) selected.removeAll(ids) else selected.addAll(ids.filter { it !in selected })
+    }
     fun deleteSelected() {
         setUndo(Undoable.Deleted(notes.filter { it.id in selected }))
         notes.removeAll { it.id in selected }
-        selected.clear()
+        clearSelection()
         persist()
     }
 
@@ -420,18 +435,35 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
     // purpose - scoping the form to a kommune only matters to disambiguate a name shared across
     // kommuner, and a single-kommune batch can already be scoped via the import hint. Running
     // without it will show how often that conflict actually bites (fylke scope is a site-side fallback).
-    fun openExport() { showExport = true }
+    // Which notes the open export covers: null = every note (the top-strip button); a set of ids =
+    // just those marked (the selection-mode Eksporter, #120). The scope is a snapshot taken at open,
+    // so it survives a later selection change - and the marks stay put, so backing out of export
+    // lands you back in selection mode where you left it.
+    private var exportScope by mutableStateOf<List<Long>?>(null)
+    fun openExport() { exportScope = null; showExport = true }
+    fun exportSelected() { exportScope = selected.toList(); showExport = true }
     fun closeExport() { showExport = false }
 
-    /** Kommuner present across all notes, for the import hint: a single (non-blank) one can be named
-     *  on the form for safer matching. */
-    fun exportKommuner(): List<String> = groupNotesByKommune(notes, localities).map { it.kommune }
+    /** The notes the current export covers - the marked ones when exporting a selection, else all. */
+    fun exportNotes(): List<Note> = exportScope?.let { ids -> notes.filter { it.id in ids } } ?: notes
 
-    /** Clear every note - after they've been imported and published. Undoable like the other
-     *  deletes (#122), so a mis-tap recovers. */
+    /** True when the open export is scoped to a selection (vs the whole list) - drives the clear
+     *  step's wording so it never claims to wipe "alle observasjoner" when it only clears a subset. */
+    fun exportIsSelection(): Boolean = exportScope != null
+
+    /** Kommuner present across the exported notes, for the import hint: a single (non-blank) one can
+     *  be named on the form for safer matching. */
+    fun exportKommuner(): List<String> = groupNotesByKommune(exportNotes(), localities).map { it.kommune }
+
+    /** Clear the exported notes - after they've been imported and published. Only the export's scope
+     *  (a selection, or all), so a subset export never deletes notes it didn't cover. Undoable like
+     *  the other deletes (#122), so a mis-tap recovers. */
     fun clearExported() {
-        setUndo(Undoable.Deleted(notes.toList()))
-        notes.clear()
+        val gone = exportNotes()
+        setUndo(Undoable.Deleted(gone))
+        val ids = gone.map { it.id }.toSet()
+        notes.removeAll { it.id in ids }
+        clearSelection()  // the exported notes are gone; leave selection mode too
         persist()
     }
 

@@ -6,6 +6,7 @@ import android.widget.Toast
 import androidx.activity.compose.BackHandler
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.tween
+import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -67,7 +68,11 @@ import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.SolidColor
+import androidx.compose.ui.graphics.StrokeCap
+import androidx.compose.ui.graphics.StrokeJoin
+import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.Layout
@@ -107,12 +112,17 @@ fun ListScreen(vm: MainViewModel, listState: LazyListState) {
     if (showFeedback) FeedbackDialog { showFeedback = false }
     var showAbout by remember { mutableStateOf(false) }
     if (showAbout) AboutDialog { showAbout = false }
-    val selecting = vm.selected.isNotEmpty()
-    // While marking notes, system Back clears the marks rather than exiting the app.
+    val selecting = vm.selectionMode
+    // While marking notes, system Back leaves selection mode rather than exiting the app.
     BackHandler(enabled = selecting) { vm.clearSelection() }
     Box(Modifier.fillMaxSize()) {
         Column(Modifier.fillMaxSize()) {
-            StatusStrip(vm)
+            // Selection mode's action bar overlays the status strip at its exact size (matchParentSize),
+            // so entering/leaving selection never resizes the strip and the list stays put (#120).
+            Box {
+                StatusStrip(vm)
+                if (selecting) SelectionBar(vm, Modifier.matchParentSize())
+            }
             // The list area holds the notes (or the empty hint) and the floating + button.
             // The footer below sits in normal flow, so it can never overlap a note row (#28).
             Box(Modifier.weight(1f).fillMaxWidth()) {
@@ -124,52 +134,33 @@ fun ListScreen(vm: MainViewModel, listState: LazyListState) {
                         )
                     }
                 } else {
-                    Column(Modifier.fillMaxSize()) {
-                        // While marking, a contextual bar tops the list: how many are marked, a
-                        // delete action, and a ✕ to leave selection mode.
-                        if (selecting) {
-                            // Actions are clickable Text (not TextButton) carrying the same 13sp +
-                            // 9.dp vertical padding as the per-day headers, so the bar reads as one
-                            // of them (TextButton's 48.dp min height would make it tower over them).
-                            Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
-                                Text(Strings.Notes.selected(vm.selected.size),
-                                    color = cs.onSurface, fontSize = 13.sp,
-                                    modifier = Modifier.weight(1f).padding(start = 16.dp, top = 9.dp, bottom = 9.dp))
-                                Text(Strings.Notes.deleteSelected, color = cs.error, fontSize = 13.sp,
-                                    fontWeight = FontWeight.Medium,
-                                    modifier = Modifier.clickable { vm.deleteSelected() }
-                                        .padding(horizontal = 16.dp, vertical = 9.dp))
-                                Text("✕", color = cs.onSurfaceVariant, fontSize = 13.sp,
-                                    fontWeight = FontWeight.Medium,
-                                    modifier = Modifier.clickable { vm.clearSelection() }
-                                        .padding(horizontal = 16.dp, vertical = 9.dp))
+                    // Bottom padding so the last row scrolls clear of the floating + button. Notes
+                    // are grouped into per-day sections, each under its own date header. Selection
+                    // mode's chrome lives in the top strip (count + actions) and a leading circle on
+                    // each row/header - nothing is inserted here, so marking never shifts the list.
+                    LazyColumn(Modifier.fillMaxSize(), state = listState, contentPadding = PaddingValues(bottom = 84.dp)) {
+                        // The grand total of species rides along on the newest day's header only.
+                        val totalSpecies = vm.notes.map { it.latin }.distinct().size
+                        groupNotesByDay(vm.notes).forEachIndexed { index, group ->
+                            item(key = "day:${group.label}") {
+                                val species = group.notes.map { it.latin }.distinct().size
+                                val label = "${group.label} · ${Strings.Notes.speciesCount(species)}" +
+                                    if (index == 0) " ${Strings.Notes.speciesTotal(totalSpecies)}" else ""
+                                val ids = group.notes.map { it.id }
+                                DayHeader(
+                                    label, selecting,
+                                    allSelected = group.notes.all { it.id in vm.selected },
+                                    onToggle = { vm.toggleDay(ids) },
+                                    onLongPress = { vm.startSelectDay(ids) },
+                                )
                             }
-                        }
-                        // Bottom padding so the last row scrolls clear of the floating + button.
-                        // Notes are grouped into per-day sections, each under its own date header
-                        // (the contextual bar above replaces only the marking actions, not these).
-                        LazyColumn(Modifier.weight(1f), state = listState, contentPadding = PaddingValues(bottom = 84.dp)) {
-                            // The grand total of species rides along on the newest day's header only.
-                            val totalSpecies = vm.notes.map { it.latin }.distinct().size
-                            groupNotesByDay(vm.notes).forEachIndexed { index, group ->
-                                item(key = "day:${group.label}") {
-                                    val species = group.notes.map { it.latin }.distinct().size
-                                    val label = "${group.label} · ${Strings.Notes.speciesCount(species)}" +
-                                        if (index == 0) " ${Strings.Notes.speciesTotal(totalSpecies)}" else ""
-                                    Text(
-                                        label,
-                                        color = cs.onSurfaceVariant, fontSize = 13.sp,
-                                        modifier = Modifier.padding(horizontal = 16.dp, vertical = 4.dp),
-                                    )
-                                }
-                                items(group.notes, key = { it.id }) { n ->
-                                    NoteRow(
-                                        n, vm.statusFor(n.latin), selected = n.id in vm.selected,
-                                        // In selection mode a tap toggles the mark; otherwise it edits.
-                                        onClick = { if (selecting) vm.toggleSelect(n.id) else vm.editNote(n) },
-                                        onLongClick = { vm.toggleSelect(n.id) },
-                                    )
-                                }
+                            items(group.notes, key = { it.id }) { n ->
+                                NoteRow(
+                                    n, vm.statusFor(n.latin), selecting = selecting, selected = n.id in vm.selected,
+                                    // In selection mode a tap toggles the mark; otherwise it edits.
+                                    onClick = { if (selecting) vm.toggleSelect(n.id) else vm.editNote(n) },
+                                    onLongClick = { vm.startSelect(n.id) },
+                                )
                             }
                         }
                     }
@@ -251,6 +242,85 @@ private fun FeedbackDialog(onDismiss: () -> Unit) {
             }) { Text(Strings.Feedback.email) }
         },
     )
+}
+
+/** The contextual action bar shown while marking notes (#120): count + close on the left, the
+ *  bulk actions on the right. Drawn over the status strip at its size, so it reads as the same bar
+ *  transforming (Material's selection app-bar) rather than a new row - and can't shift the list.
+ *  Export stays top-right, roughly where the whole-list export button sits. (An "Endre" edit action
+ *  is planned to join Slett/Eksporter here once batch-edit lands.) */
+@Composable
+private fun SelectionBar(vm: MainViewModel, modifier: Modifier = Modifier) {
+    Row(
+        modifier.background(MaterialTheme.colorScheme.primary).padding(horizontal = 10.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Text("✕", color = Color.White, fontWeight = FontWeight.SemiBold, fontSize = 20.sp,
+            modifier = Modifier.clip(CircleShape).clickable { vm.clearSelection() }.padding(6.dp))
+        Spacer(Modifier.width(10.dp))
+        Text(Strings.Notes.selected(vm.selected.size), color = Color.White,
+            fontWeight = FontWeight.SemiBold, modifier = Modifier.weight(1f))
+        Text(Strings.Notes.deleteSelected, color = Color.White, fontWeight = FontWeight.Medium, fontSize = 14.sp,
+            modifier = Modifier.clip(RoundedCornerShape(8.dp)).clickable { vm.deleteSelected() }
+                .padding(horizontal = 12.dp, vertical = 8.dp))
+        Spacer(Modifier.width(4.dp))
+        Box(
+            Modifier.clip(RoundedCornerShape(8.dp))
+                .border(1.dp, Color.White.copy(alpha = 0.7f), RoundedCornerShape(8.dp))
+                .clickable { vm.exportSelected() }.padding(horizontal = 14.dp, vertical = 8.dp),
+        ) {
+            Text(Strings.Notes.export, color = Color.White, fontWeight = FontWeight.Medium, fontSize = 14.sp)
+        }
+    }
+}
+
+/** The leading select-hint circle on rows and day headers while marking (#120): a hollow ring that
+ *  fills with a check once marked, matching the photos-app selection idiom the maintainer asked for. */
+@Composable
+private fun SelectCircle(selected: Boolean) {
+    val cs = MaterialTheme.colorScheme
+    Box(
+        Modifier.size(22.dp).clip(CircleShape)
+            .background(if (selected) cs.primary else Color.Transparent)
+            .border(1.5.dp, if (selected) cs.primary else cs.outline, CircleShape),
+        Alignment.Center,
+    ) {
+        // Drawn as a vector rather than a "✓" glyph: the font glyph sits low in the circle (its ink
+        // isn't vertically centred in its line box), so a small stroked path centres exactly instead.
+        if (selected) Canvas(Modifier.size(11.dp)) {
+            val stroke = Stroke(width = 1.8.dp.toPx(), cap = StrokeCap.Round, join = StrokeJoin.Round)
+            val path = Path().apply {
+                moveTo(size.width * 0.14f, size.height * 0.55f)
+                lineTo(size.width * 0.42f, size.height * 0.80f)
+                lineTo(size.width * 0.86f, size.height * 0.26f)
+            }
+            drawPath(path, Color.White, style = stroke)
+        }
+    }
+}
+
+/** Per-day section header. Plain date+count text normally; while marking it grows a leading circle
+ *  (like the rows) that selects/deselects the whole day at once - Material's "parent checkbox". A
+ *  long-press starts marking the whole day even from the plain state, mirroring a row's long-press. */
+@OptIn(ExperimentalFoundationApi::class)
+@Composable
+private fun DayHeader(label: String, selecting: Boolean, allSelected: Boolean, onToggle: () -> Unit, onLongPress: () -> Unit) {
+    val cs = MaterialTheme.colorScheme
+    Row(
+        Modifier.fillMaxWidth()
+            // Tap toggles the day only once marking; the plain header still long-presses into it.
+            // Vertical padding is a touch roomier than a bare label since the whole header is now a
+            // press target.
+            .combinedClickable(onClick = { if (selecting) onToggle() }, onLongClick = onLongPress)
+            .padding(horizontal = 16.dp, vertical = 7.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        if (selecting) {
+            SelectCircle(allSelected)
+            Spacer(Modifier.width(12.dp))
+        }
+        Text(label, color = cs.onSurfaceVariant, fontSize = 13.sp)
+    }
 }
 
 @Composable
@@ -383,7 +453,7 @@ private fun AnnotatedString.Builder.appendBoldSymbols(text: String) {
 
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
-private fun NoteRow(n: Note, status: String, selected: Boolean, onClick: () -> Unit, onLongClick: () -> Unit) {
+private fun NoteRow(n: Note, status: String, selecting: Boolean, selected: Boolean, onClick: () -> Unit, onLongClick: () -> Unit) {
     val cs = MaterialTheme.colorScheme
     val hasLoc = n.locName.isNotBlank()
     // age + sex (sex symbol bolded so the thin ♂/♀ glyphs read at a glance), each shown only when
@@ -396,71 +466,82 @@ private fun NoteRow(n: Note, status: String, selected: Boolean, onClick: () -> U
     // child's leftover to another. So we measure by hand, in priority order: time pinned right, then
     // the name+status, then the locality (kept flush before the time), and finally the sex/age
     // preview gets whatever room is left between name and locality (ellipsized, or dropped).
-    Layout(
-        content = {
-            Row(verticalAlignment = Alignment.CenterVertically) {   // [0] count + species + status + comment
-                Text(
-                    buildAnnotatedString {
-                        val count = if (n.count == UNKNOWN_COUNT) "?" else n.count.toString()
-                        withStyle(SpanStyle(color = cs.onPrimaryContainer, fontWeight = FontWeight.Bold)) { append("$count ") }
-                        append(if (n.uncertain) "${n.species}?" else n.species)
-                        // Status code (VU/SE/…) inline right after the name, coloured like the badge.
-                        if (status.isNotBlank()) {
-                            withStyle(SpanStyle(color = statusColor(status, cs), fontWeight = FontWeight.Bold, fontSize = 11.sp, letterSpacing = 0.5.sp)) {
-                                append(" $status")
-                            }
-                        }
-                    },
-                    maxLines = 1, overflow = TextOverflow.Ellipsis,
-                )
-                CommentBadge(n)
-            }
-            Text(   // [1] sex/age preview
-                buildAnnotatedString {
-                    preview.forEachIndexed { i, (text, bold) ->
-                        if (i > 0) append(" ")
-                        if (bold) appendBoldSymbols(text) else append(text)
-                    }
-                },
-                color = cs.onSurfaceVariant, fontSize = 13.sp, maxLines = 1, overflow = TextOverflow.Ellipsis,
-            )
-            // End-align so a truncated name's "…" hugs the right edge instead of leaving the
-            // ellipsized box's trailing slack, keeping every locality flush against the timestamp.
-            Text(n.locName, color = cs.onSurface, fontSize = 13.sp, textAlign = TextAlign.End,   // [2] locality
-                maxLines = 1, overflow = TextOverflow.Ellipsis)
-            Text(shortTime(n.time), color = cs.onSurfaceVariant, fontSize = 13.sp)   // [3] timestamp
-        },
-        modifier = Modifier.fillMaxWidth()
+    // Wrapped in a Row so a leading select-circle (only while marking) precedes the measured content;
+    // the click/tint/padding live on the Row so the whole width, circle included, is one tap target.
+    Row(
+        Modifier.fillMaxWidth()
             .combinedClickable(onClick = onClick, onLongClick = onLongClick)
             .background(if (selected) cs.primaryContainer else cs.surface)
             .padding(horizontal = 16.dp, vertical = 9.dp),
-    ) { measurables, constraints ->
-        val w = constraints.maxWidth
-        val gap = 8.dp.roundToPx()
-        val time = measurables[3].measure(Constraints(maxWidth = w))
-        val leftBudget = (w - time.width - gap).coerceAtLeast(0)               // room left of the timestamp
-        val species = measurables[0].measure(Constraints(maxWidth = leftBudget))
-        // Locality keeps its room ahead of the preview: it's measured against everything left of the
-        // name, before the preview gets a look in.
-        val afterName = (leftBudget - species.width - gap).coerceAtLeast(0)
-        val locBudget = if (hasLoc) afterName else 0
-        val loc = measurables[2].measure(Constraints(maxWidth = locBudget))
-        // Only count the locality toward the row height when it's actually shown: a Text measured at
-        // width 0 (no locality, or a long name leaving no room) balloons to two lines, which would
-        // inflate the row and leave the content floating in a too-tall box.
-        val showLoc = hasLoc && locBudget > 0
-        // Preview is last in line: it gets whatever sits between the name and the locality. It's
-        // short (sex + age), so show it all-or-nothing — measured at its natural width and dropped
-        // whole (dot included) when it won't fit, rather than collapsing to a stray "· …".
-        val previewBudget = (afterName - (if (showLoc) loc.width + gap else 0)).coerceAtLeast(0)
-        val prev = measurables[1].measure(Constraints())
-        val showPreview = preview.isNotEmpty() && prev.width <= previewBudget
-        val h = maxOf(species.height, time.height, if (showLoc) loc.height else 0, if (showPreview) prev.height else 0)
-        layout(w, h) {
-            species.placeRelative(0, (h - species.height) / 2)
-            time.placeRelative(w - time.width, (h - time.height) / 2)
-            if (showPreview) prev.placeRelative(species.width + gap, (h - prev.height) / 2)
-            if (showLoc) loc.placeRelative(w - time.width - gap - loc.width, (h - loc.height) / 2)
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        if (selecting) {
+            SelectCircle(selected)
+            Spacer(Modifier.width(12.dp))
+        }
+        Layout(
+            content = {
+                Row(verticalAlignment = Alignment.CenterVertically) {   // [0] count + species + status + comment
+                    Text(
+                        buildAnnotatedString {
+                            val count = if (n.count == UNKNOWN_COUNT) "?" else n.count.toString()
+                            withStyle(SpanStyle(color = cs.onPrimaryContainer, fontWeight = FontWeight.Bold)) { append("$count ") }
+                            append(if (n.uncertain) "${n.species}?" else n.species)
+                            // Status code (VU/SE/…) inline right after the name, coloured like the badge.
+                            if (status.isNotBlank()) {
+                                withStyle(SpanStyle(color = statusColor(status, cs), fontWeight = FontWeight.Bold, fontSize = 11.sp, letterSpacing = 0.5.sp)) {
+                                    append(" $status")
+                                }
+                            }
+                        },
+                        maxLines = 1, overflow = TextOverflow.Ellipsis,
+                    )
+                    CommentBadge(n)
+                }
+                Text(   // [1] sex/age preview
+                    buildAnnotatedString {
+                        preview.forEachIndexed { i, (text, bold) ->
+                            if (i > 0) append(" ")
+                            if (bold) appendBoldSymbols(text) else append(text)
+                        }
+                    },
+                    color = cs.onSurfaceVariant, fontSize = 13.sp, maxLines = 1, overflow = TextOverflow.Ellipsis,
+                )
+                // End-align so a truncated name's "…" hugs the right edge instead of leaving the
+                // ellipsized box's trailing slack, keeping every locality flush against the timestamp.
+                Text(n.locName, color = cs.onSurface, fontSize = 13.sp, textAlign = TextAlign.End,   // [2] locality
+                    maxLines = 1, overflow = TextOverflow.Ellipsis)
+                Text(shortTime(n.time), color = cs.onSurfaceVariant, fontSize = 13.sp)   // [3] timestamp
+            },
+            modifier = Modifier.weight(1f),
+        ) { measurables, constraints ->
+            val w = constraints.maxWidth
+            val gap = 8.dp.roundToPx()
+            val time = measurables[3].measure(Constraints(maxWidth = w))
+            val leftBudget = (w - time.width - gap).coerceAtLeast(0)               // room left of the timestamp
+            val species = measurables[0].measure(Constraints(maxWidth = leftBudget))
+            // Locality keeps its room ahead of the preview: it's measured against everything left of the
+            // name, before the preview gets a look in.
+            val afterName = (leftBudget - species.width - gap).coerceAtLeast(0)
+            val locBudget = if (hasLoc) afterName else 0
+            val loc = measurables[2].measure(Constraints(maxWidth = locBudget))
+            // Only count the locality toward the row height when it's actually shown: a Text measured at
+            // width 0 (no locality, or a long name leaving no room) balloons to two lines, which would
+            // inflate the row and leave the content floating in a too-tall box.
+            val showLoc = hasLoc && locBudget > 0
+            // Preview is last in line: it gets whatever sits between the name and the locality. It's
+            // short (sex + age), so show it all-or-nothing — measured at its natural width and dropped
+            // whole (dot included) when it won't fit, rather than collapsing to a stray "· …".
+            val previewBudget = (afterName - (if (showLoc) loc.width + gap else 0)).coerceAtLeast(0)
+            val prev = measurables[1].measure(Constraints())
+            val showPreview = preview.isNotEmpty() && prev.width <= previewBudget
+            val h = maxOf(species.height, time.height, if (showLoc) loc.height else 0, if (showPreview) prev.height else 0)
+            layout(w, h) {
+                species.placeRelative(0, (h - species.height) / 2)
+                time.placeRelative(w - time.width, (h - time.height) / 2)
+                if (showPreview) prev.placeRelative(species.width + gap, (h - prev.height) / 2)
+                if (showLoc) loc.placeRelative(w - time.width - gap - loc.width, (h - loc.height) / 2)
+            }
         }
     }
     HorizontalDivider(color = cs.outline.copy(alpha = 0.4f))
@@ -965,7 +1046,10 @@ fun ExportScreen(vm: MainViewModel) {
     val cs = MaterialTheme.colorScheme
     val clip = LocalClipboardManager.current
     val ctx = LocalContext.current
-    val text = exportTsv(vm.notes)
+    // Scope: whatever the export covers - the marked notes when opened from selection, else all.
+    val exported = vm.exportNotes()
+    val isSelection = vm.exportIsSelection()
+    val text = exportTsv(exported)
     // A single (non-blank) kommune across all notes can be named on the form; otherwise leave it blank.
     val singleKommune = vm.exportKommuner().singleOrNull()?.takeIf { it.isNotBlank() }
     var copied by remember { mutableStateOf(false) }
@@ -1020,7 +1104,8 @@ fun ExportScreen(vm: MainViewModel) {
             Step(5, Strings.Export.step5) {
                 Text(Strings.Export.step5Body,
                     fontSize = 13.sp, color = cs.onSurfaceVariant, modifier = Modifier.padding(top = 4.dp))
-                Text(Strings.Export.clearAll, color = cs.error, fontWeight = FontWeight.Medium,
+                Text(if (isSelection) Strings.Export.clearSelected(exported.size) else Strings.Export.clearAll,
+                    color = cs.error, fontWeight = FontWeight.Medium,
                     fontSize = 14.sp,
                     modifier = Modifier.clickable { confirmClear = true }.padding(top = 10.dp))
             }
@@ -1030,7 +1115,7 @@ fun ExportScreen(vm: MainViewModel) {
     if (confirmClear) {
         AlertDialog(
             onDismissRequest = { confirmClear = false },
-            title = { Text(Strings.Export.clearTitle) },
+            title = { Text(if (isSelection) Strings.Export.clearSelectedTitle(exported.size) else Strings.Export.clearTitle) },
             text = {
                 Text(Strings.Export.clearBody)
             },

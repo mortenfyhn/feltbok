@@ -118,6 +118,11 @@ object Strings {
         const val step5Body = "Når alt er på plass, kan du slette observasjonene fra appen"
         const val clearAll = "Slett alle observasjoner"
         const val clearTitle = "Slett alle observasjoner?"
+
+        // Shown instead when the export covered only marked notes (#120): names the count so it's
+        // clear the rest of the list is untouched.
+        fun clearSelected(n: Int) = "Slett ($n)"
+        fun clearSelectedTitle(n: Int) = "Slett de $n eksporterte observasjonene?"
         const val clearBody = "Sørg for alt er på plass i Artsobservasjoner!"
         const val clearConfirm = "Slett"
     }

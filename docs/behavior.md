@@ -58,12 +58,27 @@ header ("I dag", "I går", else an abbreviated date like "Søn 8. jun"). Within 
 newest first. Each row carries species + count on the left, its locality, and the
 time on the right (the day lives in the section header, so the row shows bare HH:mm).
 
+### Marking (masse-handlinger)
+
+Long-press a row to start marking. A leading circle then appears on every row (and
+on each day header), filling with a check when marked — tap a row or its circle to
+toggle it, and a day header's circle marks or clears that whole day at once. The
+status strip turns into a selection bar in place — a ✕ to leave, the count, and the
+two bulk actions **Slett** and **Eksporter** — so entering marking never shifts the
+list. `Slett` removes the marked notes (undoable); `Eksporter` opens the export
+walkthrough scoped to just them (see below). You leave marking only via the ✕, system
+Back, or finishing an action — deselecting the last note keeps you in marking mode
+(so you can re-pick), rather than dropping out. While *not* marking, a plain tap on a
+row opens it for editing.
+
 ## Export
 
 One **Eksporter** button (top right of the status strip) opens a step-by-step
 walkthrough: copy *all* your observations as a single block, paste it into
 Artsobservasjoner's "Importer observasjoner", then clear them from the app once
-they're safely in.
+they're safely in. (Exporting from a marking selection scopes the whole walkthrough
+to just the marked notes — the copied block, the kommune hint, and the final clear
+step all cover only those, so it never touches the rest of the list.)
 
 Everything pastes in one go, regardless of kommune. A bare locality name links to
 the public locality as long as the name is unambiguous; scoping the import form to a
