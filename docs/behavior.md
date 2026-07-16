@@ -64,7 +64,8 @@ Long-press a row to start marking. A leading circle then appears on every row (a
 on each day header), filling with a check when marked — tap a row or its circle to
 toggle it, and a day header's circle marks or clears that whole day at once. You can
 also **long-press and drag** across rows to sweep a range in one gesture (drag back
-to un-sweep); the list stops scrolling for the duration so the drag can't be stolen. The
+to un-sweep); dragging to the top or bottom edge auto-scrolls the list so the range
+can run past what's on screen. The
 status strip turns into a selection bar in place — a ✕ to leave, the count, and the
 two bulk actions **Slett** and **Eksporter** — so entering marking never shifts the
 list. `Slett` removes the marked notes (undoable); `Eksporter` opens the export

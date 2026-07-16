@@ -14,6 +14,7 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.gestures.detectDragGesturesAfterLongPress
 import androidx.compose.foundation.gestures.detectTapGestures
+import androidx.compose.foundation.gestures.scrollBy
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -57,6 +58,7 @@ import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
@@ -81,6 +83,7 @@ import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.Layout
 import androidx.compose.ui.platform.LocalClipboardManager
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.text.AnnotatedString
@@ -147,13 +150,38 @@ fun ListScreen(vm: MainViewModel, listState: LazyListState) {
                     // drag's Y to items via the list's layout info and sweeps this order).
                     val groups = groupNotesByDay(vm.notes)
                     val orderedIds = groups.flatMap { g -> g.notes.map { it.id } }
-                    // While a select-drag is live the list must not scroll: its scroll gesture would
-                    // otherwise race the drag detector and swallow the first moves, so the drag "didn't
-                    // register". Disabling scroll for the drag's duration hands every move to the sweep.
-                    var dragging by remember { mutableStateOf(false) }
+                    val density = LocalDensity.current
+                    val ds = remember { DragSelect() }
+                    // While a select-drag is live the list must not scroll on its own: its scroll
+                    // gesture would race the drag detector and swallow the first moves ("didn't
+                    // register"). We drive scrolling ourselves via the edge auto-scroll below instead.
+                    LaunchedEffect(ds.active) {
+                        if (!ds.active) return@LaunchedEffect
+                        // Fixed edge band; speed ramps 0..1 with depth into the band (grazing barely
+                        // moves), capped low, dead everywhere else - so it's steerable, not a lurch.
+                        val band = with(density) { 72.dp.toPx() }
+                        val maxStep = with(density) { 10.dp.toPx() }
+                        while (ds.active) {
+                            withFrameNanos {}
+                            val y = ds.pointerY
+                            if (y < 0f) continue
+                            val info = listState.layoutInfo
+                            val top = info.viewportStartOffset.toFloat()
+                            val bottom = info.viewportEndOffset.toFloat()
+                            val frac = when {
+                                y < top + band -> -((top + band - y) / band)
+                                y > bottom - band -> (y - (bottom - band)) / band
+                                else -> 0f
+                            }.coerceIn(-1f, 1f)
+                            if (frac != 0f) {
+                                listState.scrollBy(frac * maxStep)
+                                applyDragRange(listState, orderedIds, vm, ds, y)  // sweep as rows appear
+                            }
+                        }
+                    }
                     LazyColumn(
-                        Modifier.fillMaxSize().dragToSelect(listState, orderedIds, vm, haptic) { dragging = it },
-                        state = listState, userScrollEnabled = !dragging,
+                        Modifier.fillMaxSize().dragToSelect(listState, orderedIds, vm, haptic, ds),
+                        state = listState, userScrollEnabled = !ds.active,
                         contentPadding = PaddingValues(bottom = 84.dp),
                     ) {
                         // The grand total of species rides along on the newest day's header only.
@@ -223,6 +251,16 @@ fun ListScreen(vm: MainViewModel, listState: LazyListState) {
     }
 }
 
+/** Transient state of a long-press-drag range selection, shared between the gesture detector and the
+ *  edge auto-scroll loop. [active] drives scroll-freeze + the loop (observable); the rest is plain
+ *  scratch the detector writes and the loop reads. [anchor] is an index into the ordered id list. */
+private class DragSelect {
+    var active by mutableStateOf(false)
+    var anchor = -1
+    var base: Set<Long> = emptySet()
+    var pointerY by mutableFloatStateOf(-1f)
+}
+
 /** The note id under a Y coordinate (list-viewport space), or null if that row is a day header or
  *  empty space. Keys are the note ids (Long) for note rows and "day:…" (String) for headers. */
 private fun noteIdAt(listState: LazyListState, y: Float): Long? =
@@ -230,39 +268,45 @@ private fun noteIdAt(listState: LazyListState, y: Float): Long? =
         .firstOrNull { y >= it.offset && y < it.offset + it.size }
         ?.key as? Long
 
+/** Mark every note between the drag anchor and the row currently under [y], painted onto the marks
+ *  that existed when the drag began (so shrinking the drag un-marks, without clobbering earlier ones). */
+private fun applyDragRange(listState: LazyListState, orderedIds: List<Long>, vm: MainViewModel, ds: DragSelect, y: Float) {
+    if (ds.anchor < 0) return
+    val cur = noteIdAt(listState, y)?.let { orderedIds.indexOf(it) } ?: return
+    if (cur >= 0) vm.setSelection(ds.base + orderedIds.subList(minOf(ds.anchor, cur), maxOf(ds.anchor, cur) + 1))
+}
+
 /** Long-press-and-drag range selection (Material's multi-select drag), on the notes list. Long-press
- *  a row to anchor + enter marking, then drag: every row between the anchor and the finger is marked,
- *  and dragging back un-marks them (the sweep is painted onto the marks that existed when the drag
- *  began, so it never clobbers earlier selections). The row-level long-press lives here, not on the
+ *  a row to anchor + enter marking, then drag to sweep a range; edge auto-scroll (see the caller's
+ *  LaunchedEffect) extends it past the visible rows. The row-level long-press lives here, not on the
  *  rows, so the two don't fight over the gesture. */
 private fun Modifier.dragToSelect(
     listState: LazyListState,
     orderedIds: List<Long>,
     vm: MainViewModel,
     haptic: HapticFeedback,
-    setDragging: (Boolean) -> Unit,
+    ds: DragSelect,
 ): Modifier = pointerInput(orderedIds) {
-    var anchor = -1
-    var base: Set<Long> = emptySet()
     detectDragGesturesAfterLongPress(
         onDragStart = { offset ->
             val id = noteIdAt(listState, offset.y)
-            anchor = if (id != null) orderedIds.indexOf(id) else -1
-            if (anchor >= 0) {
-                base = vm.selected.toSet()
+            ds.anchor = if (id != null) orderedIds.indexOf(id) else -1
+            if (ds.anchor >= 0) {
+                ds.base = vm.selected.toSet()
+                ds.pointerY = offset.y
                 haptic.performHapticFeedback(HapticFeedbackType.LongPress)
-                vm.setSelection(base + orderedIds[anchor])
-                setDragging(true)  // freeze list scroll so it can't steal the drag
+                vm.setSelection(ds.base + orderedIds[ds.anchor])
+                ds.active = true  // freeze list scroll + start edge auto-scroll
             }
         },
         onDrag = { change, _ ->
             change.consume()
-            if (anchor < 0) return@detectDragGesturesAfterLongPress
-            val cur = noteIdAt(listState, change.position.y)?.let { orderedIds.indexOf(it) } ?: return@detectDragGesturesAfterLongPress
-            if (cur >= 0) vm.setSelection(base + orderedIds.subList(minOf(anchor, cur), maxOf(anchor, cur) + 1))
+            if (ds.anchor < 0) return@detectDragGesturesAfterLongPress
+            ds.pointerY = change.position.y
+            applyDragRange(listState, orderedIds, vm, ds, change.position.y)
         },
-        onDragEnd = { anchor = -1; setDragging(false) },
-        onDragCancel = { anchor = -1; setDragging(false) },
+        onDragEnd = { ds.anchor = -1; ds.active = false },
+        onDragCancel = { ds.anchor = -1; ds.active = false },
     )
 }
 
