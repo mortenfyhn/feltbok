@@ -2,6 +2,10 @@
 
 ## Neste utgivelse
 
+## v1.0 (16. juli 2026)
+
+- Feltbok er nå ute av beta, etter noen ukers feltbruk. Jippi!
+
 ## v0.13 (26. juni 2026)
 
 - Lettere å velge rett lokalitet på kartet.
