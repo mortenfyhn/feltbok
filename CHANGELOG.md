@@ -6,6 +6,7 @@
   på dag-overskriftene, som markerer hele dagen), og felter for antall, Slett og
   Eksporter øverst – uten at lista lenger hopper nedover.
 - Du kan nå eksportere bare de observasjonene du har markert.
+- Hold inne og dra for å markere flere observasjoner i ett drag.
 
 ## v1.0 (16. juli 2026)
 

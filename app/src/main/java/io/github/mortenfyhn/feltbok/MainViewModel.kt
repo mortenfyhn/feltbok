@@ -58,6 +58,14 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
     fun startSelect(id: Long) { selectionMode = true; if (id !in selected) selected.add(id) }
     fun startSelectDay(ids: List<Long>) { selectionMode = true; toggleDay(ids) }
 
+    /** Replace the whole marked set at once - the long-press-drag range selector paints a fresh set
+     *  (a base plus the swept range) on every drag move, so shrinking the drag un-marks again. */
+    fun setSelection(ids: Collection<Long>) {
+        selectionMode = true
+        selected.clear()
+        selected.addAll(ids)
+    }
+
     /** Toggle a whole day group at once (the date header's circle): mark all of it, or - when it's
      *  already fully marked - clear it. Mirrors Material's "parent checkbox" for a section. */
     fun toggleDay(ids: List<Long>) {

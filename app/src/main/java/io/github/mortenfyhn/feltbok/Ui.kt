@@ -12,6 +12,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.combinedClickable
+import androidx.compose.foundation.gestures.detectDragGesturesAfterLongPress
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -74,11 +75,14 @@ import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.StrokeJoin
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.hapticfeedback.HapticFeedback
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.Layout
 import androidx.compose.ui.platform.LocalClipboardManager
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalFocusManager
+import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.PlatformTextStyle
 import androidx.compose.ui.text.SpanStyle
@@ -113,6 +117,7 @@ fun ListScreen(vm: MainViewModel, listState: LazyListState) {
     var showAbout by remember { mutableStateOf(false) }
     if (showAbout) AboutDialog { showAbout = false }
     val selecting = vm.selectionMode
+    val haptic = LocalHapticFeedback.current
     // While marking notes, system Back leaves selection mode rather than exiting the app.
     BackHandler(enabled = selecting) { vm.clearSelection() }
     Box(Modifier.fillMaxSize()) {
@@ -138,10 +143,22 @@ fun ListScreen(vm: MainViewModel, listState: LazyListState) {
                     // are grouped into per-day sections, each under its own date header. Selection
                     // mode's chrome lives in the top strip (count + actions) and a leading circle on
                     // each row/header - nothing is inserted here, so marking never shifts the list.
-                    LazyColumn(Modifier.fillMaxSize(), state = listState, contentPadding = PaddingValues(bottom = 84.dp)) {
+                    // Notes in display order (for long-press-drag range selection, which maps a
+                    // drag's Y to items via the list's layout info and sweeps this order).
+                    val groups = groupNotesByDay(vm.notes)
+                    val orderedIds = groups.flatMap { g -> g.notes.map { it.id } }
+                    // While a select-drag is live the list must not scroll: its scroll gesture would
+                    // otherwise race the drag detector and swallow the first moves, so the drag "didn't
+                    // register". Disabling scroll for the drag's duration hands every move to the sweep.
+                    var dragging by remember { mutableStateOf(false) }
+                    LazyColumn(
+                        Modifier.fillMaxSize().dragToSelect(listState, orderedIds, vm, haptic) { dragging = it },
+                        state = listState, userScrollEnabled = !dragging,
+                        contentPadding = PaddingValues(bottom = 84.dp),
+                    ) {
                         // The grand total of species rides along on the newest day's header only.
                         val totalSpecies = vm.notes.map { it.latin }.distinct().size
-                        groupNotesByDay(vm.notes).forEachIndexed { index, group ->
+                        groups.forEachIndexed { index, group ->
                             item(key = "day:${group.label}") {
                                 val species = group.notes.map { it.latin }.distinct().size
                                 val label = "${group.label} · ${Strings.Notes.speciesCount(species)}" +
@@ -157,9 +174,10 @@ fun ListScreen(vm: MainViewModel, listState: LazyListState) {
                             items(group.notes, key = { it.id }) { n ->
                                 NoteRow(
                                     n, vm.statusFor(n.latin), selecting = selecting, selected = n.id in vm.selected,
-                                    // In selection mode a tap toggles the mark; otherwise it edits.
+                                    // Tap toggles the mark while marking, else opens the editor. Entering
+                                    // selection (long-press, optionally dragged into a range) is handled by
+                                    // the list's dragToSelect so it doesn't fight a row-level long-press.
                                     onClick = { if (selecting) vm.toggleSelect(n.id) else vm.editNote(n) },
-                                    onLongClick = { vm.startSelect(n.id) },
                                 )
                             }
                         }
@@ -203,6 +221,49 @@ fun ListScreen(vm: MainViewModel, listState: LazyListState) {
         if (SHOW_MINIMAP)
             LocalityPreview(vm, Modifier.align(Alignment.TopStart).offset(x = (-6).dp, y = (-6).dp))
     }
+}
+
+/** The note id under a Y coordinate (list-viewport space), or null if that row is a day header or
+ *  empty space. Keys are the note ids (Long) for note rows and "day:…" (String) for headers. */
+private fun noteIdAt(listState: LazyListState, y: Float): Long? =
+    listState.layoutInfo.visibleItemsInfo
+        .firstOrNull { y >= it.offset && y < it.offset + it.size }
+        ?.key as? Long
+
+/** Long-press-and-drag range selection (Material's multi-select drag), on the notes list. Long-press
+ *  a row to anchor + enter marking, then drag: every row between the anchor and the finger is marked,
+ *  and dragging back un-marks them (the sweep is painted onto the marks that existed when the drag
+ *  began, so it never clobbers earlier selections). The row-level long-press lives here, not on the
+ *  rows, so the two don't fight over the gesture. */
+private fun Modifier.dragToSelect(
+    listState: LazyListState,
+    orderedIds: List<Long>,
+    vm: MainViewModel,
+    haptic: HapticFeedback,
+    setDragging: (Boolean) -> Unit,
+): Modifier = pointerInput(orderedIds) {
+    var anchor = -1
+    var base: Set<Long> = emptySet()
+    detectDragGesturesAfterLongPress(
+        onDragStart = { offset ->
+            val id = noteIdAt(listState, offset.y)
+            anchor = if (id != null) orderedIds.indexOf(id) else -1
+            if (anchor >= 0) {
+                base = vm.selected.toSet()
+                haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                vm.setSelection(base + orderedIds[anchor])
+                setDragging(true)  // freeze list scroll so it can't steal the drag
+            }
+        },
+        onDrag = { change, _ ->
+            change.consume()
+            if (anchor < 0) return@detectDragGesturesAfterLongPress
+            val cur = noteIdAt(listState, change.position.y)?.let { orderedIds.indexOf(it) } ?: return@detectDragGesturesAfterLongPress
+            if (cur >= 0) vm.setSelection(base + orderedIds.subList(minOf(anchor, cur), maxOf(anchor, cur) + 1))
+        },
+        onDragEnd = { anchor = -1; setDragging(false) },
+        onDragCancel = { anchor = -1; setDragging(false) },
+    )
 }
 
 /** Lets people send feedback without knowing what GitHub is: a friendly chooser between
@@ -280,9 +341,11 @@ private fun SelectionBar(vm: MainViewModel, modifier: Modifier = Modifier) {
 private fun SelectCircle(selected: Boolean) {
     val cs = MaterialTheme.colorScheme
     Box(
+        // Only ever shown while marking, so it can afford to be bold: a solid 2 dp ring (mid-grey
+        // when empty, primary when filled) rather than the pale hairline outline colour.
         Modifier.size(22.dp).clip(CircleShape)
             .background(if (selected) cs.primary else Color.Transparent)
-            .border(1.5.dp, if (selected) cs.primary else cs.outline, CircleShape),
+            .border(2.dp, if (selected) cs.primary else cs.onSurfaceVariant, CircleShape),
         Alignment.Center,
     ) {
         // Drawn as a vector rather than a "✓" glyph: the font glyph sits low in the circle (its ink
@@ -451,9 +514,8 @@ private fun AnnotatedString.Builder.appendBoldSymbols(text: String) {
     }
 }
 
-@OptIn(ExperimentalFoundationApi::class)
 @Composable
-private fun NoteRow(n: Note, status: String, selecting: Boolean, selected: Boolean, onClick: () -> Unit, onLongClick: () -> Unit) {
+private fun NoteRow(n: Note, status: String, selecting: Boolean, selected: Boolean, onClick: () -> Unit) {
     val cs = MaterialTheme.colorScheme
     val hasLoc = n.locName.isNotBlank()
     // age + sex (sex symbol bolded so the thin ♂/♀ glyphs read at a glance), each shown only when
@@ -470,7 +532,7 @@ private fun NoteRow(n: Note, status: String, selecting: Boolean, selected: Boole
     // the click/tint/padding live on the Row so the whole width, circle included, is one tap target.
     Row(
         Modifier.fillMaxWidth()
-            .combinedClickable(onClick = onClick, onLongClick = onLongClick)
+            .clickable(onClick = onClick)
             .background(if (selected) cs.primaryContainer else cs.surface)
             .padding(horizontal = 16.dp, vertical = 9.dp),
         verticalAlignment = Alignment.CenterVertically,

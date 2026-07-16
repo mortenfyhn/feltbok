@@ -62,7 +62,9 @@ time on the right (the day lives in the section header, so the row shows bare HH
 
 Long-press a row to start marking. A leading circle then appears on every row (and
 on each day header), filling with a check when marked — tap a row or its circle to
-toggle it, and a day header's circle marks or clears that whole day at once. The
+toggle it, and a day header's circle marks or clears that whole day at once. You can
+also **long-press and drag** across rows to sweep a range in one gesture (drag back
+to un-sweep); the list stops scrolling for the duration so the drag can't be stolen. The
 status strip turns into a selection bar in place — a ✕ to leave, the count, and the
 two bulk actions **Slett** and **Eksporter** — so entering marking never shifts the
 list. `Slett` removes the marked notes (undoable); `Eksporter` opens the export
