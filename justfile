@@ -120,3 +120,8 @@ seed-notes:
     .venv/bin/python scripts/dev/make_sample_notes.py > /tmp/feltbok-seed-notes.json
     adb push /tmp/feltbok-seed-notes.json {{data_dir}}/seed-notes.json
     adb shell am force-stop {{app_id}}
+
+# Regenerate the F-Droid/Play store icon + feature graphic (fastlane/.../en-US/images) from the
+# hand-drawn SVG in scripts/dev/store-assets/. Needs rsvg-convert + imagemagick.
+render-store-assets:
+    scripts/dev/store-assets/render.sh
