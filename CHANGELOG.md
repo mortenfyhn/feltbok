@@ -10,6 +10,8 @@
   feil lokalitet – på alle på én gang.
 - Hold inne og dra for å markere flere observasjoner i ett drag – lista ruller av
   seg selv når du drar mot toppen eller bunnen.
+- Sletter du flere observasjoner på én gang, får du et bekreftelsesspørsmål først.
+  Slett-knappene viser også hvor mange du sletter.
 
 ## v1.0 (16. juli 2026)
 

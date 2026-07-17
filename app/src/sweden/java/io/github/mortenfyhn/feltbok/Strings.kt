@@ -26,6 +26,7 @@ object Strings {
 
         fun selected(n: Int) = "$n " + if (n == 1) "markerad" else "markerade"
         const val deleteSelected = "Ta bort"
+        fun confirmDeleteTitle(n: Int) = "Ta bort de $n observationerna?"
         const val edit = "Ändra"
         fun editTitle(n: Int) = "Ändra $n " + if (n == 1) "observation" else "observationer"
 
@@ -103,12 +104,12 @@ object Strings {
         const val step4Body = "Kontrollera att observationerna syns i Artportalen"
         const val step5 = "Ta bort från appen"
         const val step5Body = "När allt är på plats kan du ta bort observationerna från appen"
-        const val clearAll = "Ta bort alla observationer"
+        fun clearAll(n: Int) = "Ta bort alla observationer ($n)"
         const val clearTitle = "Ta bort alla observationer?"
 
         // Shown instead when the export covered only marked notes (#120): names the count so it's
         // clear the rest of the list is untouched.
-        fun clearSelected(n: Int) = "Ta bort ($n)"
+        fun clearSelected(n: Int) = "Ta bort $n ${if (n == 1) "observation" else "observationer"}"
         fun clearSelectedTitle(n: Int) = "Ta bort de $n exporterade observationerna?"
         const val clearBody = "Se till att allt är på plats i Artportalen!"
         const val clearConfirm = "Ta bort"

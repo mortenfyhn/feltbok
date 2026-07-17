@@ -31,6 +31,10 @@ object Strings {
         // Selection mode: long-press a note to mark it, then tap more, then delete the marked ones.
         fun selected(n: Int) = "$n markert"
         const val deleteSelected = "Slett"
+
+        // Confirm before a multi-note delete (#156): dropping several at once is surprising, so ask
+        // (a single delete just deletes - the undo snackbar catches a misfire).
+        fun confirmDeleteTitle(n: Int) = "Slett $n observasjoner?"
         const val edit = "Endre"
         fun editTitle(n: Int) = "Endre $n ${if (n == 1) "observasjon" else "observasjoner"}"
 
@@ -119,12 +123,12 @@ object Strings {
         const val step4Body = "Sjekk at observasjonene vises i Artsobservasjoner"
         const val step5 = "Slett fra appen"
         const val step5Body = "Når alt er på plass, kan du slette observasjonene fra appen"
-        const val clearAll = "Slett alle observasjoner"
+        fun clearAll(n: Int) = "Slett alle observasjoner ($n)"
         const val clearTitle = "Slett alle observasjoner?"
 
         // Shown instead when the export covered only marked notes (#120): names the count so it's
         // clear the rest of the list is untouched.
-        fun clearSelected(n: Int) = "Slett ($n)"
+        fun clearSelected(n: Int) = "Slett $n ${if (n == 1) "observasjon" else "observasjoner"}"
         fun clearSelectedTitle(n: Int) = "Slett de $n eksporterte observasjonene?"
         const val clearBody = "Sørg for alt er på plass i Artsobservasjoner!"
         const val clearConfirm = "Slett"

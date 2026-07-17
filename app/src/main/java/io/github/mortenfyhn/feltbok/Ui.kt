@@ -370,6 +370,9 @@ private fun FeedbackDialog(onDismiss: () -> Unit) {
  *  Export stays top-right, roughly where the whole-list export button sits; Endre/Slett sit before it. */
 @Composable
 private fun SelectionBar(vm: MainViewModel, onEdit: () -> Unit, modifier: Modifier = Modifier) {
+    // Deleting several notes at once is surprising, so confirm it (#156). A single mark deletes
+    // straight away - the undo snackbar is enough of a safety net there.
+    var confirmDelete by remember { mutableStateOf(false) }
     Row(
         modifier.background(MaterialTheme.colorScheme.primary)
             // The bar overlays the status strip, whose locality area is clickable - swallow taps that
@@ -387,7 +390,8 @@ private fun SelectionBar(vm: MainViewModel, onEdit: () -> Unit, modifier: Modifi
             modifier = Modifier.clip(RoundedCornerShape(8.dp)).clickable { onEdit() }
                 .padding(horizontal = 10.dp, vertical = 8.dp))
         Text(Strings.Notes.deleteSelected, color = Color.White, fontWeight = FontWeight.Medium, fontSize = 14.sp,
-            modifier = Modifier.clip(RoundedCornerShape(8.dp)).clickable { vm.deleteSelected() }
+            modifier = Modifier.clip(RoundedCornerShape(8.dp))
+                .clickable { if (vm.selected.size > 1) confirmDelete = true else vm.deleteSelected() }
                 .padding(horizontal = 10.dp, vertical = 8.dp))
         Spacer(Modifier.width(2.dp))
         Box(
@@ -397,6 +401,20 @@ private fun SelectionBar(vm: MainViewModel, onEdit: () -> Unit, modifier: Modifi
         ) {
             Text(Strings.Notes.export, color = Color.White, fontWeight = FontWeight.Medium, fontSize = 14.sp)
         }
+    }
+    if (confirmDelete) {
+        val cs = MaterialTheme.colorScheme
+        AlertDialog(
+            onDismissRequest = { confirmDelete = false },
+            title = { Text(Strings.Notes.confirmDeleteTitle(vm.selected.size)) },
+            confirmButton = {
+                Button(
+                    onClick = { vm.deleteSelected(); confirmDelete = false },
+                    colors = ButtonDefaults.buttonColors(containerColor = cs.error),
+                ) { Text(Strings.Notes.deleteSelected) }
+            },
+            dismissButton = { TextButton(onClick = { confirmDelete = false }) { Text(Strings.cancel) } },
+        )
     }
 }
 
@@ -1270,7 +1288,7 @@ fun ExportScreen(vm: MainViewModel) {
             Step(5, Strings.Export.step5) {
                 Text(Strings.Export.step5Body,
                     fontSize = 13.sp, color = cs.onSurfaceVariant, modifier = Modifier.padding(top = 4.dp))
-                Text(if (isSelection) Strings.Export.clearSelected(exported.size) else Strings.Export.clearAll,
+                Text(if (isSelection) Strings.Export.clearSelected(exported.size) else Strings.Export.clearAll(exported.size),
                     color = cs.error, fontWeight = FontWeight.Medium,
                     fontSize = 14.sp,
                     modifier = Modifier.clickable { confirmClear = true }.padding(top = 10.dp))

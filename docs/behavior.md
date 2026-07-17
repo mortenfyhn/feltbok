@@ -68,7 +68,9 @@ to un-sweep); dragging to the top or bottom edge auto-scrolls the list so the ra
 can run past what's on screen. The
 status strip turns into a selection bar in place — a ✕ to leave, the count, and the
 bulk actions **Endre**, **Slett** and **Eksporter** — so entering marking never shifts
-the list. `Slett` removes the marked notes (undoable); `Eksporter` opens the export
+the list. `Slett` removes the marked notes (undoable); deleting more than one asks to
+confirm first, since several vanishing at once is surprising (a single mark deletes
+straight away). `Eksporter` opens the export
 walkthrough scoped to just them (see below). You leave marking only via the ✕, system
 Back, or finishing an action — deselecting the last note keeps you in marking mode
 (so you can re-pick), rather than dropping out. While *not* marking, a plain tap on a
