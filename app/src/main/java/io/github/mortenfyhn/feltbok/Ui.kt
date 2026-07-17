@@ -231,11 +231,23 @@ fun ListScreen(vm: MainViewModel, listState: LazyListState) {
                     }
                 }
                 // Hidden while marking notes — the contextual bar's delete is the action then.
-                if (!selecting) FloatingActionButton(
-                    onClick = { vm.startAdd() },
-                    containerColor = cs.primary, contentColor = Color.White,
-                    modifier = Modifier.align(Alignment.BottomEnd).padding(18.dp),
-                ) { Text("+", fontSize = 28.sp) }
+                // A FAB's touch target is exactly its visual size, so a slightly-off tap for "+"
+                // used to land on the note row behind it. Wrap it in a larger transparent
+                // clickable ring (no ripple) so the hitbox grows without the button looking bigger.
+                if (!selecting) Box(
+                    Modifier.align(Alignment.BottomEnd).padding(6.dp).size(88.dp)
+                        .clickable(
+                            interactionSource = remember { MutableInteractionSource() },
+                            indication = null,
+                        ) { vm.startAdd() },
+                    contentAlignment = Alignment.Center,
+                ) {
+                    FloatingActionButton(
+                        onClick = { vm.startAdd() },
+                        containerColor = cs.primary, contentColor = Color.White,
+                        modifier = Modifier.size(64.dp),
+                    ) { Text("+", fontSize = 30.sp) }
+                }
             }
             // Footer bar: Synk / Tilbakemelding, with the version tucked at the right.
             HorizontalDivider(color = cs.outline.copy(alpha = 0.4f))

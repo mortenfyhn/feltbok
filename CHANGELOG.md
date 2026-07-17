@@ -15,6 +15,8 @@
 - **Nå**-knapp i tid-dialogen setter fra- eller til-tida til akkurat nå med ett trykk.
 - Lista ruller opp til den nye observasjonen når du lagrar den, også når den starter
   en ny dag – så du alltid ser det du nettopp la til.
+- Større **+**-knapp med romsligere trykkflate, så du lettere treffer den uten å
+  bomme på observasjonen bak.
 
 ## v1.0 (16. juli 2026)
 
