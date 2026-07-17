@@ -99,6 +99,7 @@ object Strings {
         const val title = "Tid"
         const val from = "Fra"
         const val to = "Til"
+        const val now = "Nå"
         const val done = "Ferdig"
     }
 

@@ -84,6 +84,7 @@ object Strings {
         const val title = "Tid"
         const val from = "Från"
         const val to = "Till"
+        const val now = "Nu"
         const val done = "Klar"
     }
 

@@ -1147,12 +1147,12 @@ private fun TimeDialog(vm: MainViewModel, onDismiss: () -> Unit) {
         title = { Text(Strings.Time.title) },
         text = {
             Column {
-                TimeGroupHeader(Strings.Time.from)
+                TimeGroupHeader(Strings.Time.from) { setStart(System.currentTimeMillis()) }
                 FieldRow(surface = false, divider = false,
                     onClick = { pickDate(start, ::setStart) }) { Text(displayDate(start)) }
                 FieldRow(surface = false, divider = false,
                     onClick = { pickTime(start, ::setStart) }) { Text(exportTime(start)) }
-                TimeGroupHeader(Strings.Time.to)
+                TimeGroupHeader(Strings.Time.to) { setEnd(System.currentTimeMillis()) }
                 FieldRow(surface = false, divider = false,
                     onClick = { pickDate(end, ::setEnd) }) { Text(displayDate(end)) }
                 FieldRow(surface = false, divider = false,
@@ -1165,9 +1165,12 @@ private fun TimeDialog(vm: MainViewModel, onDismiss: () -> Unit) {
 }
 
 @Composable
-private fun TimeGroupHeader(text: String) {
-    Text(text, color = MaterialTheme.colorScheme.primary, fontWeight = FontWeight.Bold,
-        fontSize = 13.sp, modifier = Modifier.padding(top = 10.dp, bottom = 2.dp))
+private fun TimeGroupHeader(text: String, onNow: () -> Unit) {
+    Row(verticalAlignment = Alignment.CenterVertically) {
+        Text(text, color = MaterialTheme.colorScheme.primary, fontWeight = FontWeight.Bold,
+            fontSize = 13.sp, modifier = Modifier.weight(1f).padding(top = 10.dp, bottom = 2.dp))
+        TextButton(onClick = onNow) { Text(Strings.Time.now) }
+    }
 }
 
 @Composable

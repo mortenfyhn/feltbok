@@ -12,6 +12,7 @@
   seg selv når du drar mot toppen eller bunnen.
 - Sletter du flere observasjoner på én gang, får du et bekreftelsesspørsmål først.
   Slett-knappene viser også hvor mange du sletter.
+- **Nå**-knapp i tid-dialogen setter fra- eller til-tida til akkurat nå med ett trykk.
 
 ## v1.0 (16. juli 2026)
 
