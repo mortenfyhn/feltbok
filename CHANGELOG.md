@@ -6,6 +6,8 @@
   på dag-overskriftene, som markerer hele dagen), og felter for antall, Slett og
   Eksporter øverst – uten at lista lenger hopper nedover.
 - Du kan nå eksportere bare de observasjonene du har markert.
+- Marker flere observasjoner og trykk **Endre** for å rette samme felt – for eksempel
+  feil lokalitet – på alle på én gang.
 - Hold inne og dra for å markere flere observasjoner i ett drag – lista ruller av
   seg selv når du drar mot toppen eller bunnen.
 

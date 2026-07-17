@@ -26,8 +26,11 @@ object Strings {
 
         fun selected(n: Int) = "$n " + if (n == 1) "markerad" else "markerade"
         const val deleteSelected = "Ta bort"
+        const val edit = "Ändra"
+        fun editTitle(n: Int) = "Ändra $n " + if (n == 1) "observation" else "observationer"
 
         fun deleted(n: Int) = "Tog bort $n " + if (n == 1) "observation" else "observationer"
+        fun edited(n: Int) = "Ändrade $n " + if (n == 1) "observation" else "observationer"
         const val undo = "Ångra"
     }
 

@@ -31,9 +31,12 @@ object Strings {
         // Selection mode: long-press a note to mark it, then tap more, then delete the marked ones.
         fun selected(n: Int) = "$n markert"
         const val deleteSelected = "Slett"
+        const val edit = "Endre"
+        fun editTitle(n: Int) = "Endre $n ${if (n == 1) "observasjon" else "observasjoner"}"
 
-        // Undo snackbar shown after a delete (issue #122).
+        // Undo snackbar shown after a delete (issue #122) or a batch edit (#120).
         fun deleted(n: Int) = "Sletta $n ${if (n == 1) "observasjon" else "observasjoner"}"
+        fun edited(n: Int) = "Endra $n ${if (n == 1) "observasjon" else "observasjoner"}"
         const val undo = "Angre"
     }
 

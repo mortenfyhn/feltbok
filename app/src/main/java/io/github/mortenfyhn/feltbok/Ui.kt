@@ -129,7 +129,7 @@ fun ListScreen(vm: MainViewModel, listState: LazyListState) {
             // so entering/leaving selection never resizes the strip and the list stays put (#120).
             Box {
                 StatusStrip(vm)
-                if (selecting) SelectionBar(vm, Modifier.matchParentSize())
+                if (selecting) SelectionBar(vm, onEdit = { vm.startBatchEdit() }, Modifier.matchParentSize())
             }
             // The list area holds the notes (or the empty hint) and the floating + button.
             // The footer below sits in normal flow, so it can never overlap a note row (#28).
@@ -204,8 +204,12 @@ fun ListScreen(vm: MainViewModel, listState: LazyListState) {
                                     n, vm.statusFor(n.latin), selecting = selecting, selected = n.id in vm.selected,
                                     // Tap toggles the mark while marking, else opens the editor. Entering
                                     // selection (long-press, optionally dragged into a range) is handled by
-                                    // the list's dragToSelect so it doesn't fight a row-level long-press.
-                                    onClick = { if (selecting) vm.toggleSelect(n.id) else vm.editNote(n) },
+                                    // the list's dragToSelect so it doesn't fight a row-level long-press -
+                                    // but a no-drag long-press leaves a trailing tap, which we swallow once.
+                                    onClick = {
+                                        if (ds.suppressTap) ds.suppressTap = false
+                                        else if (selecting) vm.toggleSelect(n.id) else vm.editNote(n)
+                                    },
                                 )
                             }
                         }
@@ -259,6 +263,11 @@ private class DragSelect {
     var anchor = -1
     var base: Set<Long> = emptySet()
     var pointerY by mutableFloatStateOf(-1f)
+
+    // A long-press with no drag still lets the row's own tap fire on finger-up (the two gestures live
+    // on different nodes, so the tap isn't cancelled). That trailing tap would toggle the just-marked
+    // row straight back off - so a long-press arms this, and the row's onClick eats the next tap once.
+    var suppressTap = false
 }
 
 /** The note id under a Y coordinate (list-viewport space), or null if that row is a day header or
@@ -273,7 +282,7 @@ private fun noteIdAt(listState: LazyListState, y: Float): Long? =
 private fun applyDragRange(listState: LazyListState, orderedIds: List<Long>, vm: MainViewModel, ds: DragSelect, y: Float) {
     if (ds.anchor < 0) return
     val cur = noteIdAt(listState, y)?.let { orderedIds.indexOf(it) } ?: return
-    if (cur >= 0) vm.setSelection(ds.base + orderedIds.subList(minOf(ds.anchor, cur), maxOf(ds.anchor, cur) + 1))
+    if (cur >= 0) vm.setSelection(ds.base + sweepRange(orderedIds, ds.anchor, cur))
 }
 
 /** Long-press-and-drag range selection (Material's multi-select drag), on the notes list. Long-press
@@ -294,6 +303,7 @@ private fun Modifier.dragToSelect(
             if (ds.anchor >= 0) {
                 ds.base = vm.selected.toSet()
                 ds.pointerY = offset.y
+                ds.suppressTap = true  // eat the trailing tap if this long-press doesn't turn into a drag
                 haptic.performHapticFeedback(HapticFeedbackType.LongPress)
                 vm.setSelection(ds.base + orderedIds[ds.anchor])
                 ds.active = true  // freeze list scroll + start edge auto-scroll
@@ -302,6 +312,7 @@ private fun Modifier.dragToSelect(
         onDrag = { change, _ ->
             change.consume()
             if (ds.anchor < 0) return@detectDragGesturesAfterLongPress
+            ds.suppressTap = false  // a real drag: movement already cancels the row's tap
             ds.pointerY = change.position.y
             applyDragRange(listState, orderedIds, vm, ds, change.position.y)
         },
@@ -352,27 +363,29 @@ private fun FeedbackDialog(onDismiss: () -> Unit) {
 /** The contextual action bar shown while marking notes (#120): count + close on the left, the
  *  bulk actions on the right. Drawn over the status strip at its size, so it reads as the same bar
  *  transforming (Material's selection app-bar) rather than a new row - and can't shift the list.
- *  Export stays top-right, roughly where the whole-list export button sits. (An "Endre" edit action
- *  is planned to join Slett/Eksporter here once batch-edit lands.) */
+ *  Export stays top-right, roughly where the whole-list export button sits; Endre/Slett sit before it. */
 @Composable
-private fun SelectionBar(vm: MainViewModel, modifier: Modifier = Modifier) {
+private fun SelectionBar(vm: MainViewModel, onEdit: () -> Unit, modifier: Modifier = Modifier) {
     Row(
-        modifier.background(MaterialTheme.colorScheme.primary).padding(horizontal = 10.dp),
+        modifier.background(MaterialTheme.colorScheme.primary).padding(horizontal = 8.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Text("✕", color = Color.White, fontWeight = FontWeight.SemiBold, fontSize = 20.sp,
             modifier = Modifier.clip(CircleShape).clickable { vm.clearSelection() }.padding(6.dp))
-        Spacer(Modifier.width(10.dp))
+        Spacer(Modifier.width(8.dp))
         Text(Strings.Notes.selected(vm.selected.size), color = Color.White,
             fontWeight = FontWeight.SemiBold, modifier = Modifier.weight(1f))
+        Text(Strings.Notes.edit, color = Color.White, fontWeight = FontWeight.Medium, fontSize = 14.sp,
+            modifier = Modifier.clip(RoundedCornerShape(8.dp)).clickable { onEdit() }
+                .padding(horizontal = 10.dp, vertical = 8.dp))
         Text(Strings.Notes.deleteSelected, color = Color.White, fontWeight = FontWeight.Medium, fontSize = 14.sp,
             modifier = Modifier.clip(RoundedCornerShape(8.dp)).clickable { vm.deleteSelected() }
-                .padding(horizontal = 12.dp, vertical = 8.dp))
-        Spacer(Modifier.width(4.dp))
+                .padding(horizontal = 10.dp, vertical = 8.dp))
+        Spacer(Modifier.width(2.dp))
         Box(
             Modifier.clip(RoundedCornerShape(8.dp))
                 .border(1.dp, Color.White.copy(alpha = 0.7f), RoundedCornerShape(8.dp))
-                .clickable { vm.exportSelected() }.padding(horizontal = 14.dp, vertical = 8.dp),
+                .clickable { vm.exportSelected() }.padding(horizontal = 12.dp, vertical = 8.dp),
         ) {
             Text(Strings.Notes.export, color = Color.White, fontWeight = FontWeight.Medium, fontSize = 14.sp)
         }
@@ -774,15 +787,36 @@ internal fun ScreenHeader(
     }
 }
 
+/** Muted, single-line hint shown in a batch-edit row where the marked notes disagree: a preview of
+ *  their current values (shared value or the mix). Nothing when there's nothing to preview. */
+@Composable
+private fun BatchHint(text: String) {
+    if (text.isNotBlank()) {
+        // Extra pale (vs a normal secondary label) so it clearly reads as the notes' *current* values,
+        // not something you've chosen to apply.
+        Text(text, color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.55f),
+            maxLines = 1, overflow = TextOverflow.Ellipsis)
+    }
+}
+
 @Composable
 fun DetailScreen(vm: MainViewModel) {
     val cs = MaterialTheme.colorScheme
     val ctx = LocalContext.current
-    // Same precondition for saving and for copying (copy commits the draft first).
-    val canSave = vm.dSpecies.isNotBlank() && (vm.dLoc != null || vm.nearest() != null)
+    // Batch mode (#120): the editor is changing the whole selection at once, not one note.
+    val batch = vm.batchEditing
+    // Same precondition for saving and for copying (copy commits the draft first). Batch edit acts on
+    // existing notes, so Lagre is always allowed (an untouched batch just changes nothing).
+    val canSave = batch || (vm.dSpecies.isNotBlank() && (vm.dLoc != null || vm.nearest() != null))
     // Leaving with unsaved work discards it but offers an undo (#122); an untouched edit just goes
-    // back with nothing to undo.
-    val leave = { if (vm.draftHasChanges()) vm.discardDraft() else vm.cancel() }
+    // back with nothing to undo. A batch edit touches nothing until Lagre, so leaving just returns.
+    val leave = {
+        when {
+            batch -> vm.cancelBatchEdit()
+            vm.draftHasChanges() -> vm.discardDraft()
+            else -> vm.cancel()
+        }
+    }
     // System Back is the natural cancel (NN/g), so it must go through the same path as the ✕ -
     // otherwise an accidental back-swipe drops a started observation silently. This handler sits
     // inside DetailScreen, so it shadows the app-level one only while the editor is open.
@@ -804,14 +838,18 @@ fun DetailScreen(vm: MainViewModel) {
         // This screen composes a draft, so leaving discards it: a bare ✕ (the conventional dismiss)
         // rather than a back chevron. No confirm - an undo snackbar catches a misfire instead (#122).
         ScreenHeader(
-            if (vm.isEditing) Strings.Detail.titleEdit else Strings.Detail.titleNew,
+            when {
+                batch -> Strings.Notes.editTitle(vm.selected.size)
+                vm.isEditing -> Strings.Detail.titleEdit
+                else -> Strings.Detail.titleNew
+            },
             onCancel = leave,
             cancelContent = { Text("✕", color = Color.White, fontSize = 22.sp) },
             // Copying commits the current draft, then hands you a prefilled copy to tweak - so you
             // can rattle off a run of similar observations (every field carries over; #130). Shown
-            // when adding too, not just editing.
+            // when adding too, not just editing - but not in batch mode (there's no single note to copy).
             trailing = {
-                TextButton(
+                if (!batch) TextButton(
                     onClick = {
                         // Only claim a save when there was something to save - same test as the
                         // discard prompt. Copying an unchanged edit still makes a copy, silently.
@@ -843,37 +881,49 @@ fun DetailScreen(vm: MainViewModel) {
         ) {
             // Species first - it's the first thing you choose for a new observation.
             FieldRow(Strings.Detail.species, onClick = { vm.changeSpecies() }) {
-                // Common name keeps its full width; the latin is what gets ellipsized when space is tight.
-                Text(vm.dSpecies + if (vm.dUncertain && vm.dSpecies.isNotBlank()) "?" else "",
-                    fontWeight = FontWeight.Medium, maxLines = 1, overflow = TextOverflow.Ellipsis)
-                if (vm.dLatin.isNotBlank())
-                    Text("  ${vm.dLatin}", color = cs.onSurfaceVariant, fontStyle = FontStyle.Italic,
-                        fontSize = 13.sp, maxLines = 1, overflow = TextOverflow.Ellipsis,
-                        modifier = Modifier.weight(1f, fill = false))
+                if (batch && vm.dSpecies.isBlank()) {
+                    BatchHint(vm.batchPreview { it.species })
+                } else {
+                    // Common name keeps its full width; the latin is what gets ellipsized when tight.
+                    Text(vm.dSpecies + if (vm.dUncertain && vm.dSpecies.isNotBlank()) "?" else "",
+                        fontWeight = FontWeight.Medium, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                    if (vm.dLatin.isNotBlank())
+                        Text("  ${vm.dLatin}", color = cs.onSurfaceVariant, fontStyle = FontStyle.Italic,
+                            fontSize = 13.sp, maxLines = 1, overflow = TextOverflow.Ellipsis,
+                            modifier = Modifier.weight(1f, fill = false))
+                }
             }
             // Locality
             FieldRow(Strings.Detail.locality, onClick = { vm.openLocalityPicker() }) {
                 val loc = vm.dLoc
-                if (loc == null) {
-                    Text(Strings.findingPosition, color = cs.onSurfaceVariant)
-                } else {
-                    Text(loc.lokalitet, fontWeight = FontWeight.Medium, maxLines = 1,
-                        overflow = TextOverflow.Ellipsis, modifier = Modifier.weight(1f, fill = false))
-                    vm.distanceTo(loc)?.let {
-                        Text("  ${formatDistance(it)}", color = cs.onSurfaceVariant, fontSize = 13.sp, maxLines = 1)
+                when {
+                    loc != null -> {
+                        Text(loc.lokalitet, fontWeight = FontWeight.Medium, maxLines = 1,
+                            overflow = TextOverflow.Ellipsis, modifier = Modifier.weight(1f, fill = false))
+                        vm.distanceTo(loc)?.let {
+                            Text("  ${formatDistance(it)}", color = cs.onSurfaceVariant, fontSize = 13.sp, maxLines = 1)
+                        }
                     }
+                    batch -> BatchHint(vm.batchPreview { it.locName })   // notes differ: show the mix
+                    else -> Text(Strings.findingPosition, color = cs.onSurfaceVariant)
                 }
             }
             AntallRow(vm)
-            DropdownRow(Strings.Detail.age, vm.dAge, Country.ages) { vm.dAge = it }
-            DropdownRow(Strings.Detail.sex, vm.dSex, Country.sexes) { vm.dSex = it }
-            DropdownRow(Strings.Detail.activity, vm.dAct, vm.activityOptions(), fullScreen = true) { vm.dAct = it }
-            CommentField(Strings.Detail.commentPublic, vm.dPub) { vm.dPub = it }
-            CommentField(Strings.Detail.commentPrivate, vm.dPriv) { vm.dPriv = it }
+            DropdownRow(Strings.Detail.age, vm.dAge, Country.ages, batchHint = if (batch) vm.batchPreview { it.age } else "") { vm.dAge = it }
+            DropdownRow(Strings.Detail.sex, vm.dSex, Country.sexes, batchHint = if (batch) vm.batchPreview { it.sex } else "") { vm.dSex = it }
+            DropdownRow(Strings.Detail.activity, vm.dAct, vm.activityOptions(), fullScreen = true, batchHint = if (batch) vm.batchPreview { it.activity } else "") { vm.dAct = it }
+            // Comments aren't batch-editable (rarely the same across notes), so hide them then.
+            if (!batch) {
+                CommentField(Strings.Detail.commentPublic, vm.dPub) { vm.dPub = it }
+                CommentField(Strings.Detail.commentPrivate, vm.dPriv) { vm.dPriv = it }
+            }
             // One row to save space; tap to open the from/to editor (point or range).
             val tMs = if (vm.dTime > 0) vm.dTime else System.currentTimeMillis()
             var showTime by remember { mutableStateOf(false) }
-            FieldRow(Strings.Detail.time, onClick = { showTime = true }) { Text(displayTimeRange(tMs, vm.dEndTime)) }
+            FieldRow(Strings.Detail.time, onClick = { showTime = true }) {
+                if (batch && vm.dTime <= 0L) BatchHint(vm.batchPreview { displayTimeRange(it.time, it.endTime) })
+                else Text(displayTimeRange(tMs, vm.dEndTime))
+            }
             if (showTime) TimeDialog(vm) { showTime = false }
         }
         // Delete and save sit side by side - red left, green right - so the destructive action
@@ -962,11 +1012,13 @@ private fun DropdownRow(
     value: String,
     options: List<String>,
     fullScreen: Boolean = false,
+    batchHint: String = "",
     onSelect: (String) -> Unit,
 ) {
     var open by remember { mutableStateOf(false) }
     FieldRow(label, onClick = { open = true }) {
-        if (value.isNotBlank()) Text(value, fontWeight = FontWeight.Medium)
+        // A set value wins; otherwise, in batch mode, preview the marked notes' current values.
+        if (value.isNotBlank()) Text(value, fontWeight = FontWeight.Medium) else BatchHint(batchHint)
     }
     if (!open) return
 

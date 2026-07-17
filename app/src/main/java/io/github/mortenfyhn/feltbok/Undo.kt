@@ -9,6 +9,9 @@ import androidx.compose.runtime.setValue
 sealed interface Undoable {
     data class Deleted(val notes: List<Note>) : Undoable
     data class Discarded(val wasEdit: Boolean) : Undoable
+
+    /** A batch field edit (#120): [before] is the affected notes as they were, so undo restores them. */
+    data class Edited(val before: List<Note>) : Undoable
 }
 
 /** The single pending undo offer. [token] bumps each time a new offer replaces the last, so the UI

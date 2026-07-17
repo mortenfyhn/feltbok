@@ -63,6 +63,7 @@ fun App(vm: MainViewModel) {
             val message = when (val action = vm.undoable) {
                 is Undoable.Deleted -> Strings.Notes.deleted(action.notes.size)
                 is Undoable.Discarded -> Strings.Detail.discarded(action.wasEdit)
+                is Undoable.Edited -> Strings.Notes.edited(action.before.size)
                 null -> return@LaunchedEffect
             }
             val result = withTimeoutOrNull(UNDO_TIMEOUT_MS) {

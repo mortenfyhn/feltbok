@@ -67,12 +67,23 @@ also **long-press and drag** across rows to sweep a range in one gesture (drag b
 to un-sweep); dragging to the top or bottom edge auto-scrolls the list so the range
 can run past what's on screen. The
 status strip turns into a selection bar in place — a ✕ to leave, the count, and the
-two bulk actions **Slett** and **Eksporter** — so entering marking never shifts the
-list. `Slett` removes the marked notes (undoable); `Eksporter` opens the export
+bulk actions **Endre**, **Slett** and **Eksporter** — so entering marking never shifts
+the list. `Slett` removes the marked notes (undoable); `Eksporter` opens the export
 walkthrough scoped to just them (see below). You leave marking only via the ✕, system
 Back, or finishing an action — deselecting the last note keeps you in marking mode
 (so you can re-pick), rather than dropping out. While *not* marking, a plain tap on a
 row opens it for editing.
+
+### Endre (batch edit)
+
+`Endre` opens the ordinary observation editor over the whole selection. Fields the
+marked notes agree on are pre-filled; fields they differ on show a pale preview of the
+current mix ("Skjære, Gråmåke, …") and stay blank. Saving applies only the fields you
+actually changed to every marked note (one undoable step) and returns you to the list
+still marking, so you can make another pass. Comments aren't batch-editable (they're
+rarely the same across notes), so they're hidden here; everything else — species,
+locality, count, age, sex, activity, time — is. Marking a *single* note and tapping
+`Endre` is just the normal single-note editor (nothing to batch).
 
 ## Export
 

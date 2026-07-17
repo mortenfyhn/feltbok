@@ -48,6 +48,11 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
      *  (Jotta-style), not by emptying the set (which would be the Google Photos "auto-exit"). */
     var selectionMode by mutableStateOf(false); private set
 
+    /** True while the DETAIL screen is editing the whole selection at once (#120), rather than one
+     *  note. The editor reuses the same draft; [batchBaseline] records the seeded values so save
+     *  applies only the fields you actually changed. See [startBatchEdit] / [commitBatchEdit]. */
+    var batchEditing by mutableStateOf(false); private set
+
     /** Notes marked for a bulk action (delete/export). A tap toggles a mark instead of opening the
      *  editor; selection mode is entered by long-pressing a note or a day header. */
     val selected = mutableStateListOf<Long>()
@@ -66,17 +71,31 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
         selected.addAll(ids)
     }
 
-    /** Toggle a whole day group at once (the date header's circle): mark all of it, or - when it's
-     *  already fully marked - clear it. Mirrors Material's "parent checkbox" for a section. */
-    fun toggleDay(ids: List<Long>) {
-        if (ids.all { it in selected }) selected.removeAll(ids) else selected.addAll(ids.filter { it !in selected })
-    }
+    /** Toggle a whole day group at once (the date header's circle). Set-maths in [toggledDay]. */
+    fun toggleDay(ids: List<Long>) = setSelection(toggledDay(selected.toSet(), ids))
+
     fun deleteSelected() {
         setUndo(Undoable.Deleted(notes.filter { it.id in selected }))
         notes.removeAll { it.id in selected }
         clearSelection()
         persist()
     }
+
+    // ---- Batch edit (#120): apply fields to every marked note at once. Undoable (restores the prior
+    // notes) and keeps the selection, so several fields can be set in a row. The transform itself is
+    // pure ([applyBatchEdit]) and unit-tested; this just snapshots for undo, writes back, and persists.
+    private fun batchApply(change: BatchChange) {
+        val ids = selected.toSet()
+        if (ids.isEmpty() || change.isNoOp) return
+        setUndo(Undoable.Edited(notes.filter { it.id in ids }))
+        val updated = applyBatchEdit(notes, ids, change)
+        for (i in notes.indices) notes[i] = updated[i]   // 1:1, order preserved (no field reorders the list)
+        persist()
+    }
+
+    /** Field previews for the batch editor: the shared value across the marks, or the mix. */
+    fun batchPreview(selector: (Note) -> String): String =
+        batchFieldPreview(notes.filter { it.id in selected }.map(selector))
 
     // The pending undo offer (#122). [undoToken] bumps on each new action so the UI shows a fresh
     // snackbar; [undo] dispatches by kind. State + the "dismiss clears it" rule live in UndoOffer.
@@ -90,6 +109,7 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
         when (val u = undoOffer.current) {
             is Undoable.Deleted -> { notes.addAll(u.notes); persist() }   // list sorts by time
             is Undoable.Discarded -> screen = Screen.DETAIL              // draft is still in the editor
+            is Undoable.Edited -> { u.before.forEach { b -> notes.indexOfFirst { it.id == b.id }.takeIf { it >= 0 }?.let { notes[it] = b } }; persist() }
             null -> {}
         }
         undoOffer.clear()
@@ -206,8 +226,10 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
         viewModelScope.launch {
             tracker.fix.collect { f ->
                 fix = f
-                // Fill the locality once GPS settles, if adding and untouched.
-                if (screen == Screen.DETAIL && editingId == null && dLoc == null) dLoc = currentLocality()
+                // Fill the locality once GPS settles, if adding and untouched. NOT in batch edit:
+                // there editingId is also null and dLoc may be null (mixed localities), but a batch
+                // draft must stay put until the user picks - else it'd silently relocate every note.
+                if (screen == Screen.DETAIL && editingId == null && dLoc == null && !batchEditing) dLoc = currentLocality()
             }
         }
     }
@@ -289,7 +311,7 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
         val now = System.currentTimeMillis()
         uses[s.norsk] = bumpUse(uses[s.norsk], now)
         saveUses(ctx, uses)
-        if (!changingSpecies && !isEditing) {
+        if (!changingSpecies && !isEditing && !batchEditing) {
             dTime = now  // stamp the entry time now
             dLoc = currentLocality()
         }
@@ -344,6 +366,7 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
             pickingCurrent = false
             screen = Screen.LIST
         } else {
+            // Both a single-note edit and a batch edit (#120) live on DETAIL and edit the draft's dLoc.
             dLoc = loc; screen = Screen.DETAIL
         }
     }
@@ -392,7 +415,74 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
     fun setCount(n: Int) { dCount = if (n < 1) UNKNOWN_COUNT else n }
 
     fun save() {
+        if (batchEditing) { commitBatchEdit(); return }
         commitDraft()
+        resetDraft()
+        screen = Screen.LIST
+    }
+
+    // ---- Batch edit via the editor (#120) ----
+    // Seeded values to diff the draft against on save, so only changed fields are written. A field
+    // the selection agrees on is seeded to that shared value; a field they differ on is seeded blank
+    // (the editor then shows a preview of the mix). locKey is the shared locality's identity, or null.
+    private data class BatchBaseline(
+        val species: String, val latin: String, val count: Int,
+        val age: String, val sex: String, val activity: String,
+        val locKey: String?, val time: Long, val endTime: Long?,
+    )
+    private var batchBaseline: BatchBaseline? = null
+    private fun Locality.key() = "$lokalitet|$lat|$lon"
+    private fun Note.locKey() = "$locName|$lat|$lon"
+
+    /** Enter the editor to change the whole selection at once: seed the draft with shared values
+     *  (blank where the notes differ), remember the seed, and open DETAIL in batch mode. */
+    fun startBatchEdit() {
+        val sel = notes.filter { it.id in selected }
+        if (sel.isEmpty()) return
+        // One note marked: there's nothing to batch - open the ordinary "Endre observasjon" editor.
+        if (sel.size == 1) { editNote(sel.first()); return }
+        fun <T> shared(f: (Note) -> T): T? = sel.map(f).distinct().singleOrNull()
+        editingId = null; changingSpecies = false; fromCopy = false
+        val latin = shared { it.latin }
+        dSpecies = if (latin != null) sel.first().species else ""
+        dLatin = latin ?: ""
+        dCount = shared { it.count } ?: UNKNOWN_COUNT
+        dAge = shared { it.age } ?: ""
+        dSex = shared { it.sex } ?: ""
+        dAct = shared { it.activity } ?: ""
+        dPub = ""; dPriv = ""; dUncertain = false
+        val locKey = shared { it.locKey() }
+        dLoc = if (locKey != null) sel.first().let { n ->
+            localities.firstOrNull { it.lokalitet == n.locName && it.lat == n.lat && it.lon == n.lon }
+                ?: Locality("", n.locName, "", n.kommune, n.lat, n.lon, 0, 0.0)
+        } else null
+        dTime = shared { it.time } ?: 0L
+        dEndTime = shared { it.endTime }
+        batchBaseline = BatchBaseline(dSpecies, dLatin, dCount, dAge, dSex, dAct, locKey, dTime, dEndTime)
+        batchEditing = true
+        screen = Screen.DETAIL
+    }
+
+    /** Apply only the fields the user actually changed (draft vs the seeded baseline) to every marked
+     *  note, then return to the list still in selection mode (so you can edit another field). */
+    private fun commitBatchEdit() {
+        val b = batchBaseline
+        val change = BatchChange(
+            species = if (dLatin.isNotBlank() && (dLatin != b?.latin || dSpecies != b.species)) SpeciesPick(dSpecies, dLatin) else null,
+            count = if (dCount != b?.count) dCount else null,
+            age = if (dAge != b?.age) dAge else null,
+            sex = if (dSex != b?.sex) dSex else null,
+            activity = if (dAct != b?.activity) dAct else null,
+            locality = dLoc?.takeIf { it.key() != b?.locKey },
+            time = if (dTime > 0 && (dTime != b?.time || dEndTime != b.endTime)) BatchTime(dTime, dEndTime) else null,
+        )
+        batchApply(change)
+        cancelBatchEdit()   // leaves batch mode + resets the draft; the marks stay
+    }
+
+    /** Leave batch edit without applying (the ✕ / Back), back to the list with the marks intact. */
+    fun cancelBatchEdit() {
+        batchEditing = false; batchBaseline = null
         resetDraft()
         screen = Screen.LIST
     }
