@@ -2,6 +2,8 @@
 
 ## Neste utgivelse
 
+- **Usikker artsbestemming** er tilbake på observasjonssida – huk av når du er usikker
+  på bestemminga, så eksporteres den med spørsmålstegn (og «Ja» i usikkerhets-kolonna).
 - Nytt utseende når du markerer observasjoner: en ring til venstre på hver rad (og
   på dag-overskriftene, som markerer hele dagen), og felter for antall, Slett og
   Eksporter øverst – uten at lista lenger hopper nedover.

@@ -46,6 +46,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.Checkbox
 import androidx.compose.material3.ColorScheme
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FloatingActionButton
@@ -941,6 +942,20 @@ fun DetailScreen(vm: MainViewModel) {
                             fontSize = 13.sp, maxLines = 1, overflow = TextOverflow.Ellipsis,
                             modifier = Modifier.weight(1f, fill = false))
                 }
+            }
+            // Uncertain species determination -> "Usikker artsbestemming" on export (shows as "Vipe?").
+            // Hidden in batch edit: the batch path doesn't carry this flag, so a checkbox there would
+            // silently do nothing on save.
+            if (!batch) {
+                Row(
+                    Modifier.fillMaxWidth().clickable { vm.dUncertain = !vm.dUncertain }
+                        .background(cs.surface).padding(start = 16.dp, end = 8.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    Text(Strings.Detail.uncertain, color = cs.onSurfaceVariant, modifier = Modifier.weight(1f))
+                    Checkbox(checked = vm.dUncertain, onCheckedChange = { vm.dUncertain = it })
+                }
+                HorizontalDivider(color = cs.outline.copy(alpha = 0.4f))
             }
             // Locality
             FieldRow(Strings.Detail.locality, onClick = { vm.openLocalityPicker() }) {

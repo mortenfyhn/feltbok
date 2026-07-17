@@ -69,6 +69,7 @@ object Strings {
         const val sex = "Kön"
         const val commentPublic = "Publik kommentar"
         const val commentPrivate = "Privat kommentar"
+        const val uncertain = "Osäker artbestämning"
         const val time = "Tid"
         const val delete = "Ta bort"
         const val copy = "Kopiera"

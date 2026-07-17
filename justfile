@@ -2,19 +2,23 @@ export ANDROID_HOME := env("ANDROID_HOME", home_directory() / "Android/Sdk")
 
 # Dev build carries the .debug applicationId suffix so it installs alongside the release app
 # I use daily. Every device-facing recipe targets this id, not the release "io.github.mortenfyhn.feltbok".
-# Recipes target the Norway flavor (the daily driver). Build the Sweden flavor directly with
-# Gradle when needed: ./gradlew installSwedenDebug (id io.github.mortenfyhn.feltbok.se.debug).
+# build/install/run take a country code (no=Norway [default], se=Sweden) so `just run` stays the
+# Norway daily driver and `just run se` drives the Sweden flavor. Extend _check-country and the
+# per-recipe flavor mappings when a new country flavor lands.
 app_id := "io.github.mortenfyhn.feltbok.debug"
-apk := "app/build/outputs/apk/norway/debug/app-norway-debug.apk"
 data_dir := "/sdcard/Android/data/" + app_id + "/files"
+
+# Reject an unknown country code before a recipe derives a flavor from it (silent-default footgun).
+_check-country country:
+    @case "{{country}}" in no|se) ;; *) echo "Unknown country '{{country}}' (use: no or se)" >&2; exit 1 ;; esac
 
 # List all recipes
 default:
     @just --list
 
-# Build debug APK (Norway flavor)
-build:
-    ./gradlew assembleNorwayDebug
+# Build debug APK (no=Norway [default], se=Sweden)
+build country="no": (_check-country country)
+    ./gradlew assemble{{ if country == "se" { "Sweden" } else { "Norway" } }}Debug
 
 # Run all tests: Python units (if any) + Kotlin units (both flavors)
 test:
@@ -63,16 +67,18 @@ lint:
 ci: lint test build
 
 # Install on connected device (-d allows downgrading over a newer build)
-install: build
-    adb install -r -d {{apk}}
+install country="no": (build country)
+    #!/usr/bin/env bash
+    flavor={{ if country == "se" { "sweden" } else { "norway" } }}
+    adb install -r -d "app/build/outputs/apk/$flavor/debug/app-$flavor-debug.apk"
 
 # The activity class is io.github.mortenfyhn.feltbok.MainActivity (the .debug suffix changes the
 # package id, not the code namespace), so spell out the full component rather than the
 # /.MainActivity shorthand.
 
-# Build, install, and launch the app
-run: install
-    adb shell am start -n {{app_id}}/io.github.mortenfyhn.feltbok.MainActivity
+# Build, install, and launch the app (no=Norway [default], se=Sweden)
+run country="no": (install country)
+    adb shell am start -n io.github.mortenfyhn.feltbok{{ if country == "se" { ".se" } else { "" } }}.debug/io.github.mortenfyhn.feltbok.MainActivity
 
 # Show device logs for the app
 log:
