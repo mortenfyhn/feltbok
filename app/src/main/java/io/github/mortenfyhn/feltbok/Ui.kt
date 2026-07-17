@@ -15,6 +15,7 @@ import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.gestures.detectDragGesturesAfterLongPress
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.gestures.scrollBy
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -163,8 +164,9 @@ fun ListScreen(vm: MainViewModel, listState: LazyListState) {
                         val maxStep = with(density) { 10.dp.toPx() }
                         while (ds.active) {
                             withFrameNanos {}
+                            // y can be negative when the finger is dragged above the list (toward the
+                            // top bar) - that must still scroll up, so don't skip it.
                             val y = ds.pointerY
-                            if (y < 0f) continue
                             val info = listState.layoutInfo
                             val top = info.viewportStartOffset.toFloat()
                             val bottom = info.viewportEndOffset.toFloat()
@@ -175,7 +177,9 @@ fun ListScreen(vm: MainViewModel, listState: LazyListState) {
                             }.coerceIn(-1f, 1f)
                             if (frac != 0f) {
                                 listState.scrollBy(frac * maxStep)
-                                applyDragRange(listState, orderedIds, vm, ds, y)  // sweep as rows appear
+                                // The finger is past the list edge, so it's over no row - sweep to the
+                                // edge-most visible row instead, so rows scrolling into view get marked.
+                                applyDragRange(listState, orderedIds, vm, ds, y.coerceIn(top, bottom - 1f))
                             }
                         }
                     }
@@ -367,7 +371,11 @@ private fun FeedbackDialog(onDismiss: () -> Unit) {
 @Composable
 private fun SelectionBar(vm: MainViewModel, onEdit: () -> Unit, modifier: Modifier = Modifier) {
     Row(
-        modifier.background(MaterialTheme.colorScheme.primary).padding(horizontal = 8.dp),
+        modifier.background(MaterialTheme.colorScheme.primary)
+            // The bar overlays the status strip, whose locality area is clickable - swallow taps that
+            // miss an action (e.g. on the count) so they don't fall through and open the map picker.
+            .clickable(interactionSource = remember { MutableInteractionSource() }, indication = null) {}
+            .padding(horizontal = 8.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Text("✕", color = Color.White, fontWeight = FontWeight.SemiBold, fontSize = 20.sp,
