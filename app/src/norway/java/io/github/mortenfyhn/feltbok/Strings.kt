@@ -53,7 +53,7 @@ object Strings {
         const val artsdatabanken = "Artsdata fra Artsdatabanken (CC BY 4.0)"
         const val artsobs = "Lokaliteter fra Artsobservasjoner"
         const val osm = "Kart © OpenStreetMap"
-        const val close = "Lukk"
+        const val close = "Ålreit"
     }
 
     object Feedback {

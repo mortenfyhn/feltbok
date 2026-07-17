@@ -42,7 +42,7 @@ object Strings {
         const val artsdatabanken = "Artdata från Artdatabanken (CC BY 4.0)"
         const val artsobs = "Fyndplatser från Artportalen"
         const val osm = "Karta © OpenStreetMap"
-        const val close = "Stäng"
+        const val close = "Okej"
     }
 
     object Feedback {
