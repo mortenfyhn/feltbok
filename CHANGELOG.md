@@ -13,6 +13,8 @@
 - Sletter du flere observasjoner på én gang, får du et bekreftelsesspørsmål først.
   Slett-knappene viser også hvor mange du sletter.
 - **Nå**-knapp i tid-dialogen setter fra- eller til-tida til akkurat nå med ett trykk.
+- Lista ruller opp til den nye observasjonen når du lagrar den, også når den starter
+  en ny dag – så du alltid ser det du nettopp la til.
 
 ## v1.0 (16. juli 2026)
 

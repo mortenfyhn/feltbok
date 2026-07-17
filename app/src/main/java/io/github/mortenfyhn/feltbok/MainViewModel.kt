@@ -180,6 +180,13 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
     var showExport by mutableStateOf(false); private set
     var fix by mutableStateOf<GpsFix?>(null); private set
 
+    // Id of a just-added note the list should scroll to reveal. A fresh obs starts a new day-group
+    // above the current scroll position, so the list stays anchored on the old top and the new note
+    // lands off-screen unless we scroll up to it. Consumed (cleared) once shown, so returning from an
+    // edit doesn't re-scroll to it.
+    var scrollToNoteId by mutableStateOf<Long?>(null); private set
+    fun clearScrollTarget() { scrollToNoteId = null }
+
     // Remembered locality-picker zoom, so reopening it keeps your last zoom level.
     var mapZoom = 16.0
 
@@ -511,7 +518,7 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
         if (isEditing) {
             val i = notes.indexOfFirst { it.id == n.id }
             if (i >= 0) notes[i] = n else notes.add(0, n)
-        } else notes.add(0, n)
+        } else { notes.add(0, n); scrollToNoteId = n.id }
         if (loc != null && !isEditing) { lastUsedLoc = loc; lastUsedFix = fix }   // stick it for the next obs
         if (dAct.isNotBlank()) {
             actUses[dAct] = (actUses[dAct] ?: 0) + 1

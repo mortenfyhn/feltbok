@@ -151,6 +151,17 @@ fun ListScreen(vm: MainViewModel, listState: LazyListState) {
                     // drag's Y to items via the list's layout info and sweeps this order).
                     val groups = groupNotesByDay(vm.notes)
                     val orderedIds = groups.flatMap { g -> g.notes.map { it.id } }
+                    // A just-added obs lands off-screen when it starts a new day above the current
+                    // scroll position - jump to its day header so it's visible. Consumed once shown.
+                    LaunchedEffect(vm.scrollToNoteId) {
+                        val id = vm.scrollToNoteId ?: return@LaunchedEffect
+                        var idx = 0
+                        for (g in groups) {
+                            if (g.notes.any { it.id == id }) { listState.animateScrollToItem(idx); break }
+                            idx += 1 + g.notes.size   // day header + its rows
+                        }
+                        vm.clearScrollTarget()
+                    }
                     val density = LocalDensity.current
                     val ds = remember { DragSelect() }
                     // While a select-drag is live the list must not scroll on its own: its scroll

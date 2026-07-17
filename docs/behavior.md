@@ -58,6 +58,9 @@ header ("I dag", "I går", else an abbreviated date like "Søn 8. jun"). Within 
 newest first. Each row carries species + count on the left, its locality, and the
 time on the right (the day lives in the section header, so the row shows bare HH:mm).
 
+Saving a new observation scrolls the list up to its day section, so you see the note
+you just added even when it starts a fresh day above where the list was scrolled.
+
 ### Marking (masse-handlinger)
 
 Long-press a row to start marking. A leading circle then appears on every row (and
