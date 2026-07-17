@@ -94,7 +94,9 @@ walkthrough: copy *all* your observations as a single block, paste it into
 Artsobservasjoner's "Importer observasjoner", then clear them from the app once
 they're safely in. (Exporting from a marking selection scopes the whole walkthrough
 to just the marked notes — the copied block, the kommune hint, and the final clear
-step all cover only those, so it never touches the rest of the list.)
+step all cover only those, so it never touches the rest of the list.) The clear step
+follows the same rule as the list's `Slett`: clearing more than one note asks to
+confirm first, a single one clears straight away — both undoable.
 
 Everything pastes in one go, regardless of kommune. A bare locality name links to
 the public locality as long as the name is unambiguous; scoping the import form to a

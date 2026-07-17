@@ -1291,7 +1291,11 @@ fun ExportScreen(vm: MainViewModel) {
                 Text(if (isSelection) Strings.Export.clearSelected(exported.size) else Strings.Export.clearAll(exported.size),
                     color = cs.error, fontWeight = FontWeight.Medium,
                     fontSize = 14.sp,
-                    modifier = Modifier.clickable { confirmClear = true }.padding(top = 10.dp))
+                    // A single note deletes straight through (the undo snackbar catches a mistap);
+                    // more than one asks first, same rule as the list's Slett (#157).
+                    modifier = Modifier.clickable {
+                        if (exported.size > 1) confirmClear = true else { vm.clearExported(); vm.closeExport() }
+                    }.padding(top = 10.dp))
             }
             Spacer(Modifier.height(24.dp))
         }
