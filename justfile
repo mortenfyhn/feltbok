@@ -102,6 +102,11 @@ build-localities *args:
 build-species:
     .venv/bin/python scripts/build_species.py
 
+# Merge both flavors' checklists into the unified latin,norsk,svensk,status,count schema, with
+# authoritative names from the IOC World Bird List (pass --ioc for a non-default xlsx path)
+build-species-names *args:
+    .venv/bin/python scripts/build_species_names.py {{args}}
+
 # Build app/src/main/assets/species_months.csv (per-species monthly report counts, for season ranking)
 build-species-months:
     .venv/bin/python scripts/build_species_months.py

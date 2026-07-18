@@ -12,6 +12,12 @@ The `status` column (Swedish Red List) is intentionally left blank for now — n
 the Sweden MVP (see issue #127). The Red List 2025 (GBIF 87e639cc-…) can fill it later.
 
     python scripts/build_species_se.py    # -> species.csv  (place in app/src/sweden/assets/)
+
+NOTE (#155): the *display/export names* no longer come from here. The bundled species.csv now uses
+the unified latin,norsk,svensk,status,count schema, with names sourced from the IOC World Bird List
+via scripts/build_species_names.py (the GBIF/Dyntaxa vernaculars this script produced carried real
+errors, e.g. "gulsångare" for härmsångare). This script survives only as the Swedish status+count
+source that feeds that merge; run build-species-names afterwards to (re)apply the IOC names.
 """
 
 import csv
@@ -84,7 +90,11 @@ def redlist_statuses():
         d = r.json()
         for rec in d.get("results", []):
             code = next(
-                (REDLIST_CODE[s] for s in rec.get("threatStatuses", []) if s in REDLIST_CODE),
+                (
+                    REDLIST_CODE[s]
+                    for s in rec.get("threatStatuses", [])
+                    if s in REDLIST_CODE
+                ),
                 None,
             )
             name = rec.get("canonicalName") or rec.get("species")
@@ -196,7 +206,9 @@ def main():
         # Drop hybrids and subspecies/races so the list is species-level, like the Norwegian one.
         if " x " in swe.lower() or " x " in latin.lower():
             continue
-        if len(latin.split()) >= 3 or any(m in swe for m in (", rasen", ", underarten", ", formen")):
+        if len(latin.split()) >= 3 or any(
+            m in swe for m in (", rasen", ", underarten", ", formen")
+        ):
             continue
         # Red-list code if native and threatened, else the alien GEIAA risk grade if introduced.
         status = redlist.get(latin) or alien.get(latin, "")

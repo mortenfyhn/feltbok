@@ -26,7 +26,11 @@ STORSKARV = ("storskarv", "Phalacrocorax carbo", "NT")  # red
 NILAND = ("niland", "Alopochen aegyptiaca", "SE")  # black (alien)
 STOKKAND = ("stokkand", "Anas platyrhynchos", "")
 KJOTTMEIS = ("kjøttmeis", "Parus major", "")
-KRAAKE = ("kråke", "Corvus cornix", "")
+KRAAKE = (
+    "kråke",
+    "Corvus corone",
+    "",
+)  # carrion+hooded crow lumped -> Corvus corone (#155)
 SVARTTROST = ("svarttrost", "Turdus merula", "")
 STEINSKVETT = (
     "svartstrupesteinskvett",
