@@ -180,12 +180,8 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
      *  wasn't there is worse than the locality case (#128). */
     private val party = mutableStateListOf<String>().apply { addAll(loadParty(app)) }
 
-    /** Known co-observer names for the picker: your used names (most-used first), unioned with
-     *  whoever's on the draft right now (so a just-added free-text name is listed too). */
-    fun coObserverOptions(): List<String> {
-        val used = coObsUses.entries.sortedByDescending { it.value }.map { it.key }
-        return (used + dCoObs).distinct()
-    }
+    /** Known co-observer names for the picker (pure ranking in [coObserverOptions]). */
+    fun coObserverOptions(): List<String> = coObserverOptions(coObsUses, dCoObs)
 
     /** Toggle a name on/off the draft's co-observers. */
     fun toggleCoObs(name: String) { if (!dCoObs.remove(name)) dCoObs.add(name) }
@@ -578,8 +574,9 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
             dCoObs.forEach { coObsUses[it] = (coObsUses[it] ?: 0) + 1 }
             saveCoObsUses(ctx, coObsUses)
         }
-        if (!isEditing) {
-            party.clear(); party.addAll(dCoObs)
+        val newParty = stickyPartyAfterSave(party.toList(), dCoObs.toList(), isEditing)
+        if (newParty != party.toList()) {
+            party.clear(); party.addAll(newParty)
             saveParty(ctx, party)
         }
         persist()
