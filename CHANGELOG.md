@@ -2,6 +2,12 @@
 
 ## Neste utgivelse
 
+- **Velg språk på artsnavn**: under Innstillinger (åpne Om-dialogen fra versjonen
+  nederst) velg du hovedspråk og sekundærspråk – norsk, svensk eller latin, i begge
+  appene. Søket bruker hovedspråket; slå på «søk i begge språk» om du vil kunne
+  søke på det andre språket òg (fint når du ikke hugsar navnet på hovedspråket).
+- Artsnavna kommer nå fra IOC World Bird List, så feil svenske navn er retta (bl.a.
+  «gulsångare» → «härmsångare») og de norske navna har rett skrivemåte.
 - **Medobservatører**: noter hvem du var ute med på hver observasjon. Følget henger
   igjen fra observasjon til observasjon, så du skriv det inn én gang og slepp å tenke på
   det – og navna du bruker foreslås neste gang. De blir med som egne kolonner i eksporten.

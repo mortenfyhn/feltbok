@@ -87,6 +87,7 @@ fun App(vm: MainViewModel) {
                     vm.showExport -> vm.closeExport()
                     vm.screen == Screen.SYNC -> vm.closeSync()
                     vm.screen == Screen.COOBS -> vm.closeCoObs()
+                    vm.screen == Screen.SETTINGS -> vm.closeSettings()
                     vm.screen == Screen.SEARCH -> vm.cancelSearch()
                     // DETAIL and LOCALITY each compose their own BackHandler, which shadows this one
                     // so the gesture matches their "tilbake" button; those branches never run here.
@@ -110,6 +111,7 @@ fun App(vm: MainViewModel) {
                     Screen.LOCALITY -> LocalityScreen(vm)
                     Screen.COOBS -> CoObserverScreen(vm)
                     Screen.SYNC -> SyncScreen(vm)
+                    Screen.SETTINGS -> SettingsScreen(vm)
                 }
                 if (vm.showExport) ExportScreen(vm)
             }

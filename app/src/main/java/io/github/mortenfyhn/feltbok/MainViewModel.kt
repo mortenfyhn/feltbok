@@ -12,7 +12,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
-enum class Screen { LIST, SEARCH, DETAIL, LOCALITY, COOBS, SYNC }
+enum class Screen { LIST, SEARCH, DETAIL, LOCALITY, COOBS, SYNC, SETTINGS }
 
 /**
  * Single source of truth for the UI. Holds the day's notes (persisted), the live
@@ -30,13 +30,52 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
     val localities = mutableStateListOf<Locality>()
     val species: List<Species> = loadSpecies(app)
 
-    /** Species normalized (folded forms, token splits) once for the search scorer - never per keystroke. */
-    private val prepared = prepare(species)
+    /** Species normalized (folded forms, token splits) for the search scorer - never per keystroke.
+     *  Cached per active-language set ([LangPrefs.searchLangs]) and rebuilt only when that changes,
+     *  so toggling the search language costs one re-prepare, not one per keystroke. */
+    private var searchIndexCache: Pair<Set<Lang>, List<PreparedSpecies>>? = null
+    private fun searchIndex(): List<PreparedSpecies> {
+        val langs = langPrefs.searchLangs
+        searchIndexCache?.let { if (it.first == langs) return it.second }
+        return prepare(species, langs).also { searchIndexCache = langs to it }
+    }
 
     /** Status code (Rødlista 2021 or Fremmedartslista 2023) by scientific name, for the badge. */
     private val statusByLatin: Map<String, String> =
         species.filter { it.status.isNotBlank() }.associate { it.latin to it.status }
     fun statusFor(latin: String): String = statusByLatin[latin] ?: ""
+
+    // ---- species-name language preference (#155) ----
+    private val speciesByLatin: Map<String, Species> = species.associateBy { it.latin }
+
+    /** The chosen display languages (primary + optional secondary); observable so changing them on
+     *  the Settings screen relabels the species list and note rows without a restart. */
+    var langPrefs by mutableStateOf(loadLangPrefs(app)); private set
+
+    fun updateLangPrefs(prefs: LangPrefs) {
+        langPrefs = prefs
+        saveLangPrefs(ctx, prefs)
+    }
+
+    /** A species' name in [lang], falling back to Latin when a source lacks that name (e.g. IOC has
+     *  no Swedish for a Norwegian-only vagrant) - Latin is the universal common denominator, so a
+     *  primary name never shows blank. */
+    private fun Species.display(lang: Lang) = name(lang).ifBlank { latin }
+
+    fun primaryName(s: Species): String = s.display(langPrefs.primary)
+
+    /** The secondary name to show under the primary, or null when it's blank (a source lacks it) or
+     *  would just repeat the primary (e.g. same language, or a missing name fell back to Latin). */
+    fun secondaryName(s: Species): String? =
+        s.name(langPrefs.secondary).takeIf { it.isNotBlank() && it != primaryName(s) }
+
+    /** The primary display name for a species identified by [latin], resolved so it honours the
+     *  current language choice; [fallback] (the stored name) is used if the latin isn't loaded. */
+    fun nameForLatin(latin: String, fallback: String): String =
+        speciesByLatin[latin]?.let { primaryName(it) } ?: fallback
+
+    /** The primary display name for a saved note (see [nameForLatin]). */
+    fun noteName(n: Note): String = nameForLatin(n.latin, n.species)
 
     val notes = mutableStateListOf<Note>().apply {
         importSeedNotes(app)   // dev-build only: import a pushed seed file, if any (see importSeedNotes)
@@ -118,13 +157,21 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
     /** Drop the pending undo without acting - the snackbar timed out or was dismissed. */
     fun dismissUndo() = undoOffer.clear()
 
-    /** Per-species use score (norsk): a pick count that fades with time (see [UseEntry]), so your
-     *  recent picks rank above ones you logged a lot but long ago. Persisted. */
-    private val uses = mutableStateMapOf<String, UseEntry>().apply { putAll(loadUses(app)) }
+    /** Per-species use score, keyed by scientific name: a pick count that fades with time (see
+     *  [UseEntry]), so your recent picks rank above ones you logged a lot but long ago. Persisted.
+     *  Keyed by latin (not the display name) so it survives a name-language change (#155); scores
+     *  from the pre-#155 file (keyed by the then-displayed name) are migrated to latin on load. */
+    private val uses = mutableStateMapOf<String, UseEntry>().apply {
+        val byName = species.associateBy { it.norsk } + species.associateBy { it.svensk }
+        loadUses(app).forEach { (key, entry) ->
+            val latin = if (species.any { it.latin == key }) key else byName[key]?.latin
+            if (latin != null) merge(latin, entry) { a, b -> if (a.lastTouched >= b.lastTouched) a else b }
+        }
+    }
 
-    /** Your decayed personal score for [norsk] as of [now] - the soft boost folded into rankings. */
-    fun useScore(norsk: String, now: Long = System.currentTimeMillis()): Double =
-        uses[norsk]?.let { decayedScore(it, now) } ?: 0.0
+    /** Your decayed personal score for [latin] as of [now] - the soft boost folded into rankings. */
+    fun useScore(latin: String, now: Long = System.currentTimeMillis()): Double =
+        uses[latin]?.let { decayedScore(it, now) } ?: 0.0
 
     /** Context-aware report frequency for ranking: what's reported in the current month and near the
      *  current GPS fix. Off-season/elsewhere/rare birds drop in rank but stay findable (tiers still
@@ -136,16 +183,16 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
      *  you have too few recents to fill it (a fresh install, early in an outing), it's padded with what
      *  the typed search shows for an empty query - the season + use-score blend - so it's never sparse. */
     fun blankQuickList(now: Long = System.currentTimeMillis()): List<Species> {
-        val byNorsk = species.associateBy { it.norsk }
+        val byLatin = species.associateBy { it.latin }
         val recent = uses.entries
             .sortedByDescending { it.value.lastTouched }
-            .mapNotNull { byNorsk[it.key] }
+            .mapNotNull { byLatin[it.key] }
         if (recent.size >= 20) return recent.take(20)
-        val have = recent.mapTo(HashSet()) { it.norsk }
+        val have = recent.mapTo(HashSet()) { it.latin }
         val month = java.time.LocalDate.now().monthValue
         val filler = species
-            .filter { it.norsk !in have }
-            .sortedByDescending { blendedWeight(ctxFreq.weight(it, month, fix?.lat, fix?.lon), useScore(it.norsk, now)) }
+            .filter { it.latin !in have }
+            .sortedByDescending { blendedWeight(ctxFreq.weight(it, month, fix?.lat, fix?.lon), useScore(it.latin, now)) }
         return (recent + filler).take(20)
     }
 
@@ -153,18 +200,21 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
      *  commonness multiplier), with your regulars boosted. Ranking lives in Search.kt so it's
      *  unit-benchmarked. Month + location are snapshotted once per query into the weight lambda - not
      *  re-read for each of ~600 species, and not shared across overlapping searches - off the main thread. */
-    suspend fun searchResults(query: String): List<Species> = withContext(Dispatchers.Default) {
-        val month = java.time.LocalDate.now().monthValue
-        val f = fix
-        val now = System.currentTimeMillis()
-        // Snapshot context + your decayed use score into one per-species likelihood (see blendedWeight)
-        // - computed once per query here, off the main thread.
-        val likelihood: (Species) -> Double = { s ->
-            blendedWeight(ctxFreq.weight(s, month, f?.lat, f?.lon), useScore(s.norsk, now))
+    suspend fun searchResults(query: String): List<Species> {
+        val index = searchIndex() // reads langPrefs on the caller (main) context before going off-thread
+        return withContext(Dispatchers.Default) {
+            val month = java.time.LocalDate.now().monthValue
+            val f = fix
+            val now = System.currentTimeMillis()
+            // Snapshot context + your decayed use score into one per-species likelihood (see
+            // blendedWeight) - computed once per query here, off the main thread.
+            val likelihood: (Species) -> Double = { s ->
+                blendedWeight(ctxFreq.weight(s, month, f?.lat, f?.lon), useScore(s.latin, now))
+            }
+            // distinct() collapses a species that matched on several of its names to one row,
+            // keeping the higher-ranked occurrence (results are best-first).
+            rankSpecies(query, index, likelihood).map { it.species }.distinct()
         }
-        // distinct() collapses a species that matched on both its primary and alt name to one row,
-        // keeping the higher-ranked occurrence (results are best-first).
-        rankSpecies(query, prepared, likelihood).map { it.species }.distinct()
     }
 
     /** Per-activity use counts, so each user's most-used activities rise to the top. */
@@ -352,9 +402,11 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
     fun discardDraft() { setUndo(Undoable.Discarded(isEditing)); screen = Screen.LIST }
 
     fun pickSpecies(s: Species) {
-        dSpecies = s.norsk; dLatin = s.latin
+        // dSpecies holds the exported Artnamn/Artsnavn: always the registry's language, whatever the
+        // user displays (#155). dLatin is the stable key used for display resolution + use scores.
+        dSpecies = s.name(Country.exportLang); dLatin = s.latin
         val now = System.currentTimeMillis()
-        uses[s.norsk] = bumpUse(uses[s.norsk], now)
+        uses[s.latin] = bumpUse(uses[s.latin], now)
         saveUses(ctx, uses)
         if (!changingSpecies && !isEditing && !batchEditing) {
             dTime = now  // stamp the entry time now
@@ -425,6 +477,10 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
     // ---- co-observer picker (#128) ----
     fun openCoObs() { screen = Screen.COOBS }
     fun closeCoObs() { screen = Screen.DETAIL }
+
+    // ---- settings (#155: species-name languages) ----
+    fun openSettings() { screen = Screen.SETTINGS }
+    fun closeSettings() { screen = Screen.LIST }
 
     // ---- "Synk mine lokaliteter" (pull the user's own privates from Artsobservasjoner) ----
     fun openSync() { screen = Screen.SYNC }

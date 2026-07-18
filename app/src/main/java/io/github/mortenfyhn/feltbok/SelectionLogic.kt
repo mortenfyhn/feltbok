@@ -20,7 +20,8 @@ fun sweepRange(orderedIds: List<Long>, anchor: Int, cursor: Int): List<Long> =
 
 /** A species pick travels as a pair - the two fields must move together or an edit would leave a
  *  note's common and scientific names mismatched. */
-data class SpeciesPick(val norsk: String, val latin: String)
+/** A batch species change: [name] is the exported registry name (Country.exportLang), [latin] the key. */
+data class SpeciesPick(val name: String, val latin: String)
 
 /** A time pick sets both endpoints together: [end] null makes it a single instant (Til = Fra). */
 data class BatchTime(val start: Long, val end: Long?)
@@ -52,7 +53,7 @@ fun applyBatchEdit(notes: List<Note>, ids: Set<Long>, change: BatchChange): List
     notes.map { n ->
         if (n.id !in ids) return@map n
         var m = n.copy(
-            species = change.species?.norsk ?: n.species,
+            species = change.species?.name ?: n.species,
             latin = change.species?.latin ?: n.latin,
             count = change.count ?: n.count,
             age = change.age ?: n.age,

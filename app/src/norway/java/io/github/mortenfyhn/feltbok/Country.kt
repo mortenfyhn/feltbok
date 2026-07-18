@@ -15,6 +15,14 @@ object Country {
     // Locale for *display* date/time (weekday + month names in the UI); export dates are numeric.
     val displayLocale: Locale = Locale("nb", "NO")
 
+    // ---- species-name languages (#155) ----
+    // The export always writes the Norwegian name (what Artsobservasjoner accepts on import),
+    // regardless of which language the user chooses to *see*. The defaults reproduce the old
+    // hard-wired behaviour (Norwegian, with Latin underneath); the user can change them in Settings.
+    val exportLang = Lang.NORSK
+    val defaultPrimary = Lang.NORSK
+    val defaultSecondary = Lang.LATIN
+
     // ---- export (paste) format ----
     val exportDateFmt = "dd.MM.yyyy"
     val exportTimeFmt = "HH:mm"

@@ -164,30 +164,76 @@ class ModelTest {
         assertEquals("", c[6]); assertEquals("", c[7])  // registry locality: name-only, links to public
     }
 
-    // ---- bilingual species search (the alt/Norwegian name in the Sweden build) ----
+    // ---- multilingual species search + name selection (#155) ----
 
     @Test
-    fun secondaryNameIsSearchableAndDedupes() {
-        // A species with a secondary (alt) name is findable by either name, and a query matching
-        // both collapses to one prepared species (two prepared entries, same species).
-        val species = listOf(
-            Species("talgoxe", "Parus major", alt = "kjøttmeis"),
-            Species("blåmes", "Cyanistes caeruleus", alt = "blåmeis"),
-            Species("gräsand", "Anas platyrhynchos", alt = "stokkand"),
-        )
-        val prepared = prepare(species)
-        assertEquals(6, prepared.size) // 3 species × (primary + alt alias)
-        val scorer = TieredScorer({ 0.0 })
-        // Typing the Norwegian name surfaces the Swedish species.
-        assertEquals("talgoxe", scorer.search("kjøttmeis", prepared).first().species.norsk)
-        // Both alias entries resolve to the same species, so callers dedupe to one row.
-        assertEquals(1, scorer.search("kjøttmeis", prepared).map { it.species }.distinct().count { it.norsk == "talgoxe" })
+    fun speciesNameReturnsTheChosenLanguage() {
+        val s = Species(latin = "Parus major", norsk = "kjøttmeis", svensk = "talgoxe")
+        assertEquals("kjøttmeis", s.name(Lang.NORSK))
+        assertEquals("talgoxe", s.name(Lang.SVENSK))
+        assertEquals("Parus major", s.name(Lang.LATIN))
     }
 
     @Test
-    fun noAliasWhenSecondaryNameBlank() {
-        val prepared = prepare(listOf(Species("kjøttmeis", "Parus major")))
+    fun everyNameIsSearchableAndDedupes() {
+        // Each species is findable by its Norwegian, Swedish, or Latin name, whichever the birder
+        // types - and a match collapses to one species (three alias entries, same species).
+        val species = listOf(
+            Species(latin = "Parus major", norsk = "kjøttmeis", svensk = "talgoxe"),
+            Species(latin = "Cyanistes caeruleus", norsk = "blåmeis", svensk = "blåmes"),
+        )
+        val prepared = prepare(species)
+        assertEquals(6, prepared.size) // 2 species × (norsk + svensk + latin)
+        val scorer = TieredScorer({ 0.0 })
+        listOf("kjøttmeis", "talgoxe", "parus").forEach { q ->
+            assertEquals("query '$q' finds Parus major", "Parus major", scorer.search(q, prepared).first().species.latin)
+        }
+        // The alias entries resolve to one species, so callers dedupe to one row.
+        assertEquals(1, scorer.search("kjøttmeis", prepared).map { it.species }.distinct().count { it.latin == "Parus major" })
+    }
+
+    @Test
+    fun blankNamesDontCreateAliases() {
+        // A Latin-only species (a source lacked both vernaculars) yields a single prepared entry.
+        val prepared = prepare(listOf(Species(latin = "Parus major", norsk = "", svensk = "")))
         assertEquals(1, prepared.size)
+    }
+
+    @Test
+    fun searchOnlyMatchesTheSelectedLanguages() {
+        // Default: search matches the primary language only, so a bird isn't surfaced via a language
+        // the user isn't looking in (#155 - typing "t" mustn't return kjøttmeis via Swedish talgoxe).
+        val species = listOf(Species(latin = "Parus major", norsk = "kjøttmeis", svensk = "talgoxe"))
+        val scorer = TieredScorer({ 0.0 })
+        val primaryOnly = prepare(species, setOf(Lang.NORSK))
+        assertEquals(1, primaryOnly.size)
+        assertTrue(scorer.search("kjøttmeis", primaryOnly).isNotEmpty())
+        assertTrue("Swedish name not searched", scorer.search("talgoxe", primaryOnly).isEmpty())
+        // Opting the secondary in makes the Swedish name findable again.
+        assertTrue(scorer.search("talgoxe", prepare(species, setOf(Lang.NORSK, Lang.SVENSK))).isNotEmpty())
+    }
+
+    @Test
+    fun searchLangsFollowTheSecondaryToggle() {
+        val prefs = LangPrefs(Lang.NORSK, Lang.LATIN)
+        assertEquals(setOf(Lang.NORSK), prefs.searchLangs)
+        assertEquals(setOf(Lang.NORSK, Lang.LATIN), prefs.copy(searchSecondary = true).searchLangs)
+    }
+
+    @Test
+    fun exportUsesRegistryNameNotTheDisplayName() {
+        // The pasted Artsnavn/Artnamn must always be the destination portal's language
+        // (Country.exportLang) - exactly what pickSpecies stores - regardless of which language the
+        // user has chosen to *see*. So export is decoupled from the display-language setting (#155).
+        val crow = Species(latin = "Corvus corone", norsk = "kråke", svensk = "kråka")
+        val exportName = crow.name(Country.exportLang) // what MainViewModel.pickSpecies writes to the note
+        assertEquals(if (isNorwayExport) "kråke" else "kråka", exportName)
+        // A vernacular registry name, never the Latin (or other language) a user might be displaying.
+        assertTrue(exportName != crow.latin && exportName != crow.name(Lang.LATIN))
+
+        val note = noteAt(noonMs).copy(species = exportName, latin = crow.latin)
+        val artnamn = exportTsv(listOf(note)).lineSequence().drop(1).first().split("\t")[0]
+        assertEquals(exportName, artnamn)
     }
 
     @Test
@@ -240,7 +286,7 @@ class ModelTest {
 
     /** A few species in Norway-wide frequency order (common first), as the bundled CSV is;
      *  RowOrderFrequency turns that order into the commonness signal the scorer ranks by. */
-    private fun freqOrdered(vararg norsk: String) = norsk.map { Species(it, it.lowercase()) }
+    private fun freqOrdered(vararg norsk: String) = norsk.map { Species(latin = it.lowercase(), norsk = it) }
 
     /** Rank through the shipping scorer. [useCount] folds into the frequency weight exactly as
      *  MainViewModel does - a regular nudges up, capped - so the test mirrors real ranking. */
@@ -250,7 +296,9 @@ class ModelTest {
             val picks = useCount(s.norsk)
             minOf(1.0, base.weight(s) + if (picks == 0) 0.0 else minOf(0.5, 0.15 * picks))
         }
-        return rankSpecies(query, prepare(list), weight).map { it.species.norsk }
+        // distinct() mirrors MainViewModel.searchResults: a species matched via several of its
+        // name-aliases (norsk/svensk/latin) collapses to one row.
+        return rankSpecies(query, prepare(list), weight).map { it.species }.distinct().map { it.norsk }
     }
 
     @Test
@@ -453,9 +501,9 @@ class ModelTest {
 
     @Test
     fun contextualFrequencyFollowsMonthAndPlace() {
-        val summer = Species("Sommerfugl", "Aestas aestas", count = 1000)
-        val winter = Species("Vinterfugl", "Hiems hiems", count = 1000)
-        val southern = Species("Sørfugl", "Meridies avis", count = 100) // less common nationally
+        val summer = Species(latin = "Aestas aestas", norsk = "Sommerfugl", count = 1000)
+        val winter = Species(latin = "Hiems hiems", norsk = "Vinterfugl", count = 1000)
+        val southern = Species(latin = "Meridies avis", norsk = "Sørfugl", count = 100) // less common nationally
         val species = listOf(summer, winter, southern)
         val monthly = mapOf(
             "Aestas aestas" to intArrayOf(0, 0, 0, 0, 1000, 0, 0, 0, 0, 0, 0, 0), // peaks May

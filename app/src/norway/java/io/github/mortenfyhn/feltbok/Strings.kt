@@ -50,10 +50,24 @@ object Strings {
         const val title = "Om Feltbok"
         const val madeBy = "Laga av Morten F. Amundsen"
         const val dataHeader = "Data og kilder"
-        const val artsdatabanken = "Artsdata fra Artsdatabanken (CC BY 4.0)"
+        const val names = "Artsnavn fra IOC World Bird List"
+        const val artsdatabanken = "Rødlistestatus fra Artsdatabanken (CC BY 4.0)"
         const val artsobs = "Lokaliteter fra Artsobservasjoner"
         const val osm = "Kart © OpenStreetMap"
         const val close = "Ålreit"
+        const val settings = "Innstillinger"
+    }
+
+    object Settings {
+        const val title = "Innstillinger"
+        const val primaryHeader = "Hovedspråk for artsnavn"
+        const val secondaryHeader = "Andrespråk for artsnavn"
+        const val searchSecondary = "Søk i begge språk"
+        fun langLabel(lang: Lang) = when (lang) {
+            Lang.NORSK -> "Norsk"
+            Lang.SVENSK -> "Svensk"
+            Lang.LATIN -> "Vitenskapelig"
+        }
     }
 
     object Feedback {

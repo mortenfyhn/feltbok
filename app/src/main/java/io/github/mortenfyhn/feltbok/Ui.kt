@@ -121,7 +121,7 @@ fun ListScreen(vm: MainViewModel, listState: LazyListState) {
     var showFeedback by remember { mutableStateOf(false) }
     if (showFeedback) FeedbackDialog { showFeedback = false }
     var showAbout by remember { mutableStateOf(false) }
-    if (showAbout) AboutDialog { showAbout = false }
+    if (showAbout) AboutDialog(onDismiss = { showAbout = false }, onSettings = { showAbout = false; vm.openSettings() })
     val selecting = vm.selectionMode
     val haptic = LocalHapticFeedback.current
     // While marking notes, system Back leaves selection mode rather than exiting the app.
@@ -218,7 +218,7 @@ fun ListScreen(vm: MainViewModel, listState: LazyListState) {
                             }
                             items(group.notes, key = { it.id }) { n ->
                                 NoteRow(
-                                    n, vm.statusFor(n.latin), selecting = selecting, selected = n.id in vm.selected,
+                                    n, vm.noteName(n), vm.statusFor(n.latin), selecting = selecting, selected = n.id in vm.selected,
                                     // Tap toggles the mark while marking, else opens the editor. Entering
                                     // selection (long-press, optionally dragged into a range) is handled by
                                     // the list's dragToSelect so it doesn't fight a row-level long-press -
@@ -547,7 +547,7 @@ private fun StatusStrip(vm: MainViewModel) {
 /** Credits / attribution (#139). The Artsdatabanken data is CC BY 4.0, which requires attribution;
  *  OSM is credited on the map too but gathered here for one tidy home. */
 @Composable
-private fun AboutDialog(onDismiss: () -> Unit) {
+private fun AboutDialog(onDismiss: () -> Unit, onSettings: () -> Unit) {
     val cs = MaterialTheme.colorScheme
     AlertDialog(
         onDismissRequest = onDismiss,
@@ -557,7 +557,9 @@ private fun AboutDialog(onDismiss: () -> Unit) {
                 Text(Strings.About.madeBy)
                 Text(Strings.About.dataHeader, fontWeight = FontWeight.SemiBold,
                     modifier = Modifier.padding(top = 24.dp, bottom = 4.dp))
-                Text(Strings.About.artsdatabanken, fontSize = 13.sp, color = cs.onSurfaceVariant)
+                Text(Strings.About.names, fontSize = 13.sp, color = cs.onSurfaceVariant)
+                Text(Strings.About.artsdatabanken, fontSize = 13.sp, color = cs.onSurfaceVariant,
+                    modifier = Modifier.padding(top = 6.dp))
                 Text(Strings.About.artsobs, fontSize = 13.sp, color = cs.onSurfaceVariant,
                     modifier = Modifier.padding(top = 6.dp))
                 Text(Strings.About.osm, fontSize = 13.sp, color = cs.onSurfaceVariant,
@@ -565,6 +567,7 @@ private fun AboutDialog(onDismiss: () -> Unit) {
             }
         },
         confirmButton = { TextButton(onClick = onDismiss) { Text(Strings.About.close) } },
+        dismissButton = { TextButton(onClick = onSettings) { Text(Strings.About.settings) } },
     )
 }
 
@@ -640,7 +643,7 @@ private fun AnnotatedString.Builder.appendBoldSymbols(text: String) {
 }
 
 @Composable
-private fun NoteRow(n: Note, status: String, selecting: Boolean, selected: Boolean, onClick: () -> Unit) {
+private fun NoteRow(n: Note, name: String, status: String, selecting: Boolean, selected: Boolean, onClick: () -> Unit) {
     val cs = MaterialTheme.colorScheme
     val hasLoc = n.locName.isNotBlank()
     // age + sex (sex symbol bolded so the thin ♂/♀ glyphs read at a glance), each shown only when
@@ -673,7 +676,7 @@ private fun NoteRow(n: Note, status: String, selecting: Boolean, selected: Boole
                         buildAnnotatedString {
                             val count = if (n.count == UNKNOWN_COUNT) "?" else n.count.toString()
                             withStyle(SpanStyle(color = cs.onPrimaryContainer, fontWeight = FontWeight.Bold)) { append("$count ") }
-                            append(if (n.uncertain) "${n.species}?" else n.species)
+                            append(if (n.uncertain) "$name?" else name)
                             // Status code (VU/SE/…) inline right after the name, coloured like the badge.
                             if (status.isNotBlank()) {
                                 withStyle(SpanStyle(color = statusColor(status, cs), fontWeight = FontWeight.Bold, fontSize = 11.sp, letterSpacing = 0.5.sp)) {
@@ -802,15 +805,15 @@ fun SearchScreen(vm: MainViewModel) {
                         .padding(horizontal = 16.dp, vertical = 9.dp),
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
-                    Text(s.norsk, fontWeight = FontWeight.Medium, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                    Text(vm.primaryName(s), fontWeight = FontWeight.Medium, maxLines = 1, overflow = TextOverflow.Ellipsis)
                     StatusBadge(s.status)
-                    // Secondary name: the alt (Norwegian) name when present, else the Latin name.
-                    // Latin is italic (scientific convention); a common name is not.
-                    val secondary = s.alt.ifBlank { s.latin }
-                    if (secondary.isNotBlank()) {
+                    // Secondary name in the user's chosen secondary language (#155); Latin is italic
+                    // (scientific convention), a common name is not.
+                    val secondary = vm.secondaryName(s)
+                    if (secondary != null) {
                         Spacer(Modifier.width(8.dp))
                         Text(secondary, color = cs.onSurfaceVariant,
-                            fontStyle = if (s.alt.isBlank()) FontStyle.Italic else FontStyle.Normal,
+                            fontStyle = if (vm.langPrefs.secondary == Lang.LATIN) FontStyle.Italic else FontStyle.Normal,
                             fontSize = 13.sp, maxLines = 1, overflow = TextOverflow.Ellipsis,
                             modifier = Modifier.weight(1f))
                     }
@@ -882,7 +885,7 @@ fun CoObserverScreen(vm: MainViewModel) {
                 })
         }
         LazyColumn(Modifier.weight(1f)) {
-            if (canAdd) item(key = " add") {
+            if (canAdd) item(key = "add") {
                 OptionItem(Strings.CoObs.add(query), selected = false, fullScreen = true) { vm.addCoObs(query); q = "" }
             }
             items(matches, key = { it }) { name ->
@@ -976,6 +979,47 @@ internal fun ScreenHeader(
     }
 }
 
+// ============================ SETTINGS ============================
+
+/** Species-name language settings (#155): one obs-entry-style row per setting - primary + secondary
+ *  language each open a small picker dialog ([DropdownRow]); a compact checkbox toggles whether search
+ *  also matches the secondary language. Changes save and take effect immediately (via langPrefs). */
+@Composable
+fun SettingsScreen(vm: MainViewModel) {
+    val cs = MaterialTheme.colorScheme
+    val prefs = vm.langPrefs
+    val langs = listOf(Lang.NORSK, Lang.SVENSK, Lang.LATIN)
+    val labels = langs.map { Strings.Settings.langLabel(it) }
+    fun langFor(label: String) = langs.first { Strings.Settings.langLabel(it) == label }
+    Column(Modifier.fillMaxSize().background(cs.background)) {
+        ScreenHeader(Strings.Settings.title, onCancel = { vm.closeSettings() })
+        Column(Modifier.verticalScroll(rememberScrollState())) {
+            DropdownRow(Strings.Settings.primaryHeader, Strings.Settings.langLabel(prefs.primary), labels, clearable = false) {
+                vm.updateLangPrefs(prefs.copy(primary = langFor(it)))
+            }
+            DropdownRow(Strings.Settings.secondaryHeader, Strings.Settings.langLabel(prefs.secondary), labels, clearable = false) {
+                vm.updateLangPrefs(prefs.copy(secondary = langFor(it)))
+            }
+            // Search matches the primary name only unless this is on, then the secondary too (#155).
+            // Mirrors the "Usikker artsbestemming" checkbox row so it reads as the same kind of toggle.
+            Row(
+                Modifier.fillMaxWidth()
+                    .clickable { vm.updateLangPrefs(prefs.copy(searchSecondary = !prefs.searchSecondary)) }
+                    .background(cs.surface).padding(start = 16.dp, end = 8.dp),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                // fontSize matches FieldRow's label (14sp) so this row reads the same size as the two above.
+                Text(Strings.Settings.searchSecondary, color = cs.onSurfaceVariant, fontSize = 14.sp, modifier = Modifier.weight(1f))
+                Checkbox(
+                    checked = prefs.searchSecondary,
+                    onCheckedChange = { vm.updateLangPrefs(prefs.copy(searchSecondary = it)) },
+                )
+            }
+            HorizontalDivider(color = cs.outline.copy(alpha = 0.4f))
+        }
+    }
+}
+
 /** Muted, single-line hint shown in a batch-edit row where the marked notes disagree: a preview of
  *  their current values (shared value or the mix). Nothing when there's nothing to preview. */
 @Composable
@@ -1044,7 +1088,7 @@ fun DetailScreen(vm: MainViewModel) {
                         // discard prompt. Copying an unchanged edit still makes a copy, silently.
                         val saved = vm.draftHasChanges()
                         val editing = vm.isEditing
-                        val species = vm.dSpecies
+                        val species = vm.nameForLatin(vm.dLatin, vm.dSpecies)
                         // Drop focus off any field (comments, count) so nothing stays selected
                         // on the fresh copy - jarring when copy just cleared the comments (#136).
                         focus.clearFocus()
@@ -1074,9 +1118,11 @@ fun DetailScreen(vm: MainViewModel) {
                     BatchHint(vm.batchPreview { it.species })
                 } else {
                     // Common name keeps its full width; the latin is what gets ellipsized when tight.
-                    Text(vm.dSpecies + if (vm.dUncertain && vm.dSpecies.isNotBlank()) "?" else "",
+                    val disp = vm.nameForLatin(vm.dLatin, vm.dSpecies)
+                    Text(disp + if (vm.dUncertain && disp.isNotBlank()) "?" else "",
                         fontWeight = FontWeight.Medium, maxLines = 1, overflow = TextOverflow.Ellipsis)
-                    if (vm.dLatin.isNotBlank())
+                    // The scientific name underneath, unless it's already what's shown (primary = Latin).
+                    if (vm.dLatin.isNotBlank() && disp != vm.dLatin)
                         Text("  ${vm.dLatin}", color = cs.onSurfaceVariant, fontStyle = FontStyle.Italic,
                             fontSize = 13.sp, maxLines = 1, overflow = TextOverflow.Ellipsis,
                             modifier = Modifier.weight(1f, fill = false))
@@ -1226,6 +1272,7 @@ private fun DropdownRow(
     options: List<String>,
     fullScreen: Boolean = false,
     batchHint: String = "",
+    clearable: Boolean = true,
     onSelect: (String) -> Unit,
 ) {
     var open by remember { mutableStateOf(false) }
@@ -1235,11 +1282,11 @@ private fun DropdownRow(
     }
     if (!open) return
 
-    // First row clears the field. A muted dash (rather than the website's truly-blank option or a
-    // worded "Ingen"): it reads as "no value" at a glance without looking like dead space or like
-    // just another option in the list.
+    // A leading clear row (unless the field is always-set, e.g. the language settings). A muted dash
+    // (rather than the website's truly-blank option or a worded "Ingen"): it reads as "no value" at a
+    // glance without looking like dead space or like just another option in the list.
     val rows: LazyListScope.() -> Unit = {
-        item { OptionItem("—", value.isBlank(), fullScreen, none = true) { onSelect(""); open = false } }
+        if (clearable) item { OptionItem("—", value.isBlank(), fullScreen, none = true) { onSelect(""); open = false } }
         items(options) { opt -> OptionItem(opt, opt == value, fullScreen) { onSelect(opt); open = false } }
     }
     if (fullScreen) {

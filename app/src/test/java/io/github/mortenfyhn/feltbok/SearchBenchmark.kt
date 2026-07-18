@@ -268,9 +268,15 @@ class SearchBenchmark {
             .map(::File).firstOrNull { it.exists() }
             ?: error("species.csv not found (cwd=${File(".").absolutePath})")
         return f.readLines().drop(1).filter { it.isNotBlank() }.mapNotNull { line ->
-            val c = line.split(',')
-            c[0].ifBlank { null }?.let {
-                Species(it, c.getOrElse(1) { "" }, c.getOrElse(2) { "" }, c.getOrElse(3) { "" }.toIntOrNull() ?: 0)
+            val c = line.split(',')  // latin,norsk,svensk,status,count
+            c.getOrElse(0) { "" }.ifBlank { null }?.let {
+                Species(
+                    latin = it,
+                    norsk = c.getOrElse(1) { "" },
+                    svensk = c.getOrElse(2) { "" },
+                    status = c.getOrElse(3) { "" },
+                    count = c.getOrElse(4) { "" }.toIntOrNull() ?: 0,
+                )
             }
         }
     }

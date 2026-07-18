@@ -74,15 +74,26 @@ data class Locality(
     }
 }
 
-// `alt` is an optional secondary common name, also searchable (the Sweden flavor fills it with the
-// Norwegian name so a Norwegian birder can fall back to names they know). Blank in the Norway build.
+/** A display/search name language. The user picks a primary + optional secondary (#155); each
+ *  flavor's export always uses its registry's language ([Country.exportLang]), independent of that. */
+enum class Lang { NORSK, SVENSK, LATIN }
+
+// Every species carries all three names (unified schema, no per-flavor special-casing). A name may
+// be blank when a source lacks it (e.g. IOC has no Swedish name for a Norwegian-only vagrant); the
+// display layer falls back to the flavor's own language, so a blank never surfaces as an empty row.
 data class Species(
-    val norsk: String,
     val latin: String,
+    val norsk: String = "",
+    val svensk: String = "",
     val status: String = "",
     val count: Int = 0,
-    val alt: String = "",
-)
+) {
+    fun name(lang: Lang): String = when (lang) {
+        Lang.NORSK -> norsk
+        Lang.SVENSK -> svensk
+        Lang.LATIN -> latin
+    }
+}
 
 const val UNKNOWN_COUNT = -1 // Note.count sentinel: unknown number of individuals
 
@@ -542,17 +553,20 @@ fun saveMyLocalities(ctx: Context, sites: List<Locality>) {
     myLocalitiesFile(ctx).writeText(sb.toString())   // internal storage: always app-writable
 }
 
-/** Columns: norsk,latin,status (Rødlista 2021 or Fremmedartslista 2023 category, blank if neither) */
+/** Columns: latin,norsk,svensk,status,count. `latin` is the stable key (unique; the vernacular
+ *  names have homonyms and may be blank). status = Rødlista/Rödlista or alien-list category, blank
+ *  if neither; count = the national report count, log-scaled into the search's commonness ranking. */
 fun loadSpecies(ctx: Context): List<Species> =
     readData(ctx, "species.csv").mapNotNull { c ->
         if (c.isEmpty() || c[0].isBlank()) {
             null
         } else {
-            // count (Norway-wide observations) and alt (secondary name) are optional - older or
-            // single-language CSVs may lack them.
             Species(
-                c[0], c.getOrElse(1) { "" }, c.getOrElse(2) { "" },
-                c.getOrElse(3) { "" }.toIntOrNull() ?: 0, c.getOrElse(4) { "" },
+                latin = c[0],
+                norsk = c.getOrElse(1) { "" },
+                svensk = c.getOrElse(2) { "" },
+                status = c.getOrElse(3) { "" },
+                count = c.getOrElse(4) { "" }.toIntOrNull() ?: 0,
             )
         }
     }
@@ -775,6 +789,45 @@ fun loadParty(ctx: Context): List<String> {
 }
 
 fun saveParty(ctx: Context, party: List<String>) = partyFile(ctx).writeText(JSONArray(party).toString())
+
+// ---- species-name language preference (#155): which language to show as primary + secondary ----
+
+/** The two display languages shown for each species: [primary] on top, [secondary] beneath. Both are
+ *  always set (there's no "no secondary" - Latin fills that role); a secondary equal to the primary
+ *  just isn't drawn. Search matches the [primary] name only, unless [searchSecondary] is on, which
+ *  also searches the secondary language (a fallback for "I forget the primary-language name"); it's
+ *  off by default so, e.g., typing "t" in the Norway build doesn't surface birds via their Swedish
+ *  name. None of this affects export - that stays the registry's [Country.exportLang]. */
+data class LangPrefs(val primary: Lang, val secondary: Lang, val searchSecondary: Boolean = false) {
+    /** The name languages the search matches against, given these prefs. */
+    val searchLangs: Set<Lang> get() = setOf(primary) + if (searchSecondary) setOf(secondary) else emptySet()
+}
+
+private fun langPrefsFile(ctx: Context) = File(ctx.filesDir, "lang_prefs.json")
+
+/** Load the saved languages, or the flavor defaults ([Country.defaultPrimary]/[defaultSecondary])
+ *  on a fresh install - so out of the box the app matches the old hard-wired per-flavor behaviour. */
+fun loadLangPrefs(ctx: Context): LangPrefs {
+    val f = langPrefsFile(ctx)
+    val default = LangPrefs(Country.defaultPrimary, Country.defaultSecondary)
+    if (!f.exists()) return default
+    return runCatching {
+        val o = JSONObject(f.readText())
+        LangPrefs(
+            Lang.valueOf(o.getString("primary")),
+            o.optString("secondary").takeIf { it.isNotBlank() }?.let { Lang.valueOf(it) } ?: default.secondary,
+            o.optBoolean("searchSecondary", default.searchSecondary),
+        )
+    }.getOrDefault(default)
+}
+
+fun saveLangPrefs(ctx: Context, prefs: LangPrefs) {
+    val o = JSONObject()
+        .put("primary", prefs.primary.name)
+        .put("secondary", prefs.secondary.name)
+        .put("searchSecondary", prefs.searchSecondary)
+    langPrefsFile(ctx).writeText(o.toString())
+}
 
 // ---- export (paste format; columns/headers per Country) ----
 

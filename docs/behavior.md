@@ -51,6 +51,31 @@ signals (`rankSpecies` in `Search.kt`):
 The dataset is tiny (~600 species), so this all runs in well under a millisecond
 per keystroke.
 
+### Names and languages
+
+Every species carries three names — Norwegian, Swedish, and the scientific (Latin)
+name — from the **IOC World Bird List**, one consistent source across both country
+builds.
+
+Under **Innstillinger** (open the About dialog from the footer version, then
+"Innstillinger") you pick a **primary** name language and a **secondary** one shown
+beneath it — each any of the three (Latin doubles as the "no second common name"
+choice). Out of the box the Norway build shows Norwegian with Latin underneath, the
+Sweden build Swedish with Norwegian underneath. A secondary equal to the primary just
+isn't drawn; a species a source lacks the chosen name for falls back to Latin, so a
+primary name is never blank.
+
+**Search** matches the **primary** name only by default — so typing `t` in the Norway
+build won't surface a bird via its Swedish name. A **"søk i begge språk"** toggle
+(same screen) also searches the secondary language, as a fallback for when you can't
+recall the primary-language name (e.g. a Swedish birder searching Norwegian). The third,
+unshown language is never searched.
+
+The **export is unaffected** by this choice: the pasted `Artsnavn`/`Artnamn` is always
+the name the destination portal accepts (Norwegian for Artsobservasjoner, Swedish for
+Artportalen) — so, e.g., a feral rock dove exports and is looked up as `bydue` even
+though IOC's species name is `klippedue`.
+
 ## The notes list
 
 Observations are grouped into per-day sections, newest day first, each under a date
@@ -140,7 +165,9 @@ private duplicate — lives in `docs/artsobs-import.md`.)
 ## About / credits
 
 Tapping the version string in the footer opens a small "Om Feltbok" dialog with the
-maker line and the data credits — Artsdatabanken (species data, CC BY 4.0),
-Artsobservasjoner (localities), and OpenStreetMap (map). The CC BY licence *requires*
+maker line and the data credits — IOC World Bird List (species names), Artsdatabanken /
+SLU Artdatabanken (red-list status, CC BY 4.0), Artsobservasjoner / Artportalen
+(localities), and OpenStreetMap (map). The dialog also links to **Innstillinger** (the
+name-language settings). The CC BY licence *requires*
 attribution; this is its home. The map also carries an "© OpenStreetMap-bidragsytere"
 corner credit, as the OSM tile policy requires.

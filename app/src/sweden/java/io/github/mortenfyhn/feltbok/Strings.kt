@@ -39,10 +39,24 @@ object Strings {
         const val title = "Om Fältbok"
         const val madeBy = "Skapad av Morten F. Amundsen"
         const val dataHeader = "Data och källor"
-        const val artsdatabanken = "Artdata från Artdatabanken (CC BY 4.0)"
+        const val names = "Artnamn från IOC World Bird List"
+        const val artsdatabanken = "Rödlistestatus från SLU Artdatabanken (CC BY 4.0)"
         const val artsobs = "Fyndplatser från Artportalen"
         const val osm = "Karta © OpenStreetMap"
         const val close = "Okej"
+        const val settings = "Inställningar"
+    }
+
+    object Settings {
+        const val title = "Inställningar"
+        const val primaryHeader = "Artnamn huvudspråk"
+        const val secondaryHeader = "Artnamn andraspråk"
+        const val searchSecondary = "Sök på båda språk"
+        fun langLabel(lang: Lang) = when (lang) {
+            Lang.NORSK -> "Norska"
+            Lang.SVENSK -> "Svenska"
+            Lang.LATIN -> "Vetenskapligt"
+        }
     }
 
     object Feedback {

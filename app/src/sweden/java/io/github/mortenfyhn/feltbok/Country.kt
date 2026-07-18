@@ -13,6 +13,14 @@ object Country {
     // Locale for *display* date/time (weekday + month names in the UI); export dates are numeric.
     val displayLocale: Locale = Locale("sv", "SE")
 
+    // ---- species-name languages (#155) ----
+    // The export always writes the Swedish name (what Artportalen accepts on import), regardless of
+    // which language the user chooses to *see*. The defaults reproduce the old hard-wired behaviour
+    // (Swedish, with Norwegian underneath); the user can change them in Settings.
+    val exportLang = Lang.SVENSK
+    val defaultPrimary = Lang.SVENSK
+    val defaultSecondary = Lang.NORSK
+
     // ---- export (paste) format ----
     // Like Norway: a picked registry locality exports name-only (the import links it to the public
     // site), and a minted map-spot exports name + coordinates + radius (creates a new private

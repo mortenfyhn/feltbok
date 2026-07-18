@@ -45,14 +45,19 @@ private fun preparedFor(s: Species, name: String, index: Int): PreparedSpecies {
     return PreparedSpecies(s, folded, index, stripSep(folded), stripSep(name.lowercase()))
 }
 
-fun prepare(species: List<Species>): List<PreparedSpecies> =
+/** Build the search index over the requested name [langs]. One alias entry per non-blank name in
+ *  those languages, all pointing at the same species so a query matches whichever the birder types;
+ *  aliases share the index, so frequency/tiebreak are identical and the caller dedupes afterwards.
+ *  The app passes only the languages the user chose to search (#155) - primary, optionally secondary
+ *  - so it doesn't surface birds via a language the user isn't looking in. */
+fun prepare(species: List<Species>, langs: Set<Lang> = Lang.values().toSet()): List<PreparedSpecies> =
     species.flatMapIndexed { i, s ->
-        // The primary name plus, when present, the secondary name ([Species.alt], e.g. the Norwegian
-        // name in the Sweden build) as an extra alias entry pointing at the same species, so a query
-        // matches either. Both share the index, so frequency/tiebreak are identical. The caller
-        // dedupes the species afterwards. No alias in the Norway build (alt is blank).
-        if (s.alt.isBlank()) listOf(preparedFor(s, s.norsk, i))
-        else listOf(preparedFor(s, s.norsk, i), preparedFor(s, s.alt, i))
+        listOf(Lang.NORSK, Lang.SVENSK, Lang.LATIN)
+            .filter { it in langs }
+            .map { s.name(it) }
+            .filter { it.isNotBlank() }
+            .distinct()
+            .map { preparedFor(s, it, i) }
     }
 
 /** One ranked result. [score] is descending-best (higher = better); not comparable across configs.
@@ -134,7 +139,7 @@ fun rankSpecies(
             val diacritic = if (matchesExact(lq, c.lowerTight)) 1.0 + tierWeights.diacriticExact else 1.0
             Ranked(c.species, tq.first * tq.second * likelihoodMult * diacritic)
         }
-        .sortedWith(compareByDescending<Ranked> { it.score }.thenBy { it.species.norsk })
+        .sortedWith(compareByDescending<Ranked> { it.score }.thenBy { it.species.latin })
 }
 
 /** (tier base, quality factor in ~(0,1.x]) for [fq] against the folded name [fn], or null for no
