@@ -267,20 +267,25 @@ fun displayTimeRange(start: Long, end: Long?): String {
 
 // Compact forms of age/sex for the list-row preview, so two near-identical observations are
 // tellable apart at a glance (which is the chicks, which the parents). The row builds the preview
-// itself (it bolds the thin sex symbol), so these stay as small reusable formatters.
+// itself (it bolds the thin sex symbol), so these stay as small reusable formatters. Both flavors'
+// vocabularies are handled here (Norway capitalised, Sweden lower-case) so the preview reads "ad ♂"
+// rather than "adult hane" on the Sweden build (#155).
 fun shortAge(age: String): String = when (age) {
     "Adult" -> "Ad"
+    "adult" -> "ad"
     "Pulli" -> "Pu"
+    "pulli" -> "pu"
     "Egg" -> "Eg"
+    "ägg" -> "äg"
     else -> age // the K-ages (1K, 2K+, …) are already short
 }
 
 // The trailing ︎ (VS15) forces text presentation, so ♂/♀ render from the regular text font
 // instead of the emoji font — without it they come out as tall colour emoji that inflate the row.
 fun sexSymbol(sex: String): String = when (sex) {
-    "Hann" -> "♂︎"
-    "Hunn" -> "♀︎"
-    "Hunnfarget" -> "(♀︎)"
+    "Hann", "Hane" -> "♂︎"
+    "Hunn", "Hona" -> "♀︎"
+    "Hunnfarget", "Honfärgad" -> "(♀︎)"
     "I par" -> "♂︎♀︎"
     else -> sex
 }

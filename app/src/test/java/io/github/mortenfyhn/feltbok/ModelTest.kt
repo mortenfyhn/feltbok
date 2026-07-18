@@ -545,6 +545,10 @@ class ModelTest {
         assertEquals("Pu", shortAge("Pulli"))
         assertEquals("Eg", shortAge("Egg"))
         assertEquals("2K+", shortAge("2K+")) // K-ages are already short - passed through
+        // Sweden's lower-case vocabulary abbreviates too (#155), so the preview isn't "adult".
+        assertEquals("ad", shortAge("adult"))
+        assertEquals("pu", shortAge("pulli"))
+        assertEquals("äg", shortAge("ägg"))
     }
 
     @Test
@@ -558,5 +562,9 @@ class ModelTest {
         assertEquals("\u2640\uFE0E", sexSymbol("Hunn")) // ♀ + VS15
         assertEquals("(\u2640\uFE0E)", sexSymbol("Hunnfarget"))
         assertEquals("\u2642\uFE0E\u2640\uFE0E", sexSymbol("I par"))
+        // Sweden's sex vocabulary maps to the same symbols (#155).
+        assertEquals("\u2642\uFE0E", sexSymbol("Hane"))
+        assertEquals("\u2640\uFE0E", sexSymbol("Hona"))
+        assertEquals("(\u2640\uFE0E)", sexSymbol("Honfärgad"))
     }
 }

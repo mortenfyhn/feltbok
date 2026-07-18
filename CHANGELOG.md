@@ -8,6 +8,7 @@
   søke på det andre språket òg (fint når du ikke hugsar navnet på hovedspråket).
 - Artsnavna kommer nå fra IOC World Bird List, så feil svenske navn er retta (bl.a.
   «gulsångare» → «härmsångare») og de norske navna har rett skrivemåte.
+- I den svenske appen forkortes alder/kjønn i lista nå kompakt («ad ♂»), som i den norske.
 - **Medobservatører**: noter hvem du var ute med på hver observasjon. Følget henger
   igjen fra observasjon til observasjon, så du skriv det inn én gang og slepp å tenke på
   det – og navna du bruker foreslås neste gang. De blir med som egne kolonner i eksporten.
