@@ -30,6 +30,12 @@ object Country {
         "Usikker artsbestemming",
     )
 
+    // Header for the repeated co-observer columns (#128). The v2.20/v3.0 Fugl template ships 10
+    // "Medobservatør" columns (R–AA); paste-import matches by header name, so exportTsv appends as
+    // many identical columns as the batch needs. The template hjelp says "10 felt (kan være flere)",
+    // so >10 is expected to work - worth a live paste-test before relying on 11+.
+    val coObserverCol = "Medobservatør"
+
     // ---- bird option vocabularies (Fugl), exactly as the import expects them ----
     val ages = listOf(
         "Egg", "Pulli", "Adult",

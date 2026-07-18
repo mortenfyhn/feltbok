@@ -128,6 +128,31 @@ class ModelTest {
     }
 
     @Test
+    fun coObserversAppendMedobservatorColumnsPaddedToTheBusiestRow() {
+        // Paste-import matches by header name, so each co-observer becomes an identically-headed
+        // trailing column; every row is padded to the max count so the grid stays rectangular (#128).
+        assumeTrue(isNorwayExport)
+        val solo = noteAt(noonMs)
+        val duo = noteAt(noonMs + 3_600_000).copy(coObservers = listOf("Kari Nordmann", "Ola Hansen"))
+        val lines = exportTsv(listOf(solo, duo)).split("\n")
+        val header = lines[0].split("\t")
+        assertEquals(16 + 2, header.size)
+        assertEquals("Medobservatør", header[16]); assertEquals("Medobservatør", header[17])
+        val soloRow = lines[1].split("\t")   // sorted by time: solo first
+        assertEquals(18, soloRow.size)
+        assertEquals("", soloRow[16]); assertEquals("", soloRow[17])   // padded blanks
+        val duoRow = lines[2].split("\t")
+        assertEquals("Kari Nordmann", duoRow[16]); assertEquals("Ola Hansen", duoRow[17])
+    }
+
+    @Test
+    fun noCoObserversLeavesExportFormatUnchanged() {
+        // The feature must be zero-cost when unused: no co-observers -> no extra columns at all.
+        val lines = exportTsv(listOf(noteAt(noonMs))).split("\n")
+        assertEquals(Country.exportCols.size, lines[0].split("\t").size)
+    }
+
+    @Test
     fun swedenExportUsesSwedishHeadersAndIsoDateAndNameOnly() {
         assumeTrue(!isNorwayExport) // the Sweden (Artportalen) flavor's export format
         val lines = exportTsv(listOf(noteAt(noonMs))).split("\n")
@@ -186,10 +211,13 @@ class ModelTest {
         // Guard against a field saved but not restored (or vice versa): silent data loss on the
         // next launch. Every field is a distinct non-default value, so dropping any one fails
         // equality (id and time differ, so a swap is caught too).
-        val n = noteAt(1717).copy(time = 1800, endTime = 1900, newLoc = true, locRadius = 50, uncertain = true)
+        val n = noteAt(1717).copy(time = 1800, endTime = 1900, newLoc = true, locRadius = 50, uncertain = true,
+            coObservers = listOf("Kari Nordmann", "Ola Hansen"))
         assertEquals(n, noteFromJson(noteToJson(n)))
         // endTime is the only optional field (omitted from JSON when null); confirm null survives.
         assertEquals(null, noteFromJson(noteToJson(n.copy(endTime = null))).endTime)
+        // coObservers is omitted from JSON when empty; confirm an empty list round-trips as empty.
+        assertEquals(emptyList<String>(), noteFromJson(noteToJson(n.copy(coObservers = emptyList()))).coObservers)
     }
 
     @Test

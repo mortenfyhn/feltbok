@@ -106,14 +106,21 @@ see [#90].
 
 ## Manual integration test sample
 
-`artsobs-import-sample.tsv` is a ready-to-paste batch the app would produce — rows
-covering the cases that matter: a name-only registry locality, blank coordinates, an
-`Usikker artsbestemming` = `Ja` flag, a brand-new locality with coordinates + radius,
-a from–til time range, and a **blank `Antall`** (unknown number of individuals, the
-`Storspove` row — see #90). Paste it into "Importer observasjoner" to check the live site still
-accepts the format end-to-end (validation **and** that rows reach "Kontroller funn", not
+`artsobs-import-sample.tsv` is a ready-to-paste batch the app would produce, covering **every
+column the app can emit** so a single paste exercises the whole format: a name-only registry
+locality, blank coordinates, an `Usikker artsbestemming` = `Ja` flag, a brand-new locality with
+coordinates + radius, a from–til time range, a **blank `Antall`** (unknown number of individuals,
+the `Storspove` row — see #90), a **private comment**, a `Kjønn` value, and **`Medobservatør`
+columns** (the `Gråmåke` row lists two co-observers, #128 — every row is padded to that count, so
+the whole batch carries the extra columns). Paste it into "Importer observasjoner" to check the live
+site still accepts the format end-to-end (validation **and** that rows reach "Kontroller funn", not
 just the green success message). It is generated from `exportTsv`, so it stays byte-identical
 to real output. Regenerate it the same way if the export format changes.
+
+The `Medobservatør` columns repeat one header per co-observer; paste-import matches by header name,
+so extra columns beyond the template's 10 are expected to work (the template hjelp says "10 felt
+(kan være flere)") — but a live paste with **11+** co-observers is worth confirming before relying
+on it.
 
 The `Usikker artsbestemming` header is a **misspelling carried by the official template**
 (the Norwegian word is *artsbestemmelse*; the Fugl sheet, col 40, has *-bestemming*).

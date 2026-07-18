@@ -28,6 +28,11 @@ object Country {
         "Publik kommentar", "Privat kommentar", "Osäker artbestämning",
     )
 
+    // Header for the repeated co-observer columns (#128). The Artportalen v4.17 Fåglar template ships
+    // 10 "Med-observatör" columns (note the hyphen); paste-import matches by header name, so exportTsv
+    // appends as many identical columns as the batch needs.
+    val coObserverCol = "Med-observatör"
+
     // ---- bird option vocabularies (Fåglar), exactly as the import expects them ----
     val ages = listOf(
         "ägg", "pulli", "adult",

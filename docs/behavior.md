@@ -57,6 +57,8 @@ Observations are grouped into per-day sections, newest day first, each under a d
 header ("I dag", "I går", else an abbreviated date like "Søn 8. jun"). Within a day,
 newest first. Each row carries species + count on the left, its locality, and the
 time on the right (the day lives in the section header, so the row shows bare HH:mm).
+A row with co-observers also shows a small **`+N`** pill (N = how many joined) beside
+the species — no pill means it was just you.
 
 Saving a new observation scrolls the list up to its day section, so you see the note
 you just added even when it starts a fresh day above where the list was scrolled.
@@ -85,10 +87,35 @@ row opens it for editing.
 marked notes agree on are pre-filled; fields they differ on show a pale preview of the
 current mix ("Skjære, Gråmåke, …") and stay blank. Saving applies only the fields you
 actually changed to every marked note (one undoable step) and returns you to the list
-still marking, so you can make another pass. Comments aren't batch-editable (they're
-rarely the same across notes), so they're hidden here; everything else — species,
+still marking, so you can make another pass. Comments and co-observers aren't
+batch-editable (they're rarely the same across notes, and the party is a per-run
+default rather than a bulk field), so they're hidden here; everything else — species,
 locality, count, age, sex, activity, time — is. Marking a *single* note and tapping
 `Endre` is just the normal single-note editor (nothing to batch).
+
+## Medobservatører (co-observers)
+
+Each observation can record who you observed with. The editor has a **Medobservatører**
+row; tapping it opens a picker that filters the names you've used before (most-used
+first) — tap a name to add or remove it, or type a new one and tap **Legg til «…»** to
+add it as free text. The names you use are remembered locally to feed that
+autocomplete; nothing leaves the phone. Each name has a **Slett** action to remove it
+from the list (for a mistype or a one-off), behind a short confirm so it's never mistaken
+for un-ticking the name from this observation — past observations keep whatever name they
+were saved with, so this only prunes what you'll be offered next time.
+
+The current field party is **sticky** ("følget mitt"): whatever co-observers you set on
+a new observation carry over to the next new one, so once you note down who you're out
+with, every following observation inherits them — you only touch the row when the party
+changes. Editing an *existing* observation's co-observers doesn't disturb the sticky
+party. **Nå er jeg alene** (in the picker) clears the set; save an observation with it
+empty and the party is cleared going forward too. The party never auto-resets on its own — it
+stays exactly as you last set it, since wrongly crediting someone who wasn't there (in a
+public database) is worse than the small chore of clearing it.
+
+On export, co-observers become the template's **`Medobservatør`** columns (one per name,
+matched by header). They must be registered Artsobservasjoner users to link cleanly on
+import; otherwise the row validates but the name may need fixing by hand afterwards.
 
 ## Export
 

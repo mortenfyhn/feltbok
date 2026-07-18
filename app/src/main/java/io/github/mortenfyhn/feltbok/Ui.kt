@@ -31,6 +31,7 @@ import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.foundation.lazy.LazyListState
@@ -604,6 +605,23 @@ private fun CommentBadge(n: Note) {
     }
 }
 
+// A "+N" pill on rows with co-observers (#128): tells at a glance that an obs wasn't just you, and
+// how many joined. No pill = solo. Muted Material container colour, no bespoke tuning.
+@Composable
+private fun CoObserverBadge(n: Note) {
+    if (n.coObservers.isEmpty()) return
+    val cs = MaterialTheme.colorScheme
+    Box(
+        Modifier.padding(start = 6.dp).clip(RoundedCornerShape(50)).background(cs.secondaryContainer)
+            .padding(horizontal = 5.dp, vertical = 1.dp),
+        contentAlignment = Alignment.Center,
+    ) {
+        Text("+${n.coObservers.size}", color = cs.onSecondaryContainer, fontWeight = FontWeight.Bold,
+            fontSize = 10.sp, lineHeight = 10.sp,
+            style = LocalTextStyle.current.copy(platformStyle = PlatformTextStyle(includeFontPadding = false)))
+    }
+}
+
 /** Append [text] bolding only the ♂/♀ glyphs (with their trailing VS15), so a "(♀)" form keeps its
  *  parens at regular weight — bold parens would dwarf the thin symbol, which barely thickens itself. */
 private fun AnnotatedString.Builder.appendBoldSymbols(text: String) {
@@ -666,6 +684,7 @@ private fun NoteRow(n: Note, status: String, selecting: Boolean, selected: Boole
                         maxLines = 1, overflow = TextOverflow.Ellipsis,
                     )
                     CommentBadge(n)
+                    CoObserverBadge(n)
                 }
                 Text(   // [1] sex/age preview
                     buildAnnotatedString {
@@ -800,6 +819,126 @@ fun SearchScreen(vm: MainViewModel) {
             }
         }
     }
+}
+
+// ============================ CO-OBSERVERS ============================
+
+/** The co-observer name picker (#128): mirrors the species search - a filter field over the names
+ *  you've used before (most-used first), a checkmark on the ones on this observation, and a free-text
+ *  "Legg til …" row for a brand-new name. Toggles apply live to the draft, so leaving is just a back
+ *  press. "Tøm følget" clears the set (and, on save, the sticky party with it). */
+@Composable
+fun CoObserverScreen(vm: MainViewModel) {
+    val cs = MaterialTheme.colorScheme
+    var q by remember { mutableStateOf("") }
+    val focus = remember { FocusRequester() }
+    val focusManager = LocalFocusManager.current
+    LaunchedEffect(Unit) { focus.requestFocus() }
+    val query = q.trim()
+    val matches = vm.coObserverOptions().filter { query.isBlank() || fold(it).contains(fold(query)) }
+    // Offer an "add" row only when the typed name isn't already a known option (case-insensitive).
+    val canAdd = query.isNotBlank() && vm.coObserverOptions().none { fold(it) == fold(query) }
+    // A name pending a delete-confirm, so a mis-tap on the always-visible "Slett" can't silently
+    // forget someone (and the dialog spells out that it's a list delete, not un-ticking this obs).
+    var confirmForget by remember { mutableStateOf<String?>(null) }
+
+    // Everything's live on the draft, so there's nothing to cancel: adding any half-typed name and
+    // returning to the editor is the "done" action - shared by Ferdig, Back, and system Back.
+    fun done() { if (query.isNotBlank()) vm.addCoObs(query); vm.closeCoObs() }
+
+    // The keyboard's Done key adds the typed name and stays put (refocus keeps it up), so you can
+    // rattle off several names; pressing it again on an empty field just drops the keyboard (a
+    // natural "done adding" signal), leaving the picker open. You finish via Ferdig/Back (#128).
+    fun addTyped() {
+        if (query.isNotBlank()) { vm.addCoObs(query); q = ""; focus.requestFocus() } else focusManager.clearFocus()
+    }
+    Column(Modifier.fillMaxSize()) {
+        ScreenHeader(
+            Strings.CoObs.title,
+            onCancel = { done() },
+            trailing = { TextButton(onClick = { done() }) { Text(Strings.CoObs.done, color = Color.White) } },
+        )
+        Row(
+            Modifier.fillMaxWidth().background(cs.surface).padding(horizontal = 12.dp, vertical = 8.dp),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            BasicTextField(q, { q = it },
+                Modifier.weight(1f).focusRequester(focus)
+                    .border(1.dp, cs.outline, RoundedCornerShape(8.dp)).padding(horizontal = 12.dp, vertical = 8.dp),
+                singleLine = true,
+                textStyle = LocalTextStyle.current.copy(color = cs.onSurface),
+                cursorBrush = SolidColor(cs.primary),
+                keyboardOptions = KeyboardOptions(autoCorrectEnabled = false, imeAction = ImeAction.Done),
+                keyboardActions = KeyboardActions(onDone = { addTyped() }),
+                decorationBox = { inner ->
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Box(Modifier.weight(1f)) {
+                            if (q.isEmpty()) Text(Strings.CoObs.placeholder, color = cs.onSurfaceVariant)
+                            inner()
+                        }
+                        if (q.isNotEmpty()) Text("✕", color = cs.onSurfaceVariant,
+                            modifier = Modifier.clickable { q = ""; focus.requestFocus() }.padding(start = 8.dp))
+                    }
+                })
+        }
+        LazyColumn(Modifier.weight(1f)) {
+            if (canAdd) item(key = " add") {
+                OptionItem(Strings.CoObs.add(query), selected = false, fullScreen = true) { vm.addCoObs(query); q = "" }
+            }
+            items(matches, key = { it }) { name ->
+                CoObsRow(name, selected = name in vm.dCoObs,
+                    onToggle = { vm.toggleCoObs(name) }, onForget = { confirmForget = name })
+            }
+        }
+        // Clearing the party is a rare housekeeping action, not the screen's confirm - so it sits at
+        // the bottom (out of the top-right "confirm" spot) and stays muted rather than alarming.
+        if (vm.dCoObs.isNotEmpty()) {
+            HorizontalDivider(color = cs.outline.copy(alpha = 0.4f))
+            TextButton(onClick = { vm.clearCoObs() }, modifier = Modifier.fillMaxWidth().background(cs.surface)) {
+                Text(Strings.CoObs.clearAll, color = cs.onSurfaceVariant)
+            }
+        }
+    }
+    confirmForget?.let { name ->
+        AlertDialog(
+            onDismissRequest = { confirmForget = null },
+            title = { Text(Strings.CoObs.forgetTitle(name)) },
+            text = { Text(Strings.CoObs.forgetBody) },
+            confirmButton = {
+                Button(
+                    onClick = { vm.forgetCoObs(name); confirmForget = null },
+                    colors = ButtonDefaults.buttonColors(containerColor = cs.error),
+                ) { Text(Strings.CoObs.remove) }
+            },
+            dismissButton = { TextButton(onClick = { confirmForget = null }) { Text(Strings.cancel) } },
+        )
+    }
+}
+
+/** One known-name row in the co-observer picker. Mirrors the notes-list marking idiom: a leading
+ *  [SelectCircle] that fills with a check when the name is on the observation (tap the row to toggle),
+ *  and a matching selected-row tint. A trailing **Fjern** forgets the name from the autocomplete list
+ *  (mistype / one-off) - its own tap target. Every element is fixed-size so the row never reflows as
+ *  you select/deselect. */
+@Composable
+private fun CoObsRow(name: String, selected: Boolean, onToggle: () -> Unit, onForget: () -> Unit) {
+    val cs = MaterialTheme.colorScheme
+    Row(
+        Modifier.fillMaxWidth().clickable(onClick = onToggle)
+            .background(if (selected) cs.primaryContainer else cs.surface)
+            .padding(start = 16.dp, top = 9.dp, bottom = 9.dp, end = 4.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        SelectCircle(selected)
+        Spacer(Modifier.width(12.dp))
+        Text(name, Modifier.weight(1f), color = cs.onSurface, fontWeight = FontWeight.Medium,
+            maxLines = 1, overflow = TextOverflow.Ellipsis)
+        // Horizontal-only padding: the row height stays governed by the select circle (like the
+        // notes list's marking rows), so co-observer rows line up with observation rows.
+        Text(Strings.CoObs.remove, color = cs.error,
+            modifier = Modifier.clickable(onClick = onForget).padding(horizontal = 12.dp))
+    }
+    HorizontalDivider(color = cs.outline.copy(alpha = 0.4f))
 }
 
 // ============================ DETAIL ============================
@@ -989,6 +1128,16 @@ fun DetailScreen(vm: MainViewModel) {
                 else Text(displayTimeRange(tMs, vm.dEndTime))
             }
             if (showTime) TimeDialog(vm) { showTime = false }
+            // Co-observers (#128) sit last, below time: tap to open the name picker. Blank value when
+            // it's just you. Not batch-editable (the sticky party is per-run, not a bulk field), so
+            // hidden in batch mode like the comments.
+            if (!batch) {
+                FieldRow(Strings.Detail.coObservers, onClick = { vm.openCoObs() }) {
+                    if (vm.dCoObs.isNotEmpty())
+                        Text(vm.dCoObs.joinToString(", "), fontWeight = FontWeight.Medium,
+                            maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.weight(1f, fill = false))
+                }
+            }
         }
         // Delete and save sit side by side - red left, green right - so the destructive action
         // isn't stacked directly under the thumb's path to Lagre, where it was easy to hit by
@@ -1226,7 +1375,10 @@ private fun FieldRow(
         .padding(horizontal = 16.dp, vertical = 10.dp)
     Row(base, verticalAlignment = Alignment.CenterVertically) {
         if (label != null) {
-            Text(label, color = cs.onSurfaceVariant, fontSize = 14.sp, modifier = Modifier.width(84.dp))
+            // widthIn(min) not a fixed width: short labels still align at 84dp, but a long one (e.g.
+            // "Medobservatører") takes the width it needs on one line instead of wrapping to two.
+            Text(label, color = cs.onSurfaceVariant, fontSize = 14.sp, maxLines = 1,
+                modifier = Modifier.widthIn(min = 84.dp))
             Spacer(Modifier.width(12.dp))
         }
         // Labelless rows left-align their value (the value alone is self-explanatory).

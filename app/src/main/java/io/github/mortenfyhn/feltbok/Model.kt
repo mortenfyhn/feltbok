@@ -105,6 +105,7 @@ data class Note(
     val newLoc: Boolean = false, // a brand-new spot: export with coordinates so the import mints it
     val locRadius: Int = 0, // chosen radius in metres for a new spot (-> Nøyaktighet)
     val uncertain: Boolean = false, // uncertain species determination (-> "Usikker artsbestemming")
+    val coObservers: List<String> = emptyList(), // who you observed with (-> Medobservatør columns)
     // Kommune the obs belongs to, stamped at save for the per-kommune export grouping. A new spot
     // resolves it from the nearest registry locality at creation; blank on notes saved before this
     // existed (grouping then falls back to the locFull / nearest-locality lookup).
@@ -614,6 +615,7 @@ fun noteToJson(n: Note): JSONObject = JSONObject().apply {
     put("locName", n.locName); put("locFull", n.locFull)
     put("lat", n.lat); put("lon", n.lon)
     put("newLoc", n.newLoc); put("locRadius", n.locRadius); put("uncertain", n.uncertain)
+    if (n.coObservers.isNotEmpty()) put("coObservers", JSONArray(n.coObservers))
     if (n.kommune.isNotBlank()) put("kommune", n.kommune)
 }
 
@@ -636,6 +638,7 @@ fun noteFromJson(o: JSONObject): Note = Note(
     newLoc = o.optBoolean("newLoc"),
     locRadius = o.optInt("locRadius"),
     uncertain = o.optBoolean("uncertain"),
+    coObservers = o.optJSONArray("coObservers")?.let { a -> (0 until a.length()).map { a.getString(it) } } ?: emptyList(),
     kommune = o.optString("kommune"),
 )
 
@@ -752,6 +755,27 @@ private fun saveCounts(ctx: Context, file: String, counts: Map<String, Int>) {
 fun loadActUses(ctx: Context) = loadCounts(ctx, "act_uses.json")
 fun saveActUses(ctx: Context, uses: Map<String, Int>) = saveCounts(ctx, "act_uses.json", uses)
 
+// ---- co-observer name register (autocomplete) + "følget mitt" (the sticky current party) ----
+
+/** Pick counts per co-observer name, so names you enter often surface first in the picker. */
+fun loadCoObsUses(ctx: Context) = loadCounts(ctx, "coobs_uses.json")
+fun saveCoObsUses(ctx: Context, uses: Map<String, Int>) = saveCounts(ctx, "coobs_uses.json", uses)
+
+private fun partyFile(ctx: Context) = File(ctx.filesDir, "party.json")
+
+/** The current field party ("følget mitt"): a sticky, explicit name set that pre-fills every new
+ *  observation. Persisted so it survives restarts - a trip lasts across app launches. */
+fun loadParty(ctx: Context): List<String> {
+    val f = partyFile(ctx)
+    if (!f.exists()) return emptyList()
+    return runCatching {
+        val a = JSONArray(f.readText())
+        (0 until a.length()).map { a.getString(it) }
+    }.getOrDefault(emptyList())
+}
+
+fun saveParty(ctx: Context, party: List<String>) = partyFile(ctx).writeText(JSONArray(party).toString())
+
 // ---- export (paste format; columns/headers per Country) ----
 
 fun exportTsv(notes: List<Note>): String {
@@ -762,6 +786,9 @@ fun exportTsv(notes: List<Note>): String {
     //    links to a public locality. Only manual selection on the site links to public.
     // So we emit the bare name and let the user scope the import form to the kommune to
     // disambiguate, fixing the rest by hand. Nord/Øst/Nøyaktighet are left blank.
+    // As many trailing "Medobservatør" columns as the busiest row needs; 0 when nobody logged a
+    // co-observer, so the format is byte-for-byte unchanged when the feature is unused (#128).
+    val maxCoObs = notes.maxOfOrNull { it.coObservers.size } ?: 0
     val rows = notes.sortedBy { it.time }.map { n ->
         val d = exportDate(n.time); val t = exportTime(n.time)
         // Til defaults to Fra; an explicit endTime makes it a range (may cross midnight).
@@ -774,17 +801,20 @@ fun exportTsv(notes: List<Note>): String {
         val nord = if (n.newLoc) String.format(Locale.US, "%.6f", n.lat) else ""
         val ost = if (n.newLoc) String.format(Locale.US, "%.6f", n.lon) else ""
         val noy = if (n.newLoc) "${n.locRadius} m" else ""
-        listOf(
+        // Pad each row's co-observers out to maxCoObs so every row has the same column count.
+        val coObs = List(maxCoObs) { n.coObservers.getOrElse(it) { "" } }
+        (listOf(
             n.species, if (n.count == UNKNOWN_COUNT) "" else n.count.toString(), n.age, n.sex, n.activity, loc,
             nord, ost, noy, d, t, dEnd, tEnd, n.publicComment, n.privateComment,
             if (n.uncertain) Country.uncertainYes else "",
-        ).joinToString("\t") { cell ->
+        ) + coObs).joinToString("\t") { cell ->
             // A tab or newline in a free-text comment would split the row and desync
             // every following column on paste-import; flatten them to spaces.
             cell.replace('\t', ' ').replace('\n', ' ').replace('\r', ' ')
         }
     }
-    return (listOf(Country.exportCols.joinToString("\t")) + rows).joinToString("\n")
+    val header = (Country.exportCols + List(maxCoObs) { Country.coObserverCol }).joinToString("\t")
+    return (listOf(header) + rows).joinToString("\n")
 }
 
 /** A kommune's worth of notes, for a self-contained per-kommune paste block. */

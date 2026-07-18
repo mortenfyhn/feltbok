@@ -2,6 +2,9 @@
 
 ## Neste utgivelse
 
+- **Medobservatører**: noter hvem du var ute med på hver observasjon. Følget henger
+  igjen fra observasjon til observasjon, så du skriv det inn én gang og slepp å tenke på
+  det – og navna du bruker foreslås neste gang. De blir med som egne kolonner i eksporten.
 - **Usikker artsbestemming** er tilbake på observasjonssida – huk av når du er usikker
   på bestemminga, så eksporteres den med spørsmålstegn (og «Ja» i usikkerhets-kolonna).
 - Nytt utseende når du markerer observasjoner: en ring til venstre på hver rad (og

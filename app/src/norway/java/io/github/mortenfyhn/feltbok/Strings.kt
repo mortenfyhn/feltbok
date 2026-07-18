@@ -81,6 +81,7 @@ object Strings {
         const val commentPublic = "Åpen kommentar"
         const val commentPrivate = "Privat kommentar"
         const val uncertain = "Usikker artsbestemming"
+        const val coObservers = "Medobservatører"
         const val time = "Tid"
         const val delete = "Slett"
         const val copy = "Kopier"
@@ -94,6 +95,20 @@ object Strings {
         // Undo snackbar after leaving the editor without saving (#122); wording depends on whether
         // it was a new observation or edits to an existing one.
         fun discarded(wasEdit: Boolean) = if (wasEdit) "Endringer forkasta" else "Observasjon forkasta"
+    }
+
+    // The co-observer picker (#128): search/add names, most-used first, tap to toggle onto the obs.
+    object CoObs {
+        const val title = "Medobservatører"
+        const val placeholder = "Søk eller skriv navn…"
+        const val done = "Ferdig"
+        const val clearAll = "Nå er jeg alene"   // reset: clears everyone (and the sticky party on save)
+        const val remove = "Slett"   // delete a name from the autocomplete list entirely
+
+        // Confirm the delete so it's never mistaken for un-ticking the name from this observation.
+        fun forgetTitle(name: String) = "Slett «$name»?"
+        const val forgetBody = "Navnet fjernes fra lista over medobservatører. Tidligere observasjoner beholder det."
+        fun add(name: String) = "Legg til «$name»"
     }
 
     object Time {

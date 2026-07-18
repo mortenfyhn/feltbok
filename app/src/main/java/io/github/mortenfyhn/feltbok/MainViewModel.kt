@@ -12,7 +12,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
-enum class Screen { LIST, SEARCH, DETAIL, LOCALITY, SYNC }
+enum class Screen { LIST, SEARCH, DETAIL, LOCALITY, COOBS, SYNC }
 
 /**
  * Single source of truth for the UI. Holds the day's notes (persisted), the live
@@ -170,6 +170,45 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
     /** Per-activity use counts, so each user's most-used activities rise to the top. */
     private val actUses = mutableStateMapOf<String, Int>().apply { putAll(loadActUses(app)) }
 
+    // ---- co-observers (#128): a name register for autocomplete, plus the sticky "følget mitt" party.
+    /** Pick counts per co-observer name, so names you enter often surface first in the picker. */
+    private val coObsUses = mutableStateMapOf<String, Int>().apply { putAll(loadCoObsUses(app)) }
+
+    /** The current field party ("følget mitt"): a sticky, explicit set pre-filled onto every new
+     *  observation. Persisted so a trip spans app launches; only ever changed on purpose (saving a
+     *  new obs, or an explicit clear) - never auto-reset, since mis-attributing an obs to someone who
+     *  wasn't there is worse than the locality case (#128). */
+    private val party = mutableStateListOf<String>().apply { addAll(loadParty(app)) }
+
+    /** Known co-observer names for the picker: your used names (most-used first), unioned with
+     *  whoever's on the draft right now (so a just-added free-text name is listed too). */
+    fun coObserverOptions(): List<String> {
+        val used = coObsUses.entries.sortedByDescending { it.value }.map { it.key }
+        return (used + dCoObs).distinct()
+    }
+
+    /** Toggle a name on/off the draft's co-observers. */
+    fun toggleCoObs(name: String) { if (!dCoObs.remove(name)) dCoObs.add(name) }
+
+    /** Add a free-text name to the draft (deduped, trimmed); no-op on blank. */
+    fun addCoObs(name: String) {
+        val n = name.trim()
+        if (n.isNotBlank() && n !in dCoObs) dCoObs.add(n)
+    }
+
+    /** Clear the draft's co-observers ("tøm følget"); the party syncs to this on save. */
+    fun clearCoObs() = dCoObs.clear()
+
+    /** Forget a name entirely - drop it from the autocomplete register (so a mistyped or one-off
+     *  name doesn't linger), and from the draft + party if it's there. Past notes keep their own
+     *  copies, so this only prunes what you'll be *offered* going forward. */
+    fun forgetCoObs(name: String) {
+        coObsUses.remove(name)
+        saveCoObsUses(ctx, coObsUses)
+        dCoObs.remove(name)
+        if (party.remove(name)) saveParty(ctx, party)
+    }
+
     /** Aktivitet options with your most-used first, then the rest in the default order. */
     fun activityOptions(): List<String> {
         val (used, rest) = Country.activities.partition { (actUses[it] ?: 0) > 0 }
@@ -207,6 +246,7 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
     var dTime by mutableStateOf(0L)
     var dEndTime by mutableStateOf<Long?>(null)   // observation end; null = single time point
     var dUncertain by mutableStateOf(false)
+    val dCoObs = mutableStateListOf<String>()      // co-observers on the draft (#128)
     val isEditing: Boolean get() = editingId != null
 
     /** Whether leaving the editor would actually lose work, so Back/✕ can skip the discard confirm
@@ -219,6 +259,7 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
             dAge != orig.age || dAct != orig.activity || dSex != orig.sex ||
             dPub != orig.publicComment || dPriv != orig.privateComment ||
             dTime != orig.time || dEndTime != orig.endTime || dUncertain != orig.uncertain ||
+            dCoObs.toList() != orig.coObservers ||
             (loc?.lokalitet ?: "") != orig.locName ||
             (loc?.lat ?: 0.0) != orig.lat || (loc?.lon ?: 0.0) != orig.lon
     }
@@ -302,6 +343,7 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
         dSpecies = ""; dLatin = ""; dCount = 1
         dAge = ""; dAct = ""; dSex = ""; dPub = ""; dPriv = ""; dUncertain = false
         dLoc = null; dTime = 0L; dEndTime = null
+        dCoObs.clear(); dCoObs.addAll(party)   // a new obs inherits the current party (#128)
     }
 
     fun changeSpecies() { changingSpecies = true; screen = Screen.SEARCH }
@@ -332,6 +374,7 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
         dAge = n.age; dAct = n.activity; dSex = n.sex
         dPub = n.publicComment; dPriv = n.privateComment
         dTime = n.time; dEndTime = n.endTime; dUncertain = n.uncertain
+        dCoObs.clear(); dCoObs.addAll(n.coObservers)
         dLoc = localities.firstOrNull { it.lokalitet == n.locName && it.lat == n.lat && it.lon == n.lon }
             ?: Locality("", n.locName, "", "", n.lat, n.lon, 0, 0.0)
         screen = Screen.DETAIL
@@ -382,6 +425,10 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
     fun leaveLocalityPicker() {
         if (pickingCurrent) { pickingCurrent = false; screen = Screen.LIST } else backToDetail()
     }
+
+    // ---- co-observer picker (#128) ----
+    fun openCoObs() { screen = Screen.COOBS }
+    fun closeCoObs() { screen = Screen.DETAIL }
 
     // ---- "Synk mine lokaliteter" (pull the user's own privates from Artsobservasjoner) ----
     fun openSync() { screen = Screen.SYNC }
@@ -457,7 +504,7 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
         dAge = shared { it.age } ?: ""
         dSex = shared { it.sex } ?: ""
         dAct = shared { it.activity } ?: ""
-        dPub = ""; dPriv = ""; dUncertain = false
+        dPub = ""; dPriv = ""; dUncertain = false; dCoObs.clear()
         val locKey = shared { it.locKey() }
         dLoc = if (locKey != null) sel.first().let { n ->
             localities.firstOrNull { it.lokalitet == n.locName && it.lat == n.lat && it.lon == n.lon }
@@ -513,7 +560,7 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
             locName = loc?.lokalitet ?: "", locFull = "",
             lat = loc?.lat ?: 0.0, lon = loc?.lon ?: 0.0,
             newLoc = loc?.newLoc == true, locRadius = if (loc?.newLoc == true) loc.radius.toInt() else 0,
-            uncertain = dUncertain, kommune = loc?.kommune ?: "",
+            uncertain = dUncertain, coObservers = dCoObs.toList(), kommune = loc?.kommune ?: "",
         )
         if (isEditing) {
             val i = notes.indexOfFirst { it.id == n.id }
@@ -523,6 +570,17 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
         if (dAct.isNotBlank()) {
             actUses[dAct] = (actUses[dAct] ?: 0) + 1
             saveActUses(ctx, actUses)
+        }
+        // Co-observers: bump the name register (for autocomplete). On a new obs the party sticks to
+        // what you just used, so the next new obs inherits it - the "everything for this trip is me
+        // + these people" default (#128). Editing an existing note leaves the party untouched.
+        if (dCoObs.isNotEmpty()) {
+            dCoObs.forEach { coObsUses[it] = (coObsUses[it] ?: 0) + 1 }
+            saveCoObsUses(ctx, coObsUses)
+        }
+        if (!isEditing) {
+            party.clear(); party.addAll(dCoObs)
+            saveParty(ctx, party)
         }
         persist()
     }

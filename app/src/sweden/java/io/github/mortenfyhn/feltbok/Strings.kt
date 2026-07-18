@@ -70,6 +70,7 @@ object Strings {
         const val commentPublic = "Publik kommentar"
         const val commentPrivate = "Privat kommentar"
         const val uncertain = "Osäker artbestämning"
+        const val coObservers = "Medobservatörer"
         const val time = "Tid"
         const val delete = "Ta bort"
         const val copy = "Kopiera"
@@ -79,6 +80,17 @@ object Strings {
         fun savedNewToast(species: String) = "Observation sparad ($species)"
 
         fun discarded(wasEdit: Boolean) = if (wasEdit) "Ändringar förkastade" else "Observation förkastad"
+    }
+
+    object CoObs {
+        const val title = "Medobservatörer"
+        const val placeholder = "Sök eller skriv namn…"
+        const val done = "Klar"
+        const val clearAll = "Nu är jag ensam"   // reset: clears everyone (and the sticky party on save)
+        const val remove = "Ta bort"   // delete a name from the autocomplete list entirely
+        fun forgetTitle(name: String) = "Ta bort «$name»?"
+        const val forgetBody = "Namnet tas bort från listan över medobservatörer. Tidigare observationer behåller det."
+        fun add(name: String) = "Lägg till «$name»"
     }
 
     object Time {
