@@ -54,6 +54,13 @@ object MapPalette {
     const val SuperFillSolid = 0xE62E7A33L
     const val SuperStroke = 0xFF173A14L
 
+    // Sweden's "hollow" style (#155): Artportalen's localities are almost all overlapping circles, so
+    // filled disks turn dense areas (Stockholm) into a solid blob. Draw them the way artportalen.se
+    // does — a grey boundary ring (this colour), no fill, with the same centre marker Norway draws for
+    // a 0 m locality: a green dot for a regular locality, a deep-green triangle for a superlocality
+    // (reusing the green fills/strokes below). The full fill only appears on the selected one.
+    const val SeRing = 0x99555555L         // grey boundary ring (all localities)
+
     // Your own locality — yellow
     const val YellowFill = 0x55E0A100L
     const val YellowFillPale = 0x1EE0A100L

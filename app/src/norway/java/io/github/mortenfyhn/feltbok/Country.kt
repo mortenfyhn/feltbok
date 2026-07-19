@@ -89,6 +89,10 @@ object Country {
     val accuracy = "100 m"
 
     // ---- geography / online services ----
+    // Locality map style. Norway has real polygons and lower density, so filled disks read fine.
+    // (Sweden's near-all-circle, heavily-overlapping localities use the hollow style instead.)
+    val hollowLocalities = false
+
     // Fallback map centre when there's no GPS fix or nearby locality (central Norway).
     val mapCenterLat = 63.7
     val mapCenterLon = 8.7

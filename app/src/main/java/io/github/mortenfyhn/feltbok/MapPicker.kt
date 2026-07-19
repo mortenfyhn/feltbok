@@ -363,6 +363,10 @@ fun LocalityPreview(vm: MainViewModel, modifier: Modifier = Modifier) {
 // Polygons draw their own shape and ignore radius.
 private const val POINT_DOT_PX = 15f
 
+/** Circumradius (px) of Sweden's superlocality centre triangle — a touch larger than [POINT_DOT_PX]
+ *  so the triangle reads as distinct from (and a little bolder than) a regular locality's dot. */
+private const val SUPER_MARK_PX = 18f
+
 /** Below this zoom, localities whose on-screen footprint is smaller than
  *  [DECLUTTER_MIN_SPAN_PX] (px half-extent) are hidden, so a far-out view of many
  *  harvested kommuner isn't a wall of dots. Tune these two to taste. */
@@ -579,6 +583,10 @@ private class LocalityOverlay(
     private val superFillPale = fillPaint(MapPalette.SuperFillPale)
     private val superFillSolid = fillPaint(MapPalette.SuperFillSolid)
     private val superStroke = strokePaint(MapPalette.SuperStroke, 2f)
+
+    // Sweden's hollow style (Country.hollowLocalities): a grey boundary ring, no fill; the centre
+    // marker reuses the green fill/stroke paints below (same as a Norway 0 m locality).
+    private val seRing = strokePaint(MapPalette.SeRing, 2.5f)
     private val privFill = fillPaint(MapPalette.YellowFill)
     private val privFillPale = fillPaint(MapPalette.YellowFillPale)
     private val privStroke = strokePaint(MapPalette.YellowStroke, 2f)
@@ -635,6 +643,27 @@ private class LocalityOverlay(
             b[3] < bb.lonWest || b[2] > bb.lonEast)
     }
 
+    /** Sweden's hollow marker: an unfilled grey radius circle + a fixed-size centre marker, so
+     *  overlapping circles don't fill the map. The centre is exactly what Norway draws for a 0 m
+     *  locality (same green fill+stroke, [POINT_DOT_PX]): a dot for a regular locality, a slightly
+     *  larger deep-green triangle for a superlocality. [rPx] is the footprint radius. */
+    private fun drawHollow(c: Canvas, cx: Float, cy: Float, rPx: Float, isSuper: Boolean) {
+        c.drawCircle(cx, cy, rPx, seRing)
+        if (isSuper) {
+            val t = SUPER_MARK_PX   // equilateral triangle pointing up, centred
+            path.reset()
+            path.moveTo(cx, cy - t)
+            path.lineTo(cx + t * 0.866f, cy + t * 0.5f)
+            path.lineTo(cx - t * 0.866f, cy + t * 0.5f)
+            path.close()
+            c.drawPath(path, superFillSolid)
+            c.drawPath(path, superStroke)
+        } else {
+            c.drawCircle(cx, cy, POINT_DOT_PX, fill)
+            c.drawCircle(cx, cy, POINT_DOT_PX, stroke)
+        }
+    }
+
     /** Draw a locality's real polygon, or its radius circle if it's a point locality. */
     private fun drawShape(c: Canvas, proj: Projection, loc: Locality,
         cx: Float, cy: Float, rPx: Float, fp: Paint, sp: Paint) {
@@ -688,8 +717,12 @@ private class LocalityOverlay(
     private fun labelFor(loc: Locality, proj: Projection, ppm: Double, markerR: Float, priority: Float): LabelCandidate {
         val a = loc.labelAnchor
         proj.toPixels(GeoPoint(a[0], a[1]), p)
-        val centred = loc.polygon.isNotEmpty() || (loc.radius > 0.0 && loc.radius * ppm >= POINT_DOT_PX)
-        return makeLabel(loc.lokalitet, p.x.toFloat(), p.y.toFloat(), markerR, centred, loc.public, loc.isSuper, priority)
+        // A hollow (Sweden) locality reads like a Norway point locality: its centre marker is the
+        // anchor, so the name sits just below that small marker (not centred in the big faint ring).
+        val hollow = Country.hollowLocalities && loc.public && loc.polygon.isEmpty()
+        val centred = !hollow && (loc.polygon.isNotEmpty() || (loc.radius > 0.0 && loc.radius * ppm >= POINT_DOT_PX))
+        val mr = if (!hollow) markerR else if (loc.isSuper) SUPER_MARK_PX else POINT_DOT_PX
+        return makeLabel(loc.lokalitet, p.x.toFloat(), p.y.toFloat(), mr, centred, loc.public, loc.isSuper, priority)
     }
 
     /** Draw a queued label, wrapped, from its first baseline down - dark text over a halo tinted
@@ -746,24 +779,30 @@ private class LocalityOverlay(
             proj.toPixels(GeoPoint(loc.lat, loc.lon), p)
             val rPx = radiusPx(loc, ppm)
             val px = p.x.toFloat(); val py = p.y.toFloat()
-            // Fade large localities (big circles/polygons) so they don't dominate the map.
-            // New spots have public=false, so they draw yellow like the user's own.
-            val big = span > LARGE_FOOTPRINT_PX
-            val fp = when {
-                !loc.public -> if (big) privFillPale else privFill
-                loc.isSuper -> when {
-                    big -> superFillPale
-                    loc.polygon.isEmpty() && loc.radius <= 0.0 -> superFillSolid   // tiny dot: paint it solid
-                    else -> superFill
+            // Sweden: public circles draw hollow (ring + dot) so the dense overlap stays readable;
+            // polygons (a handful) and the user's own localities keep the filled style below.
+            if (Country.hollowLocalities && loc.public && loc.polygon.isEmpty()) {
+                drawHollow(c, px, py, rPx, loc.isSuper)
+            } else {
+                // Fade large localities (big circles/polygons) so they don't dominate the map.
+                // New spots have public=false, so they draw yellow like the user's own.
+                val big = span > LARGE_FOOTPRINT_PX
+                val fp = when {
+                    !loc.public -> if (big) privFillPale else privFill
+                    loc.isSuper -> when {
+                        big -> superFillPale
+                        loc.polygon.isEmpty() && loc.radius <= 0.0 -> superFillSolid   // tiny dot: paint it solid
+                        else -> superFill
+                    }
+                    else -> if (big) fillPale else fill
                 }
-                else -> if (big) fillPale else fill
+                val sp = when {
+                    !loc.public -> privStroke
+                    loc.isSuper -> superStroke
+                    else -> stroke
+                }
+                drawShape(c, proj, loc, px, py, rPx, fp, sp)
             }
-            val sp = when {
-                !loc.public -> privStroke
-                loc.isSuper -> superStroke
-                else -> stroke
-            }
-            drawShape(c, proj, loc, px, py, rPx, fp, sp)
             if (BuildConfig.DEV && SHOW_HITBOXES) {  // dev hitbox overlay (off by default)
                 val fpPaint = if (tooBigToTap(loc, ppm, map.width, map.height)) dbgBlocked else dbgFootprint
                 when {

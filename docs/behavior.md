@@ -142,6 +142,21 @@ On export, co-observers become the template's **`Medobservatør`** columns (one 
 matched by header). They must be registered Artsobservasjoner users to link cleanly on
 import; otherwise the row validates but the name may need fixing by hand afterwards.
 
+## Locality picker (map)
+
+Tapping the locality field (or the status strip) opens a map of the registered localities over
+OpenStreetMap tiles. **Norway** draws each locality as a filled green disk at its real radius
+(polygons trace their real outline; superlocalities are a deeper green), and the selected one is
+highlighted; far-out views hide the smallest ones so the map doesn't clutter.
+
+**Sweden** renders them the way Artportalen does, because Artportalen's localities are almost all
+overlapping circles (5 polygons in ~29 000) — filled disks turn a city like Stockholm into a solid
+green blob. So each locality is instead a **grey outline ring** (no fill) with a small centre marker:
+a **green dot** for a regular locality (identical to a Norway 0 m locality) or a **deep-green
+triangle** for a superlocality, with the name just below the marker. The full green fill appears only
+on the one you've selected. Everything else about the picker (tap-to-select, new-spot placement,
+zoom declutter, GPS dot) is the same across both builds. The one flag is `Country.hollowLocalities`.
+
 ## Export
 
 One **Eksporter** button (top right of the status strip) opens a step-by-step

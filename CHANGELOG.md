@@ -9,6 +9,9 @@
 - Artsnavna kommer nå fra IOC World Bird List, så feil svenske navn er retta (bl.a.
   «gulsångare» → «härmsångare») og de norske navna har rett skrivemåte.
 - I den svenske appen forkortes alder/kjønn i lista nå kompakt («ad ♂»), som i den norske.
+- Kartet i den svenske appen tegner lokalitetene slik Artportalen gjør: grå omriss uten
+  fyll, med en grønn prikk (vanlig lokalitet) eller grønn trekant (superlokalitet) i midten.
+  Tette områder (som Stockholm) blir dermed lesbare i stedet for en grønn klump.
 - **Medobservatører**: noter hvem du var ute med på hver observasjon. Følget henger
   igjen fra observasjon til observasjon, så du skriv det inn én gang og slepp å tenke på
   det – og navna du bruker foreslås neste gang. De blir med som egne kolonner i eksporten.

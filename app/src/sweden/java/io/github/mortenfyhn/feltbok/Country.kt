@@ -75,6 +75,11 @@ object Country {
     val accuracy = "100 m"
 
     // ---- geography / online services ----
+    // Locality map style: Artportalen's localities are almost all overlapping circles (5 polygons in
+    // ~29k), so filled disks turn dense areas into a solid blob. Draw them hollow (ring + centre dot,
+    // fill on select), supers as deep-green triangles — the way artportalen.se draws them (#155).
+    val hollowLocalities = true
+
     // Fallback map centre when there's no GPS fix or nearby locality (central-south Sweden).
     val mapCenterLat = 59.5
     val mapCenterLon = 15.0
