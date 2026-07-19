@@ -218,7 +218,8 @@ fun ListScreen(vm: MainViewModel, listState: LazyListState) {
                             }
                             items(group.notes, key = { it.id }) { n ->
                                 NoteRow(
-                                    n, vm.noteName(n), vm.statusFor(n.latin), selecting = selecting, selected = n.id in vm.selected,
+                                    n, vm.noteName(n), vm.langPrefs.primary == Lang.LATIN, vm.statusFor(n.latin),
+                                    selecting = selecting, selected = n.id in vm.selected,
                                     // Tap toggles the mark while marking, else opens the editor. Entering
                                     // selection (long-press, optionally dragged into a range) is handled by
                                     // the list's dragToSelect so it doesn't fight a row-level long-press -
@@ -643,7 +644,7 @@ private fun AnnotatedString.Builder.appendBoldSymbols(text: String) {
 }
 
 @Composable
-private fun NoteRow(n: Note, name: String, status: String, selecting: Boolean, selected: Boolean, onClick: () -> Unit) {
+private fun NoteRow(n: Note, name: String, nameItalic: Boolean, status: String, selecting: Boolean, selected: Boolean, onClick: () -> Unit) {
     val cs = MaterialTheme.colorScheme
     val hasLoc = n.locName.isNotBlank()
     // age + sex (sex symbol bolded so the thin ♂/♀ glyphs read at a glance), each shown only when
@@ -676,7 +677,8 @@ private fun NoteRow(n: Note, name: String, status: String, selecting: Boolean, s
                         buildAnnotatedString {
                             val count = if (n.count == UNKNOWN_COUNT) "?" else n.count.toString()
                             withStyle(SpanStyle(color = cs.onPrimaryContainer, fontWeight = FontWeight.Bold)) { append("$count ") }
-                            append(if (n.uncertain) "$name?" else name)
+                            val shown = if (n.uncertain) "$name?" else name
+                            if (nameItalic) withStyle(SpanStyle(fontStyle = FontStyle.Italic)) { append(shown) } else append(shown)
                             // Status code (VU/SE/…) inline right after the name, coloured like the badge.
                             if (status.isNotBlank()) {
                                 withStyle(SpanStyle(color = statusColor(status, cs), fontWeight = FontWeight.Bold, fontSize = 11.sp, letterSpacing = 0.5.sp)) {
@@ -805,7 +807,8 @@ fun SearchScreen(vm: MainViewModel) {
                         .padding(horizontal = 16.dp, vertical = 9.dp),
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
-                    Text(vm.primaryName(s), fontWeight = FontWeight.Medium, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                    Text(vm.primaryName(s), fontWeight = FontWeight.Medium, maxLines = 1, overflow = TextOverflow.Ellipsis,
+                        fontStyle = if (vm.langPrefs.primary == Lang.LATIN) FontStyle.Italic else FontStyle.Normal)
                     StatusBadge(s.status)
                     // Secondary name in the user's chosen secondary language (#155); Latin is italic
                     // (scientific convention), a common name is not.
@@ -1120,7 +1123,8 @@ fun DetailScreen(vm: MainViewModel) {
                     // Common name keeps its full width; the latin is what gets ellipsized when tight.
                     val disp = vm.nameForLatin(vm.dLatin, vm.dSpecies)
                     Text(disp + if (vm.dUncertain && disp.isNotBlank()) "?" else "",
-                        fontWeight = FontWeight.Medium, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                        fontWeight = FontWeight.Medium, maxLines = 1, overflow = TextOverflow.Ellipsis,
+                        fontStyle = if (vm.langPrefs.primary == Lang.LATIN) FontStyle.Italic else FontStyle.Normal)
                     // The scientific name underneath, unless it's already what's shown (primary = Latin).
                     if (vm.dLatin.isNotBlank() && disp != vm.dLatin)
                         Text("  ${vm.dLatin}", color = cs.onSurfaceVariant, fontStyle = FontStyle.Italic,

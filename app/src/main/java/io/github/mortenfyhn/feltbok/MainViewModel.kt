@@ -57,22 +57,35 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
         saveLangPrefs(ctx, prefs)
     }
 
+    /** Swedish names are shown with an initial capital ("Svartvit flugsnappare"); Norwegian stays
+     *  all-lower-case and Latin keeps its own capitalised genus, so only SVENSK is transformed (#155).
+     *  Display-only: the stored data (and the export name) stay lower-case. */
+    private fun cap(name: String, lang: Lang) =
+        if (lang == Lang.SVENSK) name.replaceFirstChar { it.uppercaseChar() } else name
+
     /** A species' name in [lang], falling back to Latin when a source lacks that name (e.g. IOC has
      *  no Swedish for a Norwegian-only vagrant) - Latin is the universal common denominator, so a
      *  primary name never shows blank. */
-    private fun Species.display(lang: Lang) = name(lang).ifBlank { latin }
+    private fun Species.display(lang: Lang): String {
+        val raw = name(lang)
+        return if (raw.isBlank()) latin else cap(raw, lang)
+    }
 
     fun primaryName(s: Species): String = s.display(langPrefs.primary)
 
     /** The secondary name to show under the primary, or null when it's blank (a source lacks it) or
-     *  would just repeat the primary (e.g. same language, or a missing name fell back to Latin). */
-    fun secondaryName(s: Species): String? =
-        s.name(langPrefs.secondary).takeIf { it.isNotBlank() && it != primaryName(s) }
+     *  would just repeat the primary (e.g. same language, or a missing name fell back to Latin). The
+     *  repeat test is on the raw names so a case-only difference (Grågås/grågås) still collapses. */
+    fun secondaryName(s: Species): String? {
+        val sec = s.name(langPrefs.secondary)
+        val pri = s.name(langPrefs.primary).ifBlank { s.latin }
+        return if (sec.isBlank() || sec.equals(pri, ignoreCase = true)) null else cap(sec, langPrefs.secondary)
+    }
 
     /** The primary display name for a species identified by [latin], resolved so it honours the
      *  current language choice; [fallback] (the stored name) is used if the latin isn't loaded. */
     fun nameForLatin(latin: String, fallback: String): String =
-        speciesByLatin[latin]?.let { primaryName(it) } ?: fallback
+        speciesByLatin[latin]?.let { primaryName(it) } ?: cap(fallback, Country.exportLang)
 
     /** The primary display name for a saved note (see [nameForLatin]). */
     fun noteName(n: Note): String = nameForLatin(n.latin, n.species)

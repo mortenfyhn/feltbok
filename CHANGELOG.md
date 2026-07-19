@@ -12,6 +12,8 @@
 - Kartet i den svenske appen tegner lokalitetene slik Artportalen gjør: grå omriss uten
   fyll, med en grønn prikk (vanlig lokalitet) eller grønn trekant (superlokalitet) i midten.
   Tette områder (som Stockholm) blir dermed lesbare i stedet for en grønn klump.
+- Svenske artsnavn vises nå med stor forbokstav (som på Artportalen); norske navn er
+  fortsatt små, og latinske navn vises alltid i kursiv.
 - **Medobservatører**: noter hvem du var ute med på hver observasjon. Følget henger
   igjen fra observasjon til observasjon, så du skriv det inn én gang og slepp å tenke på
   det – og navna du bruker foreslås neste gang. De blir med som egne kolonner i eksporten.

@@ -65,6 +65,11 @@ Sweden build Swedish with Norwegian underneath. A secondary equal to the primary
 isn't drawn; a species a source lacks the chosen name for falls back to Latin, so a
 primary name is never blank.
 
+Names are cased by convention: **Swedish** names show with an initial capital ("Svartvit
+flugsnappare", as on Artportalen), **Norwegian** stays all-lower-case, and the **Latin**
+name keeps its capitalised genus and is always shown *italic* (whether primary or
+secondary). This is display-only — the stored data and the export name stay lower-case.
+
 **Search** matches the **primary** name only by default — so typing `t` in the Norway
 build won't surface a bird via its Swedish name. A **"søk i begge språk"** toggle
 (same screen) also searches the secondary language, as a fallback for when you can't
