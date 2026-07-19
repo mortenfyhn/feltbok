@@ -34,6 +34,7 @@
   en ny dag – så du alltid ser det du nettopp la til.
 - Større **+**-knapp med romsligere trykkflate, så du lettere treffer den uten å
   bomme på observasjonen bak.
+- Om-dialogen krediterer nå kilda til fremmedart-statusen òg.
 
 ## v1.0 (16. juli 2026)
 

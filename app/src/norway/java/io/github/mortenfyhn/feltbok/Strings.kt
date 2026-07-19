@@ -52,6 +52,7 @@ object Strings {
         const val dataHeader = "Data og kilder"
         const val names = "Artsnavn fra IOC World Bird List"
         const val artsdatabanken = "Rødlistestatus fra Artsdatabanken (CC BY 4.0)"
+        const val alienRisk = "Fremmede arter fra Artsdatabanken (CC BY 4.0)"
         const val artsobs = "Lokaliteter fra Artsobservasjoner"
         const val osm = "Kart © OpenStreetMap"
         const val close = "Ålreit"

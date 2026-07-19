@@ -186,8 +186,9 @@ private duplicate — lives in `docs/artsobs-import.md`.)
 
 Tapping the version string in the footer opens a small "Om Feltbok" dialog with the
 maker line and the data credits — IOC World Bird List (species names), Artsdatabanken /
-SLU Artdatabanken (red-list status, CC BY 4.0), Artsobservasjoner / Artportalen
-(localities), and OpenStreetMap (map). The dialog also links to **Innstillinger** (the
-name-language settings). The CC BY licence *requires*
-attribution; this is its home. The map also carries an "© OpenStreetMap-bidragsytere"
-corner credit, as the OSM tile policy requires.
+SLU Artdatabanken (red-list status **and** alien-species status), Artsobservasjoner /
+Artportalen (localities), and OpenStreetMap (map). The dialog also links to
+**Innstillinger** (the name-language settings). Norway's Artsdatabanken data is CC BY 4.0,
+whose licence *requires* attribution — this is its home; Sweden's SLU Artdatabanken data is
+CC0, credited as a courtesy rather than an obligation. The map also carries an
+"© OpenStreetMap-bidragsytere" corner credit, as the OSM tile policy requires.

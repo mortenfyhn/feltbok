@@ -545,8 +545,9 @@ private fun StatusStrip(vm: MainViewModel) {
     }
 }
 
-/** Credits / attribution (#139). The Artsdatabanken data is CC BY 4.0, which requires attribution;
- *  OSM is credited on the map too but gathered here for one tidy home. */
+/** Credits / attribution (#139). Norway's Artsdatabanken data is CC BY 4.0 (attribution required);
+ *  Sweden's SLU Artdatabanken data is CC0 (credited as courtesy, not obligation). OSM is credited on
+ *  the map too but gathered here for one tidy home. */
 @Composable
 private fun AboutDialog(onDismiss: () -> Unit, onSettings: () -> Unit) {
     val cs = MaterialTheme.colorScheme
@@ -560,6 +561,8 @@ private fun AboutDialog(onDismiss: () -> Unit, onSettings: () -> Unit) {
                     modifier = Modifier.padding(top = 24.dp, bottom = 4.dp))
                 Text(Strings.About.names, fontSize = 13.sp, color = cs.onSurfaceVariant)
                 Text(Strings.About.artsdatabanken, fontSize = 13.sp, color = cs.onSurfaceVariant,
+                    modifier = Modifier.padding(top = 6.dp))
+                Text(Strings.About.alienRisk, fontSize = 13.sp, color = cs.onSurfaceVariant,
                     modifier = Modifier.padding(top = 6.dp))
                 Text(Strings.About.artsobs, fontSize = 13.sp, color = cs.onSurfaceVariant,
                     modifier = Modifier.padding(top = 6.dp))
