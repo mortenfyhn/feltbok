@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- Release launcher background: a solid fill of the flavor's brand colour
-     (green for Norway, blue for Sweden). The debug build overrides this with a
-     checkerboard so a dev build is distinguishable at a glance. -->
+<!-- Launcher background: a solid fill of the flavor's brand colour (green for Norway, blue for
+     Sweden), used by every build. The dev build instead marks itself by checkerboarding the book
+     cover in the foreground (src/{norway,sweden}Debug/ic_launcher_foreground.xml, issue #158). -->
 <shape xmlns:android="http://schemas.android.com/apk/res/android" android:shape="rectangle">
     <solid android:color="@color/ic_launcher_background" />
 </shape>

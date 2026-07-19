@@ -1,0 +1,91 @@
+<!-- Debug (dev) foreground for the Sweden flavor: the beta book with a checkerboard scrawled across
+     the cover, so a dev build is obviously distinct from the release app at a glance (issue #158).
+     Release keeps the plain cover in sweden/ic_launcher_foreground.xml (still-beta, red scrawl) —
+     keep the artwork here in sync with that file. -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+
+    <!-- Field notebook, tilted slightly, with a woodcock centred on the cover. -->
+    <group android:name="book" android:rotation="-13" android:pivotX="54" android:pivotY="54">
+
+        <!-- stacked pages peeking on the right and bottom -->
+        <path android:fillColor="#FFFFFF"
+            android:pathData="M36,26 L74,26 A6,6 0 0,1 80,32 L80,84 A6,6 0 0,1 74,90 L36,90 A6,6 0 0,1 30,84 L30,32 A6,6 0 0,1 36,26 Z" />
+        <!-- page grooves (the edge of the page stack) -->
+        <path android:fillColor="#DACCA6" android:pathData="M78,34 L79,34 L79,82 L78,82 Z" />
+        <path android:fillColor="#DACCA6" android:pathData="M40,88 L72,88 L72,89 L40,89 Z" />
+
+        <!-- cover -->
+        <path android:fillColor="#F4EAD0"
+            android:pathData="M34,22 L70,22 A7,7 0 0,1 77,29 L77,79 A7,7 0 0,1 70,86 L34,86 A7,7 0 0,1 27,79 L27,29 A7,7 0 0,1 34,22 Z" />
+        <!-- dev checkerboard on the cover (issue #158): the debug-build marker. Alternating squares in
+             the flavor's brand colour, clipped to the cover so the corners stay rounded. The spine and
+             woodcock below draw on top. -->
+        <group>
+            <clip-path android:pathData="M34,22 L70,22 A7,7 0 0,1 77,29 L77,79 A7,7 0 0,1 70,86 L34,86 A7,7 0 0,1 27,79 L27,29 A7,7 0 0,1 34,22 Z" />
+            <path android:fillColor="@color/ic_launcher_background_alt"
+                android:pathData="M27,22 h12.5 v12.5 h-12.5 z M52,22 h12.5 v12.5 h-12.5 z M39.5,34.5 h12.5 v12.5 h-12.5 z M64.5,34.5 h12.5 v12.5 h-12.5 z M27,47 h12.5 v12.5 h-12.5 z M52,47 h12.5 v12.5 h-12.5 z M39.5,59.5 h12.5 v12.5 h-12.5 z M64.5,59.5 h12.5 v12.5 h-12.5 z M27,72 h12.5 v12.5 h-12.5 z M52,72 h12.5 v12.5 h-12.5 z M39.5,84.5 h12.5 v12.5 h-12.5 z M64.5,84.5 h12.5 v12.5 h-12.5 z" />
+        </group>
+        <!-- spine (darker block down the left) -->
+        <path android:fillColor="#C9B27E"
+            android:pathData="M34,22 L38,22 L38,86 L34,86 A7,7 0 0,1 27,79 L27,29 A7,7 0 0,1 34,22 Z" />
+        <!-- spine highlight line -->
+        <path android:fillColor="#EADCB8" android:pathData="M40,25 L41.5,25 L41.5,83 L40,83 Z" />
+
+        <!-- Eurasian woodcock, on the cover (clear of the spine) -->
+        <!-- tail: short rounded fan, drooped back, barred with a pale tip -->
+        <path android:fillColor="#7A4F2A"
+            android:pathData="M45,52 C40,52 35,55 34,59 C33.5,62 36,64 40,63 C43,62 45,57 45,53.5 Z" />
+        <path android:fillColor="#3A2712"
+            android:pathData="M38,53.8 C36.2,55.2 35.3,57.2 35.6,59.4 L37.5,58.8 C37.2,57 37.8,55.2 39.2,54 Z" />
+        <path android:fillColor="#E7DAB8"
+            android:pathData="M34.4,57.4 C33.8,59 34.1,60.9 35.2,62.1 L36.4,61.1 C35.6,60 35.4,58.7 35.9,57.1 Z" />
+        <!-- plump body -->
+        <path android:fillColor="#9A6B3E"
+            android:pathData="M39.5,54 a12.5,9.3 0 1,0 25,0 a12.5,9.3 0 1,0 -25,0 Z" />
+        <!-- folded wing (darker), inside the body -->
+        <path android:fillColor="#6E4A29"
+            android:pathData="M37.5,51 a9.5,5.8 0 1,0 19,0 a9.5,5.8 0 1,0 -19,0 Z" />
+        <!-- dark wing bars (cryptic plumage) -->
+        <path android:fillColor="#4A3219"
+            android:pathData="M42,50 q5,-1.3 10,0.5 l-0.5,1.6 q-4.7,-1.7 -9.2,-0.7 Z" />
+        <path android:fillColor="#4A3219"
+            android:pathData="M41.5,53.3 q5.3,-1.2 10.6,0.7 l-0.5,1.6 q-5,-1.8 -10,-0.8 Z" />
+        <!-- pale buff belly -->
+        <path android:fillColor="#C7A878"
+            android:pathData="M46,59 a8,3.8 0 1,0 16,0 a8,3.8 0 1,0 -16,0 Z" />
+        <!-- head, raised at the front -->
+        <path android:fillColor="#925F33"
+            android:pathData="M56.6,47 a6.4,6.4 0 1,0 12.8,0 a6.4,6.4 0 1,0 -12.8,0 Z" />
+        <!-- crown bars (transverse, behind the eye) -->
+        <path android:fillColor="#3A2712" android:pathData="M55.6,43.2 L57.3,42.7 L58,45.9 L56.3,46.4 Z" />
+        <path android:fillColor="#3A2712" android:pathData="M58.7,42.4 L60.4,42.1 L60.9,45.3 L59.2,45.6 Z" />
+        <!-- bill, long and straight, angled ~45 deg down -->
+        <path android:fillColor="#6B543B" android:pathData="M67,49 L76.5,58.5 L75.1,59.9 L65.6,50.4 Z" />
+        <path android:fillColor="#3E3024" android:pathData="M73,55 L76.5,58.5 L75.1,59.9 L71.6,56.4 Z" />
+        <!-- dark loral line, from eye toward the bill -->
+        <path android:fillColor="#4A3219" android:pathData="M63,43.4 L66.6,49.2 L65.1,49.9 L61.8,44.4 Z" />
+        <!-- large eye, set very high on the head -->
+        <path android:fillColor="#161616"
+            android:pathData="M61,41 a2.3,2.3 0 1,0 4.6,0 a2.3,2.3 0 1,0 -4.6,0 Z" />
+        <path android:fillColor="#FFFFFF"
+            android:pathData="M62.1,40.2 a0.7,0.7 0 1,0 1.4,0 a0.7,0.7 0 1,0 -1.4,0 Z" />
+
+        <!-- "beta", scrawled across the cover in red felt marker -->
+        <path android:strokeColor="#E0301E" android:strokeWidth="2.1"
+            android:strokeLineCap="round" android:strokeLineJoin="round"
+            android:pathData="M43,66 L43,80 M43,74 C47,72.5 49.5,75 49.5,77 C49.5,79.5 46.5,80.5 43,79" />
+        <path android:strokeColor="#E0301E" android:strokeWidth="2.1"
+            android:strokeLineCap="round" android:strokeLineJoin="round"
+            android:pathData="M50.5,76.5 L55.5,75.5 C56,72.5 50.5,72 50.5,76.5 C50.5,80.5 53.5,80.5 56,78.5" />
+        <path android:strokeColor="#E0301E" android:strokeWidth="2.1"
+            android:strokeLineCap="round" android:strokeLineJoin="round"
+            android:pathData="M59,67 L59,79 C59,80.5 61,80.5 62,79.5 M56,71 L62,70.5" />
+        <path android:strokeColor="#E0301E" android:strokeWidth="2.1"
+            android:strokeLineCap="round" android:strokeLineJoin="round"
+            android:pathData="M69,73.5 C64.5,72 63,77 65,79.5 C67,81 69.5,79.5 69.5,75.5 L69.5,80.5" />
+    </group>
+</vector>
