@@ -1125,9 +1125,11 @@ fun DetailScreen(vm: MainViewModel) {
                     Text(disp + if (vm.dUncertain && disp.isNotBlank()) "?" else "",
                         fontWeight = FontWeight.Medium, maxLines = 1, overflow = TextOverflow.Ellipsis,
                         fontStyle = if (vm.langPrefs.primary == Lang.LATIN) FontStyle.Italic else FontStyle.Normal)
-                    // The scientific name underneath, unless it's already what's shown (primary = Latin).
-                    if (vm.dLatin.isNotBlank() && disp != vm.dLatin)
-                        Text("  ${vm.dLatin}", color = cs.onSurfaceVariant, fontStyle = FontStyle.Italic,
+                    // The chosen secondary name underneath (like the search results); Latin is italic.
+                    val secondary = vm.secondaryNameForLatin(vm.dLatin)
+                    if (secondary != null)
+                        Text("  $secondary", color = cs.onSurfaceVariant,
+                            fontStyle = if (vm.langPrefs.secondary == Lang.LATIN) FontStyle.Italic else FontStyle.Normal,
                             fontSize = 13.sp, maxLines = 1, overflow = TextOverflow.Ellipsis,
                             modifier = Modifier.weight(1f, fill = false))
                 }

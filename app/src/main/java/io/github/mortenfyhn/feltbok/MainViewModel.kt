@@ -90,6 +90,11 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
     /** The primary display name for a saved note (see [nameForLatin]). */
     fun noteName(n: Note): String = nameForLatin(n.latin, n.species)
 
+    /** The secondary display name for the species identified by [latin] (see [secondaryName]), or
+     *  null when there's no secondary to show or the species isn't loaded. Used by the editor's
+     *  picked-species row so it shows the chosen primary + secondary, like the search results. */
+    fun secondaryNameForLatin(latin: String): String? = speciesByLatin[latin]?.let { secondaryName(it) }
+
     val notes = mutableStateListOf<Note>().apply {
         importSeedNotes(app)   // dev-build only: import a pushed seed file, if any (see importSeedNotes)
         addAll(loadNotes(app))
