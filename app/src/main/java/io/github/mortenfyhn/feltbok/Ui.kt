@@ -707,7 +707,8 @@ private fun NoteRow(n: Note, name: String, nameItalic: Boolean, status: String, 
                 // ellipsized box's trailing slack, keeping every locality flush against the timestamp.
                 Text(n.locName, color = cs.onSurface, fontSize = 13.sp, textAlign = TextAlign.End,   // [2] locality
                     maxLines = 1, overflow = TextOverflow.Ellipsis)
-                Text(shortTime(n.time), color = cs.onSurfaceVariant, fontSize = 13.sp)   // [3] timestamp
+                // A no-time obs has no clock to show; a dash marks it (the day header carries the date).
+                Text(if (n.timeUnknown) "–" else shortTime(n.time), color = cs.onSurfaceVariant, fontSize = 13.sp)   // [3] timestamp
             },
             modifier = Modifier.weight(1f),
         ) { measurables, constraints ->
@@ -1179,8 +1180,8 @@ fun DetailScreen(vm: MainViewModel) {
             val tMs = if (vm.dTime > 0) vm.dTime else System.currentTimeMillis()
             var showTime by remember { mutableStateOf(false) }
             FieldRow(Strings.Detail.time, onClick = { showTime = true }) {
-                if (batch && vm.dTime <= 0L) BatchHint(vm.batchPreview { displayTimeRange(it.time, it.endTime) })
-                else Text(displayTimeRange(tMs, vm.dEndTime))
+                if (batch && vm.dTime <= 0L) BatchHint(vm.batchPreview { displayTimeRange(it.time, it.endTime, it.timeUnknown) })
+                else Text(displayTimeRange(tMs, vm.dEndTime, vm.dTimeUnknown))
             }
             if (showTime) TimeDialog(vm) { showTime = false }
             // Co-observers (#128) sit last, below time: tap to open the name picker. Blank value when
@@ -1355,16 +1356,22 @@ private fun CommentField(label: String, value: String, onChange: (String) -> Uni
     HorizontalDivider(color = cs.outline.copy(alpha = 0.4f))
 }
 
-/** From/to time editor. All four rows show at once; Til mirrors Fra (dEndTime == null) until you
- *  set a Til field directly, which decouples it into a real range — possibly spanning midnight. */
+/** From/to time editor. Both rows show at once; each row's date and time-of-day are tapped
+ *  separately (opening the platform date/time dialog), so you can change only the date or only the
+ *  time. Til mirrors Fra (dEndTime == null) until you set a Til field directly, decoupling it into a
+ *  real range — possibly across midnight. "Nå" sets everything to this moment; "Uten klokkeslett"
+ *  keeps the date but exports no time. */
 @Composable
 private fun TimeDialog(vm: MainViewModel, onDismiss: () -> Unit) {
     val ctx = LocalContext.current
     // Picks mutate the draft live, so snapshot the open-time values to restore if the edit is cancelled.
-    val orig = remember { vm.dTime to vm.dEndTime }
-    fun cancel() { vm.dTime = orig.first; vm.dEndTime = orig.second; onDismiss() }
+    val orig = remember { Triple(vm.dTime, vm.dEndTime, vm.dTimeUnknown) }
+    fun cancel() { vm.dTime = orig.first; vm.dEndTime = orig.second; vm.dTimeUnknown = orig.third; onDismiss() }
     val start = if (vm.dTime > 0) vm.dTime else System.currentTimeMillis()
     val end = vm.dEndTime ?: start
+
+    // The platform pickers (same as before): imperative dialogs shown on tap. They keep the
+    // untouched half of the instant, so a date pick leaves the time alone and vice versa.
     fun pickDate(ms: Long, onSet: (Long) -> Unit) {
         val cal = java.util.Calendar.getInstance().apply { timeInMillis = ms }
         android.app.DatePickerDialog(ctx, { _, y, mo, d ->
@@ -1387,19 +1394,29 @@ private fun TimeDialog(vm: MainViewModel, onDismiss: () -> Unit) {
     fun setEnd(ms: Long) { vm.dEndTime = maxOf(ms, start) }
     AlertDialog(
         onDismissRequest = ::cancel,
-        title = { Text(Strings.Time.title) },
+        title = {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Text(Strings.Time.title, modifier = Modifier.weight(1f))
+                // One "Nå" sets both endpoints to this moment (like the website's button) and
+                // re-enables a time-of-day that had been left unspecified.
+                TextButton(onClick = {
+                    vm.dTime = System.currentTimeMillis(); vm.dEndTime = null; vm.dTimeUnknown = false
+                }) { Text(Strings.Time.now) }
+            }
+        },
         text = {
             Column {
-                TimeGroupHeader(Strings.Time.from) { setStart(System.currentTimeMillis()) }
-                FieldRow(surface = false, divider = false,
-                    onClick = { pickDate(start, ::setStart) }) { Text(displayDate(start)) }
-                FieldRow(surface = false, divider = false,
-                    onClick = { pickTime(start, ::setStart) }) { Text(exportTime(start)) }
-                TimeGroupHeader(Strings.Time.to) { setEnd(System.currentTimeMillis()) }
-                FieldRow(surface = false, divider = false,
-                    onClick = { pickDate(end, ::setEnd) }) { Text(displayDate(end)) }
-                FieldRow(surface = false, divider = false,
-                    onClick = { pickTime(end, ::setEnd) }) { Text(exportTime(end)) }
+                TimeRow(Strings.Time.from, start, vm.dTimeUnknown,
+                    onDate = { pickDate(start, ::setStart) }, onTime = { pickTime(start, ::setStart) })
+                TimeRow(Strings.Time.to, end, vm.dTimeUnknown,
+                    onDate = { pickDate(end, ::setEnd) }, onTime = { pickTime(end, ::setEnd) })
+                Row(
+                    Modifier.fillMaxWidth().clickable { vm.dTimeUnknown = !vm.dTimeUnknown },
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    Checkbox(checked = vm.dTimeUnknown, onCheckedChange = { vm.dTimeUnknown = it })
+                    Text(Strings.Time.noTime)
+                }
             }
         },
         confirmButton = { TextButton(onClick = onDismiss) { Text(Strings.Time.done) } },
@@ -1407,12 +1424,15 @@ private fun TimeDialog(vm: MainViewModel, onDismiss: () -> Unit) {
     )
 }
 
+/** One "Start-tid"/"Sluttid" row: label on the left, a separately-tappable date and (unless the
+ *  time is left unspecified) time-of-day on the right. */
 @Composable
-private fun TimeGroupHeader(text: String, onNow: () -> Unit) {
-    Row(verticalAlignment = Alignment.CenterVertically) {
-        Text(text, color = MaterialTheme.colorScheme.primary, fontWeight = FontWeight.Bold,
-            fontSize = 13.sp, modifier = Modifier.weight(1f).padding(top = 10.dp, bottom = 2.dp))
-        TextButton(onClick = onNow) { Text(Strings.Time.now) }
+private fun TimeRow(label: String, ms: Long, timeUnknown: Boolean, onDate: () -> Unit, onTime: () -> Unit) {
+    Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+        Text(label, color = MaterialTheme.colorScheme.onSurfaceVariant, fontSize = 14.sp,
+            modifier = Modifier.weight(1f))
+        TextButton(onClick = onDate) { Text(displayDate(ms)) }
+        if (!timeUnknown) TextButton(onClick = onTime) { Text(exportTime(ms)) }
     }
 }
 

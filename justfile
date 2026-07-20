@@ -8,13 +8,13 @@ export ANDROID_HOME := env("ANDROID_HOME", home_directory() / "Android/Sdk")
 app_id := "io.github.mortenfyhn.feltbok.debug"
 data_dir := "/sdcard/Android/data/" + app_id + "/files"
 
+
 # Reject an unknown country code before a recipe derives a flavor from it (silent-default footgun).
 _check-country country:
     @case "{{country}}" in no|se) ;; *) echo "Unknown country '{{country}}' (use: no or se)" >&2; exit 1 ;; esac
 
 # List all recipes
-default:
-    @just --list
+set default-list := true
 
 # Build debug APK (no=Norway [default], se=Sweden)
 build country="no": (_check-country country)
@@ -127,7 +127,7 @@ push-data:
 # non-debuggable (release speed), so run-as can't reach internal storage; instead push a seed file
 # to the external dir, which the dev build imports on next launch (see importSeedNotes). Targets the
 # .debug app only — never the release app with the maintainer's real field notes.
-seed-notes:
+seed:
     .venv/bin/python scripts/dev/make_sample_notes.py > /tmp/feltbok-seed-notes.json
     adb push /tmp/feltbok-seed-notes.json {{data_dir}}/seed-notes.json
     adb shell am force-stop {{app_id}}

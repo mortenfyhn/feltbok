@@ -24,6 +24,9 @@ identical in order. **Feltbok targets the old site (v2.20) via paste.**
 Geographic WGS 84 decimal degrees vs UTM is **not** in the file — it's a per-account
 setting on the old site (Min side → coordinate format). The app emits decimal degrees,
 so the account must be set to *Geografisk (WGS 84)* for coordinates to be read right.
+The decimal separator is a **comma** (`63,670000`), not a period — the import parses numbers
+with the account's number format (Norwegian/Swedish), so a period is rejected as *"not a decimal
+number"*. The TSV is tab-delimited, so a comma inside the value is safe.
 But see below: **we normally export without coordinates**, so this rarely matters.
 
 ## Locality matching — the make-or-break
@@ -89,7 +92,11 @@ authoritative `isPrivate` flag per site, so `build_sites.py` simply keeps the pu
 `Usikker artsbestemming`.
 
 `Nord`/`Øst`/`Nøyaktighet` are left blank unless "Ta med koordinater" is on. Dates are
-`dd.MM.yyyy`, times `HH:mm`; from/til are the same instant (one moment of observation).
+`dd.MM.yyyy`, times `HH:mm`; from/til default to the same instant (one moment of
+observation). The time-of-day is optional: an obs saved with "Uten klokkeslett" keeps
+its date(s) but emits both `klokkeslett` columns **blank** — the same "unknown" idiom as
+a blank `Antall`. (Whether the site imports a date-only row cleanly is what the no-time
+sample rows below exist to verify.)
 
 `Nøyaktighet` (radius of a minted custom locality) **must be a positive integer** — a
 `0 m` row hard-fails with *"Lokaliteten må ha en nøyaktighet som er et positivt heltall"*
@@ -104,18 +111,30 @@ Still unconfirmed: whether it registers as *unknown* vs. silently defaulting to 
 needs the **Kontroller funn** review page (blocked by a site-side bug at time of writing) —
 see [#90].
 
-## Manual integration test sample
+## Manual integration test — seed, then export from the app
 
-`artsobs-import-sample.tsv` is a ready-to-paste batch the app would produce, covering **every
-column the app can emit** so a single paste exercises the whole format: a name-only registry
-locality, blank coordinates, an `Usikker artsbestemming` = `Ja` flag, a brand-new locality with
-coordinates + radius, a from–til time range, a **blank `Antall`** (unknown number of individuals,
-the `Storspove` row — see #90), a **private comment**, a `Kjønn` value, and **`Medobservatør`
-columns** (the `Gråmåke` row lists two co-observers, #128 — every row is padded to that count, so
-the whole batch carries the extra columns). Paste it into "Importer observasjoner" to check the live
-site still accepts the format end-to-end (validation **and** that rows reach "Kontroller funn", not
-just the green success message). It is generated from `exportTsv`, so it stays byte-identical
-to real output. Regenerate it the same way if the export format changes.
+Rather than maintain a hand-written TSV (which drifts from real output — an invalid `Aktivitet`
+string once slipped in that way and failed import), the integration test goes through the app:
+
+1. `just seed` — pushes a clean batch of observations to the debug app (from
+   `scripts/dev/make_sample_notes.py`; it imports them on next launch, **overwriting** its notes).
+2. Export from the app (the normal Eksporter flow) and paste into "Importer observasjoner".
+3. Check the live site accepts it end-to-end — validation **and** that rows reach "Kontroller
+   funn", not just the green success message.
+
+The seed deliberately spans every path `exportTsv` takes so one paste exercises the whole format:
+a name-only registry locality, a brand-new spot (coordinates + radius, mints a private locality —
+each import mints a fresh **duplicate**, so expect to clean those up), a **blank `Antall`** (unknown
+count, see #90), the `Usikker artsbestemming` flag, both comment fields, same-day and multi-day time
+ranges, the two **blank `klokkeslett`** no-time cases (single day and multi-day, #155), and
+**`Medobservatør` columns** with 0/1/12 co-observers. To keep the import errors meaningful (rather
+than drowned in avoidable ones), the seed uses inputs the site actually accepts: localities are
+**real, globally-unique public localities** (unique across the country, so they resolve to the public
+locality even without kommune-scoping the form — no "matchet flere allmenne lokaliteter"),
+co-observers are **real registered users** (made-up or ambiguous names like a common "Ola Nordmann"
+fail to resolve), and the one "I par" row uses an even count (the site requires partall). So a clean
+seed should import with **no errors** — any error is then a real signal.
+`python scripts/dev/make_sample_notes.py --why` prints a legend of what each row is for.
 
 The `Medobservatør` columns repeat one header per co-observer; paste-import matches by header name,
 so extra columns beyond the template's 10 are expected to work (the template hjelp says "10 felt

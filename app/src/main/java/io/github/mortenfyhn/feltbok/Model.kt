@@ -101,6 +101,7 @@ data class Note(
     val id: Long, // creation time in ms - the stable key (never changes)
     val time: Long = id, // observation start (date+time) - editable; defaults to id
     val endTime: Long? = null, // observation end; null = a single time point (Til = Fra on export)
+    val timeUnknown: Boolean = false, // date is known but the time-of-day isn't (obs added after the fact -> blank klokkeslett)
     val species: String,
     val latin: String,
     val count: Int, // UNKNOWN_COUNT (-1) = unknown number of individuals (-> blank Antall)
@@ -259,9 +260,10 @@ private fun nbFormat(pattern: String) = SimpleDateFormat(pattern, NB).apply { da
 fun displayTime(ms: Long): String = nbFormat("d. MMM, HH:mm").format(Date(ms))
 fun shortTime(ms: Long): String = nbFormat("HH:mm").format(Date(ms))
 
-/** The editor's one-line time summary: a single point, or "from – to" for a range. */
-fun displayTimeRange(start: Long, end: Long?): String {
-    val fmt = nbFormat("d. MMM HH:mm")
+/** The editor's one-line time summary: a single point, or "from – to" for a range. When the
+ *  time-of-day is unspecified only the date shows (no HH:mm), matching how it exports. */
+fun displayTimeRange(start: Long, end: Long?, timeUnknown: Boolean = false): String {
+    val fmt = nbFormat(if (timeUnknown) "d. MMM" else "d. MMM HH:mm")
     return if (end == null) fmt.format(Date(start)) else "${fmt.format(Date(start))} – ${fmt.format(Date(end))}"
 }
 
@@ -628,6 +630,7 @@ internal fun withUniqueIds(notes: List<Note>): List<Note> {
 fun noteToJson(n: Note): JSONObject = JSONObject().apply {
     put("id", n.id); put("time", n.time); put("species", n.species); put("latin", n.latin)
     n.endTime?.let { put("endTime", it) }
+    if (n.timeUnknown) put("timeUnknown", true)
     put("count", n.count); put("age", n.age); put("activity", n.activity)
     put("sex", n.sex); put("publicComment", n.publicComment)
     put("privateComment", n.privateComment)
@@ -642,6 +645,7 @@ fun noteFromJson(o: JSONObject): Note = Note(
     id = o.getLong("id"),
     time = o.optLong("time", o.getLong("id")),
     endTime = if (o.has("endTime")) o.getLong("endTime") else null,
+    timeUnknown = o.optBoolean("timeUnknown", false),
     species = o.getString("species"),
     latin = o.optString("latin"),
     count = o.getInt("count"),
@@ -664,7 +668,7 @@ fun noteFromJson(o: JSONObject): Note = Note(
 /**
  * Dev seeding. The debug build ships non-debuggable (it runs at release speed), so `run-as` can't
  * reach its files, and notes.json lives in internal storage that `adb push` can't write either. So
- * `just seed-notes` pushes a seed file to the external files dir (which adb push *can* reach), and
+ * `just seed` pushes a seed file to the external files dir (which adb push *can* reach), and
  * the dev build imports it into notes.json on the next launch and deletes it. Gated to the `.debug`
  * package so the real release app never imports a pushed file. Call before [loadNotes].
  */
@@ -848,16 +852,23 @@ fun exportTsv(notes: List<Note>): String {
     // co-observer, so the format is byte-for-byte unchanged when the feature is unused (#128).
     val maxCoObs = notes.maxOfOrNull { it.coObservers.size } ?: 0
     val rows = notes.sortedBy { it.time }.map { n ->
-        val d = exportDate(n.time); val t = exportTime(n.time)
+        val d = exportDate(n.time)
         // Til defaults to Fra; an explicit endTime makes it a range (may cross midnight).
         val end = n.endTime ?: n.time
-        val dEnd = exportDate(end); val tEnd = exportTime(end)
+        val dEnd = exportDate(end)
+        // A no-time obs keeps its date but leaves both klokkeslett columns blank (the site
+        // accepts a date-only observation, like a blank Antall means "unknown").
+        val t = if (n.timeUnknown) "" else exportTime(n.time)
+        val tEnd = if (n.timeUnknown) "" else exportTime(end)
         val loc = n.locName.ifBlank { n.locFull }
         // A brand-new spot is exported WITH coordinates (+ its radius as Nøyaktighet), which
         // mints a new custom locality on import; registry localities stay name-only so the import
         // links them to the public site (verified on both Artsobservasjoner and Artportalen).
-        val nord = if (n.newLoc) String.format(Locale.US, "%.6f", n.lat) else ""
-        val ost = if (n.newLoc) String.format(Locale.US, "%.6f", n.lon) else ""
+        // Coordinates use the flavor's locale (comma decimal) - the paste-import parses numbers with
+        // the account's number format (Norwegian/Swedish), so a period reads as "not a decimal
+        // number". The TSV is tab-delimited, so a comma in the value is safe.
+        val nord = if (n.newLoc) String.format(Country.displayLocale, "%.6f", n.lat) else ""
+        val ost = if (n.newLoc) String.format(Country.displayLocale, "%.6f", n.lon) else ""
         val noy = if (n.newLoc) "${n.locRadius} m" else ""
         // Pad each row's co-observers out to maxCoObs so every row has the same column count.
         val coObs = List(maxCoObs) { n.coObservers.getOrElse(it) { "" } }

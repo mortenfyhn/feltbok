@@ -309,6 +309,7 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
     var dLoc by mutableStateOf<Locality?>(null)
     var dTime by mutableStateOf(0L)
     var dEndTime by mutableStateOf<Long?>(null)   // observation end; null = single time point
+    var dTimeUnknown by mutableStateOf(false)     // time-of-day left unspecified (date still known)
     var dUncertain by mutableStateOf(false)
     val dCoObs = mutableStateListOf<String>()      // co-observers on the draft (#128)
     val isEditing: Boolean get() = editingId != null
@@ -322,7 +323,7 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
         return dSpecies != orig.species || dLatin != orig.latin || dCount != orig.count ||
             dAge != orig.age || dAct != orig.activity || dSex != orig.sex ||
             dPub != orig.publicComment || dPriv != orig.privateComment ||
-            dTime != orig.time || dEndTime != orig.endTime || dUncertain != orig.uncertain ||
+            dTime != orig.time || dEndTime != orig.endTime || dTimeUnknown != orig.timeUnknown || dUncertain != orig.uncertain ||
             dCoObs.toList() != orig.coObservers ||
             (loc?.lokalitet ?: "") != orig.locName ||
             (loc?.lat ?: 0.0) != orig.lat || (loc?.lon ?: 0.0) != orig.lon
@@ -406,7 +407,7 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
         editingId = null; changingSpecies = false; fromCopy = false
         dSpecies = ""; dLatin = ""; dCount = 1
         dAge = ""; dAct = ""; dSex = ""; dPub = ""; dPriv = ""; dUncertain = false
-        dLoc = null; dTime = 0L; dEndTime = null
+        dLoc = null; dTime = 0L; dEndTime = null; dTimeUnknown = false
         dCoObs.clear(); dCoObs.addAll(party)   // a new obs inherits the current party (#128)
     }
 
@@ -439,7 +440,7 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
         dSpecies = n.species; dLatin = n.latin; dCount = n.count
         dAge = n.age; dAct = n.activity; dSex = n.sex
         dPub = n.publicComment; dPriv = n.privateComment
-        dTime = n.time; dEndTime = n.endTime; dUncertain = n.uncertain
+        dTime = n.time; dEndTime = n.endTime; dTimeUnknown = n.timeUnknown; dUncertain = n.uncertain
         dCoObs.clear(); dCoObs.addAll(n.coObservers)
         dLoc = localities.firstOrNull { it.lokalitet == n.locName && it.lat == n.lat && it.lon == n.lon }
             ?: Locality("", n.locName, "", "", n.lat, n.lon, 0, 0.0)
@@ -582,6 +583,8 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
         } else null
         dTime = shared { it.time } ?: 0L
         dEndTime = shared { it.endTime }
+        dTimeUnknown = false   // batch edit doesn't touch the no-time flag; keep the checkbox off
+
         batchBaseline = BatchBaseline(dSpecies, dLatin, dCount, dAge, dSex, dAct, locKey, dTime, dEndTime)
         batchEditing = true
         screen = Screen.DETAIL
@@ -624,6 +627,7 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
             },
             time = dTime.takeIf { it > 0 } ?: System.currentTimeMillis(),
             endTime = dEndTime,
+            timeUnknown = dTimeUnknown,
             species = dSpecies, latin = dLatin, count = dCount,
             age = dAge, activity = dAct, sex = dSex,
             publicComment = dPub, privateComment = dPriv,
@@ -634,7 +638,12 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
         )
         if (isEditing) {
             val i = notes.indexOfFirst { it.id == n.id }
-            if (i >= 0) notes[i] = n else notes.add(0, n)
+            if (i >= 0) {
+                // Moving an edit to another day lands it in a different day-group - maybe a new one
+                // at the top (e.g. today) that's off-screen - so scroll to reveal it, as for a new obs.
+                if (exportDate(notes[i].time) != exportDate(n.time)) scrollToNoteId = n.id
+                notes[i] = n
+            } else notes.add(0, n)
         } else { notes.add(0, n); scrollToNoteId = n.id }
         if (loc != null && !isEditing) { lastUsedLoc = loc; lastUsedFix = fix }   // stick it for the next obs
         if (dAct.isNotBlank()) {

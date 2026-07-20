@@ -86,7 +86,8 @@ though IOC's species name is `klippedue`.
 Observations are grouped into per-day sections, newest day first, each under a date
 header ("I dag", "I går", else an abbreviated date like "Søn 8. jun"). Within a day,
 newest first. Each row carries species + count on the left, its locality, and the
-time on the right (the day lives in the section header, so the row shows bare HH:mm).
+time on the right (the day lives in the section header, so the row shows bare HH:mm;
+an observation left without a time shows a dash there instead).
 A row with co-observers also shows a small **`+N`** pill (N = how many joined) beside
 the species — no pill means it was just you.
 
@@ -122,6 +123,16 @@ batch-editable (they're rarely the same across notes, and the party is a per-run
 default rather than a bulk field), so they're hidden here; everything else — species,
 locality, count, age, sex, activity, time — is. Marking a *single* note and tapping
 `Endre` is just the normal single-note editor (nothing to batch).
+
+## Tidspunkt (start/slutt)
+
+The editor's time row opens a small editor with a **Start-tid** and a **Sluttid** row,
+each with a separately-tappable date and time-of-day (so you can change just the day, or
+just the clock). Sluttid mirrors Start-tid until you edit it, then it becomes a real range
+that may span midnight (the end can never fall before the start). **Nå** sets both ends to
+the current moment. **Uten klokkeslett** keeps the date but leaves the time unspecified —
+for observations logged after the fact, when you don't remember the time; it exports with
+the date filled in and both klokkeslett columns blank.
 
 ## Medobservatører (co-observers)
 

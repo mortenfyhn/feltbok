@@ -128,10 +128,11 @@ object Strings {
 
     object Time {
         const val title = "Tid"
-        const val from = "Fra"
-        const val to = "Til"
+        const val from = "Start-tid"
+        const val to = "Sluttid"
         const val now = "Nå"
         const val done = "Ferdig"
+        const val noTime = "Uten klokkeslett"
     }
 
     object Export {

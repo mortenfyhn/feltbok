@@ -67,7 +67,8 @@ fun applyBatchEdit(notes: List<Note>, ids: Set<Long>, change: BatchChange): List
                 kommune = loc.kommune,
             )
         }
-        change.time?.let { m = m.copy(time = it.start, endTime = it.end) }
+        // Setting a time in bulk means the time-of-day is now known, so clear any no-time flag.
+        change.time?.let { m = m.copy(time = it.start, endTime = it.end, timeUnknown = false) }
         m
     }
 

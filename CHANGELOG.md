@@ -2,6 +2,12 @@
 
 ## Neste utgivelse
 
+- **Tidspunkt**: ny og ryddigere tid-editor med egne rader for start-tid og sluttid, der
+  dato og klokkeslett kan endres hver for seg. Én **Nå**-knapp setter alt til akkurat nå.
+  Nytt: hak av **Uten klokkeslett** når du legg inn ein obs i etterkant og ikkje hugsar
+  tida – datoen blir med, men klokkeslettet står tomt.
+- Retta eksport av nye lokaliteter: koordinatene skreiv seg med punktum, som importen
+  avviste som «ikke et desimaltall». Nå brukes komma, så egne kartplasseringer importeres.
 - **Velg språk på artsnavn**: under Innstillinger (åpne Om-dialogen fra versjonen
   nederst) velg du hovedspråk og sekundærspråk – norsk, svensk eller latin, i begge
   appene. Søket bruker hovedspråket; slå på «søk i begge språk» om du vil kunne

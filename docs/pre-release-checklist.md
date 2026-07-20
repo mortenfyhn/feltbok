@@ -27,6 +27,14 @@ not a one-off tap-through.
 - Status strip shows the nearest locality + distance once GPS settles; "du er her" within range.
 - Current locality **sticks** as you move a little, re-snaps after a genuine move (~50 m).
 
+**Paste-import against the live site** *(the export format end-to-end — automation stops at "TSV
+renders"; the real import site can't be scripted)*
+- `just seed` a clean batch, then export from the app and paste into Artsobservasjoner "Importer
+  observasjoner". The seed spans every export path (new-spot coords + radius, blank `Antall`,
+  uncertain, same-day/multi-day ranges, the two no-time cases, 0/1/12 co-observers).
+- It should validate with **no errors** and rows should reach **Kontroller funn** (not just the green
+  banner). Any error is a real regression — see [artsobs-import.md](artsobs-import.md) for the format.
+
 **Other interaction bits**
 - Search names with **å/æ/ø** return the expected birds.
 - Copy an observation → the locality picker **centres on that observation's own locality** (#91-era).

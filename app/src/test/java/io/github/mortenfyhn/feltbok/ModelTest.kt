@@ -92,6 +92,16 @@ class ModelTest {
     }
 
     @Test
+    fun timeUnknownExportsBlankKlokkeslettButKeepsDates() {
+        // "Uten klokkeslett": the date is still emitted (from and til), only the two time
+        // columns go blank - the site accepts a date-only observation.
+        assumeTrue(isNorwayExport)
+        val c = exportTsv(listOf(noteAt(noonMs).copy(endTime = noonMs, timeUnknown = true))).split("\n")[1].split("\t")
+        assertEquals("01.06.2026", c[9]); assertEquals("", c[10])
+        assertEquals("01.06.2026", c[11]); assertEquals("", c[12])
+    }
+
+    @Test
     fun exportSortsByTimeAscending() {
         val early = noteAt(noonMs)
         val late = noteAt(noonMs + 3_600_000)
@@ -120,10 +130,12 @@ class ModelTest {
     fun newLocExportsCoordinatesAndRadiusAsNoyaktighet() {
         // A brand-new spot is exported WITH coordinates (+ radius as Nøyaktighet) so the
         // import mints it; registry localities stay name-only (covered by the test above).
+        // Coordinates use a comma decimal (the import parses numbers with the account's locale;
+        // both nb-NO and sv-SE use a comma) - a period is rejected as "not a decimal number".
         val n = noteAt(noonMs).copy(newLoc = true, locRadius = 50)
         val c = exportTsv(listOf(n)).split("\n")[1].split("\t")
-        assertEquals("63.670000", c[6])
-        assertEquals("8.310000", c[7])
+        assertEquals("63,670000", c[6])
+        assertEquals("8,310000", c[7])
         assertEquals("50 m", c[8])
     }
 
@@ -257,7 +269,7 @@ class ModelTest {
         // Guard against a field saved but not restored (or vice versa): silent data loss on the
         // next launch. Every field is a distinct non-default value, so dropping any one fails
         // equality (id and time differ, so a swap is caught too).
-        val n = noteAt(1717).copy(time = 1800, endTime = 1900, newLoc = true, locRadius = 50, uncertain = true,
+        val n = noteAt(1717).copy(time = 1800, endTime = 1900, timeUnknown = true, newLoc = true, locRadius = 50, uncertain = true,
             coObservers = listOf("Kari Nordmann", "Ola Hansen"))
         assertEquals(n, noteFromJson(noteToJson(n)))
         // endTime is the only optional field (omitted from JSON when null); confirm null survives.
