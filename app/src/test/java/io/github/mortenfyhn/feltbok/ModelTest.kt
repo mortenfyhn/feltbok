@@ -384,6 +384,42 @@ class ModelTest {
     }
 
     @Test
+    fun distanceToFootprintRanksByEdgeNotCentre() {
+        // #155: a big circle you're inside vs. a small one you're outside but nearer its centre.
+        val big = Locality("big", "Farnavik", "", "", 63.0, 8.0, 0, 3000.0)     // 3 km radius
+        val small = Locality("small", "Stajnträsk", "", "", 63.01, 8.0, 0, 200.0)   // ~1.1 km north
+        val you = 63.006 to 8.0                                                  // inside big, outside small
+        assertTrue(haversine(you.first, you.second, small.lat, small.lon) <    // nearer small's centre...
+            haversine(you.first, you.second, big.lat, big.lon))
+        assertTrue(distanceToFootprint(big, you.first, you.second) < 0.0)       // ...yet inside big
+        assertTrue(distanceToFootprint(big, you.first, you.second) <           // ...so big wins the ranking
+            distanceToFootprint(small, you.first, you.second))
+    }
+
+    @Test
+    fun distanceToFootprintPrefersNearerEdgeWhenOutsideBoth() {
+        // Outside both: closer to the small one's centre, but closer to the big one's edge -> big.
+        val big = Locality("big", "Big", "", "", 63.0, 8.0, 0, 2000.0)         // 2 km radius
+        val small = Locality("small", "Small", "", "", 63.05, 8.0, 0, 100.0)   // ~5.6 km north
+        val you = 63.026 to 8.0                                                // ~2.9 km from big, ~2.7 km from small
+        assertTrue(haversine(you.first, you.second, small.lat, small.lon) <
+            haversine(you.first, you.second, big.lat, big.lon))
+        assertTrue(distanceToFootprint(big, you.first, you.second) <
+            distanceToFootprint(small, you.first, you.second))
+    }
+
+    @Test
+    fun footprintAreaSmallerForSmallerLocality() {
+        // #155: inside both nested localities -> the smaller (most specific) is the default.
+        val big = Locality("big", "Big", "", "", 63.0, 8.0, 0, 3000.0)
+        val small = Locality("small", "Small", "", "", 63.0, 8.0, 0, 200.0)
+        assertTrue(footprintArea(small) < footprintArea(big))
+        val polygon = Locality("p", "Poly", "", "", 63.0, 8.0, 0, 0.0,
+            polygon = square(63.0, 63.01, 8.0, 8.01))   // ~1.1 km × ~0.5 km box
+        assertTrue(footprintArea(polygon) > 0.0)
+    }
+
+    @Test
     fun poleOfInaccessibilityCentresASquare() {
         val pole = poleOfInaccessibility(square(63.0, 64.0, 8.0, 9.0))
         assertEquals(63.5, pole[0], 0.02)

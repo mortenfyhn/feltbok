@@ -173,6 +173,13 @@ triangle** for a superlocality, with the name just below the marker. The full gr
 on the one you've selected. Everything else about the picker (tap-to-select, new-spot placement,
 zoom declutter, GPS dot) is the same across both builds. The one flag is `Country.hollowLocalities`.
 
+The locality suggested by default (before you pick one) is based on your GPS fix's position relative
+to each **footprint**, not just the nearest centre. If you're standing inside one or more localities,
+the **smallest** containing one is suggested (the most specific — matching how a tap resolves nested
+localities). If you're inside none, the one whose **edge** is closest wins. So a large locality you're
+inside beats a small one you're outside, yet a small locality nested inside a big one still wins when
+you're inside both. A point locality (no radius) falls back to plain centre distance.
+
 ## Export
 
 One **Eksporter** button (top right of the status strip) opens a step-by-step

@@ -18,6 +18,7 @@ import java.time.format.DateTimeFormatter
 import java.util.Date
 import java.util.Locale
 import kotlin.math.PI
+import kotlin.math.abs
 import kotlin.math.atan
 import kotlin.math.atan2
 import kotlin.math.cos
@@ -164,6 +165,44 @@ fun pointInPolygon(lat: Double, lon: Double, polygon: List<DoubleArray>): Boolea
 fun localityContains(loc: Locality, lat: Double, lon: Double): Boolean =
     if (loc.polygon.isNotEmpty()) pointInPolygon(lat, lon, loc.polygon)
     else loc.radius > 0.0 && haversine(lat, lon, loc.lat, loc.lon) <= loc.radius
+
+/** Signed great-circle distance (m) from [lat]/[lon] to a locality's footprint edge, negative when
+ *  inside. Circle: centre distance minus radius. Polygon: nearest-edge distance, negated inside. A
+ *  point locality (radius 0, no polygon) reduces to plain centre distance. Lets the picker rank by
+ *  how far you are from a locality's *edge* rather than its centre - so a big locality you're inside
+ *  (or nearer the edge of) beats a small one you're far outside (#155). */
+fun distanceToFootprint(loc: Locality, lat: Double, lon: Double): Double {
+    if (loc.polygon.isEmpty()) return haversine(lat, lon, loc.lat, loc.lon) - loc.radius
+    // Local equirectangular projection (metres) centred on the query point, so the vertices become
+    // planar and segDistSq gives real metres to the nearest edge.
+    val cosLat = cos(Math.toRadians(lat))
+    var minSq = Double.MAX_VALUE
+    var j = loc.polygon.size - 1
+    for (i in loc.polygon.indices) {
+        val ax = (loc.polygon[i][1] - lon) * 111_320.0 * cosLat; val ay = (loc.polygon[i][0] - lat) * 111_320.0
+        val bx = (loc.polygon[j][1] - lon) * 111_320.0 * cosLat; val by = (loc.polygon[j][0] - lat) * 111_320.0
+        minSq = minOf(minSq, segDistSq(0.0, 0.0, ax, ay, bx, by))
+        j = i
+    }
+    val edge = sqrt(minSq)
+    return if (pointInPolygon(lat, lon, loc.polygon)) -edge else edge
+}
+
+/** Footprint area in m². Circle: π·r². Polygon: shoelace over a local equirectangular projection.
+ *  Point localities are 0. Used to pick the *smallest* locality you're inside as the default (#155). */
+fun footprintArea(loc: Locality): Double {
+    if (loc.polygon.isEmpty()) return PI * loc.radius * loc.radius
+    val cosLat = cos(Math.toRadians(loc.lat))
+    var sum = 0.0
+    var j = loc.polygon.size - 1
+    for (i in loc.polygon.indices) {
+        val xi = loc.polygon[i][1] * 111_320.0 * cosLat; val yi = loc.polygon[i][0] * 111_320.0
+        val xj = loc.polygon[j][1] * 111_320.0 * cosLat; val yj = loc.polygon[j][0] * 111_320.0
+        sum += xj * yi - xi * yj
+        j = i
+    }
+    return abs(sum) / 2.0
+}
 
 /** Squared distance from point (px,py) to segment a->b, in planar coords. */
 private fun segDistSq(px: Double, py: Double, ax: Double, ay: Double, bx: Double, by: Double): Double {

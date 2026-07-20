@@ -365,12 +365,18 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
     private var nearestFix: GpsFix? = null
     private var nearestLoc: Locality? = null
 
-    /** Official locality nearest the current fix, or null until GPS settles. */
+    /** Default locality for the current fix, or null until GPS settles. If you're inside one or more
+     *  localities' footprints, the *smallest* containing one wins (the most specific - matching how a
+     *  tap resolves nesting, #126); otherwise the one whose footprint *edge* is nearest. So a big
+     *  locality you're inside beats a small one you're outside, yet a small locality nested inside a
+     *  big one still wins when you're inside both (#155). */
     fun nearest(): Locality? {
         val f = fix ?: return null
         if (f !== nearestFix) {
             nearestFix = f
-            nearestLoc = localities.minByOrNull { haversine(f.lat, f.lon, it.lat, it.lon) }
+            val inside = localities.filter { localityContains(it, f.lat, f.lon) }
+            nearestLoc = if (inside.isNotEmpty()) inside.minByOrNull { footprintArea(it) }
+            else localities.minByOrNull { distanceToFootprint(it, f.lat, f.lon) }
         }
         return nearestLoc
     }

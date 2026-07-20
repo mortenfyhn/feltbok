@@ -6,6 +6,9 @@
   dato og klokkeslett kan endres hver for seg. Én **Nå**-knapp setter alt til akkurat nå.
   Nytt: hak av **Uten klokkeslett** når du legg inn ein obs i etterkant og ikkje hugsar
   tida – datoen blir med, men klokkeslettet står tomt.
+- Betre lokalitetsforslag: står du inne i ein stor lokalitet, blir den foreslått
+  framfor ein liten du er utanfor. Er du inne i fleire (ein liten inni ein stor),
+  vinn den minste; er du utanfor alle, vinn den du er nærmast kanten av.
 - Retta eksport av nye lokaliteter: koordinatene skreiv seg med punktum, som importen
   avviste som «ikke et desimaltall». Nå brukes komma, så egne kartplasseringer importeres.
 - **Velg språk på artsnavn**: under Innstillinger (åpne Om-dialogen fra versjonen
