@@ -2,6 +2,9 @@
 
 ## Neste utgivelse
 
+- **Arter utanom lista**: finn du ikkje arten i søket, kan du no skrive inn namnet sjølv –
+  ei **«Velg …»**-rad dukkar opp nedst. Namnet blir teke med i eksporten akkurat slik du
+  skreiv det (så det er opp til deg å treffe namnet importen godtar).
 - **Tidspunkt**: ny og ryddigere tid-editor med egne rader for start-tid og sluttid, der
   dato og klokkeslett kan endres hver for seg. Én **Nå**-knapp setter alt til akkurat nå.
   Nytt: hak av **Uten klokkeslett** når du legg inn ein obs i etterkant og ikkje hugsar

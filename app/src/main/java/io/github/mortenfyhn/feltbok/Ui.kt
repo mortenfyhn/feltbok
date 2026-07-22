@@ -769,6 +769,12 @@ fun SearchScreen(vm: MainViewModel) {
     // and forth the top row was a stale, low-ranked match instead of the best one (#64).
     val listState = rememberLazyListState()
     LaunchedEffect(results) { listState.scrollToItem(0) }
+    // Offer a free-text "add" row (at the bottom, so the best checklist match stays on top) for a
+    // species not in the list (#144), unless the typed name already matches a shown result exactly.
+    val query = q.trim()
+    val canAdd = query.isNotBlank() && results.none { s ->
+        fold(vm.primaryName(s)) == fold(query) || vm.secondaryName(s)?.let { fold(it) == fold(query) } == true
+    }
     Column(Modifier.fillMaxSize()) {
         Row(
             Modifier.fillMaxWidth().background(cs.surface).padding(start = 4.dp, end = 12.dp, top = 2.dp, bottom = 2.dp),
@@ -826,6 +832,11 @@ fun SearchScreen(vm: MainViewModel) {
                     }
                 }
                 HorizontalDivider(color = cs.outline.copy(alpha = 0.4f))
+            }
+            if (canAdd) item(key = "add") {
+                OptionItem(Strings.Search.add(query), selected = false, fullScreen = true) {
+                    vm.pickArbitrarySpecies(query)
+                }
             }
         }
     }

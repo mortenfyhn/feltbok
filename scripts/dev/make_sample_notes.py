@@ -74,6 +74,10 @@ GRESSHOPPESANGER = (
 )  # long name + red badge
 DOBBELTBEKKASIN = ("dobbeltbekkasin", "Gallinago media", "NT")  # long name + red badge
 SVARTHALESPOVE = ("svarthalespove", "Limosa limosa", "CR")  # long name + red badge
+# An arbitrary species typed by hand (#144): not in the app's bird checklist, so latin is blank
+# (no registry key, no status badge). Exports verbatim in Artsnavn — rådyr resolves on the portal
+# (it covers all species, not just birds), so a clean seed still imports without error.
+RAADYR = ("rådyr", "", "")
 
 UNKNOWN_COUNT = -1
 MINUTE = 60_000
@@ -129,11 +133,14 @@ def note(
     no_time=False,
     new_loc=False,
     radius=0,
+    private_loc=False,
 ):
     """One row. `why` = what it exercises (dev doc, not exported). `mins` = minutes before now
     (drives the day header). `dur_min`, if set, adds an end time that many minutes after the start
     (a range; large values span days — keep the end in the past, the site rejects future times).
-    `no_time` marks the time-of-day unspecified. `new_loc` exports coordinates + `radius`."""
+    `no_time` marks the time-of-day unspecified. `new_loc` exports coordinates + `radius`.
+    `private_loc` marks `loc` as one of the user's own private localities (links by bare name, so no
+    qualified fullname), matching how the app stores a note picked on a private site."""
     return dict(
         why=why,
         mins=mins,
@@ -151,6 +158,7 @@ def note(
         no_time=no_time,
         new_loc=new_loc,
         radius=radius,
+        private_loc=private_loc,
     )
 
 
@@ -269,6 +277,20 @@ ROWS = [
         pub="ny lokalitet",
         new_loc=True,
         radius=1,
+    ),
+    note(
+        # Age/activity/sex are bird-group codes (Adult, Rastende, …) that the import rejects on a
+        # non-bird, so leave them blank here — the user fills only what fits, or fixes it on the site.
+        "arbitrary species typed by hand (#144, blank latin), on a private locality, group fields blank",
+        280,
+        RAADYR,
+        2,
+        "",
+        "",
+        "",
+        "TKB tredje avdeling",
+        pub="beitet i utkanten",
+        private_loc=True,
     ),
     note(
         "no-time, single day (#155): date kept, both klokkeslett blank",
@@ -441,9 +463,10 @@ def build(now_ms):
             "publicComment": r["pub"],
             "privateComment": r["priv"],
             "locName": r["loc"],
-            # A registry locality carries a qualified fullname; a brand-new spot has none.
+            # A registry locality carries a qualified fullname; a brand-new spot and a private
+            # locality (links by bare name) have none.
             "locFull": ""
-            if new_loc or not r["loc"]
+            if new_loc or r["private_loc"] or not r["loc"]
             else f"{r['loc']}, Trondheim, Trøndelag",
             "lat": NEW_LAT if new_loc else LAT,
             "lon": NEW_LON if new_loc else LON,

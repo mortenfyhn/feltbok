@@ -82,6 +82,7 @@ object Strings {
 
     object Search {
         const val placeholder = "Søk art…"
+        fun add(name: String) = "Velg «$name»"
     }
 
     object Detail {

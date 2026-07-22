@@ -51,6 +51,18 @@ signals (`rankSpecies` in `Search.kt`):
 The dataset is tiny (~600 species), so this all runs in well under a millisecond
 per keystroke.
 
+### Species not in the list
+
+If what you saw isn't in the checklist — a rarity, or a non-bird species — a
+**"Velg «…»"** row appears at the bottom of the results whenever your typed name
+doesn't already match a listed species exactly. Tapping it records the observation
+with the name exactly as you typed it — nothing is added to the app's species list,
+so it won't be searchable next time; each such observation is typed in fresh. That
+name is exported verbatim in the
+`Artsnavn` column, so it's on you to type something the destination portal will
+match on import (it isn't checked against any list). These free-typed species get no
+season/location ranking or recents boost — they aren't in the dataset.
+
 ### Names and languages
 
 Every species carries three names — Norwegian, Swedish, and the scientific (Latin)

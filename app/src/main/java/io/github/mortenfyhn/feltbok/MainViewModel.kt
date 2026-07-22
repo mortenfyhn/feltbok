@@ -441,6 +441,20 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
         screen = Screen.DETAIL
     }
 
+    /** Commit a free-typed species name not in the checklist (#144). The typed text becomes the
+     *  exported Artsnavn verbatim; latin is left blank (no registry entry), which the display
+     *  fallbacks (nameForLatin) and export already tolerate. No use-score bump - there's no stable
+     *  latin key to attribute it to, and it won't reappear in recents. */
+    fun pickArbitrarySpecies(name: String) {
+        dSpecies = name.trim(); dLatin = ""
+        if (!changingSpecies && !isEditing && !batchEditing) {
+            dTime = System.currentTimeMillis()
+            dLoc = currentLocality()
+        }
+        changingSpecies = false
+        screen = Screen.DETAIL
+    }
+
     fun editNote(n: Note) {
         editingId = n.id; changingSpecies = false; fromCopy = false
         dSpecies = n.species; dLatin = n.latin; dCount = n.count
