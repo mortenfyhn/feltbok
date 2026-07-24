@@ -2,6 +2,7 @@
 
 ## Neste utgivelse
 
+- Versjonsnummeret nedst i appen viser ikkje lenger eit misvisande «-dirty» i F-Droid-bygg.
 - Retta artsnavn: enkelte arter hadde feil eller utdatert namn i søket – blant anna mangla
   «svartstrupe» (den låg feilaktig som «afrikasvartstrupe»). Både norske og vitskaplege namn
   hentes nå frå Artsdatabanken, same kjelde som Artsobservasjoner bruker, så dei stemmer med det

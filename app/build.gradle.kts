@@ -13,7 +13,10 @@ plugins {
 }
 
 // Build version shown in-app, straight from git. At a tag it's "v0.1"; between tags
-// "v0.1-3-gabc-dirty"; with no tag yet, the short hash.
+// "v0.1-3-gabc-dirty"; with no tag yet, the short hash. The "-dirty" suffix is kept only for the
+// dev build: F-Droid's build server sanitizes tracked files before building (strips signing
+// configs), so release builds there are always "dirty" through no fault of the source — and our
+// own release.sh already refuses a non-clean tree.
 // A ValueSource (not a config-time `git` call) so the configuration cache re-runs it each build
 // and the version can't go stale when HEAD moves while the cache is otherwise reusable.
 abstract class GitVersion : ValueSource<String, ValueSourceParameters.None> {
@@ -29,6 +32,7 @@ abstract class GitVersion : ValueSource<String, ValueSourceParameters.None> {
     } catch (e: Exception) { "dev" }
 }
 val gitVersion: String = providers.of(GitVersion::class) {}.get()
+val gitVersionRelease: String = gitVersion.removeSuffix("-dirty")
 
 // Branch name, shown only in the dev build so a working-branch build is identifiable on-device.
 // Same ValueSource rationale as GitVersion: re-run each build so it tracks branch switches.
@@ -73,7 +77,7 @@ android {
         versionCode = 14
         versionName = "1.0"
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
-        buildConfigField("String", "GIT_VERSION", "\"$gitVersion\"")
+        buildConfigField("String", "GIT_VERSION", "\"$gitVersionRelease\"")
         // BuildConfig.DEBUG tracks the `debuggable` flag, which the debug build type turns OFF for
         // speed - so it's false even in the dev build. Use this DEV flag for dev-only code instead.
         buildConfigField("boolean", "DEV", "false")
