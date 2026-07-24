@@ -2,8 +2,10 @@
 """Build the Norwegian bird checklist (norsk,latin,status) for the app's species search.
 
 Lists every bird species ever recorded in Artsobservasjoner (GBIF dataset
-b124e1e0-…, taxonKey 212 = Aves) and resolves each to its Norwegian + scientific
-name via the GBIF backbone vernacular names (language 'nor', then 'nno'). Sorted
+b124e1e0-…, taxonKey 212 = Aves) and resolves each to its Norwegian name via
+Artsdatabanken's Taxon API — the same name authority Artsobservasjoner uses on
+import, so the names match what the portal accepts (the GBIF backbone vernacular
+is only a fallback for the few vagrants Artsnavnebasen has no name for). Sorted
 most-observed first, so common species rank first in search. The `status` column
 carries the Norwegian Red List 2021 category (mainland) for red-listed species, or
 the Alien Species List 2023 risk category (SE/HI/PH/LO/NK) for introduced species.
@@ -22,7 +24,14 @@ import requests
 
 DATASET = "b124e1e0-4755-430f-9eab-894f25a9b59c"
 AVES = 212
-NORTAXA = "a6c6cead-b5ce-4a4e-8cf5-1542ba708dec"  # Artsdatabanken's Norwegian name base
+
+# This checklist inherits the GBIF backbone's older genus for a few species; Artsobservasjoner and
+# its name authority have since moved them. Map to the current scientific name so both the name
+# lookup and the emitted latin match what the portal accepts.
+SCI_ALIASES = {
+    "Oceanodroma leucorhoa": "Hydrobates leucorhous",  # stormsvale
+    "Oceanodroma monorhis": "Hydrobates monorhis",  # japanstormsvale
+}
 
 # Norwegian Red List 2021 (Artsdatabanken), mainland (Area=N) bird assessments.
 # Only red-listed categories are kept for display; LC/NA/NE map to "".
@@ -30,11 +39,6 @@ REDLIST_URL = (
     "https://lister.artsdatabanken.no/rodlisteforarter/2021?SpeciesGroups=Fugler&Area=N"
 )
 REDLISTED = {"RE", "CR", "EN", "VU", "NT", "DD"}
-# Red List uses newer genera than this checklist for a few species; map to ours so they match.
-REDLIST_ALIASES = {
-    "Curruca nisoria": "Sylvia nisoria",  # hauksanger
-    "Hydrobates leucorhous": "Oceanodroma leucorhoa",  # stormsvale
-}
 
 
 # Alien Species List 2023 (Artsdatabanken) bird assessments. The ecological-risk
@@ -68,8 +72,8 @@ def _scrape_categories(url, categories, label):
         for blob in rows:
             lat, cat = latre.search(blob), catre.search(blob)
             if lat and cat and cat.group(1) in categories:
-                name = _html.unescape(lat.group(1)).strip()
-                out[REDLIST_ALIASES.get(name, name)] = cat.group(1)
+                # The list and the checklist both key on Artsdatabanken's accepted name, so they match.
+                out[_html.unescape(lat.group(1)).strip()] = cat.group(1)
         page += 1
         time.sleep(0.6)  # gentle on Artsdatabanken
     return out
@@ -85,47 +89,45 @@ def fetch_alienlist():
     return _scrape_categories(ALIENLIST_URL, ALIEN_CATS, "alienlist")
 
 
-# Manual Bokmål names for species the lookups miss - mostly where this dataset
-# files a bird under an old genus (Sylvia) that Artsnavnebasen only lists under
-# the current one (Curruca), so the name-match fails. Only confident regulars;
-# genuine rare vagrants are left as their scientific name.
+# Deliberate divergence from Artsdatabanken's preferred name: Artsnavnebasen calls Columba livia
+# "klippedue" (the species as a whole), but Norway only has the feral form, so Artsobservasjoner
+# only accepts "bydue" on import. Everything else resolves correctly through the authoritative
+# lookup, so no other manual names are needed.
 OVERRIDES = {
-    "Sylvia communis": "tornsanger",
-    "Sylvia curruca": "møller",
-    "Sylvia nana": "dvergsanger",
-    "Sylvia crassirostris": "sultansanger",
-    "Corvus corone": "svartkråke",
-    "Lanius isabellinus": "isabellavarsler",
-    "Acanthis hornemanni": "polarsisik",
-    # Artsnavnebasen calls Columba livia "klippedue" (the species as a whole), but Norway only has
-    # the feral form, so Artsobservasjoner only accepts "bydue" on import. Use the name Artsobs takes.
     "Columba livia": "bydue",
 }
 
 
-def nortaxa_name(latin):
-    """Norwegian name from Artsnavnebasen - Artsobservasjoner uses the same base.
-    Prefer Bokmål (nob, what Artsobs reports) over Nynorsk (nno)."""
-    d = (
-        get(
-            "https://api.gbif.org/v1/species/search",
-            {"datasetKey": NORTAXA, "q": latin, "qField": "SCIENTIFIC", "limit": 30},
-        )
-        or {}
+def artsdatabanken_taxon(latin):
+    """(accepted scientific name, preferred Norwegian name) from Artsdatabanken's Taxon API - the
+    same authority Artsobservasjoner uses on import. Modernizes an outdated genus to the currently
+    accepted binomial (so the name matches the portal and joins the Swedish list, which already uses
+    the new genera), but keeps our species-level name where Artsdatabanken has since lumped it into
+    a subspecies. The Norwegian name is the vernacular flagged `preferred` (Bokmål, else Nynorsk).
+    Returns (latin unchanged, None) when the name is unknown or the taxon carries no Norwegian name."""
+    hits = get(
+        "https://artsdatabanken.no/api/Taxon/ScientificName", {"scientificName": latin}
     )
-    nob = nor = nno = None
-    for r in d.get("results", []):
-        if r.get("canonicalName") != latin:
-            continue
-        for v in r.get("vernacularNames", []):
-            lang, nm = v.get("language"), v["vernacularName"]
-            if lang == "nob" and not nob:
-                nob = nm
-            elif lang == "nor" and not nor:
-                nor = nm
-            elif lang == "nno" and not nno:
-                nno = nm
-    return nob or nor or nno
+    if not hits:
+        return latin, None
+    accepted = hits[0].get("acceptedNameUsage") or {}
+    if accepted.get("taxonRank") == "species":
+        latin = accepted["scientificName"]
+    taxon = get(f"https://artsdatabanken.no/api/Taxon/{hits[0]['taxonID']}") or {}
+    names = taxon.get("vernacularNames") or []
+
+    def preferred(lang):
+        return next(
+            (
+                v["vernacularName"]
+                for v in names
+                if v.get("language") == lang
+                and v.get("nomenclaturalStatus") == "preferred"
+            ),
+            None,
+        )
+
+    return latin, preferred("nb-NO") or preferred("nn-NO")
 
 
 def get(url, params=None):
@@ -162,10 +164,11 @@ def resolve(key):
     latin = sp.get("canonicalName") or sp.get("scientificName")
     if not latin:
         return None
-    # Artsnavnebasen (Bokmål) first - it matches Artsobservasjoner. The GBIF
-    # backbone vernacular is an inconsistent Bokmål/Nynorsk mix, so use it only
-    # for species Artsnavnebasen doesn't cover.
-    norsk = nortaxa_name(latin)
+    latin = SCI_ALIASES.get(latin, latin)
+    # Artsdatabanken (Artsnavnebasen) is authoritative for both the accepted scientific name and the
+    # Norwegian name, and matches Artsobservasjoner. Its API is missing a name for a few rare
+    # vagrants, so fall back to the GBIF backbone vernacular (a Bokmål/Nynorsk mix) only there.
+    latin, norsk = artsdatabanken_taxon(latin)
     if not norsk:
         vn = (
             get(

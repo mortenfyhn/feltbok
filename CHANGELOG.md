@@ -2,6 +2,10 @@
 
 ## Neste utgivelse
 
+- Retta artsnavn: enkelte arter hadde feil eller utdatert namn i søket – blant anna mangla
+  «svartstrupe» (den låg feilaktig som «afrikasvartstrupe»). Både norske og vitskaplege namn
+  hentes nå frå Artsdatabanken, same kjelde som Artsobservasjoner bruker, så dei stemmer med det
+  importen godtar (og fleire arter fekk endeleg det svenske namnet sitt med).
 - **Arter utanom lista**: finn du ikkje arten i søket, kan du no skrive inn namnet sjølv –
   ei **«Velg …»**-rad dukkar opp nedst. Namnet blir teke med i eksporten akkurat slik du
   skreiv det (så det er opp til deg å treffe namnet importen godtar).

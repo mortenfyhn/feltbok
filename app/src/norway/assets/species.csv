@@ -79,7 +79,7 @@ Tringa nebularia,gluttsnipe,gluttsnäppa,,128653
 Apus apus,tårnseiler,tornseglare,NT,127935
 Pluvialis apricaria,heilo,ljungpipare,NT,125629
 Gavia stellata,smålom,smålom,,121356
-Phalacrocorax aristotelis,toppskarv,,,102243
+Gulosus aristotelis,toppskarv,toppskarv,,102243
 Picus viridis,grønnspett,gröngöling,,102177
 Delichon urbicum,taksvale,hussvala,NT,101853
 Anser brachyrhynchus,kortnebbgås,spetsbergsgås,,101057
@@ -90,7 +90,7 @@ Podiceps cristatus,toppdykker,skäggdopping,,96781
 Columba livia,bydue,klippduva,,96145
 Falco tinnunculus,tårnfalk,tornfalk,,93401
 Branta leucopsis,hvitkinngås,vitkindad gås,,92098
-Sylvia communis,tornsanger,,,87853
+Curruca communis,tornsanger,törnsångare,,87853
 Saxicola rubetra,buskskvett,buskskvätta,,86768
 Gavia arctica,storlom,storlom,,86609
 Fulica atra,sothøne,sothöna,VU,84655
@@ -113,9 +113,9 @@ Morus bassanus,havsule,havssula,,68854
 Dryocopus martius,svartspett,spillkråka,,68214
 Cuculus canorus,gjøk,gök,NT,68291
 Tringa glareola,grønnstilk,grönbena,,67116
-Sylvia curruca,møller,,,66825
+Curruca curruca,møller,ärtsångare,,66825
 Scolopax rusticola,rugde,morkulla,,66674
-Accipiter gentilis,hønsehauk,,VU,64202
+Astur gentilis,hønsehauk,duvhök,VU,64202
 Muscicapa striata,gråfluesnapper,grå flugsnappare,,63837
 Tringa ochropus,skogsnipe,skogssnäppa,,63519
 Uria aalge,lomvi,sillgrissla,CR,63012
@@ -166,7 +166,7 @@ Picus canus,gråspett,gråspett,,28768
 Calidris minuta,dvergsnipe,småsnäppa,,28184
 Mareca strepera,snadderand,snatterand,NT,27911
 Larus hyperboreus,polarmåke,vittrut,,27681
-Charadrius dubius,dverglo,mindre strandpipare,VU,26980
+Thinornis dubius,dverglo,mindre strandpipare,VU,26980
 Mergellus albellus,lappfiskand,salskrake,VU,26657
 Alle alle,alkekonge,alkekung,,25892
 Circus cyaneus,myrhauk,blå kärrhök,EN,25551
@@ -183,13 +183,13 @@ Calcarius lapponicus,lappspurv,lappsparv,EN,20835
 Carpodacus erythrinus,rosenfink,rosenfink,NT,20970
 Phasianus colchicus,fasan,fasan,LO,20807
 Corvus corone,kråke,kråka,,688258
-Phylloscopus sibillatrix,bøksanger,,,20260
+Phylloscopus sibilatrix,bøksanger,grönsångare,,20260
 Loxia pytyopsittacus,furukorsnebb,större korsnäbb,,19724
 Asio flammeus,jordugle,jorduggla,,18303
 Aythya ferina,taffeland,brunand,,17877
 Tetrao urogallus,storfugl,tjäder,,17653
 Somateria spectabilis,praktærfugl,praktejder,,17631
-Saxicola rubicola,afrikasvartstrupe,svarthakad buskskvätta,EN,17386
+Saxicola rubicola,svartstrupe,svarthakad buskskvätta,EN,17386
 Falco subbuteo,lerkefalk,lärkfalk,NT,17273
 Calidris ferruginea,tundrasnipe,spovsnäppa,,17008
 Stercorarius skua,storjo,storlabb,,16659
@@ -223,7 +223,7 @@ Acanthis hornemanni,polarsisik,,,9595
 Phylloscopus inornatus,gulbrynsanger,tajgasångare,,9556
 Loxia leucoptera,båndkorsnebb,bändelkorsnäbb,VU,9296
 Stercorarius longicaudus,fjelljo,fjällabb,,8870
-Charadrius morinellus,boltit,,,8815
+Eudromias morinellus,boltit,fjällpipare,,8815
 Phoenicurus ochruros,svartrødstjert,svart rödstjärt,EN,8446
 Ardea alba,egretthegre,ägretthäger,,7776
 Anser serrirostris,tundrasædgås,tundrasädgås,VU,7673
@@ -237,7 +237,7 @@ Falco rusticolus,jaktfalk,jaktfalk,VU,5156
 Polysticta stelleri,stellerand,alförrädare,VU,5088
 Stercorarius pomarinus,polarjo,bredstjärtad labb,,5015
 Phalaropus fulicarius,polarsvømmesnipe,brednäbbad simsnäppa,,4745
-Sylvia nisoria,hauksanger,,CR,4717
+Curruca nisoria,hauksanger,höksångare,CR,4717
 Porzana porzana,myrrikse,småfläckig sumphöna,EN,4602
 Uria lomvia,polarlomvi,spetsbergsgrissla,CR,4267
 Hydrobates pelagicus,havsvale,stormsvala,,4143
@@ -252,7 +252,7 @@ Puffinus puffinus,havlire,mindre lira,,2898
 Gallinago media,dobbeltbekkasin,dubbelbeckasin,NT,2866
 Melanitta perspicillata,brilleand,vitnackad svärta,,2849
 Streptopelia turtur,turteldue,turturduva,,2846
-Puffinus griseus,grålire,,,2766
+Ardenna grisea,grålire,grålira,,2766
 Poecile cinctus,lappmeis,lappmes,,2764
 Ficedula parva,dvergfluesnapper,mindre flugsnappare,,2642
 Anser caerulescens,snøgås,snögås,LO,2585
@@ -288,13 +288,13 @@ Hydroprogne caspia,rovterne,skräntärna,,999
 Oriolus oriolus,pirol,sommargylling,,967
 Branta ruficollis,rødhalsgås,rödhalsad gås,,960
 Locustella luscinioides,sumpsanger,vassångare,,984
-Bubulcus ibis,kuhegre,,,911
+Ardea ibis,kuhegre,kohäger,,911
 Sternula albifrons,dvergterne,småtärna,,875
 Falco vespertinus,aftenfalk,aftonfalk,,954
 Turdus atrogularis,svartstrupetrost,svarthalsad trast,,813
 Netta rufina,rødhodeand,rödhuvad dykand,,806
 Streptopelia orientalis,mongolturteldue,större turturduva,,792
-Saxicola maurus,russesvartstrupe,vitgumpad buskskvätta,,768
+Saxicola maurus,asiasvartstrupe,vitgumpad buskskvätta,,768
 Emberiza leucocephalos,hvithodespurv,tallsparv,,722
 Bubo bubo,hubro,berguv,EN,718
 Strix nebulosa,lappugle,lappuggla,VU,708
@@ -308,7 +308,7 @@ Alopochen aegyptiaca,niland,nilgås,SE,631
 Oenanthe deserti,ørkensteinskvett,ökenstenskvätta,,626
 Phylloscopus proregulus,fuglekongesanger,kungsfågelsångare,,608
 Emberiza rustica,vierspurv,videsparv,CR,603
-Oceanodroma leucorhoa,stormsvale,,VU,596
+Hydrobates leucorhous,stormsvale,klykstjärtad stormsvala,VU,596
 Merops apiaster,bieter,biätare,,594
 Lanius senator,rødhodevarsler,rödhuvad törnskata,,563
 Larus michahellis,gulbeinmåke,medelhavstrut,,547
@@ -334,13 +334,13 @@ Oenanthe pleschanka,svartstrupesteinskvett,nunnestenskvätta,,380
 Luscinia megarhynchos,sørnattergal,sydnäktergal,,380
 Cairina moschata,knoppand,myskand,NK,343
 Tringa stagnatilis,damsnipe,dammsnäppa,,341
-Charadrius leschenaultii,ørkenlo,,,331
+Anarhynchus leschenaultii,ørkenlo,ökenpipare,,331
 Pluvialis dominica,kanadalo,amerikansk tundrapipare,,326
 Remiz pendulinus,pungmeis,pungmes,,325
 Plegadis falcinellus,bronseibis,bronsibis,,316
 Leucophaeus pipixcan,franklinmåke,präriemås,,311
 Gelochelidon nilotica,sandterne,sandtärna,,286
-Charadrius alexandrinus,hvitbrystlo,,,286
+Anarhynchus alexandrinus,hvitbrystlo,svartbent strandpipare,,286
 Aythya affinis,purpurhodeand,mindre bergand,,277
 Xenus cinereus,tereksnipe,tereksnäppa,,275
 Anthus campestris,markpiplerke,fältpiplärka,,270
@@ -353,10 +353,10 @@ Aythya nyroca,hvitøyeand,vitögd dykand,,244
 Anser rossii,eskimogås,dvärgsnögås,,242
 Calidris himantopus,styltesnipe,styltsnäppa,,238
 Galerida cristata,topplerke,tofslärka,RE,234
-Anthus rubescens,myrpiplerke,hedpiplärka,,226
+Anthus rubescens,kanadapiplerke,hedpiplärka,,226
 Lanius cristatus,brunvarsler,brun törnskata,,224
 Calidris pusilla,sandsnipe,sandsnäppa,,212
-Porzana parva,sumprikse,,,211
+Zapornia parva,sumprikse,mindre sumphöna,,211
 Larus glaucescens,gråvingemåke,gråvingad trut,,211
 Bubo scandiacus,snøugle,fjälluggla,CR,211
 Limnodromus scolopaceus,langnebbekkasinsnipe,större beckasinsnäppa,,210
@@ -401,7 +401,7 @@ Lanius nubicus,hvitpannevarsler,masktörnskata,,110
 Melospiza melodia,sangspurv,sångsparv,,109
 Vanellus cinereus,gråhodevipe,gråhuvad vipa,,109
 Puffinus mauretanicus,balearlire,balearisk lira,,107
-Sylvia nana,dvergsanger,,,106
+Curruca nana,ørkensanger,ökensångare,,106
 Ichthyaetus ichthyaetus,steppemåke,svarthuvad trut,,104
 Iduna caligata,tartarsanger,stäppsångare,,95
 Chlidonias hybrida,hvitkinnsvartterne,skäggtärna,,94
@@ -434,26 +434,26 @@ Tyto alba,tårnugle,tornuggla,,59
 Vanellus leucurus,sumpvipe,sumpvipa,,57
 Calidris mauri,beringsnipe,tundrasnäppa,,56
 Calidris ruficollis,rødstrupesnipe,rödhalsad snäppa,,56
-Zoothera aurea,skjelltrost,guldtrast,,55
+Zoothera aurea,gulltrost,guldtrast,,55
 Neophron percnopterus,åtselgribb,smutsgam,,53
 Falco naumanni,rødfalk,rödfalk,,53
 Turdus eunomus,svartflekktrost,bruntrast,,53
 Zonotrichia albicollis,hvitstrupespurv,vitstrupig sparv,,52
 Buteo rufinus,ørnvåk,örnvråk,,50
-Cecropis daurica,amursvale,rostgumpsvala,,48
+Cecropis daurica,tempelsvale,rostgumpsvala,,48
 Tringa solitaria,eremittsnipe,amerikansk skogssnäppa,,46
 Catharus ustulatus,brunkinnskogtrost,beigekindad skogstrast,,45
 Iduna rama,ramasanger,saxaulsångare,,45
 Setophaga striata,svarthetteparula,vitkindad skogssångare,,45
 Emberiza elegans,gulstrupespurv,praktsparv,,44
-Phoenicopterus roseus,flamingo,större flamingo,,43
+Phoenicopterus roseus,rosenflamingo,större flamingo,,43
 Melanocorypha calandra,kalanderlerke,kalanderlärka,,42
-Puffinus gravis,storlire,,,42
+Ardenna gravis,storlire,större lira,,42
 Aquila nipalensis,steppeørn,stäppörn,,39
 Pelecanus crispus,krøllpelikan,krushuvad pelikan,,38
 Thalassarche melanophris,svartbrynalbatross,svartbrynad albatross,,38
 Setophaga tigrina,brunkinnparula,brunkindad skogssångare,,35
-Ixobrychus minutus,dvergrørdrum,,,33
+Botaurus minutus,dvergrørdrum,dvärgrördrom,,33
 Gallinago delicata,kanadabekkasin,wilsonbeckasin,,33
 Melanocorypha bimaculata,fjellkalanderlerke,asiatisk kalanderlärka,,33
 Ficedula albicilla,taigafluesnapper,tajgaflugsnappare,,33
@@ -464,10 +464,10 @@ Hippolais polyglotta,spottesanger,polyglottsångare,,29
 Emberiza buchanani,rødbrystspurv,bergortolan,,29
 Catharus fuscescens,viriskogtrost,rostskogstrast,,27
 Emberiza bruniceps,brunhodespurv,stäppsparv,,27
-Turdus naumanni,bruntrost,rödtrast,,27
+Turdus naumanni,rødflekktrost,rödtrast,,27
 Anas bahamensis,hvitkinnand,bahamaand,LO,24
 Alectoris chukar,berghøne,berghöna,LO,23
-Sylvia crassirostris,sultansanger,,,22
+Curruca crassirostris,mestersanger,mästersångare,,22
 Charadrius semipalmatus,amerikasandlo,flikstrandpipare,,21
 Seiurus aurocapilla,ovnparula,brandkronad skogssångare,,21
 Aegypius monachus,munkegribb,grågam,,21
@@ -480,19 +480,19 @@ Circaetus gallicus,slangeørn,ormörn,,16
 Phoenicopterus chilensis,chileflamingo,chileflamingo,,16
 Pheucticus ludovicianus,rosenbrysttykknebb,brokig kardinal,,16
 Ptyonoprogne rupestris,klippesvale,klippsvala,,15
-Charadrius asiaticus,raudbrystlo,,,14
+Anarhynchus asiaticus,rødbrystlo,kaspisk pipare,,14
 Geokichla sibirica,sibirtrost,sibirisk trast,,14
 Pelecanus onocrotalus,hvitpelikan,vit pelikan,,13
 Bartramia longicauda,præriesnipe,piparsnäppa,,13
 Icterus galbula,lundtrupial,baltimoretrupial,,13
 Geothlypis trichas,nordgulstrupe,gulhake,,13
 Chrysolophus pictus,gullfasan,guldfasan,,13
-Charadrius mongolus,mongollo,,,13
+Anarhynchus mongolus,kamtsjatkalo,kamtjatkapipare,,13
 Coturnix japonica,engvaktel,japansk vaktel,HI,12
 Merops persicus,blåkinnbieter,grön biätare,,12
 Phylloscopus nitidus,einersanger,kaukasisk lundsångare,,12
 Dendrocoptes medius,mellomspett,mellanspett,,11
-Oceanodroma monorhis,japanstormsvale,,,10
+Hydrobates monorhis,japanstormsvale,koreastormsvala,,10
 Emberiza rutila,kastanjespurv,rödbrun sparv,,10
 Numenius hudsonicus,tundraspove,amerikansk småspov,,10
 Nymphicus hollandicus,nymfekakadu,nymfparakit,,9
@@ -510,7 +510,7 @@ Oenanthe hispanica,punersteinskvett,västlig medelhavsstenskvätta,,7
 Mniotilta varia,klatreparula,svartvit skogssångare,,6
 Otus scops,dverghornugle,dvärguv,,6
 Anser canagicus,keisergås,kejsargås,LO,6
-Thalassarche chlororhynchos,tristanalbatross,mindre albatross,,5
+Thalassarche chlororhynchos,gulnesealbatross,mindre albatross,,5
 Monticola saxatilis,steintrost,stentrast,,5
 Leiothlypis peregrina,møllparula,tennesseeskogssångare,,5
 Alectoris rufa,rødhøne,rödhöna,NK,4
@@ -524,14 +524,14 @@ Phoeniconaias minor,dvergflamingo,mindre flamingo,,3
 Limosa haemastica,svartvingespove,hudsonspov,,3
 Cathartes aura,kalkunkondor,kalkongam,,3
 Molothrus ater,brunhodetrupial,brunhuvad kostare,,3
-Cardinalis cardinalis,kardinal,röd kardinal,,3
+Cardinalis cardinalis,rødkardinal,röd kardinal,,3
 Irania gutturalis,hvitstrupenattergal,vitstrupig näktergal,,3
 Passerina ciris,pavespurv,påvekardinal,,3
 Passer hispaniolensis,middelhavsspurv,spansk sparv,,3
 Thalasseus maximus,kongeterne,kungstärna,,3
 Onychoprion anaethetus,tøyleterne,tygeltärna,,3
 Carpodacus sibiricus,langhalefink,långstjärtad rosenfink,,3
-Porphyrio porphyrio,blåsultanhøne,västlig purpurhöna,,2
+Porphyrio porphyrio,sultanhøne,västlig purpurhöna,,2
 Hirundapus caudacutus,pigghaleseiler,taggstjärtseglare,,2
 Melopsittacus undulatus,undulat,undulat,,2
 Fratercula cirrhata,topplunde,tofslunne,,2
@@ -566,7 +566,7 @@ Phylloscopus coronatus,østkronsanger,östlig kronsångare,,1
 Euplectes afer,gulkronebisp,gulkronad eldvävare,,1
 Coccyzus americanus,gulnebbgjøk,gulnäbbad regngök,,1
 Porphyrio martinica,amerikapurpurhøne,amerikansk sultanhöna,,1
-Oceanites oceanicus,wilsonstormsvale,havslöpare,,1
+Oceanites oceanicus,oseanstormsvale,havslöpare,,1
 Icterus wagleri,svartgumptrupial,svartgumpad trupial,,1
 Passerina caerulea,blåtykknebb,blåkardinal,,1
 Ficedula mugimaki,mugimakifluesnapper,mugimakiflugsnappare,,1

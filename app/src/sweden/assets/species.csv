@@ -221,7 +221,7 @@ Porzana porzana,myrrikse,småfläckig sumphöna,VU,43351
 Anthus cervinus,lappiplerke,rödstrupig piplärka,EN,42048
 Emberiza hortulana,hortulan,ortolansparv,CR,41956
 Loxia leucoptera,båndkorsnebb,bändelkorsnäbb,,40633
-Saxicola rubicola,afrikasvartstrupe,svarthakad buskskvätta,NT,40310
+Saxicola rubicola,svartstrupe,svarthakad buskskvätta,NT,40310
 Regulus ignicapilla,rødtoppfuglekonge,brandkronad kungsfågel,,40205
 Phalaropus lobatus,svømmesnipe,smalnäbbad simsnäppa,VU,39925
 Ficedula albicollis,halsbåndfluesnapper,halsbandsflugsnappare,,39492
@@ -300,7 +300,7 @@ Tarsiger cyanurus,blåstjert,tajgablåstjärt,VU,4821
 Phylloscopus humei,blekbrynsanger,bergtajgasångare,,4761
 Phylloscopus fuscatus,brunsanger,brunsångare,,4756
 Streptopelia orientalis,mongolturteldue,större turturduva,,4683
-Saxicola maurus,russesvartstrupe,vitgumpad buskskvätta,,4515
+Saxicola maurus,asiasvartstrupe,vitgumpad buskskvätta,,4515
 Turdus atrogularis,svartstrupetrost,svarthalsad trast,,4409
 Puffinus puffinus,havlire,mindre lira,,4276
 Xema sabini,sabinemåke,tärnmås,,4180
@@ -375,7 +375,7 @@ Ardea purpurea,purpurhegre,purpurhäger,,883
 Hieraaetus pennatus,dvergørn,dvärgörn,,873
 Motacilla tschutschensis,østgulerle,östlig gulärla,,870
 Hippolais polyglotta,spottesanger,polyglottsångare,,851
-Anthus rubescens,myrpiplerke,hedpiplärka,,829
+Anthus rubescens,kanadapiplerke,hedpiplärka,,829
 Prunella atrogularis,svartstrupejernspurv,svartstrupig järnsparv,,826
 Calidris ruficollis,rødstrupesnipe,rödhalsad snäppa,,815
 Dendrocoptes medius,mellomspett,mellanspett,RE,813
@@ -437,10 +437,10 @@ Bucanetes mongolicus,steinfink,mongolfink,,195
 Ichthyaetus ichthyaetus,steppemåke,svarthuvad trut,,195
 Catharus ustulatus,brunkinnskogtrost,beigekindad skogstrast,,187
 Leucophaeus atricilla,lattermåke,sotvingad mås,,187
-Phoenicopterus roseus,flamingo,större flamingo,,187
+Phoenicopterus roseus,rosenflamingo,större flamingo,,187
 Phylloscopus plumbeitarsus,ospesanger,sibirisk lundsångare,,181
 Monticola saxatilis,steintrost,stentrast,,170
-Turdus naumanni,bruntrost,rödtrast,,169
+Turdus naumanni,rødflekktrost,rödtrast,,169
 Bucephala albeola,bøffeland,buffelhuvud,NK,158
 Sula leucogaster,brunsule,brunsula,,145
 Anas bahamensis,hvitkinnand,bahamaand,LO,144
@@ -484,10 +484,10 @@ Phoenicurus fuliginosus,blyrødstjert,forsrödstjärt,,37
 Junco hyemalis,vinterjunko,mörkögd junco,,37
 Hirundapus caudacutus,pigghaleseiler,taggstjärtseglare,,36
 Syrrhaptes paradoxus,steppehøne,stäppflyghöna,,35
-Cecropis daurica,amursvale,rostgumpsvala,,35
+Cecropis daurica,tempelsvale,rostgumpsvala,,35
 Melanocorypha yeltoniensis,svartlerke,svartlärka,,32
 Tringa solitaria,eremittsnipe,amerikansk skogssnäppa,,31
-Zoothera aurea,skjelltrost,guldtrast,,31
+Zoothera aurea,gulltrost,guldtrast,,31
 Acridotheres tristis,hyrdestær,brun majna,LO,30
 Apus caffer,hvitgumpseiler,vitgumpseglare,,29
 Lanius borealis,borealvarsler,beringvarfågel,,25
@@ -608,7 +608,7 @@ Setophaga coronata,myrteparula,myrtenskogssångare,,0
 Xanthocephalus xanthocephalus,gulhodetrupial,gulhuvad ängstrupial,,0
 Coccyzus americanus,gulnebbgjøk,gulnäbbad regngök,,0
 Mycerobas affinis,gullkjernebiter,halsbandsstenknäck,,0
-Oceanites oceanicus,wilsonstormsvale,havslöpare,,0
+Oceanites oceanicus,oseanstormsvale,havslöpare,,0
 Curruca hortensis,punersanger,herdesångare,,0
 Loxia megaplaga,hispaniolakorsnebb,hispaniolakorsnäbb,,0
 Corvus splendens,huskråke,huskråka,LO,0
@@ -629,7 +629,7 @@ Alaudala rufescens,flekkdverglerke,medelhavsdvärglärka,,0
 Setophaga americana,stryparula,messkogssångare,,0
 Ploceus intermedius,småmaskevever,mindre maskvävare,,0
 Clanga pomarina,småskrikørn,mindre skrikörn,,0
-Thinornis dubius,,mindre strandpipare,,0
+Thinornis dubius,dverglo,mindre strandpipare,,0
 Zapornia parva,sumprikse,mindre sumphöna,,0
 Alauda gulgula,orientlerke,mindre sånglärka,,0
 Ficedula mugimaki,mugimakifluesnapper,mugimakiflugsnappare,,0
