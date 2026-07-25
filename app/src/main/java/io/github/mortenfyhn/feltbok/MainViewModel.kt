@@ -242,11 +242,11 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
     /** Pick counts per co-observer name, so names you enter often surface first in the picker. */
     private val coObsUses = mutableStateMapOf<String, Int>().apply { putAll(loadCoObsUses(app)) }
 
-    /** The current field party ("følget mitt"): a sticky, explicit set pre-filled onto every new
-     *  observation. Persisted so a trip spans app launches; only ever changed on purpose (saving a
-     *  new obs, or an explicit clear) - never auto-reset, since mis-attributing an obs to someone who
-     *  wasn't there is worse than the locality case (#128). */
-    private val party = mutableStateListOf<String>().apply { addAll(loadParty(app)) }
+    /** The current field party ("følget mitt"), pre-filled onto every new observation: simply the
+     *  newest note's co-observers. Derived, not stored - whoever your latest obs credits *is* the
+     *  party, so fixing that note (alone or in a batch) fixes the default for the next one, and
+     *  editing older notes can't hijack it (#128). */
+    private fun party(): List<String> = notes.maxByOrNull { it.time }?.coObservers ?: emptyList()
 
     /** Known co-observer names for the picker (pure ranking in [coObserverOptions]). */
     fun coObserverOptions(): List<String> = coObserverOptions(coObsUses, dCoObs)
@@ -264,13 +264,12 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
     fun clearCoObs() = dCoObs.clear()
 
     /** Forget a name entirely - drop it from the autocomplete register (so a mistyped or one-off
-     *  name doesn't linger), and from the draft + party if it's there. Past notes keep their own
-     *  copies, so this only prunes what you'll be *offered* going forward. */
+     *  name doesn't linger), and from the draft if it's there. Past notes keep their own copies,
+     *  so this only prunes what you'll be *offered* going forward. */
     fun forgetCoObs(name: String) {
         coObsUses.remove(name)
         saveCoObsUses(ctx, coObsUses)
         dCoObs.remove(name)
-        if (party.remove(name)) saveParty(ctx, party)
     }
 
     /** Aktivitet options with your most-used first, then the rest in the default order. */
@@ -414,7 +413,7 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
         dSpecies = ""; dLatin = ""; dCount = 1
         dAge = ""; dAct = ""; dSex = ""; dPub = ""; dPriv = ""; dUncertain = false
         dLoc = null; dTime = 0L; dEndTime = null; dTimeUnknown = false
-        dCoObs.clear(); dCoObs.addAll(party)   // a new obs inherits the current party (#128)
+        dCoObs.clear(); dCoObs.addAll(party())   // a new obs inherits the current party (#128)
     }
 
     fun changeSpecies() { changingSpecies = true; screen = Screen.SEARCH }
@@ -573,7 +572,7 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
     private data class BatchBaseline(
         val species: String, val latin: String, val count: Int,
         val age: String, val sex: String, val activity: String,
-        val locKey: String?, val time: Long, val endTime: Long?,
+        val locKey: String?, val time: Long, val endTime: Long?, val coObs: List<String>,
     )
     private var batchBaseline: BatchBaseline? = null
     private fun Locality.key() = "$lokalitet|$lat|$lon"
@@ -595,7 +594,8 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
         dAge = shared { it.age } ?: ""
         dSex = shared { it.sex } ?: ""
         dAct = shared { it.activity } ?: ""
-        dPub = ""; dPriv = ""; dUncertain = false; dCoObs.clear()
+        dPub = ""; dPriv = ""; dUncertain = false
+        dCoObs.clear(); dCoObs.addAll(shared { it.coObservers } ?: emptyList())
         val locKey = shared { it.locKey() }
         dLoc = if (locKey != null) sel.first().let { n ->
             localities.firstOrNull { it.lokalitet == n.locName && it.lat == n.lat && it.lon == n.lon }
@@ -605,7 +605,7 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
         dEndTime = shared { it.endTime }
         dTimeUnknown = false   // batch edit doesn't touch the no-time flag; keep the checkbox off
 
-        batchBaseline = BatchBaseline(dSpecies, dLatin, dCount, dAge, dSex, dAct, locKey, dTime, dEndTime)
+        batchBaseline = BatchBaseline(dSpecies, dLatin, dCount, dAge, dSex, dAct, locKey, dTime, dEndTime, dCoObs.toList())
         batchEditing = true
         screen = Screen.DETAIL
     }
@@ -622,8 +622,16 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
             activity = if (dAct != b?.activity) dAct else null,
             locality = dLoc?.takeIf { it.key() != b?.locKey },
             time = if (dTime > 0 && (dTime != b?.time || dEndTime != b.endTime)) BatchTime(dTime, dEndTime) else null,
+            coObservers = dCoObs.toList().takeIf { it != b?.coObs },
         )
         batchApply(change)
+        // Bump the name register like a single-note save would, so a name typed here feeds the
+        // autocomplete next time. The party needs no handling: it's derived from the newest note,
+        // so a batch that covers it re-points the default automatically.
+        change.coObservers?.takeIf { it.isNotEmpty() }?.let { names ->
+            names.forEach { coObsUses[it] = (coObsUses[it] ?: 0) + 1 }
+            saveCoObsUses(ctx, coObsUses)
+        }
         cancelBatchEdit()   // leaves batch mode + resets the draft; the marks stay
     }
 
@@ -670,17 +678,11 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
             actUses[dAct] = (actUses[dAct] ?: 0) + 1
             saveActUses(ctx, actUses)
         }
-        // Co-observers: bump the name register (for autocomplete). On a new obs the party sticks to
-        // what you just used, so the next new obs inherits it - the "everything for this trip is me
-        // + these people" default (#128). Editing an existing note leaves the party untouched.
+        // Co-observers: bump the name register (for autocomplete). The party is derived from the
+        // newest note, so the save itself is what makes it stick - nothing to sync.
         if (dCoObs.isNotEmpty()) {
             dCoObs.forEach { coObsUses[it] = (coObsUses[it] ?: 0) + 1 }
             saveCoObsUses(ctx, coObsUses)
-        }
-        val newParty = stickyPartyAfterSave(party.toList(), dCoObs.toList(), isEditing)
-        if (newParty != party.toList()) {
-            party.clear(); party.addAll(newParty)
-            saveParty(ctx, party)
         }
         persist()
     }

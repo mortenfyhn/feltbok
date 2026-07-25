@@ -3,38 +3,9 @@ package io.github.mortenfyhn.feltbok
 import org.junit.Assert.assertEquals
 import org.junit.Test
 
-/** Unit tests for the co-observer sticky-party + picker logic (#128) - the non-obvious behaviour a
- *  regression would break silently. Pure functions in CoObservers.kt; the ViewModel just calls them. */
+/** Unit tests for the co-observer picker logic (#128). The sticky party has no logic to test any
+ *  more: it's derived (the newest note's co-observers, see MainViewModel.party()). */
 class CoObserversTest {
-
-    @Test
-    fun creatingAnObservationMakesItsCoObserversTheParty() {
-        // The "everything for this trip is me + these people" default: a new obs sets the party, so
-        // the next new obs inherits it.
-        assertEquals(
-            listOf("Kari", "Ola"),
-            stickyPartyAfterSave(current = emptyList(), savedCoObservers = listOf("Kari", "Ola"), isEditing = false),
-        )
-    }
-
-    @Test
-    fun editingAnObservationLeavesThePartyUntouched() {
-        // Going back to fix an old note's co-observers must not hijack today's party (the field-tested
-        // edge: adding a co-obs by *editing* the first obs doesn't make it sticky).
-        assertEquals(
-            listOf("Kari"),
-            stickyPartyAfterSave(current = listOf("Kari"), savedCoObservers = listOf("Per"), isEditing = true),
-        )
-    }
-
-    @Test
-    fun creatingSoloClearsTheParty() {
-        // Saving a new obs with nobody along resets the party - "Nå er jeg alene".
-        assertEquals(
-            emptyList<String>(),
-            stickyPartyAfterSave(current = listOf("Kari", "Ola"), savedCoObservers = emptyList(), isEditing = false),
-        )
-    }
 
     @Test
     fun pickerListsKnownNamesMostUsedFirst() {

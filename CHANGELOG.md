@@ -3,6 +3,9 @@
 ## Neste utgivelse
 
 - Ymse småforbedringer.
+- **Medobservatører i masseendring**: gløymde du å setje følget før du logga ein
+  haug med obsar? Marker dei, trykk **Endre**, og legg til medobservatørane på alle
+  i eitt jafs.
 - Versjonsnummeret nedst i appen viser ikkje lenger eit misvisande «-dirty» i F-Droid-bygg.
 - Retta artsnavn: enkelte arter hadde feil eller utdatert namn i søket – blant anna mangla
   «svartstrupe» (den låg feilaktig som «afrikasvartstrupe»). Både norske og vitskaplege namn

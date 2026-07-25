@@ -130,10 +130,14 @@ row opens it for editing.
 marked notes agree on are pre-filled; fields they differ on show a pale preview of the
 current mix ("Skjære, Gråmåke, …") and stay blank. Saving applies only the fields you
 actually changed to every marked note (one undoable step) and returns you to the list
-still marking, so you can make another pass. Comments and co-observers aren't
-batch-editable (they're rarely the same across notes, and the party is a per-run
-default rather than a bulk field), so they're hidden here; everything else — species,
-locality, count, age, sex, activity, time — is. Marking a *single* note and tapping
+still marking, so you can make another pass. Comments aren't batch-editable (they're
+rarely the same across notes), so they're hidden here; everything else — species,
+locality, count, age, sex, activity, time, co-observers — is. Batch-editing
+co-observers covers the classic slip of logging a run of notes before remembering to
+set the party; it replaces each note's list (it doesn't append). Since the party is
+derived from the most recent observation (see Medobservatører below), a batch that
+covers it also fixes the default for the next new observation. Marking a *single* note
+and tapping
 `Endre` is just the normal single-note editor (nothing to batch).
 
 ## Tidspunkt (start/slutt)
@@ -157,13 +161,15 @@ from the list (for a mistype or a one-off), behind a short confirm so it's never
 for un-ticking the name from this observation — past observations keep whatever name they
 were saved with, so this only prunes what you'll be offered next time.
 
-The current field party is **sticky** ("følget mitt"): whatever co-observers you set on
-a new observation carry over to the next new one, so once you note down who you're out
-with, every following observation inherits them — you only touch the row when the party
-changes. Editing an *existing* observation's co-observers doesn't disturb the sticky
-party. **Nå er jeg alene** (in the picker) clears the set; save an observation with it
-empty and the party is cleared going forward too. The party never auto-resets on its own — it
-stays exactly as you last set it, since wrongly crediting someone who wasn't there (in a
+The current field party ("følget mitt") is simply **your most recent observation's
+co-observers**: every new observation is pre-filled with them, so once you note down who
+you're out with, everything that follows inherits them — you only touch the row when the
+party changes. Because the party is derived rather than stored, fixing the newest
+observation's co-observers (alone or in a batch) fixes the default for the next one, and
+editing or backdating *older* observations can't hijack today's party.
+**Nå er jeg alene** (in the picker) clears the set; save an observation with it
+empty and the party is cleared going forward too. The party never resets on its own — it
+tracks exactly what you last saved, since wrongly crediting someone who wasn't there (in a
 public database) is worse than the small chore of clearing it.
 
 On export, co-observers become the template's **`Medobservatør`** columns (one per name,

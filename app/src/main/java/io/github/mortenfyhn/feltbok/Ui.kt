@@ -1196,14 +1196,13 @@ fun DetailScreen(vm: MainViewModel) {
             }
             if (showTime) TimeDialog(vm) { showTime = false }
             // Co-observers (#128) sit last, below time: tap to open the name picker. Blank value when
-            // it's just you. Not batch-editable (the sticky party is per-run, not a bulk field), so
-            // hidden in batch mode like the comments.
-            if (!batch) {
-                FieldRow(Strings.Detail.coObservers, onClick = { vm.openCoObs() }) {
-                    if (vm.dCoObs.isNotEmpty())
-                        Text(vm.dCoObs.joinToString(", "), fontWeight = FontWeight.Medium,
-                            maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.weight(1f, fill = false))
-                }
+            // it's just you. Batch-editable like the other fields - the typical fix is realizing a
+            // string of notes went in without the party and adding it to all of them at once.
+            FieldRow(Strings.Detail.coObservers, onClick = { vm.openCoObs() }) {
+                if (vm.dCoObs.isNotEmpty())
+                    Text(vm.dCoObs.joinToString(", "), fontWeight = FontWeight.Medium,
+                        maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.weight(1f, fill = false))
+                else if (batch) BatchHint(vm.batchPreview { it.coObservers.joinToString(", ") })
             }
         }
         // Delete and save sit side by side - red left, green right - so the destructive action

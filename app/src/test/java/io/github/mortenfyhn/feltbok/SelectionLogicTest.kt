@@ -112,6 +112,16 @@ class SelectionLogicTest {
     }
 
     @Test
+    fun coObserversReplaceTheList() {
+        val n = note(1).copy(coObservers = listOf("Kari"))
+        val out = applyBatchEdit(listOf(n), setOf(1L), BatchChange(coObservers = listOf("Ola", "Per"))).single()
+        assertEquals(listOf("Ola", "Per"), out.coObservers)
+        // null leaves each note's own list alone; empty list is a real clear.
+        assertEquals(listOf("Kari"), applyBatchEdit(listOf(n), setOf(1L), BatchChange(age = "Adult")).single().coObservers)
+        assertEquals(emptyList<String>(), applyBatchEdit(listOf(n), setOf(1L), BatchChange(coObservers = emptyList())).single().coObservers)
+    }
+
+    @Test
     fun idIsNeverChangedByBatch() {
         val out = applyBatchEdit(listOf(note(7)), setOf(7L), BatchChange(time = BatchTime(999, 1000), age = "Adult")).single()
         assertEquals(7L, out.id)   // id is the stable key - a time edit must not touch it
@@ -122,6 +132,7 @@ class SelectionLogicTest {
         assertTrue(BatchChange().isNoOp)
         assertTrue(!BatchChange(age = "").isNoOp)   // clearing age is a real change, not a no-op
         assertTrue(!BatchChange(time = BatchTime(1, null)).isNoOp)
+        assertTrue(!BatchChange(coObservers = emptyList()).isNoOp)   // batch-clearing the party too
     }
 
     @Test

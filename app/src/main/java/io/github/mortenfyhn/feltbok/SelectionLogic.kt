@@ -39,11 +39,12 @@ data class BatchChange(
     val activity: String? = null,
     val locality: Locality? = null,
     val time: BatchTime? = null,
+    val coObservers: List<String>? = null,
 ) {
     /** Nothing to write - the editor was left with no field changed, so a save is a no-op. */
     val isNoOp: Boolean get() =
         species == null && count == null && age == null && sex == null &&
-            activity == null && locality == null && time == null
+            activity == null && locality == null && time == null && coObservers == null
 }
 
 /** Apply [change] to every note whose id is in [ids]; all other notes pass through untouched, and
@@ -59,6 +60,7 @@ fun applyBatchEdit(notes: List<Note>, ids: Set<Long>, change: BatchChange): List
             age = change.age ?: n.age,
             sex = change.sex ?: n.sex,
             activity = change.activity ?: n.activity,
+            coObservers = change.coObservers ?: n.coObservers,
         )
         change.locality?.let { loc ->
             m = m.copy(
