@@ -4,6 +4,8 @@ Note to agents: Always write new entries in the same style and **brevity** as ol
 
 ## Neste utgivelse
 
+- Sikrere sikkerhetskopi av observasjoner.
+
 ## v1.1 (28. juli 2026)
 
 - Støtte for medobservatører.

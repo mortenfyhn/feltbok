@@ -648,6 +648,19 @@ fun loadSpeciesRegions(ctx: Context): Map<Int, Map<String, Int>> {
 
 private fun notesFile(ctx: Context) = File(ctx.filesDir, "notes.json")
 
+/** Write to a sibling temp file, fsync, then rename over [f]. A plain writeText truncates first,
+ *  so a crash mid-save could leave the file empty or torn - unrecoverable for field notes (#153).
+ *  The rename is atomic on the same filesystem, so a complete file exists at every instant; the
+ *  fsync makes sure the new content is on disk before the rename points at it. */
+private fun writeAtomic(f: File, text: String) {
+    val tmp = File(f.parentFile, f.name + ".tmp")
+    java.io.FileOutputStream(tmp).use { out ->
+        out.write(text.toByteArray())
+        out.fd.sync()
+    }
+    if (!tmp.renameTo(f)) throw java.io.IOException("rename failed: $tmp -> $f")
+}
+
 /**
  * Two observations entered in the same millisecond share an `id` (it's the creation time).
  * `id` is the list's stable key and the handle for edit/delete/select, so a collision both
@@ -733,7 +746,7 @@ fun loadNotes(ctx: Context): List<Note> {
 fun saveNotes(ctx: Context, notes: List<Note>) {
     val arr = JSONArray()
     notes.forEach { arr.put(noteToJson(it)) }
-    notesFile(ctx).writeText(arr.toString())
+    writeAtomic(notesFile(ctx), arr.toString())
 }
 
 /**
