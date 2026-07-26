@@ -34,6 +34,16 @@ while ! attached; do
 done
 attached && just itest
 
+# Same deal for the seed→export→paste-import check (docs/pre-release-checklist.md): it's the only
+# end-to-end test of the export format against the real site — automation stops at "TSV renders" —
+# but it's manual, so the script can only ask. Require a typed answer (not a stray Enter) so
+# releasing without it is as deliberate as skipping the R8 tests above.
+while true; do
+    read -rp "Has the seed→export→paste-import test passed on the live site? (yes / 'skip' to release without it): " ans
+    [ "$ans" = yes ] && break
+    [ "$ans" = skip ] && { echo "Skipping the paste-import check for $tag."; break; }
+done
+
 # versionCode must increase for every release Android should treat as an upgrade; just +1.
 old_code=$(grep -oP 'versionCode = \K\d+' "$gradle")
 new_code=$((old_code + 1))
