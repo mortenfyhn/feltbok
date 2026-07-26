@@ -742,6 +742,21 @@ fun importSeedNotes(ctx: Context) {
     }
 }
 
+// ---- archive (#153): archived (ex-deleted) observations, one JSON object per line ----
+// JSON Lines rather than a JSON array so archiving can APPEND without parsing the existing
+// archive; only the archive screen and a restore read the whole file.
+
+fun notesToJsonl(notes: List<Note>): String =
+    notes.joinToString("") { noteToJson(it).toString() + "\n" }
+
+/** A malformed line (e.g. a torn append from a crash) is skipped, not fatal - the archive is a
+ *  safety net, so one bad line must never take the rest of it down. */
+fun notesFromJsonl(text: String): List<Note> =
+    text.lineSequence()
+        .filter { it.isNotBlank() }
+        .mapNotNull { line -> runCatching { noteFromJson(JSONObject(line)) }.getOrNull() }
+        .toList()
+
 fun loadNotes(ctx: Context): List<Note> {
     val f = notesFile(ctx)
     if (!f.exists()) return emptyList()
@@ -755,6 +770,32 @@ fun saveNotes(ctx: Context, notes: List<Note>) {
     val arr = JSONArray()
     notes.forEach { arr.put(noteToJson(it)) }
     writeAtomic(notesFile(ctx), arr.toString())
+}
+
+// ---- archive file (#153): where "deleted" observations go, restorable from the archive screen.
+// Separate from notes.json so the hot paths (launch parse, every-save rewrite, the Downloads TSV
+// mirror) stay proportional to the LIVE notes however many years of archive pile up. ----
+
+private fun archiveFile(ctx: Context) = File(ctx.filesDir, "archive.jsonl")
+
+/** Archiving appends - it never parses the existing archive (the point of JSONL). A torn append
+ *  can only corrupt the final line, which [notesFromJsonl] skips, so no atomic dance is needed. */
+fun appendToArchive(ctx: Context, notes: List<Note>) {
+    if (notes.isEmpty()) return
+    archiveFile(ctx).appendText(notesToJsonl(notes))
+}
+
+fun loadArchive(ctx: Context): List<Note> {
+    val f = archiveFile(ctx)
+    if (!f.exists()) return emptyList()
+    return runCatching { notesFromJsonl(f.readText()) }.getOrDefault(emptyList())
+}
+
+/** Full rewrite - only shrinking the archive (a restore, or an undone archiving) needs this.
+ *  An empty archive deletes the file, keeping [archiveExists] a plain existence check. */
+fun saveArchive(ctx: Context, notes: List<Note>) {
+    val f = archiveFile(ctx)
+    if (notes.isEmpty()) f.delete() else writeAtomic(f, notesToJsonl(notes))
 }
 
 /**

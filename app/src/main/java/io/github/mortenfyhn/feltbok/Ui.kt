@@ -166,40 +166,11 @@ fun ListScreen(vm: MainViewModel, listState: LazyListState) {
                         }
                         vm.clearScrollTarget()
                     }
-                    val density = LocalDensity.current
                     val ds = remember { DragSelect() }
-                    // While a select-drag is live the list must not scroll on its own: its scroll
-                    // gesture would race the drag detector and swallow the first moves ("didn't
-                    // register"). We drive scrolling ourselves via the edge auto-scroll below instead.
-                    LaunchedEffect(ds.active) {
-                        if (!ds.active) return@LaunchedEffect
-                        // Fixed edge band; speed ramps 0..1 with depth into the band (grazing barely
-                        // moves), capped low, dead everywhere else - so it's steerable, not a lurch.
-                        val band = with(density) { 72.dp.toPx() }
-                        val maxStep = with(density) { 10.dp.toPx() }
-                        while (ds.active) {
-                            withFrameNanos {}
-                            // y can be negative when the finger is dragged above the list (toward the
-                            // top bar) - that must still scroll up, so don't skip it.
-                            val y = ds.pointerY
-                            val info = listState.layoutInfo
-                            val top = info.viewportStartOffset.toFloat()
-                            val bottom = info.viewportEndOffset.toFloat()
-                            val frac = when {
-                                y < top + band -> -((top + band - y) / band)
-                                y > bottom - band -> (y - (bottom - band)) / band
-                                else -> 0f
-                            }.coerceIn(-1f, 1f)
-                            if (frac != 0f) {
-                                listState.scrollBy(frac * maxStep)
-                                // The finger is past the list edge, so it's over no row - sweep to the
-                                // edge-most visible row instead, so rows scrolling into view get marked.
-                                applyDragRange(listState, orderedIds, vm, ds, y.coerceIn(top, bottom - 1f))
-                            }
-                        }
-                    }
+                    SelectDragAutoScroll(listState, orderedIds, vm, ds)
                     LazyColumn(
-                        Modifier.fillMaxSize().dragToSelect(listState, orderedIds, vm, haptic, ds),
+                        Modifier.fillMaxSize().dragToSelect(listState, orderedIds, vm, haptic, ds)
+                            .scrollIndicator(listState),
                         state = listState, userScrollEnabled = !ds.active,
                         contentPadding = PaddingValues(bottom = 84.dp),
                     ) {
@@ -272,6 +243,10 @@ fun ListScreen(vm: MainViewModel, listState: LazyListState) {
                             maxLines = 1, modifier = Modifier.clickable { vm.openSync() }.padding(horizontal = 14.dp, vertical = 10.dp))
                     }
                     Spacer(Modifier.weight(1f))
+                    // Always visible, even with nothing archived (#153) - so the archive is
+                    // discoverable before you first need it.
+                    Text(Strings.Archive.title, color = cs.primary, fontWeight = FontWeight.Medium, fontSize = 13.sp,
+                        maxLines = 1, modifier = Modifier.clickable { vm.openArchive() }.padding(horizontal = 14.dp, vertical = 10.dp))
                     Text(Strings.Notes.feedback, color = cs.primary, fontWeight = FontWeight.Medium, fontSize = 13.sp,
                         maxLines = 1, modifier = Modifier.clickable { showFeedback = true }.padding(horizontal = 14.dp, vertical = 10.dp))
                 }
@@ -300,6 +275,42 @@ private class DragSelect {
     // on different nodes, so the tap isn't cancelled). That trailing tap would toggle the just-marked
     // row straight back off - so a long-press arms this, and the row's onClick eats the next tap once.
     var suppressTap = false
+}
+
+/** Edge auto-scroll while a select-drag is live (shared by the notes list and the archive).
+ *  While a select-drag is live the list must not scroll on its own: its scroll gesture would race
+ *  the drag detector and swallow the first moves ("didn't register") - the caller freezes user
+ *  scroll via [DragSelect.active], and this drives scrolling instead. */
+@Composable
+private fun SelectDragAutoScroll(listState: LazyListState, orderedIds: List<Long>, vm: MainViewModel, ds: DragSelect) {
+    val density = LocalDensity.current
+    LaunchedEffect(ds.active) {
+        if (!ds.active) return@LaunchedEffect
+        // Fixed edge band; speed ramps 0..1 with depth into the band (grazing barely
+        // moves), capped low, dead everywhere else - so it's steerable, not a lurch.
+        val band = with(density) { 72.dp.toPx() }
+        val maxStep = with(density) { 10.dp.toPx() }
+        while (ds.active) {
+            withFrameNanos {}
+            // y can be negative when the finger is dragged above the list (toward the
+            // top bar) - that must still scroll up, so don't skip it.
+            val y = ds.pointerY
+            val info = listState.layoutInfo
+            val top = info.viewportStartOffset.toFloat()
+            val bottom = info.viewportEndOffset.toFloat()
+            val frac = when {
+                y < top + band -> -((top + band - y) / band)
+                y > bottom - band -> (y - (bottom - band)) / band
+                else -> 0f
+            }.coerceIn(-1f, 1f)
+            if (frac != 0f) {
+                listState.scrollBy(frac * maxStep)
+                // The finger is past the list edge, so it's over no row - sweep to the
+                // edge-most visible row instead, so rows scrolling into view get marked.
+                applyDragRange(listState, orderedIds, vm, ds, y.coerceIn(top, bottom - 1f))
+            }
+        }
+    }
 }
 
 /** The note id under a Y coordinate (list-viewport space), or null if that row is a day header or
@@ -649,7 +660,7 @@ private fun AnnotatedString.Builder.appendBoldSymbols(text: String) {
 }
 
 @Composable
-private fun NoteRow(n: Note, name: String, nameItalic: Boolean, status: String, selecting: Boolean, selected: Boolean, onClick: () -> Unit) {
+private fun NoteRow(n: Note, name: String, nameItalic: Boolean, status: String, selecting: Boolean, selected: Boolean, clickEnabled: Boolean = true, onClick: () -> Unit) {
     val cs = MaterialTheme.colorScheme
     val hasLoc = n.locName.isNotBlank()
     // age + sex (sex symbol bolded so the thin ♂/♀ glyphs read at a glance), each shown only when
@@ -666,7 +677,7 @@ private fun NoteRow(n: Note, name: String, nameItalic: Boolean, status: String, 
     // the click/tint/padding live on the Row so the whole width, circle included, is one tap target.
     Row(
         Modifier.fillMaxWidth()
-            .clickable(onClick = onClick)
+            .clickable(enabled = clickEnabled, onClick = onClick)
             .background(if (selected) cs.primaryContainer else cs.surface)
             .padding(horizontal = 16.dp, vertical = 9.dp),
         verticalAlignment = Alignment.CenterVertically,
@@ -1040,6 +1051,94 @@ fun SettingsScreen(vm: MainViewModel) {
                 )
             }
             HorizontalDivider(color = cs.outline.copy(alpha = 0.4f))
+        }
+    }
+}
+
+// ============================ ARCHIVE ============================
+
+/** The archive (#153): where "deleted" observations go, restorable from here. Marking behaves
+ *  exactly like the notes list (long-press to start - optionally dragged into a range with edge
+ *  auto-scroll - leading circles, day-header toggles, a contextual bar over the header); the only
+ *  difference is that a plain tap outside marking does nothing, since an archived note can't be
+ *  opened. Restore is the single action; true deletion is deliberately absent. */
+@Composable
+fun ArchiveScreen(vm: MainViewModel) {
+    val cs = MaterialTheme.colorScheme
+    val selecting = vm.selectionMode
+    val haptic = LocalHapticFeedback.current
+    // System Back leaves selection mode first (like the list), then the screen.
+    BackHandler { if (selecting) vm.clearSelection() else vm.closeArchive() }
+    Column(Modifier.fillMaxSize()) {
+        Box {
+            ScreenHeader(Strings.Archive.title, onCancel = { vm.closeArchive() })
+            if (selecting) ArchiveSelectionBar(vm, Modifier.matchParentSize())
+        }
+        if (vm.archived.isEmpty()) {
+            Box(Modifier.fillMaxSize(), Alignment.Center) {
+                Text(Strings.Archive.empty, color = cs.onSurfaceVariant, textAlign = TextAlign.Center)
+            }
+        } else {
+            val listState = rememberLazyListState()
+            val groups = groupNotesByDay(vm.archived)
+            val orderedIds = groups.flatMap { g -> g.notes.map { it.id } }
+            val ds = remember { DragSelect() }
+            SelectDragAutoScroll(listState, orderedIds, vm, ds)
+            LazyColumn(
+                Modifier.fillMaxSize().dragToSelect(listState, orderedIds, vm, haptic, ds)
+                    .scrollIndicator(listState),
+                state = listState, userScrollEnabled = !ds.active,
+            ) {
+                groups.forEach { group ->
+                    item(key = "day:${group.label}") {
+                        val ids = group.notes.map { it.id }
+                        DayHeader(
+                            group.label, selecting,
+                            allSelected = group.notes.all { it.id in vm.selected },
+                            onToggle = { vm.toggleDay(ids) },
+                            onLongPress = { vm.startSelectDay(ids) },
+                        )
+                    }
+                    items(group.notes, key = { it.id }) { n ->
+                        NoteRow(
+                            n, vm.noteName(n), vm.langPrefs.primary == Lang.LATIN, vm.statusFor(n.latin),
+                            selecting = selecting, selected = n.id in vm.selected,
+                            // Outside marking a tap has nothing to do (no editor here), so disable
+                            // it: an enabled-but-inert row would still flash its ripple.
+                            clickEnabled = selecting,
+                            onClick = {
+                                if (ds.suppressTap) ds.suppressTap = false
+                                else vm.toggleSelect(n.id)
+                            },
+                        )
+                    }
+                }
+            }
+        }
+    }
+}
+
+/** The archive's contextual bar while marking: count + close on the left, Gjenopprett on the
+ *  right. Same transform-the-header idiom (and styling) as the list's [SelectionBar]. */
+@Composable
+private fun ArchiveSelectionBar(vm: MainViewModel, modifier: Modifier = Modifier) {
+    Row(
+        modifier.background(MaterialTheme.colorScheme.primary)
+            .clickable(interactionSource = remember { MutableInteractionSource() }, indication = null) {}
+            .padding(horizontal = 8.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Text("✕", color = Color.White, fontWeight = FontWeight.SemiBold, fontSize = 20.sp,
+            modifier = Modifier.clip(CircleShape).clickable { vm.clearSelection() }.padding(6.dp))
+        Spacer(Modifier.width(8.dp))
+        Text(Strings.Notes.selected(vm.selected.size), color = Color.White,
+            fontWeight = FontWeight.SemiBold, modifier = Modifier.weight(1f))
+        Box(
+            Modifier.clip(RoundedCornerShape(8.dp))
+                .border(1.dp, Color.White.copy(alpha = 0.7f), RoundedCornerShape(8.dp))
+                .clickable { vm.restoreSelected() }.padding(horizontal = 12.dp, vertical = 8.dp),
+        ) {
+            Text(Strings.Archive.restore, color = Color.White, fontWeight = FontWeight.Medium, fontSize = 14.sp)
         }
     }
 }
@@ -1555,9 +1654,14 @@ fun ExportScreen(vm: MainViewModel) {
     // Scope: whatever the export covers - the marked notes when opened from selection, else all.
     val exported = vm.exportNotes()
     val isSelection = vm.exportIsSelection()
-    val text = exportTsv(exported)
+    // remember'd: with a big batch the TSV runs to hundreds of KB, so don't rebuild it (or rescan
+    // the kommuner) on every recomposition.
+    val text = remember(exported) { exportTsv(exported) }
+    // The preview field shows only the first rows: laying out the FULL string in a text field is
+    // what made this screen slow to open on a big batch. The copy button copies everything.
+    val preview = remember(text) { text.lineSequence().take(20).joinToString("\n") }
     // A single (non-blank) kommune across all notes can be named on the form; otherwise leave it blank.
-    val singleKommune = vm.exportKommuner().singleOrNull()?.takeIf { it.isNotBlank() }
+    val singleKommune = remember(exported) { vm.exportKommuner().singleOrNull()?.takeIf { it.isNotBlank() } }
     var copied by remember { mutableStateOf(false) }
     var confirmClear by remember { mutableStateOf(false) }
 
@@ -1565,7 +1669,7 @@ fun ExportScreen(vm: MainViewModel) {
         ScreenHeader(Strings.Export.title, onCancel = { vm.closeExport() })
         Column(Modifier.weight(1f).verticalScroll(rememberScrollState()).padding(horizontal = 16.dp)) {
             Step(1, Strings.Export.step1) {
-                OutlinedTextField(text, {},
+                OutlinedTextField(preview, {},
                     Modifier.fillMaxWidth().height(120.dp).padding(top = 6.dp), readOnly = true,
                     textStyle = androidx.compose.ui.text.TextStyle(fontSize = 11.sp))
                 Button(

@@ -12,7 +12,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
-enum class Screen { LIST, SEARCH, DETAIL, LOCALITY, COOBS, SYNC, SETTINGS }
+enum class Screen { LIST, SEARCH, DETAIL, LOCALITY, COOBS, SYNC, SETTINGS, ARCHIVE }
 
 /**
  * Single source of truth for the UI. Holds the day's notes (persisted), the live
@@ -131,8 +131,49 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
     fun toggleDay(ids: List<Long>) = setSelection(toggledDay(selected.toSet(), ids))
 
     fun deleteSelected() {
-        setUndo(Undoable.Deleted(notes.filter { it.id in selected }))
-        notes.removeAll { it.id in selected }
+        archive(notes.filter { it.id in selected })
+        clearSelection()
+    }
+
+    // ---- archive (#153): "Slett" moves notes to the archive file instead of destroying them; the
+    // archive screen restores them. True deletion is deliberately absent - clearing the app's data
+    // is the escape hatch if someone really wants everything gone.
+
+    /** Archived notes for the ARCHIVE screen, loaded fresh each time it opens (the archive can be
+     *  big, so it isn't parsed at startup - see loadArchive). */
+    val archived = mutableStateListOf<Note>()
+
+    /** The shared "delete" path: append [gone] to the archive, drop them from the live list, and
+     *  offer the usual undo. Appending immediately (not on snackbar expiry) means an app kill can't
+     *  lose them; the undo therefore also takes them back OUT of the archive (see [undo]). */
+    private fun archive(gone: List<Note>) {
+        if (gone.isEmpty()) return
+        appendToArchive(ctx, gone)
+        setUndo(Undoable.Deleted(gone))
+        val ids = gone.map { it.id }.toSet()
+        notes.removeAll { it.id in ids }
+        persist()
+    }
+
+    fun openArchive() {
+        clearSelection()
+        archived.clear()
+        archived.addAll(loadArchive(ctx))
+        screen = Screen.ARCHIVE
+    }
+
+    fun closeArchive() {
+        clearSelection()
+        screen = Screen.LIST
+    }
+
+    /** Move the marked archived notes back to the live list (they re-sort into their day groups). */
+    fun restoreSelected() {
+        val sel = archived.filter { it.id in selected }
+        if (sel.isEmpty()) return
+        archived.removeAll { it.id in selected }
+        saveArchive(ctx, archived.toList())
+        notes.addAll(sel)
         clearSelection()
         persist()
     }
@@ -163,7 +204,14 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
 
     fun undo() {
         when (val u = undoOffer.current) {
-            is Undoable.Deleted -> { notes.addAll(u.notes); persist() }   // list sorts by time
+            is Undoable.Deleted -> {   // list sorts by time
+                notes.addAll(u.notes)
+                // They were archived at once (see archive()), so take them back out - a note must
+                // never exist in both lists.
+                val ids = u.notes.map { it.id }.toSet()
+                saveArchive(ctx, loadArchive(ctx).filterNot { it.id in ids })
+                persist()
+            }
             is Undoable.Discarded -> screen = Screen.DETAIL              // draft is still in the editor
             is Undoable.Edited -> { u.before.forEach { b -> notes.indexOfFirst { it.id == b.id }.takeIf { it >= 0 }?.let { notes[it] = b } }; persist() }
             null -> {}
@@ -687,11 +735,7 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
     }
 
     fun delete() {
-        editingId?.let { id ->
-            setUndo(Undoable.Deleted(notes.filter { it.id == id }))
-            notes.removeAll { it.id == id }
-            persist()
-        }
+        editingId?.let { id -> archive(notes.filter { it.id == id }) }
         screen = Screen.LIST
     }
 
@@ -723,12 +767,8 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
      *  (a selection, or all), so a subset export never deletes notes it didn't cover. Undoable like
      *  the other deletes (#122), so a mis-tap recovers. */
     fun clearExported() {
-        val gone = exportNotes()
-        setUndo(Undoable.Deleted(gone))
-        val ids = gone.map { it.id }.toSet()
-        notes.removeAll { it.id in ids }
+        archive(exportNotes())
         clearSelection()  // the exported notes are gone; leave selection mode too
-        persist()
     }
 
     private fun persist() {

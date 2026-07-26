@@ -25,14 +25,20 @@ object Strings {
         fun gpsAccuracy(m: Int) = "(GPS ±$m m)"
 
         fun selected(n: Int) = "$n " + if (n == 1) "markerad" else "markerade"
-        const val deleteSelected = "Ta bort"
-        fun confirmDeleteTitle(n: Int) = "Ta bort de $n observationerna?"
+        const val deleteSelected = "Arkivera"
+        fun confirmDeleteTitle(n: Int) = "Arkivera de $n observationerna?"
         const val edit = "Ändra"
         fun editTitle(n: Int) = "Ändra $n " + if (n == 1) "observation" else "observationer"
 
-        fun deleted(n: Int) = "Tog bort $n " + if (n == 1) "observation" else "observationer"
+        fun deleted(n: Int) = "Arkiverade $n " + if (n == 1) "observation" else "observationer"
         fun edited(n: Int) = "Ändrade $n " + if (n == 1) "observation" else "observationer"
         const val undo = "Ångra"
+    }
+
+    object Archive {
+        const val title = "Arkiv"
+        const val empty = "Inga arkiverade observationer"
+        const val restore = "Återställ"
     }
 
     object About {
@@ -89,7 +95,7 @@ object Strings {
         const val uncertain = "Osäker artbestämning"
         const val coObservers = "Medobservatörer"
         const val time = "Tid"
-        const val delete = "Ta bort"
+        const val delete = "Arkivera"
         const val copy = "Kopiera"
         const val save = "Spara"
 
@@ -134,17 +140,17 @@ object Strings {
         fun tip(kommune: String) = "(Prioritera fyndplatser i $kommune för att undvika krockar)"
         const val step4 = "Granska fynd"
         const val step4Body = "Kontrollera att observationerna syns i Artportalen"
-        const val step5 = "Ta bort från appen"
-        const val step5Body = "När allt är på plats kan du ta bort observationerna från appen"
-        fun clearAll(n: Int) = "Ta bort alla observationer ($n)"
-        const val clearTitle = "Ta bort alla observationer?"
+        const val step5 = "Arkivera i appen"
+        const val step5Body = "När allt är på plats kan du arkivera observationerna i appen"
+        fun clearAll(n: Int) = "Arkivera alla observationer ($n)"
+        const val clearTitle = "Arkivera alla observationer?"
 
         // Shown instead when the export covered only marked notes (#120): names the count so it's
         // clear the rest of the list is untouched.
-        fun clearSelected(n: Int) = "Ta bort $n ${if (n == 1) "observation" else "observationer"}"
-        fun clearSelectedTitle(n: Int) = "Ta bort de $n exporterade observationerna?"
+        fun clearSelected(n: Int) = "Arkivera $n ${if (n == 1) "observation" else "observationer"}"
+        fun clearSelectedTitle(n: Int) = "Arkivera de $n exporterade observationerna?"
         const val clearBody = "Se till att allt är på plats i Artportalen!"
-        const val clearConfirm = "Ta bort"
+        const val clearConfirm = "Arkivera"
     }
 
     object Sync {

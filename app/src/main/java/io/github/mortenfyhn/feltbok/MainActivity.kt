@@ -11,6 +11,7 @@ import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.viewModels
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.safeDrawingPadding
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material3.MaterialTheme
@@ -25,6 +26,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.unit.dp
 import androidx.core.content.ContextCompat
 import kotlinx.coroutines.withTimeoutOrNull
 
@@ -103,7 +105,7 @@ fun App(vm: MainViewModel) {
                     vm.screen == Screen.COOBS -> vm.closeCoObs()
                     vm.screen == Screen.SETTINGS -> vm.closeSettings()
                     vm.screen == Screen.SEARCH -> vm.cancelSearch()
-                    // DETAIL and LOCALITY each compose their own BackHandler, which shadows this one
+                    // DETAIL, LOCALITY and ARCHIVE each compose their own BackHandler, which shadows this one
                     // so the gesture matches their "tilbake" button; those branches never run here.
                     else -> {}
                 }
@@ -119,7 +121,11 @@ fun App(vm: MainViewModel) {
                 // window is edge-to-edge. Sits on the Scaffold, not the Surface, so the Surface's
                 // background colour still paints behind the bars instead of leaving them bare.
                 modifier = Modifier.safeDrawingPadding(),
-                snackbarHost = { SnackbarHost(snackbar) },
+                // Lifted above the list's footer bar (Material floats snackbars above persistent
+                // bottom chrome), so the undo toast can't cover the Arkiv/feedback links - which it
+                // otherwise does exactly when you've just archived and might want the archive. The
+                // footer is a single fixed 13sp text row, so a constant clears it.
+                snackbarHost = { SnackbarHost(snackbar, Modifier.padding(bottom = 40.dp)) },
                 containerColor = Color.Transparent,
             ) { _ ->
                 when (vm.screen) {
@@ -130,6 +136,7 @@ fun App(vm: MainViewModel) {
                     Screen.COOBS -> CoObserverScreen(vm)
                     Screen.SYNC -> SyncScreen(vm)
                     Screen.SETTINGS -> SettingsScreen(vm)
+                    Screen.ARCHIVE -> ArchiveScreen(vm)
                 }
                 if (vm.showExport) ExportScreen(vm)
             }

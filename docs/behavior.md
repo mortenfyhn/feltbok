@@ -117,6 +117,10 @@ the species — no pill means it was just you.
 Saving a new observation scrolls the list up to its day section, so you see the note
 you just added even when it starts a fresh day above where the list was scrolled.
 
+While you scroll, a thin indicator along the right edge shows where you are in the
+list (it fades away at rest) — with a long history the day headers alone give no
+sense of position. The archive list has it too.
+
 ### Marking (masse-handlinger)
 
 Long-press a row to start marking. A leading circle then appears on every row (and
@@ -126,9 +130,10 @@ also **long-press and drag** across rows to sweep a range in one gesture (drag b
 to un-sweep); dragging to the top or bottom edge auto-scrolls the list so the range
 can run past what's on screen. The
 status strip turns into a selection bar in place — a ✕ to leave, the count, and the
-bulk actions **Endre**, **Slett** and **Eksporter** — so entering marking never shifts
-the list. `Slett` removes the marked notes (undoable); deleting more than one asks to
-confirm first, since several vanishing at once is surprising (a single mark deletes
+bulk actions **Endre**, **Arkiver** and **Eksporter** — so entering marking never shifts
+the list. `Arkiver` moves the marked notes to the archive (undoable, and restorable
+from the archive later — see Arkiv below); archiving more than one asks to
+confirm first, since several vanishing at once is surprising (a single mark archives
 straight away). `Eksporter` opens the export
 walkthrough scoped to just them (see below). You leave marking only via the ✕, system
 Back, or finishing an action — deselecting the last note keeps you in marking mode
@@ -217,8 +222,9 @@ Artsobservasjoner's "Importer observasjoner", then clear them from the app once
 they're safely in. (Exporting from a marking selection scopes the whole walkthrough
 to just the marked notes — the copied block, the kommune hint, and the final clear
 step all cover only those, so it never touches the rest of the list.) The clear step
-follows the same rule as the list's `Slett`: clearing more than one note asks to
-confirm first, a single one clears straight away — both undoable.
+follows the same rule as the list's `Arkiver`: clearing more than one note asks to
+confirm first, a single one clears straight away — both undoable, and the cleared
+notes land in the archive like any other archiving.
 
 Everything pastes in one go, regardless of kommune. A bare locality name links to
 the public locality as long as the name is unambiguous; scoping the import form to a
@@ -228,6 +234,22 @@ one kommune, the walkthrough suggests prioritising that kommune's localities on 
 form (a free safety net); across several kommuner it just pastes everything and lets
 unambiguous names resolve themselves. (The deep why — what links vs. what mints a
 private duplicate — lives in `docs/artsobs-import.md`.)
+
+## Arkiv
+
+`Arkiver` never destroys anything: "deleted" observations move to an archive
+instead, and the undo snackbar says so ("Arkiverte …"). An **Arkiv** link in the
+list footer opens it — always visible, even when empty, so it's discoverable
+before you first need it. The archive screen is the same day-grouped list, and
+marking behaves exactly like the main list (long-press to start, drag to sweep a
+range with edge auto-scroll, circles, day-header toggles, the header turning into
+a selection bar) — the one difference is that a plain tap outside marking does
+nothing, since an archived note can't be opened. The single action is
+**Gjenopprett**, which moves the marked notes back into the live list. There is no
+true delete in the app — clearing the app's data is the escape hatch if someone
+really wants everything gone. The archive lives in its own file (`archive.jsonl`,
+append-only on archiving), so launch, saving and the Downloads backup stay
+proportional to the *live* notes however big the archive grows.
 
 ## About / credits
 
