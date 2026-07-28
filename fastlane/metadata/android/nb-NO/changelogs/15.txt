@@ -1,0 +1,5 @@
+• Støtte for medobservatører.
+• Velg hvilke observasjoner du vil eksportere.
+• Fiksa noen gærne artsnavn, bl.a. svartstrupe.
+• Bedre tidspunktvelger.
+• Ymse småforbedringer og feilrettinger.

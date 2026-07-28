@@ -1,0 +1,5 @@
+• Support for co-observers.
+• Choose which observations to export.
+• Fixed some incorrect species names, such as svartstrupe (Saxicola rubicola).
+• Better time picker.
+• Various minor improvements and fixes.

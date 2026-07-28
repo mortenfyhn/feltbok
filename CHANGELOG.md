@@ -1,61 +1,16 @@
 # Endringslogg
 
+Note to agents: Always write new entries in the same style and **brevity** as older entries.
+
 ## Neste utgivelse
 
-- Ymse småforbedringer.
-- **Medobservatører i masseendring**: gløymde du å setje følget før du logga ein
-  haug med obsar? Marker dei, trykk **Endre**, og legg til medobservatørane på alle
-  i eitt jafs.
-- Versjonsnummeret nedst i appen viser ikkje lenger eit misvisande «-dirty» i F-Droid-bygg.
-- Retta artsnavn: enkelte arter hadde feil eller utdatert namn i søket – blant anna mangla
-  «svartstrupe» (den låg feilaktig som «afrikasvartstrupe»). Både norske og vitskaplege namn
-  hentes nå frå Artsdatabanken, same kjelde som Artsobservasjoner bruker, så dei stemmer med det
-  importen godtar (og fleire arter fekk endeleg det svenske namnet sitt med).
-- **Arter utanom lista**: finn du ikkje arten i søket, kan du no skrive inn namnet sjølv –
-  ei **«Velg …»**-rad dukkar opp nedst. Namnet blir teke med i eksporten akkurat slik du
-  skreiv det (så det er opp til deg å treffe namnet importen godtar).
-- **Tidspunkt**: ny og ryddigere tid-editor med egne rader for start-tid og sluttid, der
-  dato og klokkeslett kan endres hver for seg. Én **Nå**-knapp setter alt til akkurat nå.
-  Nytt: hak av **Uten klokkeslett** når du legg inn ein obs i etterkant og ikkje hugsar
-  tida – datoen blir med, men klokkeslettet står tomt.
-- Betre lokalitetsforslag: står du inne i ein stor lokalitet, blir den foreslått
-  framfor ein liten du er utanfor. Er du inne i fleire (ein liten inni ein stor),
-  vinn den minste; er du utanfor alle, vinn den du er nærmast kanten av.
-- Retta eksport av nye lokaliteter: koordinatene skreiv seg med punktum, som importen
-  avviste som «ikke et desimaltall». Nå brukes komma, så egne kartplasseringer importeres.
-- **Velg språk på artsnavn**: under Innstillinger (åpne Om-dialogen fra versjonen
-  nederst) velg du hovedspråk og sekundærspråk – norsk, svensk eller latin, i begge
-  appene. Søket bruker hovedspråket; slå på «søk i begge språk» om du vil kunne
-  søke på det andre språket òg (fint når du ikke hugsar navnet på hovedspråket).
-- Artsnavna kommer nå fra IOC World Bird List, så feil svenske navn er retta (bl.a.
-  «gulsångare» → «härmsångare») og de norske navna har rett skrivemåte.
-- I den svenske appen forkortes alder/kjønn i lista nå kompakt («ad ♂»), som i den norske.
-- Kartet i den svenske appen tegner lokalitetene slik Artportalen gjør: grå omriss uten
-  fyll, med en grønn prikk (vanlig lokalitet) eller grønn trekant (superlokalitet) i midten.
-  Tette områder (som Stockholm) blir dermed lesbare i stedet for en grønn klump.
-- Svenske artsnavn vises nå med stor forbokstav (som på Artportalen); norske navn er
-  fortsatt små, og latinske navn vises alltid i kursiv.
-- **Medobservatører**: noter hvem du var ute med på hver observasjon. Følget henger
-  igjen fra observasjon til observasjon, så du skriv det inn én gang og slepp å tenke på
-  det – og navna du bruker foreslås neste gang. De blir med som egne kolonner i eksporten.
-- **Usikker artsbestemming** er tilbake på observasjonssida – huk av når du er usikker
-  på bestemminga, så eksporteres den med spørsmålstegn (og «Ja» i usikkerhets-kolonna).
-- Nytt utseende når du markerer observasjoner: en ring til venstre på hver rad (og
-  på dag-overskriftene, som markerer hele dagen), og felter for antall, Slett og
-  Eksporter øverst – uten at lista lenger hopper nedover.
-- Du kan nå eksportere bare de observasjonene du har markert.
-- Marker flere observasjoner og trykk **Endre** for å rette samme felt – for eksempel
-  feil lokalitet – på alle på én gang.
-- Hold inne og dra for å markere flere observasjoner i ett drag – lista ruller av
-  seg selv når du drar mot toppen eller bunnen.
-- Sletter du flere observasjoner på én gang, får du et bekreftelsesspørsmål først.
-  Slett-knappene viser også hvor mange du sletter.
-- **Nå**-knapp i tid-dialogen setter fra- eller til-tida til akkurat nå med ett trykk.
-- Lista ruller opp til den nye observasjonen når du lagrar den, også når den starter
-  en ny dag – så du alltid ser det du nettopp la til.
-- Større **+**-knapp med romsligere trykkflate, så du lettere treffer den uten å
-  bomme på observasjonen bak.
-- Om-dialogen krediterer nå kilda til fremmedart-statusen òg.
+## v1.1 (28. juli 2026)
+
+- Støtte for medobservatører.
+- Velg hvilke observasjoner du vil eksportere.
+- Fiksa noen gærne artsnavn, bl.a. svartstrupe.
+- Bedre tidspunktvelger.
+- Ymse småforbedringer og feilrettinger.
 
 ## v1.0 (16. juli 2026)
 
