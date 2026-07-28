@@ -64,6 +64,7 @@ blocks:
         - name: ruff + unit tests (scripts/)
           commands:
             - curl -fsSL https://github.com/astral-sh/ruff/releases/latest/download/ruff-x86_64-unknown-linux-gnu.tar.gz | tar -xz -C /tmp
+            - /tmp/ruff-x86_64-unknown-linux-gnu/ruff --version
             - /tmp/ruff-x86_64-unknown-linux-gnu/ruff check scripts/
             - pip install --quiet requests
             - python3 -m unittest discover -s scripts -p 'test_*.py'
