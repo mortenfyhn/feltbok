@@ -102,6 +102,11 @@ build-localities *args:
 build-species:
     .venv/bin/python scripts/build_species.py
 
+# Build app/src/norway/assets/ubestemt.csv ("ub." unidentified-species entries, issue #162)
+build-ubestemt:
+    .venv/bin/python scripts/build_ubestemt.py
+    mv ubestemt.csv app/src/norway/assets/ubestemt.csv
+
 # Merge both flavors' checklists into the unified latin,norsk,svensk,status,count schema, with
 # authoritative names from the IOC World Bird List (pass --ioc for a non-default xlsx path)
 build-species-names *args:
@@ -121,6 +126,7 @@ push-data:
     -adb push app/src/norway/assets/species.csv {{data_dir}}/species.csv
     -adb push app/src/norway/assets/species_months.csv {{data_dir}}/species_months.csv
     -adb push app/src/norway/assets/species_regions.csv {{data_dir}}/species_regions.csv
+    -adb push app/src/norway/assets/ubestemt.csv {{data_dir}}/ubestemt.csv
     -adb push my-localities.csv {{data_dir}}/my-localities.csv   # maintainer's own customs (device-only)
 
 # Seed the DEBUG app with varied sample observations (overwrites its notes!). The debug build ships

@@ -4,6 +4,7 @@ Note to agents: Always write new entries in the same style and **brevity** as ol
 
 ## Neste utgivelse
 
+- Søk opp «ub.»-arter (ubestemt), f.eks. «ub. makrell-/rødnebbterne».
 - Sikrere sikkerhetskopi av observasjoner.
 
 ## v1.1 (28. juli 2026)

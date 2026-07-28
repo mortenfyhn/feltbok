@@ -78,6 +78,12 @@ SVARTHALESPOVE = ("svarthalespove", "Limosa limosa", "CR")  # long name + red ba
 # (no registry key, no status badge). Exports verbatim in Artsnavn — rådyr resolves on the portal
 # (it covers all species, not just birds), so a clean seed still imports without error.
 RAADYR = ("rådyr", "", "")
+# ub. (ubestemt/unidentified) entries (#162): a species-complex and a genus-level example.
+# UB_TERNE (the species-complex) was confirmed live to import cleanly via the app's existing
+# free-text override; UB_SVANE (genus-level) wasn't separately tested, but the import mechanism
+# doesn't distinguish the two categories, so it's expected to behave the same.
+UB_TERNE = ("ub. makrell-/rødnebbterne", "Sterna hirundo/paradisaea", "")
+UB_SVANE = ("ub. svane", "Cygnus", "")
 
 UNKNOWN_COUNT = -1
 MINUTE = 60_000
@@ -441,6 +447,26 @@ ROWS = [
         "",
         "Overflygende",
         "Ladehammeren",
+    ),
+    note(
+        "ub. species-complex entry (#162): normal bird-group fields still apply",
+        DAY // MINUTE + 740,
+        UB_TERNE,
+        2,
+        "Adult",
+        "",
+        "Rastende",
+        "Ilsvika",
+    ),
+    note(
+        "ub. genus-level entry (#162)",
+        DAY // MINUTE + 800,
+        UB_SVANE,
+        1,
+        "Adult",
+        "",
+        "Trekkende",
+        "Leangenbukta",
     ),
 ]
 

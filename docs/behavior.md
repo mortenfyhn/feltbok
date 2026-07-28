@@ -63,6 +63,17 @@ name is exported verbatim in the
 match on import (it isn't checked against any list). These free-typed species get no
 season/location ranking or recents boost — they aren't in the dataset.
 
+### Ubestemt (ub.) entries
+
+Artsobservasjoner also lets a sighting be logged as "ub. X" ("ubestemt") when you can narrow it
+to a genus (`ub. svane`) or a small group of similar species (`ub. makrell-/rødnebbterne`) but not
+the exact species. These are fetched from Artsobservasjoner itself
+(`scripts/build_ubestemt.py`) and searchable like any other checklist entry — but they carry no
+observation-count data, so they never get the "what's likely here and now" boost real species get;
+a matching real species generally ranks above a same-tier ub. entry, though a better match tier
+(e.g. typing "ub. …" exactly) still wins outright, same as for two real species. Norway-only for
+now.
+
 ### Names and languages
 
 Every species carries three names — Norwegian, Swedish, and the scientific (Latin)

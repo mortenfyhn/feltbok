@@ -617,6 +617,15 @@ fun loadSpecies(ctx: Context): List<Species> =
         }
     }
 
+/** "ub." (ubestemt/unidentified) entries (#162) - e.g. "ub. makrell-/rødnebbterne" for when you
+ *  can narrow a sighting to a genus or a small group of similar species but not the exact one.
+ *  Columns: latin,norsk (see scripts/build_ubestemt.py). Norway-only asset: optional, like
+ *  [loadSpeciesMonths] - the Sweden build simply has no such file, so this degrades to empty. */
+fun loadUbestemt(ctx: Context): List<Species> =
+    runCatching { readData(ctx, "ubestemt.csv") }.getOrDefault(emptyList()).mapNotNull { c ->
+        if (c.isEmpty() || c[0].isBlank()) null else Species(latin = c[0], norsk = c.getOrElse(1) { "" })
+    }
+
 /** Per-species monthly report counts (latin -> 12 ints), for season-aware ranking ([SeasonalFrequency]).
  *  Optional asset: empty if absent, so search just falls back to all-time frequency. */
 fun loadSpeciesMonths(ctx: Context): Map<String, IntArray> =

@@ -29,6 +29,8 @@ scripts/__pycache__/
 /ExcelExport*.xlsx
 # Generated species list (if regenerated locally)
 /species.csv
+# Generated ub. (ubestemt) checklist (if regenerated locally, before moving into assets)
+/ubestemt.csv
 # Locality import-matching test sheets
 /lokalitetstest*.xlsx
 

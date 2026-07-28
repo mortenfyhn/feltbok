@@ -28,6 +28,10 @@ authoritative `isPrivate` flag. No login needed; the harvest is resumable. Extra
 `hovedlokalitet` is resolved from each site's `parentSiteId`; manual public/private
 corrections in `locality_overrides.csv` (keyed by siteId) win over the flag.
 
+`build_ubestemt.py` (`just build-ubestemt`) harvests Artsobservasjoner's "ub." (ubestemt)
+taxon entries from the same mobile API's `TaxonName/Search` endpoint and writes
+`ubestemt.csv` (Norway-only — no Swedish equivalent has been investigated).
+
 Push onto the device with `just push-data` — it overrides the bundled asset, no
 rebuild.
 

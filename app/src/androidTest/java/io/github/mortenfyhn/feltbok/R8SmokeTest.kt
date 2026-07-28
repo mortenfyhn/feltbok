@@ -59,4 +59,12 @@ class R8SmokeTest {
         val species = loadSpecies(ctx)
         assertTrue("expected bundled species", species.isNotEmpty())
     }
+
+    /** ubestemt.csv (#162) only exists in the Norway flavor's assets, so this proves R8/resource
+     *  shrinking + flavor packaging actually ship it into the built APK. */
+    @Test
+    fun bundledUbestemtLoads() {
+        val ubestemt = loadUbestemt(ctx)
+        assertTrue("expected bundled ub. entries", ubestemt.isNotEmpty())
+    }
 }

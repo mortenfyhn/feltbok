@@ -28,7 +28,7 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
     // Nothing on the first screen needs localities; nearest()/the picker just see an empty list
     // until it populates (a beat later), then recompose.
     val localities = mutableStateListOf<Locality>()
-    val species: List<Species> = loadSpecies(app)
+    val species: List<Species> = loadSpecies(app) + loadUbestemt(app)
 
     /** Species normalized (folded forms, token splits) for the search scorer - never per keystroke.
      *  Cached per active-language set ([LangPrefs.searchLangs]) and rebuilt only when that changes,
