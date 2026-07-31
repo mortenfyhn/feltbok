@@ -763,6 +763,7 @@ fun SearchScreen(vm: MainViewModel) {
     }
     // Auto-focus with the keyboard up so you can type the moment the screen opens.
     val focus = remember { FocusRequester() }
+    val focusManager = LocalFocusManager.current
     LaunchedEffect(Unit) { focus.requestFocus() }
     // Snap back to the top on every new result set. Otherwise the LazyColumn keeps its scroll
     // anchored to the previously-visible item across searches, so after typing a few queries back
@@ -795,8 +796,11 @@ fun SearchScreen(vm: MainViewModel) {
                 cursorBrush = SolidColor(cs.primary),
                 // autoCorrect off: don't want the IME "correcting" species names, and the
                 // gesture/compose path it drives is what crashes on swipe-typing.
-                keyboardOptions = KeyboardOptions(autoCorrectEnabled = false, imeAction = ImeAction.Search),
-                keyboardActions = KeyboardActions(onSearch = { results.firstOrNull()?.let { vm.pickSpecies(it) } }),
+                // Done, not Search (#166): the list filters as you type, so a "search" key promised an
+                // action that doesn't exist - and on a name that isn't in the list it was doubly wrong.
+                // Done just folds the keyboard away, showing more of the results.
+                keyboardOptions = KeyboardOptions(autoCorrectEnabled = false, imeAction = ImeAction.Done),
+                keyboardActions = KeyboardActions(onDone = { focusManager.clearFocus() }),
                 decorationBox = { inner ->
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         Box(Modifier.weight(1f)) {
