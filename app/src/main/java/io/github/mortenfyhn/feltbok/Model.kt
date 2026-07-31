@@ -296,7 +296,6 @@ private val NB_SYMBOLS = DateFormatSymbols(NB).apply {
 }
 private fun nbFormat(pattern: String) = SimpleDateFormat(pattern, NB).apply { dateFormatSymbols = NB_SYMBOLS }
 
-fun displayTime(ms: Long): String = nbFormat("d. MMM, HH:mm").format(Date(ms))
 fun shortTime(ms: Long): String = nbFormat("HH:mm").format(Date(ms))
 
 /** The editor's one-line time summary: a single point, or "from – to" for a range. When the
