@@ -5,7 +5,6 @@ import android.content.Context
 import android.location.Location
 import android.location.LocationListener
 import android.location.LocationManager
-import android.os.SystemClock
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 
@@ -15,11 +14,7 @@ data class GpsFix(
     val lon: Double,
     val accuracyM: Float,
     val elapsedRealtimeNanos: Long,
-) {
-    /** Seconds since this fix was taken, so the UI can flag stale positions. */
-    fun ageSeconds(): Long =
-        (SystemClock.elapsedRealtimeNanos() - elapsedRealtimeNanos) / 1_000_000_000L
-}
+)
 
 /**
  * Streams live GPS fixes while [start]ed. We keep updates running the whole

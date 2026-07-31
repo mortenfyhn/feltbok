@@ -116,8 +116,7 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
     fun toggleSelect(id: Long) { if (!selected.remove(id)) selected.add(id) }
     fun clearSelection() { selected.clear(); selectionMode = false }
 
-    /** Long-press entry point: switch into selection mode and mark what was pressed. */
-    fun startSelect(id: Long) { selectionMode = true; if (id !in selected) selected.add(id) }
+    /** Long-press entry point on a day header: switch into selection mode and mark the whole day. */
     fun startSelectDay(ids: List<Long>) { selectionMode = true; toggleDay(ids) }
 
     /** Replace the whole marked set at once - the long-press-drag range selector paints a fresh set
