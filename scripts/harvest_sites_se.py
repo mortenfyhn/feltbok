@@ -227,7 +227,7 @@ def main():
                 f"{s['lon']:.6f}",
                 0,
                 0,
-                int(round(s.get("accuracy") or 0)) or 1,
+                round(s.get("accuracy") or 0) or 1,
                 s.get("wkt", ""),
                 "1",
                 "0",

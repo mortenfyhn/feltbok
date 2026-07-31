@@ -64,7 +64,7 @@ def locality_site(bbox, name):
         lat, lon = rec.get("decimalLatitude"), rec.get("decimalLongitude")
         if not lid or lat is None or lon is None:
             continue
-        radius = int(round(rec.get("coordinateUncertaintyInMeters") or 0)) or 100
+        radius = round(rec.get("coordinateUncertaintyInMeters") or 0) or 100
         return (
             lid,
             lat,

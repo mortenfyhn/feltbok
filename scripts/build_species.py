@@ -55,7 +55,7 @@ def _scrape_categories(url, categories, label):
     # Match each species' own detail anchor (/<list>/<year>/<id>), not just any link ending in
     # digits - else nav/footer links keep `rows` non-empty past the last page and we never break.
     base = urlsplit(url).path
-    rowre = re.compile(rf'<a[^>]*href="{re.escape(base)}/\d+".*?</a>', re.S)
+    rowre = re.compile(rf'<a[^>]*href="{re.escape(base)}/\d+".*?</a>', re.DOTALL)
     latre = re.compile(r"element_scientific_name[^>]*><i>([^<]+)</i>")
     catre = re.compile(r'class="([A-Z]{2}) risk-category-circle"')
     out, page = {}, 1

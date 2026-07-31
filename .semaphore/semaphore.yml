@@ -63,7 +63,7 @@ blocks:
       jobs:
         - name: ruff + unit tests (scripts/)
           commands:
-            - curl -fsSL https://releases.astral.sh/github/ruff/releases/download/0.15.22/ruff-x86_64-unknown-linux-gnu.tar.gz | tar -xz -C /tmp
+            - curl -fsSL https://releases.astral.sh/github/ruff/releases/download/0.16.1/ruff-x86_64-unknown-linux-gnu.tar.gz | tar -xz -C /tmp
             - /tmp/ruff-x86_64-unknown-linux-gnu/ruff --version
             - /tmp/ruff-x86_64-unknown-linux-gnu/ruff check scripts/
             - pip install --quiet requests

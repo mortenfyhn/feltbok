@@ -147,25 +147,25 @@ def note(
     `no_time` marks the time-of-day unspecified. `new_loc` exports coordinates + `radius`.
     `private_loc` marks `loc` as one of the user's own private localities (links by bare name, so no
     qualified fullname), matching how the app stores a note picked on a private site."""
-    return dict(
-        why=why,
-        mins=mins,
-        species=species,
-        count=count,
-        age=age,
-        sex=sex,
-        act=act,
-        loc=loc,
-        pub=pub,
-        priv=priv,
-        unc=unc,
-        coobs=coobs or [],
-        dur_min=dur_min,
-        no_time=no_time,
-        new_loc=new_loc,
-        radius=radius,
-        private_loc=private_loc,
-    )
+    return {
+        "why": why,
+        "mins": mins,
+        "species": species,
+        "count": count,
+        "age": age,
+        "sex": sex,
+        "act": act,
+        "loc": loc,
+        "pub": pub,
+        "priv": priv,
+        "unc": unc,
+        "coobs": coobs or [],
+        "dur_min": dur_min,
+        "no_time": no_time,
+        "new_loc": new_loc,
+        "radius": radius,
+        "private_loc": private_loc,
+    }
 
 
 ROWS = [
@@ -474,7 +474,7 @@ ROWS = [
 def build(now_ms):
     notes = []
     for i, r in enumerate(ROWS):
-        sp, latin, status = r["species"]
+        sp, latin, _status = r["species"]
         t = now_ms - r["mins"] * MINUTE
         new_loc = r["new_loc"]
         n = {

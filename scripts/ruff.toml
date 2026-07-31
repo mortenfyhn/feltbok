@@ -3,3 +3,14 @@
 # Pin behaviour so an unpinned CI `pip install ruff` can't drift the formatting.
 line-length = 88
 target-version = "py312"
+
+# 0.16 turned on 413 default rules (up from 59). These few fight the deliberate
+# style of these one-shot build/harvest scripts, so they stay off.
+[lint]
+ignore = [
+    "EXE001", # shebangs are documentation; the justfile runs everything via .venv/bin/python
+    "SIM115", # json.load(open(...)) is fine when the process exits right after
+    "SIM905", # "a b c".split() is the terse column-list idiom here
+    "BLE001", # the harvest retry loop swallows every error on purpose
+    "S110",
+]

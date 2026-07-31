@@ -167,7 +167,7 @@ def main() -> int:
                 if d.get("regions") == [
                     list(r) for r in regions
                 ]:  # same areas -> resume
-                    done = [set(tuple(t) for t in s) for s in d["done"]]
+                    done = [{tuple(t) for t in s} for s in d["done"]]
         except (json.JSONDecodeError, OSError) as e:
             # Don't trust a partial rows file + its checkpoint: resuming would skip tiles
             # whose rows are gone, leaving silent gaps. Start fresh and re-fetch everything.
