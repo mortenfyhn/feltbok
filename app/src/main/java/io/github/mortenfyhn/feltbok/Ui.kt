@@ -707,8 +707,8 @@ private fun NoteRow(n: Note, name: String, nameItalic: Boolean, status: String, 
                 // ellipsized box's trailing slack, keeping every locality flush against the timestamp.
                 Text(n.locName, color = cs.onSurface, fontSize = 13.sp, textAlign = TextAlign.End,   // [2] locality
                     maxLines = 1, overflow = TextOverflow.Ellipsis)
-                // A no-time obs has no clock to show; a dash marks it (the day header carries the date).
-                Text(if (n.timeUnknown) "–" else shortTime(n.time), color = cs.onSurfaceVariant, fontSize = 13.sp)   // [3] timestamp
+                // A no-time obs has no clock to show; a blanked-out clock marks it (the day header carries the date).
+                Text(if (n.timeUnknown) "--:--" else shortTime(n.time), color = cs.onSurfaceVariant, fontSize = 13.sp)   // [3] timestamp
             },
             modifier = Modifier.weight(1f),
         ) { measurables, constraints ->

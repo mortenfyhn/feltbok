@@ -110,7 +110,7 @@ Observations are grouped into per-day sections, newest day first, each under a d
 header ("I dag", "I går", else an abbreviated date like "Søn 8. jun"). Within a day,
 newest first. Each row carries species + count on the left, its locality, and the
 time on the right (the day lives in the section header, so the row shows bare HH:mm;
-an observation left without a time shows a dash there instead).
+an observation left without a time shows `--:--` there instead).
 A row with co-observers also shows a small **`+N`** pill (N = how many joined) beside
 the species — no pill means it was just you.
 
