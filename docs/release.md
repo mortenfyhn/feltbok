@@ -57,6 +57,14 @@ Build one locally:
 ./gradlew assembleRelease   # -> app/build/outputs/apk/release/app-release.apk
 ```
 
+## Target API level
+
+Play requires new apps and updates to target a recent API — **36 (Android 16) from
+31 Aug 2026** — and raises the bar every year, so expect to bump `compileSdk`/`targetSdk`
+annually once we're on Play. F-Droid has no such requirement, so a bump is always for
+Play's sake. Bumping is rarely free: 34 -> 36 needed AGP + Gradle bumps, and edge-to-edge
+handling, since from targetSdk 35 the system draws behind the system bars with no opt-out.
+
 ## CI
 
 Semaphore (`.semaphore/semaphore.yml`) runs tests, ktlint, and a debug build on every push;
@@ -76,7 +84,13 @@ or future-proof it.
   in Norway when verification enforcement reaches Europe (2027+), and is the same identity
   reused for Play later.
   See <https://support.google.com/android-developer-console/answer/16561738>.
-- **Google Play closed/internal testing track** (deferred). The only channel with *no*
-  Play Protect prompt — apps installed via Play aren't treated as unknown. Needs a Play
-  Console account and an AAB upload.
+- **Google Play** (in progress, #74 — free, not priced). The only channel with *no*
+  Play Protect prompt — apps installed via Play aren't treated as unknown. Upload is an
+  **AAB**, not an APK (`./gradlew bundleRelease`). With **Play App Signing** Google holds
+  the final signing key and we upload with an *upload key*, so a Play install carries a
+  third signature (GitHub keystore / F-Droid key / Play key all differ). Consequence worth
+  knowing: nobody can move between channels without uninstalling first. Harmless here —
+  notes are exported then deleted, so there's nothing to migrate. Set the upload key from
+  `feltbok-release.keystore` so Play releases stay consistent with each other. Account
+  paperwork and listing assets are tracked on #74, not in this repo.
 - **F-Droid** (deferred, free). Convenience/auto-update; still sideload-scanned.
