@@ -13,7 +13,7 @@ import java.util.Locale
  */
 object Country {
     // Locale for *display* date/time (weekday + month names in the UI); export dates are numeric.
-    val displayLocale: Locale = Locale("nb", "NO")
+    val displayLocale: Locale = Locale.forLanguageTag("nb-NO")
 
     // ---- species-name languages (#155) ----
     // The export always writes the Norwegian name (what Artsobservasjoner accepts on import),

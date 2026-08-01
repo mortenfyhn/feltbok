@@ -6,15 +6,24 @@ F-Droid there's no build-from-source automation — you build locally and upload
 
 ## Prerequisites (one-time)
 
-- **Play Console developer account** — US$25 one-off. Now requires identity
-  verification.
+- **Play Console developer account** — US$25 one-off, plus identity verification
+  (government ID, sometimes a selfie). Verification is *per account*: an existing
+  verified work/organization account doesn't carry over to a personal one.
+- **Closed testing gate** — personal accounts created after 13 Nov 2023 must run a
+  closed test with **12 opted-in testers for 14 consecutive days** before production
+  is unlocked. The countdown restarts if the count drops below 12, so this is weeks
+  of calendar time, not a form to fill in. Organization accounts are exempt.
 - **Privacy policy URL** — mandatory for any app requesting location. We request
   `ACCESS_FINE/COARSE_LOCATION`, so a hosted policy page is required (a section in
   the repo's GitHub Pages / README link is fine).
-- **Target API level** — Play requires new apps/updates to target a recent API
-  (Android 15 / API 35 as of late 2025). We're at `targetSdk = 34`, so a bump to
-  `compileSdk`/`targetSdk = 35` will likely be needed *before* the first upload.
-  F-Droid has no such requirement, so don't bump just for F-Droid.
+- **Target API level** — done: `compileSdk`/`targetSdk = 36` (Android 16), which
+  Play requires for new apps and updates from 31 Aug 2026. F-Droid has no such
+  requirement — the bump was for Play.
+- **Only if the app is priced** — a payments profile (merchant account) *and* EU DSA
+  **trader status**, which publishes a contact address and phone number on the store
+  listing. For a one-person app that means a home address unless a business address is
+  set up. Triggered by EU distribution: Sweden is EU, Norway is only EEA. A free
+  listing skips both.
 
 ## Listing assets
 

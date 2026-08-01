@@ -2,12 +2,16 @@ package io.github.mortenfyhn.feltbok
 
 import android.Manifest
 import android.content.pm.PackageManager
+import android.graphics.Color.TRANSPARENT
 import android.os.Bundle
 import androidx.activity.ComponentActivity
+import androidx.activity.SystemBarStyle
 import androidx.activity.compose.BackHandler
 import androidx.activity.compose.setContent
+import androidx.activity.enableEdgeToEdge
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.viewModels
+import androidx.compose.foundation.layout.safeDrawingPadding
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
@@ -19,6 +23,7 @@ import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.remember
+import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.core.content.ContextCompat
 import kotlinx.coroutines.withTimeoutOrNull
@@ -37,6 +42,15 @@ class MainActivity : ComponentActivity() {
         }
 
     override fun onCreate(savedInstanceState: Bundle?) {
+        // From targetSdk 35 the system draws the app behind the status and navigation bars and
+        // there's no opting out, so declare it rather than inherit it half-configured: transparent
+        // bars, and `light` styles (= dark icons) because AppTheme is light-only and would
+        // otherwise get white icons on a near-white background. The Scaffold below re-insets the
+        // content, so the layout still looks like it did before edge-to-edge.
+        enableEdgeToEdge(
+            statusBarStyle = SystemBarStyle.light(TRANSPARENT, TRANSPARENT),
+            navigationBarStyle = SystemBarStyle.light(TRANSPARENT, TRANSPARENT),
+        )
         super.onCreate(savedInstanceState)
         configureOsmdroid(applicationContext)   // one-time map init, off the first map's path
         setContent { App(vm) }
@@ -101,6 +115,10 @@ fun App(vm: MainViewModel) {
             // that screen leaves composition.
             val listState = rememberLazyListState()
             Scaffold(
+                // Keeps the content clear of the system bars, cutout and keyboard now that the
+                // window is edge-to-edge. Sits on the Scaffold, not the Surface, so the Surface's
+                // background colour still paints behind the bars instead of leaving them bare.
+                modifier = Modifier.safeDrawingPadding(),
                 snackbarHost = { SnackbarHost(snackbar) },
                 containerColor = Color.Transparent,
             ) { _ ->

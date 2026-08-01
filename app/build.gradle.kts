@@ -68,12 +68,12 @@ val seUserId = localProps?.getProperty("feltbok.se.userId") ?: System.getenv("SE
 
 android {
     namespace = "io.github.mortenfyhn.feltbok"
-    compileSdk = 34
+    compileSdk = 36
 
     defaultConfig {
         applicationId = "io.github.mortenfyhn.feltbok"
         minSdk = 26
-        targetSdk = 34
+        targetSdk = 36
         versionCode = 15
         versionName = "1.1"
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
