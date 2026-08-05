@@ -5,6 +5,7 @@ Note to agents: Always write new entries in the same style and **brevity** as ol
 ## Neste utgivelse
 
 - Søk opp «ub.»-arter (ubestemt), f.eks. «ub. makrell-/rødnebbterne».
+- Kommentarfeltene tar mindre plass: trykk på dem for å skrive.
 - Sikrere sikkerhetskopi av observasjoner.
 - Tilpassa Android 16.
 - Ymse småforbedringer.

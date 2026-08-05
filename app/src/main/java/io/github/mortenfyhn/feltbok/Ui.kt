@@ -29,6 +29,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.safeDrawingPadding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
@@ -1356,19 +1357,55 @@ private fun OptionItem(text: String, selected: Boolean, fullScreen: Boolean, non
     if (fullScreen) HorizontalDivider(color = cs.outline.copy(alpha = 0.4f))
 }
 
+/** A comment as a one-line row like every other field: the text box used to sit inline and cost two
+ *  rows' height each, which pushed the fields below it off screen. Tap to write it on a full-screen
+ *  page; the row then previews the start of the comment, ellipsized. */
 @Composable
 private fun CommentField(label: String, value: String, onChange: (String) -> Unit) {
     val cs = MaterialTheme.colorScheme
-    val focus = LocalFocusManager.current
-    Column(Modifier.background(cs.surface).padding(horizontal = 16.dp, vertical = 5.dp)) {
-        Text(label, color = cs.onSurfaceVariant, fontSize = 13.sp, modifier = Modifier.padding(bottom = 2.dp))
-        // Single-line with a "Done" action so the keyboard closes (a multi-line field leaves
-        // the tester stuck - Enter just inserts a newline). Comments are short anyway.
-        OutlinedTextField(value, onChange, Modifier.fillMaxWidth(), singleLine = true,
-            keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
-            keyboardActions = KeyboardActions(onDone = { focus.clearFocus() }))
+    var open by remember { mutableStateOf(false) }
+    FieldRow(label, onClick = { open = true }) {
+        if (value.isNotBlank())
+            Text(value, fontWeight = FontWeight.Medium, maxLines = 1,
+                overflow = TextOverflow.Ellipsis, modifier = Modifier.weight(1f, fill = false))
     }
-    HorizontalDivider(color = cs.outline.copy(alpha = 0.4f))
+    if (!open) return
+
+    val requester = remember { FocusRequester() }
+    // Held as a TextFieldValue purely to place the caret at the end of an existing comment - a plain
+    // String field starts it at offset 0, so you'd have to tap to the end before adding a word.
+    var tfv by remember { mutableStateOf(TextFieldValue(value, selection = TextRange(value.length))) }
+    // decorFitsSystemWindows = false so the keyboard inset reaches safeDrawingPadding below instead
+    // of the dialog window swallowing it (the activity is edge-to-edge, so nothing resizes on its own).
+    Dialog(onDismissRequest = { open = false },
+        properties = DialogProperties(usePlatformDefaultWidth = false, decorFitsSystemWindows = false)) {
+        Surface(Modifier.fillMaxSize(), color = cs.surface) {
+            // Keeps the header's actions clear of the system bars and of the keyboard - the writing
+            // area shrinks instead, like any notes app. On the Column, not the Surface, so the
+            // surface colour still paints behind the bars (same as the Scaffold in MainActivity).
+            Column(Modifier.safeDrawingPadding()) {
+                // Back and Ferdig both just close: typing writes straight to the draft, so there's
+                // nothing to commit here and nothing a stray back press can lose (the draft itself
+                // isn't saved until Lagre on the detail screen). Same as the co-observer picker.
+                ScreenHeader(label, onCancel = { open = false }, trailing = {
+                    TextButton(onClick = { open = false }) { Text(Strings.Detail.commentDone, color = Color.White) }
+                })
+                // The effect lives in here, with the field: the dialog's content is a subcomposition,
+                // so requesting focus from the caller can run before the field is attached.
+                LaunchedEffect(Unit) { requester.requestFocus() }   // keyboard up right away, no second tap
+                // The page itself is the writing area (no outlined box): it fills the space, so a tap
+                // anywhere lands in the text and a long comment wraps at the real page edges. Enter is
+                // a Done key that finishes and goes back rather than a newline (a newline wouldn't
+                // survive the export anyway - exportTsv flattens it to a space).
+                BasicTextField(tfv, { tfv = it; onChange(it.text) },
+                    Modifier.fillMaxSize().padding(16.dp).focusRequester(requester),
+                    textStyle = LocalTextStyle.current.copy(color = cs.onSurface, fontSize = 16.sp),
+                    cursorBrush = SolidColor(cs.primary),
+                    keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
+                    keyboardActions = KeyboardActions(onDone = { open = false }))
+            }
+        }
+    }
 }
 
 /** From/to time editor. Both rows show at once; each row's date and time-of-day are tapped

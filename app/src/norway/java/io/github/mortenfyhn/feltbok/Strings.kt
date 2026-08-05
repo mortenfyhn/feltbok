@@ -96,6 +96,7 @@ object Strings {
         const val sex = "Kjønn"
         const val commentPublic = "Åpen kommentar"
         const val commentPrivate = "Privat kommentar"
+        const val commentDone = "Ferdig"
         const val uncertain = "Usikker artsbestemming"
         const val coObservers = "Medobservatører"
         const val time = "Tid"
