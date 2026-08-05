@@ -29,10 +29,13 @@ test:
 hooks:
     git config core.hooksPath .githooks
 
-# Instrumented R8 smoke tests on an attached device (src/androidTest, minified releaseTest
-# variant). Catches reflection-strip regressions unit tests can't — see CLAUDE.md / #117. Skips
-# (doesn't fail) when no device is attached, so it's safe to call from a wrapper. NOT in CI: no
-# emulator on Semaphore, and it installs io.github.mortenfyhn.feltbok.releasetest — never the real io.github.mortenfyhn.feltbok.
+# src/androidTest on the minified releaseTest variant, in two layers: R8 smoke tests (reflection
+# strips unit tests can't see) and UI wiring (what survives recomposition, where Back goes). Skips
+# (doesn't fail) when no device is attached, so it's safe to call from a wrapper — release.sh does.
+# NOT in CI: no emulator on Semaphore. Installs io.github.mortenfyhn.feltbok.releasetest, never the
+# real io.github.mortenfyhn.feltbok. See CLAUDE.md and docs/pre-release-checklist.md.
+
+# Instrumented tests on an attached device: R8 smoke + UI wiring (skips if no device)
 itest:
     #!/usr/bin/env bash
     set -euo pipefail
@@ -107,8 +110,10 @@ build-ubestemt:
     .venv/bin/python scripts/build_ubestemt.py
     mv ubestemt.csv app/src/norway/assets/ubestemt.csv
 
-# Merge both flavors' checklists into the unified latin,norsk,svensk,status,count schema, with
-# authoritative names from the IOC World Bird List (pass --ioc for a non-default xlsx path)
+# Merges into the unified latin,norsk,svensk,status,count schema, with authoritative names from the
+# IOC World Bird List (pass --ioc for a non-default xlsx path).
+
+# Merge both flavors' checklists into one schema, with IOC names
 build-species-names *args:
     .venv/bin/python scripts/build_species_names.py {{args}}
 
@@ -129,16 +134,19 @@ push-data:
     -adb push app/src/norway/assets/ubestemt.csv {{data_dir}}/ubestemt.csv
     -adb push my-localities.csv {{data_dir}}/my-localities.csv   # maintainer's own customs (device-only)
 
-# Seed the DEBUG app with varied sample observations (overwrites its notes!). The debug build ships
-# non-debuggable (release speed), so run-as can't reach internal storage; instead push a seed file
-# to the external dir, which the dev build imports on next launch (see importSeedNotes). Targets the
-# .debug app only — never the release app with the maintainer's real field notes.
+# The debug build ships non-debuggable (release speed), so run-as can't reach internal storage;
+# instead push a seed file to the external dir, which the dev build imports on next launch (see
+# importSeedNotes). Targets the .debug app only — never the release app with the real field notes.
+
+# Seed the DEBUG app with varied sample observations (overwrites its notes!)
 seed:
     .venv/bin/python scripts/dev/make_sample_notes.py > /tmp/feltbok-seed-notes.json
     adb push /tmp/feltbok-seed-notes.json {{data_dir}}/seed-notes.json
     adb shell am force-stop {{app_id}}
 
-# Regenerate the F-Droid/Play store icon + feature graphic (fastlane/.../en-US/images) from the
-# hand-drawn SVG in scripts/dev/store-assets/. Needs rsvg-convert + imagemagick.
+# Writes to fastlane/.../en-US/images from the hand-drawn SVG in scripts/dev/store-assets/.
+# Needs rsvg-convert + imagemagick.
+
+# Regenerate the F-Droid/Play store icon + feature graphic
 render-store-assets:
     scripts/dev/store-assets/render.sh
