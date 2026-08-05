@@ -8,8 +8,10 @@ capturing bird observations in Norway and exporting a TSV to paste into Artsobse
 Recipes live in `just --list` — the notes below are only the why's and gotchas that aren't in there.
 - `just install` / `just run` verify a change in the real app on a connected device (`adb devices`);
   drive the UI with `adb shell input tap/text` and inspect with `adb exec-out screencap`. **Ask before
-  testing on the phone** — the maintainer's device isn't always attached and they often prefer to drive
-  the UI themselves; don't install/run on the device unless they've okayed it.
+  testing on the phone** — the maintainer's device isn't always attached, and the usual flow is that
+  *they* run `just run` and test by hand, often iterating with you on UI work. So build and report,
+  and offer to check it on the phone yourself; never install or run on the device unless they've
+  okayed it in that moment.
 - Always run `./gradlew test` (Kotlin units) before opening a PR; `just test` also runs the Python tests.
 - **`kotlinOptions.allWarningsAsErrors` makes any new deprecation a build failure**, so a dependency
   bump breaks the build wherever the newer library deprecates something we call. Watch out for where
