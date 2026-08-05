@@ -42,8 +42,17 @@ Recipes live in `just --list` — the notes below are only the why's and gotchas
   real release) keeps the shared-lib + app symbols the tests reach by name. The app's own code +
   osmdroid still get full R8, so the strip-check keeps its value. `release.sh` runs them as a
   pre-flight gate (before tagging/building), prompting to plug in a device or confirm the skip — so
-  a release-only R8 strip fails there, not in users' hands. The reflection-insensitive UI behaviour
-  layer is deliberately left for later (#117) — only the R8-exposed paths are covered today.
+  a release-only R8 strip fails there, not in users' hands. The suite also carries a **UI-wiring
+  layer** (`UndoFlowTest`, `NavigationFlowTest`, `EditFlowTest`) that isn't about R8 at all: it guards
+  the plumbing on top of logic the JVM tests already cover — what survives recomposition, which notes
+  an action reaches, where Back goes. Add to it only where a pure-JVM test genuinely can't reach, and
+  only once the UI in question has settled (see the "several rounds" convention below). Still out of
+  reach: map tap-picking (the map is an AndroidView, so its centre/selection never enters the
+  semantics tree), GPS-dependent behaviour, and the live-site paste-import.
+- **`ClearAppDataRule` first, in every test that builds a `MainViewModel`.** All the instrumented
+  tests share one install and `MainViewModel` persists notes.json on save then reloads it in its
+  constructor, so without the rule one test's notes leak into the next and the suite becomes
+  order-dependent (it used to pass only because JUnit runs classes alphabetically).
 - **Two builds coexist on the device.** The dev build carries the `.debug` applicationId suffix
   (`io.github.mortenfyhn.feltbok.debug`), so it installs alongside the maintainer's daily
   **release** app (`io.github.mortenfyhn.feltbok`). `just install`/`just run`/`just uninstall` all

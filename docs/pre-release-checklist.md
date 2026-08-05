@@ -12,6 +12,11 @@ not a one-off tap-through.
 - `just itest` (device, minified `releaseTest` variant; also a `release.sh` pre-flight): app launch,
   osmdroid Projection, asset loads, **add-observation flow** (search → save → in list), **export
   flow** (open → TSV renders → copy). A regression in these fails the gate, not the shipped APK.
+- `just itest` also covers the UI wiring on top of the unit-tested logic: **undo** (snackbar after a
+  delete, Angre puts the note back, navigating away dismisses it), **Back** out of species search and
+  the export overlay, the **list keeping its scroll position** across a trip into the editor, **batch
+  edit** writing only to the marked notes, and **Kopier** carrying the original's locality into the
+  new draft.
 
 ## Hand-test these — automation can't (or doesn't yet)
 
@@ -35,9 +40,12 @@ renders"; the real import site can't be scripted)*
 - It should validate with **no errors** and rows should reach **Kontroller funn** (not just the green
   banner). Any error is a real regression — see [artsobs-import.md](artsobs-import.md) for the format.
 
-**Other interaction bits**
+**Other interaction bits** *(what's left after the itest wiring layer — see above)*
 - Search names with **å/æ/ø** return the expected birds.
 - Copy an observation → the locality picker **centres on that observation's own locality** (#91-era).
-- Undo snackbar after a delete / discarded draft; system Back behaves per screen.
+  The tests only get as far as "the copy kept the locality": `pickerCenter` is unit-tested, but the
+  map is an AndroidView, so where it actually centred never reaches the semantics tree.
+- Undo after a **discarded draft** (the delete case is automated).
+- System Back on the screens the tests don't reach: the map picker, Synk, medobservatører, settings.
 
 After a clean soak (a few field days, no surprises), cut the release per [release.md](release.md).
