@@ -65,6 +65,26 @@ annually once we're on Play. F-Droid has no such requirement, so a bump is alway
 Play's sake. Bumping is rarely free: 34 -> 36 needed AGP + Gradle bumps, and edge-to-edge
 handling, since from targetSdk 35 the system draws behind the system bars with no opt-out.
 
+### Play's edge-to-edge warnings are both false alarms — don't chase them
+
+Every Play upload raises two "Brukeropplevelse" warnings. Neither needs a fix, and both cost
+an afternoon to re-diagnose from scratch, so:
+
+- *"Det er ikke sikkert at heldekkende kan brukes for alle brukere"* — the generic advisory Play
+  shows every app targeting SDK 35+. We already do what it asks: `enableEdgeToEdge()` in
+  `MainActivity.onCreate` plus `Modifier.safeDrawingPadding()` on the Scaffold.
+- *"Appen din bruker avviklede API-er ... `LAYOUT_IN_DISPLAY_CUTOUT_MODE_SHORT_EDGES`"*, blamed on
+  an obfuscated class like `b.r.k` — that's `androidx.activity.EdgeToEdgeApi28`. Resolve such names
+  through `app/build/outputs/mapping/norwayRelease/mapping.txt`. `enableEdgeToEdge()` picks its
+  implementation off a descending `SDK_INT` ladder, and only the API 28 rung uses `SHORT_EDGES`;
+  `EdgeToEdgeApi35` inherits `EdgeToEdgeApi30`'s non-deprecated `..._ALWAYS`. So Android 15 never
+  executes the flagged line — Play scans the dex statically and can't see the `SDK_INT` gate. The
+  class is only in the APK at all because `minSdk` is 26.
+
+The only ways to silence the second one are raising `minSdk` to 30 (drops Android 8-10 users) or
+hand-rolling edge-to-edge (same runtime behaviour, and we'd own the compat matrix). Both are worse
+than the warning. Ignore it until `minSdk` rises for an unrelated reason.
+
 ## CI
 
 Semaphore (`.semaphore/semaphore.yml`) runs tests, ktlint, and a debug build on every push;

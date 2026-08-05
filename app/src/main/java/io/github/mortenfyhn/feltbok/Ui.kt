@@ -84,7 +84,8 @@ import androidx.compose.ui.hapticfeedback.HapticFeedback
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.Layout
-import androidx.compose.ui.platform.LocalClipboardManager
+import androidx.compose.ui.platform.ClipEntry
+import androidx.compose.ui.platform.LocalClipboard
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalFocusManager
@@ -1511,7 +1512,8 @@ private fun Step(n: Int, title: String, body: @Composable () -> Unit) {
 @Composable
 fun ExportScreen(vm: MainViewModel) {
     val cs = MaterialTheme.colorScheme
-    val clip = LocalClipboardManager.current
+    val clip = LocalClipboard.current
+    val scope = rememberCoroutineScope()
     val ctx = LocalContext.current
     // Scope: whatever the export covers - the marked notes when opened from selection, else all.
     val exported = vm.exportNotes()
@@ -1530,7 +1532,14 @@ fun ExportScreen(vm: MainViewModel) {
                     Modifier.fillMaxWidth().height(120.dp).padding(top = 6.dp), readOnly = true,
                     textStyle = androidx.compose.ui.text.TextStyle(fontSize = 11.sp))
                 Button(
-                    onClick = { clip.setText(AnnotatedString(text)); copied = true },
+                    onClick = {
+                        // Setting the clipboard is suspending since Compose 1.9; the label is unused
+                        // by the import form, so pass null.
+                        scope.launch {
+                            clip.setClipEntry(ClipEntry(android.content.ClipData.newPlainText(null, text)))
+                        }
+                        copied = true
+                    },
                     modifier = Modifier.padding(top = 6.dp),
                 ) { Text(if (copied) Strings.Export.copied else Strings.Export.copy) }
             }

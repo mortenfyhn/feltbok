@@ -11,6 +11,12 @@ Recipes live in `just --list` — the notes below are only the why's and gotchas
   testing on the phone** — the maintainer's device isn't always attached and they often prefer to drive
   the UI themselves; don't install/run on the device unless they've okayed it.
 - Always run `./gradlew test` (Kotlin units) before opening a PR; `just test` also runs the Python tests.
+- **`kotlinOptions.allWarningsAsErrors` makes any new deprecation a build failure**, so a dependency
+  bump breaks the build wherever the newer library deprecates something we call. Watch out for where
+  that surfaces: `./gradlew test` and `assembleRelease*` compile `main` + `test` but NOT
+  `src/androidTest`, so a broken instrumented source set only shows up under `just itest` (or
+  `assembleNorwayReleaseTestAndroidTest`, which needs no device). After bumping a Compose/AndroidX
+  version, compile that too rather than trusting a green `./gradlew test`.
 - `./gradlew assembleRelease` — signed release, needs the keystore (no `just` recipe for it).
 - **Release runs through R8** (`isMinifyEnabled` + resource shrinking; keep rules in
   `app/proguard-rules.pro`). R8 tree-shakes by *static* reachability, so anything reached by
