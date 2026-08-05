@@ -21,7 +21,10 @@ import org.junit.runner.RunWith
  */
 @RunWith(AndroidJUnit4::class)
 class ExportFlowTest {
-    @get:Rule
+    @get:Rule(order = 0)
+    val clearData = ClearAppDataRule()
+
+    @get:Rule(order = 1)
     val rule = createComposeRule()
 
     @Test

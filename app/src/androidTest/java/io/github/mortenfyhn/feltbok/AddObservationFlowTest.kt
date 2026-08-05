@@ -26,7 +26,12 @@ import org.junit.runner.RunWith
  */
 @RunWith(AndroidJUnit4::class)
 class AddObservationFlowTest {
-    @get:Rule
+    // Order matters only in that the wipe must precede the test body; both rules wrap it, so either
+    // nesting works. Explicit orders keep that from being accidental.
+    @get:Rule(order = 0)
+    val clearData = ClearAppDataRule()
+
+    @get:Rule(order = 1)
     val rule = createComposeRule()
 
     @Test
