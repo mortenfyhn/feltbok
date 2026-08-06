@@ -17,7 +17,7 @@ NOTE (#155): the *display/export names* no longer come from here. The bundled sp
 the unified latin,norsk,svensk,status,count schema, with names sourced from the IOC World Bird List
 via scripts/build_species_names.py (the GBIF/Dyntaxa vernaculars this script produced carried real
 errors, e.g. "gulsångare" for härmsångare). This script survives only as the Swedish status+count
-source that feeds that merge; run build-species-names afterwards to (re)apply the IOC names.
+source that feeds that merge; run merge-species-names afterwards to (re)apply the IOC names.
 """
 
 import csv

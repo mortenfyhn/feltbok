@@ -16,7 +16,7 @@ _check-country country:
 # List all recipes
 set default-list := true
 
-# Build debug APK (no=Norway [default], se=Sweden)
+# Build the dev APK (no=Norway [default], se=Sweden)
 [group('app')]
 build country="no": (_check-country country)
     ./gradlew assemble{{ if country == "se" { "Sweden" } else { "Norway" } }}Debug
@@ -27,7 +27,7 @@ test:
     .venv/bin/python -m unittest discover -s scripts -p 'test_*.py'
     ./gradlew testNorwayDebugUnitTest testSwedenDebugUnitTest
 
-# Wire up the version-controlled git hooks (run once per fresh clone)
+# Install git hooks
 [group('dev')]
 hooks:
     git config core.hooksPath .githooks
@@ -72,11 +72,11 @@ lint:
 # CI fails late on style slips (e.g. blank-line-before-declaration) that `just test` alone
 # never checks; run this before pushing, or `just format` first to auto-fix the mechanical stuff.
 
-# Run the full CI gate locally: ktlint + ruff, unit tests, debug APK
+# Run the full CI gate locally: ktlint + ruff, unit tests, dev APK
 [group('check')]
 ci: lint test build
 
-# Install on connected device (-d allows downgrading over a newer build)
+# Install the dev APK on a connected device (-d allows downgrading over a newer build)
 [group('app')]
 install country="no": (build country)
     #!/usr/bin/env bash
@@ -87,7 +87,7 @@ install country="no": (build country)
 # package id, not the code namespace), so spell out the full component rather than the
 # /.MainActivity shorthand.
 
-# Build, install, and launch the app (no=Norway [default], se=Sweden)
+# Build, install, and launch the dev app (no=Norway [default], se=Sweden)
 [group('app')]
 run country="no": (install country)
     adb shell am start -n io.github.mortenfyhn.feltbok{{ if country == "se" { ".se" } else { "" } }}.debug/io.github.mortenfyhn.feltbok.MainActivity
@@ -97,7 +97,7 @@ run country="no": (install country)
 log:
     adb logcat -s Feltbok:* AndroidRuntime:* --format=brief
 
-# Uninstall the dev build from device (NOT the release app)
+# Uninstall the dev app from the device (NOT the release app)
 [group('app')]
 uninstall:
     adb uninstall {{app_id}}
@@ -130,7 +130,7 @@ build-ubestemt:
 
 # Merge both flavors' checklists into one schema, with IOC names
 [group('data')]
-build-species-names *args:
+merge-species-names *args:
     .venv/bin/python scripts/build_species_names.py {{args}}
 
 # Build app/src/main/assets/species_months.csv (per-species monthly report counts, for season ranking)
@@ -157,7 +157,7 @@ push-data:
 # instead push a seed file to the external dir, which the dev build imports on next launch (see
 # importSeedNotes). Targets the .debug app only — never the release app with the real field notes.
 
-# Seed the DEBUG app with varied sample observations (overwrites its notes!)
+# Seed the dev app with varied sample observations (overwrites its notes!)
 [group('dev')]
 seed:
     .venv/bin/python scripts/dev/make_sample_notes.py > /tmp/feltbok-seed-notes.json

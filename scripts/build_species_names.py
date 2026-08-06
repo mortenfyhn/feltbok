@@ -19,7 +19,7 @@ Names come from the IOC World Bird List (multilingual), joined by scientific nam
 
 This is an offline merge of files already in the repo plus the IOC spreadsheet; no network.
 
-    just build-species-names          # regenerates both app/src/*/assets/species.csv
+    just merge-species-names          # regenerates both app/src/*/assets/species.csv
 """
 
 import argparse
