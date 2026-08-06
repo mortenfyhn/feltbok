@@ -17,15 +17,18 @@ _check-country country:
 set default-list := true
 
 # Build debug APK (no=Norway [default], se=Sweden)
+[group('app')]
 build country="no": (_check-country country)
     ./gradlew assemble{{ if country == "se" { "Sweden" } else { "Norway" } }}Debug
 
 # Run all tests: Python units (if any) + Kotlin units (both flavors)
+[group('check')]
 test:
     .venv/bin/python -m unittest discover -s scripts -p 'test_*.py'
     ./gradlew testNorwayDebugUnitTest testSwedenDebugUnitTest
 
 # Wire up the version-controlled git hooks (run once per fresh clone)
+[group('dev')]
 hooks:
     git config core.hooksPath .githooks
 
@@ -36,6 +39,7 @@ hooks:
 # real io.github.mortenfyhn.feltbok. See CLAUDE.md and docs/pre-release-checklist.md.
 
 # Instrumented tests on an attached device: R8 smoke + UI wiring (skips if no device)
+[group('check')]
 itest:
     #!/usr/bin/env bash
     set -euo pipefail
@@ -54,11 +58,13 @@ itest:
     ./gradlew connectedNorwayReleaseTestAndroidTest
 
 # Auto-format Kotlin (ktlint) + Python (ruff); run before committing manual tweaks
+[group('check')]
 format:
     ./gradlew ktlintFormat
     .venv/bin/ruff format scripts/
 
 # Check formatting/lint without changing files (what CI gates on)
+[group('check')]
 lint:
     ./gradlew ktlintCheck
     .venv/bin/ruff check scripts/
@@ -67,9 +73,11 @@ lint:
 # never checks; run this before pushing, or `just format` first to auto-fix the mechanical stuff.
 
 # Run the full CI gate locally: ktlint + ruff, unit tests, debug APK
+[group('check')]
 ci: lint test build
 
 # Install on connected device (-d allows downgrading over a newer build)
+[group('app')]
 install country="no": (build country)
     #!/usr/bin/env bash
     flavor={{ if country == "se" { "sweden" } else { "norway" } }}
@@ -80,32 +88,39 @@ install country="no": (build country)
 # /.MainActivity shorthand.
 
 # Build, install, and launch the app (no=Norway [default], se=Sweden)
+[group('app')]
 run country="no": (install country)
     adb shell am start -n io.github.mortenfyhn.feltbok{{ if country == "se" { ".se" } else { "" } }}.debug/io.github.mortenfyhn.feltbok.MainActivity
 
 # Show device logs for the app
+[group('app')]
 log:
     adb logcat -s Feltbok:* AndroidRuntime:* --format=brief
 
 # Uninstall the dev build from device (NOT the release app)
+[group('app')]
 uninstall:
     adb uninstall {{app_id}}
 
 # ---- Locality / species data, rebuilt on the maintainer's machine ----
 
 # Harvest the official site list from Artsobservasjoner's mobile API (no auth; usage in the script header)
+[group('data')]
 harvest *args:
     .venv/bin/python scripts/harvest_sites_mobil.py {{args}}
 
 # Build app/src/main/assets/localities.csv from the harvested sites
+[group('data')]
 build-localities *args:
     .venv/bin/python scripts/build_sites.py {{args}}
 
 # Build app/src/main/assets/species.csv (Norwegian bird checklist, norsk + latin)
+[group('data')]
 build-species:
     .venv/bin/python scripts/build_species.py
 
 # Build app/src/norway/assets/ubestemt.csv ("ub." unidentified-species entries, issue #162)
+[group('data')]
 build-ubestemt:
     .venv/bin/python scripts/build_ubestemt.py
     mv ubestemt.csv app/src/norway/assets/ubestemt.csv
@@ -114,18 +129,22 @@ build-ubestemt:
 # IOC World Bird List (pass --ioc for a non-default xlsx path).
 
 # Merge both flavors' checklists into one schema, with IOC names
+[group('data')]
 build-species-names *args:
     .venv/bin/python scripts/build_species_names.py {{args}}
 
 # Build app/src/main/assets/species_months.csv (per-species monthly report counts, for season ranking)
+[group('data')]
 build-species-months:
     .venv/bin/python scripts/build_species_months.py
 
 # Build app/src/main/assets/species_regions.csv (per-grid-cell species counts, for locality ranking)
+[group('data')]
 build-species-regions:
     .venv/bin/python scripts/build_species_regions.py
 
 # Push the built localities/species CSVs to the device (overrides the bundled assets, no rebuild)
+[group('data')]
 push-data:
     adb push app/src/norway/assets/localities.csv {{data_dir}}/localities.csv
     -adb push app/src/norway/assets/species.csv {{data_dir}}/species.csv
@@ -139,6 +158,7 @@ push-data:
 # importSeedNotes). Targets the .debug app only — never the release app with the real field notes.
 
 # Seed the DEBUG app with varied sample observations (overwrites its notes!)
+[group('dev')]
 seed:
     .venv/bin/python scripts/dev/make_sample_notes.py > /tmp/feltbok-seed-notes.json
     adb push /tmp/feltbok-seed-notes.json {{data_dir}}/seed-notes.json
@@ -148,5 +168,6 @@ seed:
 # Needs rsvg-convert + imagemagick.
 
 # Regenerate the F-Droid/Play store icon + feature graphic
+[group('dev')]
 render-store-assets:
     scripts/dev/store-assets/render.sh
