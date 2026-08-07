@@ -660,7 +660,7 @@ private fun AnnotatedString.Builder.appendBoldSymbols(text: String) {
 }
 
 @Composable
-private fun NoteRow(n: Note, name: String, nameItalic: Boolean, status: String, selecting: Boolean, selected: Boolean, clickEnabled: Boolean = true, onClick: () -> Unit) {
+private fun NoteRow(n: Note, name: String, nameItalic: Boolean, status: String, selecting: Boolean, selected: Boolean, onClick: () -> Unit) {
     val cs = MaterialTheme.colorScheme
     val hasLoc = n.locName.isNotBlank()
     // age + sex (sex symbol bolded so the thin ♂/♀ glyphs read at a glance), each shown only when
@@ -677,7 +677,7 @@ private fun NoteRow(n: Note, name: String, nameItalic: Boolean, status: String, 
     // the click/tint/padding live on the Row so the whole width, circle included, is one tap target.
     Row(
         Modifier.fillMaxWidth()
-            .clickable(enabled = clickEnabled, onClick = onClick)
+            .clickable(onClick = onClick)
             .background(if (selected) cs.primaryContainer else cs.surface)
             .padding(horizontal = 16.dp, vertical = 9.dp),
         verticalAlignment = Alignment.CenterVertically,
@@ -1109,12 +1109,11 @@ fun ArchiveScreen(vm: MainViewModel) {
                         NoteRow(
                             n, vm.noteName(n), vm.langPrefs.primary == Lang.LATIN, vm.statusFor(n.latin),
                             selecting = selecting, selected = n.id in vm.selected,
-                            // Outside marking a tap has nothing to do (no editor here), so disable
-                            // it: an enabled-but-inert row would still flash its ripple.
-                            clickEnabled = selecting,
                             onClick = {
                                 if (ds.suppressTap) ds.suppressTap = false
-                                else vm.toggleSelect(n.id)
+                                // A tap marks rather than opens - there's no editor for an archived
+                                // note, so the first tap starts marking instead of doing nothing.
+                                else if (selecting) vm.toggleSelect(n.id) else vm.startSelect(n.id)
                             },
                         )
                     }

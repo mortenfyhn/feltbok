@@ -243,8 +243,9 @@ list footer opens it — always visible, even when empty, so it's discoverable
 before you first need it. The archive screen is the same day-grouped list, and
 marking behaves exactly like the main list (long-press to start, drag to sweep a
 range with edge auto-scroll, circles, day-header toggles, the header turning into
-a selection bar) — the one difference is that a plain tap outside marking does
-nothing, since an archived note can't be opened. The single action is
+a selection bar) — the one difference is that a plain tap marks the note instead
+of opening it, since an archived note can't be opened; the first tap is enough to
+start marking, so getting one note back needs no long-press. The single action is
 **Gjenopprett**, which moves the marked notes back into the live list. There is no
 true delete in the app — clearing the app's data is the escape hatch if someone
 really wants everything gone. The archive lives in its own file (`archive.jsonl`,

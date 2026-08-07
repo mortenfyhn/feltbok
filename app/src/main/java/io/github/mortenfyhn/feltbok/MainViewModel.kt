@@ -119,6 +119,10 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
     /** Long-press entry point on a day header: switch into selection mode and mark the whole day. */
     fun startSelectDay(ids: List<Long>) { selectionMode = true; toggleDay(ids) }
 
+    /** Enter selection mode on one note. The archive taps straight into this: an archived note can't
+     *  be opened, so marking is all a tap can mean there, and it saves discovering the long-press. */
+    fun startSelect(id: Long) { selectionMode = true; toggleSelect(id) }
+
     /** Replace the whole marked set at once - the long-press-drag range selector paints a fresh set
      *  (a base plus the swept range) on every drag move, so shrinking the drag un-marks again. */
     fun setSelection(ids: Collection<Long>) {
