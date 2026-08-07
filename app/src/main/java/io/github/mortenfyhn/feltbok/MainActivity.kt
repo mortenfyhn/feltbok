@@ -28,12 +28,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.core.content.ContextCompat
-import kotlinx.coroutines.withTimeoutOrNull
-
-// How long an undo snackbar stays before auto-dismissing if you neither act on it nor navigate away
-// (#122). Generous so a glance away in the field doesn't miss the window, but bounded so it doesn't
-// sit on the list forever.
-private const val UNDO_TIMEOUT_MS = 12_000L
 
 class MainActivity : ComponentActivity() {
     private val vm: MainViewModel by viewModels()
@@ -73,8 +67,8 @@ fun App(vm: MainViewModel) {
         val snackbar = remember { SnackbarHostState() }
         // After a delete or a draft discard, offer to undo it (#122). Keyed on undoToken so a fresh
         // snackbar shows per action; hosted here (not on the list) so it survives the switch to LIST.
-        // It clears on whichever comes first: you tap Angre, the timeout elapses, or you navigate
-        // away (the dismiss effect below). Indefinite duration hands the timing to withTimeoutOrNull.
+        // It clears on whichever comes first: you tap Angre, the Short duration elapses, or you
+        // navigate away (the dismiss effect below).
         LaunchedEffect(vm.undoToken) {
             val message = when (val action = vm.undoable) {
                 is Undoable.Deleted -> Strings.Notes.deleted(action.notes.size)
@@ -82,13 +76,11 @@ fun App(vm: MainViewModel) {
                 is Undoable.Edited -> Strings.Notes.edited(action.before.size)
                 null -> return@LaunchedEffect
             }
-            val result = withTimeoutOrNull(UNDO_TIMEOUT_MS) {
-                snackbar.showSnackbar(
-                    message = message,
-                    actionLabel = Strings.Notes.undo,
-                    duration = SnackbarDuration.Indefinite,
-                )
-            }
+            val result = snackbar.showSnackbar(
+                message = message,
+                actionLabel = Strings.Notes.undo,
+                duration = SnackbarDuration.Short,
+            )
             if (result == SnackbarResult.ActionPerformed) vm.undo() else vm.dismissUndo()
         }
         // The undo only makes sense on the list; dismiss it once you act (start/edit an observation,
