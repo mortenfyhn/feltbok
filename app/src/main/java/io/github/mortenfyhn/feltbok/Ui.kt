@@ -994,10 +994,12 @@ internal fun ScreenHeader(
     title: String,
     onCancel: () -> Unit,
     cancelContent: @Composable () -> Unit = { Text("‹ ${Strings.back}", color = Color.White) },
+    // Before [trailing] so a trailing-lambda call site still binds to that, not to this.
+    modifier: Modifier = Modifier,
     trailing: @Composable RowScope.() -> Unit = {},
 ) {
     Box(
-        Modifier.fillMaxWidth().background(MaterialTheme.colorScheme.primary),
+        modifier.fillMaxWidth().background(MaterialTheme.colorScheme.primary),
         contentAlignment = Alignment.Center,
     ) {
         Text(title, color = Color.White, fontWeight = FontWeight.SemiBold, fontSize = 16.sp,
@@ -1071,7 +1073,11 @@ fun ArchiveScreen(vm: MainViewModel) {
     BackHandler { if (selecting) vm.clearSelection() else vm.closeArchive() }
     Column(Modifier.fillMaxSize()) {
         Box {
-            ScreenHeader(Strings.Archive.title, onCancel = { vm.closeArchive() })
+            // As tall as the list's status strip, so the rows start where the list's did and the
+            // selection bar drawn over it has room for its outlined button (a title-height bar
+            // leaves the outline 2dp of clearance).
+            ScreenHeader(Strings.Archive.title, onCancel = { vm.closeArchive() },
+                modifier = Modifier.heightIn(min = 64.dp))
             if (selecting) ArchiveSelectionBar(vm, Modifier.matchParentSize())
         }
         if (vm.archived.isEmpty()) {
