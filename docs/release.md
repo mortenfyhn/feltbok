@@ -98,19 +98,21 @@ client-side Google feature keyed on whether the app/developer is known to Google
 We mitigate it for now with clear install instructions (above); the steps below remove
 or future-proof it.
 
-- **Free Limited Distribution Account** (Android developer verification). Early access
-  June 2026; **no government ID**, **up to 20 devices**. Register the release signing key
-  + `io.github.mortenfyhn.feltbok`. Doesn't silence today's scan prompt, but future-proofs installability
-  in Norway when verification enforcement reaches Europe (2027+), and is the same identity
-  reused for Play later.
-  See <https://support.google.com/android-developer-console/answer/16561738>.
-- **Google Play** (in progress, #74 — free, not priced). The only channel with *no*
+- **Google Play** (#74, free — in closed testing since Aug 2026). The only channel with *no*
   Play Protect prompt — apps installed via Play aren't treated as unknown. Upload is an
-  **AAB**, not an APK (`./gradlew bundleRelease`). With **Play App Signing** Google holds
-  the final signing key and we upload with an *upload key*, so a Play install carries a
-  third signature (GitHub keystore / F-Droid key / Play key all differ). Consequence worth
-  knowing: nobody can move between channels without uninstalling first. Harmless here —
-  notes are exported then deleted, so there's nothing to migrate. Set the upload key from
-  `feltbok-release.keystore` so Play releases stay consistent with each other. Account
-  paperwork and listing assets are tracked on #74, not in this repo.
-- **F-Droid** (deferred, free). Convenience/auto-update; still sideload-scanned.
+  **AAB**, not an APK: `./gradlew bundleNorwayRelease` (plain `bundleRelease` builds both
+  flavors). With **Play App Signing** Google holds the final signing key and we upload with an
+  *upload key*, so a Play install carries a third signature (GitHub keystore / F-Droid key /
+  Play key all differ). Consequence worth knowing: nobody can move between channels without
+  uninstalling first. Harmless here — notes are exported then deleted, so there's nothing to
+  migrate. Account paperwork and listing assets are tracked on #74, not in this repo.
+- **F-Droid** (live since v0.12, free). Convenience/auto-update; still sideload-scanned.
+- **Android developer verification.** Enrolling in Play App Signing auto-registered the Play
+  key + `io.github.mortenfyhn.feltbok`, which covers the global "register by 30 Sep 2026 or be
+  removed from Play" requirement. The *install-blocking* half only hits Brazil, Indonesia,
+  Singapore and Thailand on that date, so nothing breaks for Norwegian users this year — but it
+  goes global in **2027**, and then an unregistered package+key pair can't be installed on a
+  certified device. Before then, register `feltbok-release.keystore` in Play Console as an
+  additional key used outside Play, or the **GitHub release APKs stop installing**. F-Droid's
+  key isn't ours to register; that one is F-Droid's problem.
+  See <https://support.google.com/android-developer-console/answer/16561738>.
