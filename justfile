@@ -109,7 +109,7 @@ uninstall:
 harvest *args:
     .venv/bin/python scripts/harvest_sites_mobil.py {{args}}
 
-# Build app/src/main/assets/localities.csv from the harvested sites
+# Build app/src/norway/assets/localities.csv from the harvested sites
 [group('data')]
 build-localities *args:
     .venv/bin/python scripts/build_sites.py {{args}}

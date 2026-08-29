@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Build app/src/main/assets/localities.csv from a mobile-API site harvest.
+"""Build app/src/norway/assets/localities.csv from a mobile-API site harvest.
 
 The harvest (harvest_sites_mobil.py) carries everything we need straight from
 Artsobservasjoner, so this is the whole pipeline now - no GBIF, no footprints, no
@@ -29,7 +29,7 @@ import pathlib
 DATA_DIR = os.environ.get(
     "FELTBOK_DATA_DIR", "/home/morten/Documents/projects/app-feltbok"
 )
-CSV = "app/src/main/assets/localities.csv"  # public/allmenn - bundled + committed + shared
+CSV = "app/src/norway/assets/localities.csv"  # public/allmenn - bundled + committed + shared
 OVERRIDES = pathlib.Path(__file__).parent / "locality_overrides.csv"
 
 

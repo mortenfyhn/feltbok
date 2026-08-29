@@ -15,10 +15,13 @@ No auth needed: the endpoint serves the public allmenn registry over a plain GET
 returns private sites - other people's included - but build_sites.py keeps only the public
 ones for the bundled localities.csv; your own privates come from the in-app ByUser sync).
 
-Two server limits drive the tiling: a bbox may span at most ~50 km in Web Mercator per side,
-and a response returns at most 1000 sites (no paging). So we tile in Web Mercator at a safe
-size and recursively quarter any tile that hits the 1000-site cap. Output: a JSON array of
-rows saved to OUT, gentle and resumable.
+Two server limits drive the tiling. A bbox may span at most 50 km in Web Mercator per side;
+51 km gives "BoundingBox too large" (errorCode G8), so we cannot start from one big box and
+quadtree downward - the grid has to be laid out in advance. And a response is truncated with
+no paging: MaxSites must be 1-1000, and the server returns up to about twice what you ask
+for, so the 1000-row check below spots truncation well before the real cut-off. We tile in
+Web Mercator at a safe size and recursively quarter any tile that comes back truncated.
+Output: a JSON array of rows saved to OUT, gentle and resumable.
 
     .venv/bin/python scripts/harvest_sites_mobil.py [--bbox minlon,minlat,maxlon,maxlat]
 """
@@ -51,9 +54,14 @@ DEFAULT_REGIONS = [
 # Web-Mercator tile size in metres. The server rejects a box wider than ~50 km/side
 # ("BoundingBox too large"), so stay safely under it.
 TILE_M = 40_000
-MAX_SITES = 1000  # the server's hard per-response cap; hitting it => subdivide
+MAX_SITES = 1000  # the largest MaxSites the server accepts (400 outside 1-1000); hitting it => subdivide
 MIN_TILE_M = 400  # stop subdividing below this (accept truncation; ~never reached)
 DELAY = 0.8
+# save() rewrites the whole rows file, which is ~1 GB by the end of a run (~7s to serialize
+# and write). Pacing it by tile count made bookkeeping cost more than the requests once the
+# run reached empty grid; pace it by time instead, so it stays a few percent of wall clock.
+# A clean Ctrl-C still saves, so this only bounds what a crash or power loss can cost.
+SAVE_EVERY_S = 120
 
 
 def merc(lon, lat):
@@ -190,7 +198,10 @@ def main() -> int:
         """Harvest mercator box [a,c]x[b,d]; quarter it if it hits the 1000-site cap."""
         res = fetch(session, a, b, c, d)
         stats["req"] += 1
-        time.sleep(DELAY)
+        # Most of the grid is empty sea and ice (~86% of tiles). Those answer in ~0.04s, so
+        # pausing after them spends hours of wall clock being polite about nothing.
+        if res:
+            time.sleep(DELAY)
         if res is None:
             return
         for r in res:
@@ -210,6 +221,9 @@ def main() -> int:
         len(s) for s in done
     )  # tiles done across all regions (resumed + this run)
     processed = 0  # tiles harvested THIS run (excludes resumed ones), for the ETA rate
+    last_save = start
+    # Counting public rows walks every row, so refresh it when we save, not on every print.
+    pub = sum(1 for r in rows.values() if not r["isPrivate"])
     try:
         for (mx0, my0, mx1, my1, nx, ny), reg_done in zip(grids, done):
             for i in range(nx):
@@ -224,9 +238,11 @@ def main() -> int:
                     reg_done.add((i, j))
                     ndone += 1
                     processed += 1
-                    if ndone % 10 == 0:
+                    if time.time() - last_save > SAVE_EVERY_S:
                         save()
+                        last_save = time.time()
                         pub = sum(1 for r in rows.values() if not r["isPrivate"])
+                    if ndone % 10 == 0:
                         elapsed = time.time() - start
                         eta = f", ~{hms(elapsed / processed * (total - ndone))} left"
                         print(
