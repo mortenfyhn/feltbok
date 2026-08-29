@@ -1,15 +1,13 @@
 # Endringslogg
 
-Note to agents: Always write new entries in the same style and **brevity** as older entries.
+<!-- Note to agents: Always write new entries in the same style and **brevity** as older entries. -->
 
 ## Neste utgivelse
 
-- Søk opp «ub.»-arter (ubestemt), f.eks. «ub. makrell-/rødnebbterne».
-- Kommentarfeltene tar mindre plass: trykk på dem for å skrive.
-- Sikrere sikkerhetskopi av observasjoner.
-- Tilpassa Android 16.
-- Observasjoner kan nå arkiveres heller enn permanent slettes.
-- Oppdaterte lokaliteter: 249 nye offentlige lokaliteter er med.
+- Støtte for ubestemte arter, f.eks. «ub. makrell-/rødnebbterne».
+- Oppdaterte allmenne lokaliteter (249 nye).
+- Observasjoner kan nå arkiveres i stedet for å slettes.
+- Åpen/privat kommentar tar mindre plass.
 - Ymse småforbedringer.
 
 ## v1.1 (28. juli 2026)
