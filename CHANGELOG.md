@@ -9,6 +9,7 @@ Note to agents: Always write new entries in the same style and **brevity** as ol
 - Sikrere sikkerhetskopi av observasjoner.
 - Tilpassa Android 16.
 - Observasjoner kan nå arkiveres heller enn permanent slettes.
+- Oppdaterte lokaliteter: 249 nye offentlige lokaliteter er med.
 - Ymse småforbedringer.
 
 ## v1.1 (28. juli 2026)
