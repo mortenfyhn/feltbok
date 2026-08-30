@@ -124,11 +124,14 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
     fun startSelect(id: Long) { selectionMode = true; toggleSelect(id) }
 
     /** Replace the whole marked set at once - the long-press-drag range selector paints a fresh set
-     *  (a base plus the swept range) on every drag move, so shrinking the drag un-marks again. */
+     *  (a base plus the swept range) on every drag move, so shrinking the drag un-marks again. Diffed
+     *  rather than clear+addAll, since a drag move usually changes the set by a handful of ids and a
+     *  full rebuild would copy the whole (possibly long) selection back in on every frame. */
     fun setSelection(ids: Collection<Long>) {
         selectionMode = true
-        selected.clear()
-        selected.addAll(ids)
+        val target = ids as? Set<Long> ?: ids.toSet()
+        selected.retainAll(target)
+        for (id in target) if (id !in selected) selected.add(id)
     }
 
     /** Toggle a whole day group at once (the date header's circle). Set-maths in [toggledDay]. */
