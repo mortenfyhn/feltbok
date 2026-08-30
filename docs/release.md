@@ -19,25 +19,51 @@ First draft the version's entry in `CHANGELOG.md` (terse, user-facing highlights
 ./release.sh 0.8
 ```
 
-The script bumps `versionCode`+`versionName` in `app/build.gradle.kts`, then **pauses** so you
-can finalize the `## v0.8` changelog section — that section becomes the release notes, so nothing
-is tagged or pushed until you press Enter. After that it commits (version bump + changelog), tags
-`v0.8`, builds both flavors' signed APK (`feltbok-v0.8.apk` for Norway and
-`feltbok-se-v0.8.apk` for Sweden — both attached to the one release), pushes, and runs
-`gh release create` with notes assembled from the install steps + the changelog entry + the
-auto-generated "What's Changed" list. No manual GitHub edit afterwards.
+The script runs its cheap checks first (clean tree, master's tip, tag free, keystore), so anything
+missing costs a second rather than a full instrumented test run. It then **waits while you write
+the notes** — one file at a time, no abort-and-re-run. The `## Neste utgivelse` section stays a
+hand edit (rewriting it into shippable notes is a real part of cutting a release, and the heading
+rename rides along with it); the English F-Droid "what's new" is optional, so `skip` passes. The
+preview further down shows what it parsed, and `e` re-reads the file if you want another pass.
+
+Next come the two gates: the R8 smoke tests (`just itest`) and the seed→export→paste-import check,
+which the script sets up for you on request — `just install`, `just seed`, `just run`, so the dev
+app is loaded with the sample batch and you only do the paste by hand. Both are skippable, but only
+by typing `skip`.
+
+After that it commits (version bump + changelog), tags `v0.8`, and builds both flavors' signed APK
+(`feltbok-v0.8.apk` for Norway and `feltbok-se-v0.8.apk` for Sweden — both attached to the one
+release). All of that is local.
+
+**Pushing is its own prompt at the end.** Answer anything but `yes` and the tag stays local, the
+APKs are kept for sideloading, and the script prints the two commands that undo it (`git tag -d` +
+a *mixed* `git reset HEAD~1`, so your hand-written changelog survives in the working tree). That
+makes the whole script safe to rehearse: Ctrl-C at the "build + tag" pause touches nothing at all,
+and stopping at the push prompt costs one `git reset`. On `yes` it pushes and runs
+`gh release create` with notes assembled from the install steps + the changelog entry. No manual
+GitHub edit afterwards.
+
+## Releases are cut from master's tip
+
+The script refuses to release anything else, so that **what you soaked is exactly what ships**. If
+work lands while a build is soaking, it belongs on a feature branch until the release is out —
+don't merge it to master. Releasing an older hash instead would put the version bump on a side
+branch, and merging that back conflicts with `CHANGELOG.md` every time (both sides edit the top of
+the file), mid-release, after tagging. The branch is cheaper. The script's error says how far off
+you are and gives the command to move the unsoaked commits aside.
 
 **F-Droid "what's new":** F-Droid shows `fastlane/metadata/android/<locale>/changelogs/<versionCode>.txt`
 inline per version. The script **generates the Norwegian one** (`nb-NO`) from the `## vX` section, so
 `CHANGELOG.md` stays the single source for it — but skips generation if the file already exists, so a
 hand-tuned entry (e.g. one omitting an installer-only note) wins. The **English** one (`en-US`) is
-hand-written each release (Norway-only app, so non-nb users are rare); the script warns if it's
-missing but doesn't block. Write it during the pause.
+hand-written each release (Norway-only app, so non-nb users are rare); the script lists it as
+missing but doesn't block. Write it while the script waits.
 
 A drafted (uncommitted) `CHANGELOG.md` — and the per-version `changelogs/*.txt` files — are allowed
 to be dirty when you start; everything else must be committed. `versionCode` auto-increments so each release is an upgrade
 Android will install over the last; the in-app version string comes from `git describe`, so it
-shows `0.8` at the tag. Needs a clean `master`, the keystore (below), and an authenticated `gh`.
+shows `0.8` at the tag. Needs master's tip (and it up to date with `origin/master`), the keystore
+(below), and an authenticated `gh`.
 Building locally is much faster than the old cold Semaphore tag build.
 
 ## Signing
