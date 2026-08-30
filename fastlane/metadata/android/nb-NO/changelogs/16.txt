@@ -1,0 +1,4 @@
+• Støtte for ubestemte arter, f.eks. «ub. makrell-/rødnebbterne».
+• Oppdaterte allmenne lokaliteter (249 nye).
+• Gamle observasjoner vil nå arkiveres heller enn slettes.
+• Åpen/privat kommentar tar mindre plass.

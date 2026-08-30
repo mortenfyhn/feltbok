@@ -4,11 +4,12 @@
 
 ## Neste utgivelse
 
+## v1.2 (29. august 2026)
+
 - Støtte for ubestemte arter, f.eks. «ub. makrell-/rødnebbterne».
 - Oppdaterte allmenne lokaliteter (249 nye).
-- Observasjoner kan nå arkiveres i stedet for å slettes.
+- Gamle observasjoner vil nå arkiveres heller enn slettes.
 - Åpen/privat kommentar tar mindre plass.
-- Ymse småforbedringer.
 
 ## v1.1 (28. juli 2026)
 

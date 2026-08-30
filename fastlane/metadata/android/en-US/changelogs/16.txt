@@ -1,0 +1,4 @@
+• Support for unidentified species, e.g. «ub. makrell-/rødnebbterne».
+• Updated public sites (249 new).
+• Old observations are now archived instead of deleted.
+• Public/private comments take less space.
