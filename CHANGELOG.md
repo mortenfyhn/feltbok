@@ -4,6 +4,8 @@
 
 ## Neste utgivelse
 
+- Angre-knappen virker igjen når du arkiverer fra eksportskjermen.
+
 ## v1.2 (29. august 2026)
 
 - Støtte for ubestemte arter, f.eks. «ub. makrell-/rødnebbterne».

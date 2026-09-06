@@ -759,8 +759,10 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
     fun exportSelected() { exportScope = selected.toList(); showExport = true }
     fun closeExport() { showExport = false }
 
-    /** The notes the current export covers - the marked ones when exporting a selection, else all. */
-    fun exportNotes(): List<Note> = exportScope?.let { ids -> notes.filter { it.id in ids } } ?: notes
+    /** The notes the current export covers - the marked ones when exporting a selection, else all.
+     *  Copied, not the live list: [clearExported] hands the result to [archive], which then removes
+     *  those notes - aliasing would empty the undo payload, so the snackbar claimed "0 arkiverte". */
+    fun exportNotes(): List<Note> = exportScope?.let { ids -> notes.filter { it.id in ids } } ?: notes.toList()
 
     /** True when the open export is scoped to a selection (vs the whole list) - drives the clear
      *  step's wording so it never claims to wipe "alle observasjoner" when it only clears a subset. */

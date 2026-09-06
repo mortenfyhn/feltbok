@@ -55,4 +55,24 @@ class ExportFlowTest {
         rule.onNodeWithText(Strings.Export.copy).performClick()
         rule.onNodeWithText(Strings.Export.copied).assertIsDisplayed()
     }
+
+    /**
+     * Archiving from the export screen must report (and offer to undo) the notes it took. The
+     * whole-list export scope aliases the live note list, so a bug there empties the undo payload
+     * and the snackbar claims "0". One note, so no confirm dialog stands in the way.
+     */
+    @Test
+    fun clearingTheExportReportsWhatItArchived() {
+        val app = ApplicationProvider.getApplicationContext<Application>()
+        val vm = MainViewModel(app)
+        rule.setContent { App(vm) }
+        rule.runOnUiThread { vm.seedNote("kjøttmeis") }
+
+        rule.onNodeWithText(Strings.Notes.export).performClick()
+        rule.onNodeWithText(Strings.Export.clearAll(1)).performClick()
+
+        rule.onNodeWithText(Strings.Notes.deleted(1)).assertIsDisplayed()
+        rule.onNodeWithText(Strings.Notes.undo).performClick()
+        rule.onNodeWithText("kjøttmeis", substring = true).assertIsDisplayed()
+    }
 }
