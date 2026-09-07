@@ -109,7 +109,7 @@ object Strings {
         const val title = "Medobservatörer"
         const val placeholder = "Sök eller skriv namn…"
         const val done = "Klar"
-        const val clearAll = "Nu är jag ensam"   // reset: clears everyone (and the sticky party on save)
+        const val clearAll = "Inga medobservatörer"   // reset: clears everyone (and the sticky party on save)
         const val remove = "Ta bort"   // delete a name from the autocomplete list entirely
         fun forgetTitle(name: String) = "Ta bort «$name»?"
         const val forgetBody = "Namnet tas bort från listan över medobservatörer. Tidigare observationer behåller det."

@@ -129,7 +129,7 @@ object Strings {
         const val title = "Medobservatører"
         const val placeholder = "Søk eller skriv navn…"
         const val done = "Ferdig"
-        const val clearAll = "Nå er jeg alene"   // reset: clears everyone (and the sticky party on save)
+        const val clearAll = "Ingen medobservatører"   // reset: clears everyone (and the sticky party on save)
         const val remove = "Slett"   // delete a name from the autocomplete list entirely
 
         // Confirm the delete so it's never mistaken for un-ticking the name from this observation.

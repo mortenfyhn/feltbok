@@ -186,7 +186,7 @@ you're out with, everything that follows inherits them — you only touch the ro
 party changes. Because the party is derived rather than stored, fixing the newest
 observation's co-observers (alone or in a batch) fixes the default for the next one, and
 editing or backdating *older* observations can't hijack today's party.
-**Nå er jeg alene** (in the picker) clears the set; save an observation with it
+**Ingen medobservatører** (in the picker) clears the set; save an observation with it
 empty and the party is cleared going forward too. The party never resets on its own — it
 tracks exactly what you last saved, since wrongly crediting someone who wasn't there (in a
 public database) is worse than the small chore of clearing it.
