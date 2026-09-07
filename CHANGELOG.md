@@ -8,6 +8,7 @@
 - Markeringa blir oppheva etter at du har endra flere observasjoner samtidig, og Angre-meldinga står lenger.
 - Angre-melding også når du endrar en enkelt observasjon.
 - Klarere ordlyd for å tømme medobservatører: «Ingen medobservatører».
+- Navnet på hovedlokaliteter (mørkegrønne prikker) blir nå vist framfor navn på vanlige lokaliteter i kartet.
 
 ## v1.2 (29. august 2026)
 

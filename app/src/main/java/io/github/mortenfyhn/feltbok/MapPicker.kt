@@ -405,6 +405,11 @@ internal fun declutteredAtZoom(zoom: Double, spanPx: Float): Boolean =
 private const val LABEL_MIN_SPAN_PX = 14f
 private const val POINT_LABEL_EXTENT_M = 60.0
 
+/** Nominal extent for a *superlocality* point (#178). A super dot stands for a whole area, so
+ *  treating it as a 60 m point made it lose its name to any ordinary polygon beside it - and the
+ *  neighbour's label then read as the dot's name. Score it like the big locality it represents. */
+private const val SUPER_POINT_LABEL_EXTENT_M = 500.0
+
 /** Padding (px) added around each label's text box before testing overlap — the main
  *  "breathing room" knob for how tightly labels may sit next to each other (#121). */
 private const val LABEL_PAD = 8f
@@ -679,9 +684,11 @@ private class LocalityOverlay(
 
     /** Footprint span used both for label candidacy (vs [LABEL_MIN_SPAN_PX]) and as the priority
      *  score in the collision pass: bigger footprint = higher priority. Point localities have no
-     *  real size, so they get a nominal extent ([POINT_LABEL_EXTENT_M]). */
+     *  real size, so they get a nominal extent ([POINT_LABEL_EXTENT_M], or
+     *  [SUPER_POINT_LABEL_EXTENT_M] for a superlocality dot). */
     private fun labelSpanPx(loc: Locality, ppm: Double): Float =
-        if (loc.polygon.isEmpty() && loc.radius <= 0.0) (POINT_LABEL_EXTENT_M * ppm).toFloat()
+        if (loc.polygon.isEmpty() && loc.radius <= 0.0)
+            ((if (loc.isSuper) SUPER_POINT_LABEL_EXTENT_M else POINT_LABEL_EXTENT_M) * ppm).toFloat()
         else screenSpanPx(loc, ppm)
 
     private val lineH = 32f
