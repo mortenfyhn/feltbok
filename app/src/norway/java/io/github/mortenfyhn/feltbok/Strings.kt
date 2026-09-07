@@ -108,7 +108,7 @@ object Strings {
         const val commentPrivate = "Privat kommentar"
         const val commentDone = "Ferdig"
         const val uncertain = "Usikker artsbestemming"
-        const val coObservers = "Medobservatører"
+        const val coObservers = "Medobs."   // short, so the names beside it get the room (#176)
         const val time = "Tid"
         const val delete = "Arkiver"
         const val copy = "Kopier"
@@ -130,6 +130,9 @@ object Strings {
         const val placeholder = "Søk eller skriv navn…"
         const val done = "Ferdig"
         const val clearAll = "Ingen medobservatører"   // reset: clears everyone (and the sticky party on save)
+
+        // The list-screen party header (#176). Empty reads as [clearAll] - the same "you're alone" text.
+        fun party(count: Int, names: String) = "$count medobs: $names"
         const val remove = "Slett"   // delete a name from the autocomplete list entirely
 
         // Confirm the delete so it's never mistaken for un-ticking the name from this observation.

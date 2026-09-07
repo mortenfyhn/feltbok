@@ -296,11 +296,20 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
     /** Pick counts per co-observer name, so names you enter often surface first in the picker. */
     private val coObsUses = mutableStateMapOf<String, Int>().apply { putAll(loadCoObsUses(app)) }
 
-    /** The current field party ("følget mitt"), pre-filled onto every new observation: simply the
-     *  newest note's co-observers. Derived, not stored - whoever your latest obs credits *is* the
-     *  party, so fixing that note (alone or in a batch) fixes the default for the next one, and
-     *  editing older notes can't hijack it (#128). */
-    private fun party(): List<String> = notes.maxByOrNull { it.time }?.coObservers ?: emptyList()
+    /** The current field party ("følget mitt"), pre-filled onto every new observation and shown in
+     *  the list header (#176). It follows the newest note's co-observers - whoever your latest obs
+     *  credits *is* the party, so fixing that note (alone or in a batch) fixes the default for the
+     *  next one, and editing older notes can't hijack it (#128) - and the header sets it directly.
+     *  Stored rather than derived so a header-set party works with no notes yet and survives a
+     *  restart; seeded from the newest note so nothing changes for existing data. */
+    var party by mutableStateOf(loadParty(app) ?: notes.maxByOrNull { it.time }?.coObservers ?: emptyList())
+        private set
+
+    private fun storeParty(names: List<String>) { party = names; saveParty(ctx, names) }
+
+    /** After a note write: the party follows the newest note. A delete/archive leaves it alone -
+     *  losing your party because you tidied up an old note would be worse than a stale one. */
+    private fun syncPartyToNewest() { notes.maxByOrNull { it.time }?.let { storeParty(it.coObservers) } }
 
     /** Known co-observer names for the picker (pure ranking in [coObserverOptions]). */
     fun coObserverOptions(): List<String> = coObserverOptions(coObsUses, dCoObs)
@@ -308,10 +317,15 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
     /** Toggle a name on/off the draft's co-observers. */
     fun toggleCoObs(name: String) { if (!dCoObs.remove(name)) dCoObs.add(name) }
 
-    /** Add a free-text name to the draft (deduped, trimmed); no-op on blank. */
+    /** Add a free-text name to the draft (deduped, trimmed); no-op on blank. The name joins the
+     *  autocomplete register straight away (at zero uses, so ranking still counts real uses) - it
+     *  used to get in only on save, so un-ticking a just-typed name made it vanish from the picker
+     *  entirely. Only Slett removes a name now. */
     fun addCoObs(name: String) {
         val n = name.trim()
-        if (n.isNotBlank() && n !in dCoObs) dCoObs.add(n)
+        if (n.isBlank()) return
+        if (n !in dCoObs) dCoObs.add(n)
+        if (n !in coObsUses) { coObsUses[n] = 0; saveCoObsUses(ctx, coObsUses) }
     }
 
     /** Clear the draft's co-observers ("tøm følget"); the party syncs to this on save. */
@@ -467,7 +481,7 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
         dSpecies = ""; dLatin = ""; dCount = 1
         dAge = ""; dAct = ""; dSex = ""; dPub = ""; dPriv = ""; dUncertain = false
         dLoc = null; dTime = 0L; dEndTime = null; dTimeUnknown = false
-        dCoObs.clear(); dCoObs.addAll(party())   // a new obs inherits the current party (#128)
+        dCoObs.clear(); dCoObs.addAll(party)   // a new obs inherits the current party (#128)
     }
 
     fun changeSpecies() { changingSpecies = true; screen = Screen.SEARCH }
@@ -568,7 +582,32 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
 
     // ---- co-observer picker (#128) ----
     fun openCoObs() { screen = Screen.COOBS }
-    fun closeCoObs() { screen = Screen.DETAIL }
+
+    /** Set the party straight from the list header (#176), reusing the picker: it edits the draft's
+     *  names, so seed those with the party and write them back on the way out. Safe because there's
+     *  no observation in progress while you're on the list. */
+    fun editParty() {
+        editingParty = true
+        dCoObs.clear(); dCoObs.addAll(party)
+        screen = Screen.COOBS
+    }
+    private var editingParty = false
+
+    fun closeCoObs() {
+        if (!editingParty) { screen = Screen.DETAIL; return }
+        editingParty = false
+        storeParty(dCoObs.toList())
+        bumpCoObsUses(dCoObs)   // a name typed here should feed the autocomplete, like a save does
+        resetDraft()
+        screen = Screen.LIST
+    }
+
+    /** Bump the name register so names you use often surface first in the picker. */
+    private fun bumpCoObsUses(names: List<String>) {
+        if (names.isEmpty()) return
+        names.forEach { coObsUses[it] = (coObsUses[it] ?: 0) + 1 }
+        saveCoObsUses(ctx, coObsUses)
+    }
 
     // ---- settings (#155: species-name languages) ----
     fun openSettings() { screen = Screen.SETTINGS }
@@ -685,12 +724,8 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
         )
         batchApply(change)
         // Bump the name register like a single-note save would, so a name typed here feeds the
-        // autocomplete next time. The party needs no handling: it's derived from the newest note,
-        // so a batch that covers it re-points the default automatically.
-        change.coObservers?.takeIf { it.isNotEmpty() }?.let { names ->
-            names.forEach { coObsUses[it] = (coObsUses[it] ?: 0) + 1 }
-            saveCoObsUses(ctx, coObsUses)
-        }
+        // autocomplete next time, and re-point the party if the batch covered the newest note.
+        change.coObservers?.let { bumpCoObsUses(it); syncPartyToNewest() }
         cancelBatchEdit()   // leaves batch mode + resets the draft
         clearSelection()
     }
@@ -738,12 +773,8 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
             actUses[dAct] = (actUses[dAct] ?: 0) + 1
             saveActUses(ctx, actUses)
         }
-        // Co-observers: bump the name register (for autocomplete). The party is derived from the
-        // newest note, so the save itself is what makes it stick - nothing to sync.
-        if (dCoObs.isNotEmpty()) {
-            dCoObs.forEach { coObsUses[it] = (coObsUses[it] ?: 0) + 1 }
-            saveCoObsUses(ctx, coObsUses)
-        }
+        bumpCoObsUses(dCoObs)
+        syncPartyToNewest()
         persist()
     }
 

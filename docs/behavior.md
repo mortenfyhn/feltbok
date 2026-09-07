@@ -153,8 +153,8 @@ old values can't be recovered any other way once it's gone. Comments aren't batc
 rarely the same across notes), so they're hidden here; everything else — species,
 locality, count, age, sex, activity, time, co-observers — is. Batch-editing
 co-observers covers the classic slip of logging a run of notes before remembering to
-set the party; it replaces each note's list (it doesn't append). Since the party is
-derived from the most recent observation (see Medobservatører below), a batch that
+set the party; it replaces each note's list (it doesn't append). Since the party follows
+the most recent observation (see Medobservatører below), a batch that
 covers it also fixes the default for the next new observation. Marking a *single* note
 and tapping
 `Endre` is just the normal single-note editor (nothing to batch).
@@ -171,21 +171,27 @@ the date filled in and both klokkeslett columns blank.
 
 ## Medobservatører (co-observers)
 
-Each observation can record who you observed with. The editor has a **Medobservatører**
-row; tapping it opens a picker that filters the names you've used before (most-used
+Each observation can record who you observed with. The editor has a **Medobs** row
+showing first names; tapping it opens a picker that filters the names you've used before (most-used
 first) — tap a name to add or remove it, or type a new one and tap **Legg til «…»** to
-add it as free text. The names you use are remembered locally to feed that
-autocomplete; nothing leaves the phone. Each name has a **Slett** action to remove it
+add it as free text. A name you type joins that list right away, so un-ticking it doesn't
+make it disappear. The names are remembered locally; nothing leaves the phone. Each name has a **Slett** action to remove it
 from the list (for a mistype or a one-off), behind a short confirm so it's never mistaken
 for un-ticking the name from this observation — past observations keep whatever name they
 were saved with, so this only prunes what you'll be offered next time.
 
-The current field party ("følget mitt") is simply **your most recent observation's
+The current field party ("følget mitt") follows **your most recent observation's
 co-observers**: every new observation is pre-filled with them, so once you note down who
 you're out with, everything that follows inherits them — you only touch the row when the
-party changes. Because the party is derived rather than stored, fixing the newest
-observation's co-observers (alone or in a batch) fixes the default for the next one, and
-editing or backdating *older* observations can't hijack today's party.
+party changes. Fixing the newest observation's co-observers (alone or in a batch) fixes
+the default for the next one, and editing or backdating *older* observations can't hijack
+today's party.
+
+The party is also shown on its own line under the green strip on the list screen, first
+names only ("Med: Kari, Ola"), or **Ingen medobservatører** when you're alone — so you can
+see at a glance who the next observation will credit, and notice a party you forgot to
+set. Tapping that line opens the same picker and sets the party directly, without going
+through an observation.
 **Ingen medobservatører** (in the picker) clears the set; save an observation with it
 empty and the party is cleared going forward too. The party never resets on its own — it
 tracks exactly what you last saved, since wrongly crediting someone who wasn't there (in a

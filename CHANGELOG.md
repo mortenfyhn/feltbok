@@ -4,6 +4,8 @@
 
 ## Neste utgivelse
 
+- Følget ditt vises øverst på lista, og du kan endre medobservatører ved å trykke på det.
+- Et nytt medobservatørnavn blir liggende i lista sjøl om du tar det bort fra observasjonen.
 - Fiksa feil antall "observasjoner arkivert" i melding etter eksport.
 - Markeringa blir oppheva etter at du har endra flere observasjoner samtidig, og Angre-meldinga står lenger.
 - Angre-melding også når du endrar en enkelt observasjon.

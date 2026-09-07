@@ -140,11 +140,14 @@ fun ListScreen(vm: MainViewModel, listState: LazyListState) {
             // The footer below sits in normal flow, so it can never overlap a note row (#28).
             Box(Modifier.weight(1f).fillMaxWidth()) {
                 if (vm.notes.isEmpty()) {
-                    Box(Modifier.fillMaxSize(), Alignment.Center) {
-                        Text(
-                            Strings.Notes.empty,
-                            color = cs.onSurfaceVariant, textAlign = TextAlign.Center,
-                        )
+                    Column(Modifier.fillMaxSize()) {
+                        PartyStrip(vm)
+                        Box(Modifier.fillMaxSize(), Alignment.Center) {
+                            Text(
+                                Strings.Notes.empty,
+                                color = cs.onSurfaceVariant, textAlign = TextAlign.Center,
+                            )
+                        }
                     }
                 } else {
                     // Bottom padding so the last row scrolls clear of the floating + button. Notes
@@ -162,7 +165,7 @@ fun ListScreen(vm: MainViewModel, listState: LazyListState) {
                     // scroll position - jump to its day header so it's visible. Consumed once shown.
                     LaunchedEffect(vm.scrollToNoteId) {
                         val id = vm.scrollToNoteId ?: return@LaunchedEffect
-                        var idx = 0
+                        var idx = 1   // the party row precedes the first day header
                         for (g in groups) {
                             if (g.notes.any { it.id == id }) { listState.animateScrollToItem(idx); break }
                             idx += 1 + g.notes.size   // day header + its rows
@@ -177,6 +180,9 @@ fun ListScreen(vm: MainViewModel, listState: LazyListState) {
                         state = listState, userScrollEnabled = !ds.active,
                         contentPadding = PaddingValues(bottom = 84.dp),
                     ) {
+                        // The party rides along as the list's first row, so it scrolls away like a
+                        // day header - it's a reminder for when you're logging, not permanent chrome.
+                        item(key = "party") { PartyStrip(vm) }
                         // The grand total of species rides along on the newest day's header only.
                         val totalSpecies = vm.notes.map { it.latin }.distinct().size
                         groups.forEachIndexed { index, group ->
@@ -584,6 +590,28 @@ private fun StatusStrip(vm: MainViewModel) {
     }
 }
 
+/** The current party ("følget mitt") at the top of the notes list (#176): who your next observation will
+ *  credit, and a tap to change it. Always shown - "Ingen medobservatører" is the reminder that makes
+ *  you notice a party you forgot to set. It rides in the list as its first row, so it scrolls away
+ *  rather than eating a permanent line of chrome. The count leads ("2 medobs.: Kari, Ola") so it
+ *  survives the ellipsis on a big party. First names only (full ones are one tap away in the picker);
+ *  the same muted pink as the list rows' +N badge, so the two read as the same thing. */
+@Composable
+private fun PartyStrip(vm: MainViewModel) {
+    val cs = MaterialTheme.colorScheme
+    val party = vm.party
+    Text(
+        if (party.isEmpty()) Strings.CoObs.clearAll
+        else Strings.CoObs.party(party.size, party.joinToString(", ") { shortCoObsName(it) }),
+        color = cs.onSecondaryContainer, fontSize = 13.sp, maxLines = 1, overflow = TextOverflow.Ellipsis,
+        // Centred when you're alone: with no names to read left-to-right the line is just a status,
+        // and centring keeps it from looking like a truncated list.
+        textAlign = if (party.isEmpty()) TextAlign.Center else TextAlign.Start,
+        modifier = Modifier.fillMaxWidth().background(cs.secondaryContainer)
+            .clickable { vm.editParty() }.padding(horizontal = 14.dp, vertical = 6.dp),
+    )
+}
+
 /** Credits / attribution (#139). Norway's Artsdatabanken data is CC BY 4.0 (attribution required);
  *  Sweden's SLU Artdatabanken data is CC0 (credited as courtesy, not obligation). OSM is credited on
  *  the map too but gathered here for one tidy home. */
@@ -897,7 +925,8 @@ fun CoObserverScreen(vm: MainViewModel) {
     var q by remember { mutableStateOf("") }
     val focus = remember { FocusRequester() }
     val focusManager = LocalFocusManager.current
-    LaunchedEffect(Unit) { focus.requestFocus() }
+    // No auto-focus: the picker usually opens on names you already have, and a keyboard covering
+    // half the list just to be dismissed is a chore. Tap the field when you do need to type.
     val query = q.trim()
     val matches = vm.coObserverOptions().filter { query.isBlank() || fold(it).contains(fold(query)) }
     // Offer an "add" row only when the typed name isn't already a known option (case-insensitive).
@@ -1337,9 +1366,11 @@ fun DetailScreen(vm: MainViewModel) {
             // string of notes went in without the party and adding it to all of them at once.
             FieldRow(Strings.Detail.coObservers, onClick = { vm.openCoObs() }) {
                 if (vm.dCoObs.isNotEmpty())
-                    Text(vm.dCoObs.joinToString(", "), fontWeight = FontWeight.Medium,
+                    // First names, as in the list header (#176) - the picker one tap away spells
+                    // out the full ones, and short names fit more of the party on the row.
+                    Text(vm.dCoObs.joinToString(", ") { shortCoObsName(it) }, fontWeight = FontWeight.Medium,
                         maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.weight(1f, fill = false))
-                else if (batch) BatchHint(vm.batchPreview { it.coObservers.joinToString(", ") })
+                else if (batch) BatchHint(vm.batchPreview { it.coObservers.joinToString(", ") { n -> shortCoObsName(n) } })
             }
         }
         // Delete and save sit side by side - red left, green right - so the destructive action

@@ -879,13 +879,27 @@ private fun saveCounts(ctx: Context, file: String, counts: Map<String, Int>) {
 fun loadActUses(ctx: Context) = loadCounts(ctx, "act_uses.json")
 fun saveActUses(ctx: Context, uses: Map<String, Int>) = saveCounts(ctx, "act_uses.json", uses)
 
-// ---- co-observer name register (autocomplete) ----
-// The "følget mitt" party needs no file: it's derived from the newest note (MainViewModel.party()).
-// Older builds persisted it in party.json; that file is now simply ignored.
+// ---- co-observer name register (autocomplete) + "følget mitt" (the current party) ----
 
 /** Pick counts per co-observer name, so names you enter often surface first in the picker. */
 fun loadCoObsUses(ctx: Context) = loadCounts(ctx, "coobs_uses.json")
 fun saveCoObsUses(ctx: Context, uses: Map<String, Int>) = saveCounts(ctx, "coobs_uses.json", uses)
+
+private fun partyFile(ctx: Context) = File(ctx.filesDir, "party.json")
+
+/** The current field party ("følget mitt"), persisted so it survives restarts - a trip lasts across
+ *  app launches, and it can be set from the list header before there are any notes (#176). null when
+ *  never written, which seeds it from the newest note instead (the pre-#176 derived behaviour). */
+fun loadParty(ctx: Context): List<String>? {
+    val f = partyFile(ctx)
+    if (!f.exists()) return null
+    return runCatching {
+        val a = JSONArray(f.readText())
+        (0 until a.length()).map { a.getString(it) }
+    }.getOrNull()
+}
+
+fun saveParty(ctx: Context, party: List<String>) = partyFile(ctx).writeText(JSONArray(party).toString())
 
 // ---- species-name language preference (#155): which language to show as primary + secondary ----
 

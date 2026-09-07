@@ -3,8 +3,8 @@ package io.github.mortenfyhn.feltbok
 import org.junit.Assert.assertEquals
 import org.junit.Test
 
-/** Unit tests for the co-observer picker logic (#128). The sticky party has no logic to test any
- *  more: it's derived (the newest note's co-observers, see MainViewModel.party()). */
+/** Unit tests for the co-observer picker logic (#128). The sticky party itself is state, not logic
+ *  (see MainViewModel.party). */
 class CoObserversTest {
 
     @Test
