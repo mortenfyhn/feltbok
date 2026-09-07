@@ -186,8 +186,8 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
     }
 
     // ---- Batch edit (#120): apply fields to every marked note at once. Undoable (restores the prior
-    // notes) and keeps the selection, so several fields can be set in a row. The transform itself is
-    // pure ([applyBatchEdit]) and unit-tested; this just snapshots for undo, writes back, and persists.
+    // notes). The transform itself is pure ([applyBatchEdit]) and unit-tested; this just snapshots
+    // for undo, writes back, and persists.
     private fun batchApply(change: BatchChange) {
         val ids = selected.toSet()
         if (ids.isEmpty() || change.isNoOp) return
@@ -614,7 +614,11 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
 
     fun save() {
         if (batchEditing) { commitBatchEdit(); return }
+        // An edit overwrites the old values with nowhere to get them back from, so offer the same
+        // undo a batch edit does (#177) - but only when the save actually changed something.
+        val before = if (isEditing) notes.firstOrNull { it.id == editingId } else null
         commitDraft()
+        if (before != null && notes.any { it.id == before.id && it != before }) setUndo(Undoable.Edited(listOf(before)))
         resetDraft()
         screen = Screen.LIST
     }
@@ -665,7 +669,8 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
     }
 
     /** Apply only the fields the user actually changed (draft vs the seeded baseline) to every marked
-     *  note, then return to the list still in selection mode (so you can edit another field). */
+     *  note, then return to the list with the marks dropped (#177) - the edit is done, and leaving
+     *  them marked invited a second edit of the same notes by accident. */
     private fun commitBatchEdit() {
         val b = batchBaseline
         val change = BatchChange(
@@ -686,7 +691,8 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
             names.forEach { coObsUses[it] = (coObsUses[it] ?: 0) + 1 }
             saveCoObsUses(ctx, coObsUses)
         }
-        cancelBatchEdit()   // leaves batch mode + resets the draft; the marks stay
+        cancelBatchEdit()   // leaves batch mode + resets the draft
+        clearSelection()
     }
 
     /** Leave batch edit without applying (the ✕ / Back), back to the list with the marks intact. */

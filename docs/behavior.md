@@ -116,6 +116,8 @@ the species — no pill means it was just you.
 
 Saving a new observation scrolls the list up to its day section, so you see the note
 you just added even when it starts a fresh day above where the list was scrolled.
+Saving an *edit* that changed something offers an undo ("Endra 1 observasjon"), on the
+same longer timeout as a batch edit — the old values are gone otherwise.
 
 While you scroll, a thin indicator along the right edge shows where you are in the
 list (it fades away at rest) — with a long history the day headers alone give no
@@ -145,8 +147,9 @@ row opens it for editing.
 `Endre` opens the ordinary observation editor over the whole selection. Fields the
 marked notes agree on are pre-filled; fields they differ on show a pale preview of the
 current mix ("Skjære, Gråmåke, …") and stay blank. Saving applies only the fields you
-actually changed to every marked note (one undoable step) and returns you to the list
-still marking, so you can make another pass. Comments aren't batch-editable (they're
+actually changed to every marked note (one undoable step), drops the marks and returns
+you to the list. The undo snackbar stays up a bit longer than an archive one, since the
+old values can't be recovered any other way once it's gone. Comments aren't batch-editable (they're
 rarely the same across notes), so they're hidden here; everything else — species,
 locality, count, age, sex, activity, time, co-observers — is. Batch-editing
 co-observers covers the classic slip of logging a run of notes before remembering to

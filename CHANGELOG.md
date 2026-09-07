@@ -4,7 +4,9 @@
 
 ## Neste utgivelse
 
-- Angre-knappen virker igjen når du arkiverer fra eksportskjermen.
+- Fiksa feil antall "observasjoner arkivert" i melding etter eksport.
+- Markeringa blir oppheva etter at du har endra flere observasjoner samtidig, og Angre-meldinga står lenger.
+- Angre-melding også når du endrar en enkelt observasjon.
 
 ## v1.2 (29. august 2026)
 

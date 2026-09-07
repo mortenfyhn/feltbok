@@ -67,19 +67,21 @@ fun App(vm: MainViewModel) {
         val snackbar = remember { SnackbarHostState() }
         // After a delete or a draft discard, offer to undo it (#122). Keyed on undoToken so a fresh
         // snackbar shows per action; hosted here (not on the list) so it survives the switch to LIST.
-        // It clears on whichever comes first: you tap Angre, the Short duration elapses, or you
+        // It clears on whichever comes first: you tap Angre, the duration elapses, or you
         // navigate away (the dismiss effect below).
         LaunchedEffect(vm.undoToken) {
-            val message = when (val action = vm.undoable) {
-                is Undoable.Deleted -> Strings.Notes.deleted(action.notes.size)
-                is Undoable.Discarded -> Strings.Detail.discarded(action.wasEdit)
-                is Undoable.Edited -> Strings.Notes.edited(action.before.size)
+            // A batch edit gets the Long duration: unlike a delete or an export, the old values
+            // aren't recoverable from anywhere else once the offer is gone (#177).
+            val (message, duration) = when (val action = vm.undoable) {
+                is Undoable.Deleted -> Strings.Notes.deleted(action.notes.size) to SnackbarDuration.Short
+                is Undoable.Discarded -> Strings.Detail.discarded(action.wasEdit) to SnackbarDuration.Short
+                is Undoable.Edited -> Strings.Notes.edited(action.before.size) to SnackbarDuration.Long
                 null -> return@LaunchedEffect
             }
             val result = snackbar.showSnackbar(
                 message = message,
                 actionLabel = Strings.Notes.undo,
-                duration = SnackbarDuration.Short,
+                duration = duration,
             )
             if (result == SnackbarResult.ActionPerformed) vm.undo() else vm.dismissUndo()
         }
