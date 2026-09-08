@@ -111,10 +111,7 @@ fun LocalityScreen(vm: MainViewModel) {
             overlays.add(NorwegianCopyrightOverlay(ctx))    // required by the OSM tile policy
             zoomController.setVisibility(CustomZoomButtonsController.Visibility.NEVER)  // use our own buttons
             controller.setZoom(if (vm.mapZoom >= 1.0) vm.mapZoom else 16.0)   // keep the last zoom
-            val (lat, lon) = pickerCenter(
-                focused = vm.isEditing || vm.fromCopy || vm.pickingCurrent,
-                focus = vm.pickerFocus, fix = vm.fix, dLoc = vm.dLoc, nearest = vm.nearest(),
-            )
+            val (lat, lon) = pickerCenter(focus = vm.pickerFocus, fix = vm.fix, nearest = vm.nearest())
             controller.setCenter(GeoPoint(lat, lon))
         }
     }
@@ -373,22 +370,20 @@ private const val SUPER_MARK_PX = 18f
 private const val DECLUTTER_ZOOM = 14.0
 private const val DECLUTTER_MIN_SPAN_PX = 24f
 
-/** Where the picker map centres when it opens, as (lat, lon). [focused] is true when editing or
- *  copying an observation, or changing the current locality: then centre on the chosen [focus]
- *  locality so you adjust around it, not your current position. A new observation isn't focused, so
- *  it centres on the current GPS [fix] to show where you are now, falling back to the draft [dLoc],
- *  the [nearest] locality, then the country default. Copying must focus too: the copy carries the
- *  original's location but isn't "editing" it, so without [focused] it wrongly re-centred on GPS. */
+/** Where the picker map centres when it opens, as (lat, lon). The [focus] locality - the draft's
+ *  own, or the current one when changing that - always wins: you came here to adjust around the
+ *  place the observation claims, so dropping you on your own position hides it (#180). Only with no
+ *  focus at all does it fall back to the GPS [fix], the [nearest] locality, then the country
+ *  default. This used to be gated on a "focused" flag listing the screens that count, which had to
+ *  be widened for every new one (copying, the current-locality picker, batch edit) and still missed
+ *  the plain new observation that inherited a far-away current locality. */
 internal fun pickerCenter(
-    focused: Boolean,
     focus: Locality?,
     fix: GpsFix?,
-    dLoc: Locality?,
     nearest: Locality?,
 ): Pair<Double, Double> {
-    val f = if (focused) focus else null
-    val lat = f?.lat ?: fix?.lat ?: dLoc?.lat ?: nearest?.lat ?: Country.mapCenterLat
-    val lon = f?.lon ?: fix?.lon ?: dLoc?.lon ?: nearest?.lon ?: Country.mapCenterLon
+    val lat = focus?.lat ?: fix?.lat ?: nearest?.lat ?: Country.mapCenterLat
+    val lon = focus?.lon ?: fix?.lon ?: nearest?.lon ?: Country.mapCenterLon
     return lat to lon
 }
 

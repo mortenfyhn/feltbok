@@ -216,6 +216,10 @@ triangle** for a superlocality, with the name just below the marker. The full gr
 on the one you've selected. Everything else about the picker (tap-to-select, new-spot placement,
 zoom declutter, GPS dot) is the same across both builds. The one flag is `Country.hollowLocalities`.
 
+The map opens centred on the locality the observation already has, however far that is from your
+GPS fix — you opened the picker to adjust around that place. Only when there's no locality yet does
+it centre on your own position.
+
 The locality suggested by default (before you pick one) is based on your GPS fix's position relative
 to each **footprint**, not just the nearest centre. If you're standing inside one or more localities,
 the **smallest** containing one is suggested (the most specific — matching how a tap resolves nested

@@ -10,19 +10,20 @@ class PickerCenterTest {
     private val locality = loc(63.0, 10.0)
     private val gps = fix(59.0, 5.0)
 
-    // The regression: copying an observation then editing its location must centre on the locality
-    // the copy already has, not on the current GPS fix. `focused` covers editing/copying/current.
+    // #180: the locality wins over the GPS fix however far apart they are. A new observation
+    // inherits the current locality, which sticks after you pick one by hand or save a note there,
+    // so it can sit far from where you now stand - and the picker must still show it.
     @Test
-    fun focusedCentresOnLocalityNotGps() {
-        val (lat, lon) = pickerCenter(focused = true, focus = locality, fix = gps, dLoc = locality, nearest = null)
+    fun localityWinsOverGps() {
+        val (lat, lon) = pickerCenter(focus = locality, fix = gps, nearest = null)
         assertEquals(63.0, lat, 0.0)
         assertEquals(10.0, lon, 0.0)
     }
 
-    // A new (unfocused) observation centres on where you are now so you can place a locality near you.
+    // With no locality yet, centre on where you are now so you can place one near you.
     @Test
-    fun unfocusedCentresOnGps() {
-        val (lat, lon) = pickerCenter(focused = false, focus = locality, fix = gps, dLoc = locality, nearest = null)
+    fun noLocalityCentresOnGps() {
+        val (lat, lon) = pickerCenter(focus = null, fix = gps, nearest = null)
         assertEquals(59.0, lat, 0.0)
         assertEquals(5.0, lon, 0.0)
     }

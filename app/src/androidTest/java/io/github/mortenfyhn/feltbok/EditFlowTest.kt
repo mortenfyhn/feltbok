@@ -38,7 +38,7 @@ class EditFlowTest {
 
     /**
      * Copying must keep the locality the original already had. The centring that depends on it
-     * (`pickerCenter(focused = true, …)`) is unit-tested but not assertable here — the map is an
+     * (`pickerCenter`) is unit-tested but not assertable here — the map is an
      * AndroidView, so its centre never reaches the semantics tree.
      */
     @Test
