@@ -89,7 +89,7 @@ authoritative `isPrivate` flag per site, so `build_sites.py` simply keeps the pu
 `Artsnavn`, `Antall`, `Alder`, `Kjønn`, `Aktivitet`, `Lokalitetsnavn`, `Nord`, `Øst`,
 `Nøyaktighet`, `Fra dato`, `Fra klokkeslett`, `Til dato`, `Til klokkeslett`,
 `Kommentar (synlig for alle)`, `Privat kommentar (kun synlig for deg selv)`,
-`Usikker artsbestemming`.
+`Usikker artsbestemming`, `Skjul funn til dato`.
 
 `Nord`/`Øst`/`Nøyaktighet` are left blank unless "Ta med koordinater" is on. Dates are
 `dd.MM.yyyy`, times `HH:mm`; from/til default to the same instant (one moment of
@@ -125,7 +125,7 @@ string once slipped in that way and failed import), the integration test goes th
 The seed deliberately spans every path `exportTsv` takes so one paste exercises the whole format:
 a name-only registry locality, a brand-new spot (coordinates + radius, mints a private locality —
 each import mints a fresh **duplicate**, so expect to clean those up), a **blank `Antall`** (unknown
-count, see #90), the `Usikker artsbestemming` flag, both comment fields, same-day and multi-day time
+count, see #90), the `Usikker artsbestemming` flag, both comment fields, a **hidden** row (`Skjul funn til dato`, #181), same-day and multi-day time
 ranges, the two **blank `klokkeslett`** no-time cases (single day and multi-day, #155), and
 **`Medobservatør` columns** with 0/1/12 co-observers. To keep the import errors meaningful (rather
 than drowned in avoidable ones), the seed uses inputs the site actually accepts: localities are
@@ -140,6 +140,16 @@ The `Medobservatør` columns repeat one header per co-observer; paste-import mat
 so extra columns beyond the template's 10 are expected to work (the template hjelp says "10 felt
 (kan være flere)") — but a live paste with **11+** co-observers is worth confirming before relying
 on it.
+
+`Skjul funn til dato` (col 17) hides the observation from other users until after the date given
+(#181). The template's *Instruksjoner* sheet documents it as *"Hindrer innsyn av andre til etter
+datoen som angis på formatet DD.MM.YYYY (Kan stå tom)"* — the same `dd.MM.yyyy` as the other dates,
+blank when not hidden. This is the one column the **Sweden** flavor doesn't emit: Artportalen's
+v4.17 `Fåglar` template has no equivalent (its `Diffusion` field blurs the coordinates instead of
+hiding the record for a while), so `Country.hideUntilCol` is null there and the cell is dropped.
+**Paste-tested against the live site (2026-09-09):** the seed's hidden row imports and registers
+the hide. Still unverified is whether a date in the *past* is accepted, which the app never emits
+anyway since the picker seeds a year ahead.
 
 The `Usikker artsbestemming` header is a **misspelling carried by the official template**
 (the Norwegian word is *artsbestemmelse*; the Fugl sheet, col 40, has *-bestemming*).

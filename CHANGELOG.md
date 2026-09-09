@@ -12,6 +12,7 @@
 - Klarere ordlyd for å tømme medobservatører: «Ingen medobservatører».
 - Navnet på hovedlokaliteter (mørkegrønne prikker) blir nå vist framfor navn på vanlige lokaliteter i kartet.
 - Kartet åpner nå på lokaliteten til observasjonen, ikke der du sjøl står.
+- Du kan skjule en observasjon for andre fram til en dato du velger, for sårbare fugler du ikke vil at folk skal lete etter.
 
 ## v1.2 (29. august 2026)
 

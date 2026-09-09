@@ -10,8 +10,8 @@
 2. **A live paste-import test** — seed clean, then export FROM THE APP and paste into
    Artsobservasjoner "Importer observasjoner". So the rows also cover every path `exportTsv` takes:
    a name-only registry locality, a brand-new spot (coordinates + radius, mints a private locality —
-   each import mints a fresh dupe), a blank Antall (unknown count), the uncertain flag, a same-day
-   and a multi-day time range, and the two no-time cases (#155: date kept, klokkeslett blank — single
+   each import mints a fresh dupe), a blank Antall (unknown count), the uncertain flag, a hide-until date
+   (#181), a same-day and a multi-day time range, and the two no-time cases (#155: date kept, klokkeslett blank — single
    day and multi-day). To keep import errors meaningful, real inputs the site validates are used:
    localities are **real, globally-unique public localities** (unique across the whole country, so
    they resolve to the public locality even without kommune-scoping the import — no "matchet flere
@@ -140,13 +140,15 @@ def note(
     new_loc=False,
     radius=0,
     private_loc=False,
+    hide_days=None,
 ):
     """One row. `why` = what it exercises (dev doc, not exported). `mins` = minutes before now
     (drives the day header). `dur_min`, if set, adds an end time that many minutes after the start
     (a range; large values span days — keep the end in the past, the site rejects future times).
     `no_time` marks the time-of-day unspecified. `new_loc` exports coordinates + `radius`.
     `private_loc` marks `loc` as one of the user's own private localities (links by bare name, so no
-    qualified fullname), matching how the app stores a note picked on a private site."""
+    qualified fullname), matching how the app stores a note picked on a private site. `hide_days`
+    sets "Skjul funn til dato" that many days from now (#181)."""
     return {
         "why": why,
         "mins": mins,
@@ -165,6 +167,7 @@ def note(
         "new_loc": new_loc,
         "radius": radius,
         "private_loc": private_loc,
+        "hide_days": hide_days,
     }
 
 
@@ -191,6 +194,17 @@ ROWS = [
         "Rastende",
         "Ladehammeren",
         coobs=PARTY,
+    ),
+    note(
+        "hidden until well past the breeding season (Skjul funn til dato, #181)",
+        55,
+        STORSPOVE,
+        2,
+        "Adult",
+        "I par",
+        "Permanent revir",
+        "Ilsvika",
+        hide_days=400,
     ),
     note(
         "unknown count ('?' in list / blank Antall on export), long activity, solo",
@@ -508,6 +522,8 @@ def build(now_ms):
             n["endTime"] = t + r["dur_min"] * MINUTE
         if r["no_time"]:
             n["timeUnknown"] = True
+        if r["hide_days"]:
+            n["hideUntil"] = now_ms + r["hide_days"] * DAY
         notes.append(n)
     return notes
 

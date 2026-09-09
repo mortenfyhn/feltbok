@@ -123,6 +123,9 @@ data class Note(
     // resolves it from the nearest registry locality at creation; blank on notes saved before this
     // existed (grouping then falls back to the locFull / nearest-locality lookup).
     val kommune: String = "",
+    // Hide the observation from everyone else until after this date (-> "Skjul funn til dato").
+    // For vulnerable birds you don't want a crowd turning up to search for. null = not hidden.
+    val hideUntil: Long? = null,
 )
 
 // ---- distance ----
@@ -699,6 +702,7 @@ fun noteToJson(n: Note): JSONObject = JSONObject().apply {
     put("newLoc", n.newLoc); put("locRadius", n.locRadius); put("uncertain", n.uncertain)
     if (n.coObservers.isNotEmpty()) put("coObservers", JSONArray(n.coObservers))
     if (n.kommune.isNotBlank()) put("kommune", n.kommune)
+    n.hideUntil?.let { put("hideUntil", it) }
 }
 
 fun noteFromJson(o: JSONObject): Note = Note(
@@ -723,6 +727,7 @@ fun noteFromJson(o: JSONObject): Note = Note(
     uncertain = o.optBoolean("uncertain"),
     coObservers = o.optJSONArray("coObservers")?.let { a -> (0 until a.length()).map { a.getString(it) } } ?: emptyList(),
     kommune = o.optString("kommune"),
+    hideUntil = if (o.has("hideUntil")) o.getLong("hideUntil") else null,
 )
 
 /**
@@ -974,11 +979,14 @@ fun exportTsv(notes: List<Note>): String {
         val noy = if (n.newLoc) "${n.locRadius} m" else ""
         // Pad each row's co-observers out to maxCoObs so every row has the same column count.
         val coObs = List(maxCoObs) { n.coObservers.getOrElse(it) { "" } }
+        // Only the Norwegian template has a hide-until column (Artportalen's "Diffusion" blurs
+        // coordinates instead - a different mechanism), so the cell exists only where the header does.
+        val hide = if (Country.hideUntilCol != null) listOf(n.hideUntil?.let(::exportDate) ?: "") else emptyList()
         (listOf(
             n.species, if (n.count == UNKNOWN_COUNT) "" else n.count.toString(), n.age, n.sex, n.activity, loc,
             nord, ost, noy, d, t, dEnd, tEnd, n.publicComment, n.privateComment,
             if (n.uncertain) Country.uncertainYes else "",
-        ) + coObs).joinToString("\t") { cell ->
+        ) + hide + coObs).joinToString("\t") { cell ->
             // A tab or newline in a free-text comment would split the row and desync
             // every following column on paste-import; flatten them to spaces.
             cell.replace('\t', ' ').replace('\n', ' ').replace('\r', ' ')

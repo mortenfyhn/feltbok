@@ -95,6 +95,11 @@ object Strings {
         const val uncertain = "Osäker artbestämning"
         const val coObservers = "Medobs."   // short, so the names beside it get the room (#176)
         const val time = "Tid"
+
+        // The row is hidden in this flavor (Artportalen has no such column, see Country.hideUntilCol);
+        // the label exists because Ui.kt is country-agnostic and reads Strings unconditionally.
+        const val hideUntil = "Dölj t.o.m."
+        const val hideUntilNone = "Dölj inte"   // the date picker's neutral button
         const val delete = "Arkivera"
         const val copy = "Kopiera"
         const val save = "Spara"

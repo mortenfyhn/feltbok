@@ -30,11 +30,16 @@ object Country {
     val exportDateFmt = "yyyy-MM-dd"
     val exportTimeFmt = "HH:mm"
     val uncertainYes = "Ja"
+
+    // Artportalen has no "hide until" column: the v4.17 Fåglar template's protection field is
+    // "Diffusion", which blurs the coordinates rather than hiding the observation for a while. So
+    // the field is unexported here, and the note keeps its value in case that changes.
+    val hideUntilCol: String? = null
     val exportCols = listOf(
         "Artnamn", "Antal", "Ålder-Stadium", "Kön", "Aktivitet", "Lokalnamn", "Nord", "Ost",
         "Noggrannhet", "Startdatum", "Starttid", "Slutdatum", "Sluttid",
         "Publik kommentar", "Privat kommentar", "Osäker artbestämning",
-    )
+    ) + listOfNotNull(hideUntilCol)
 
     // Header for the repeated co-observer columns (#128). The Artportalen v4.17 Fåglar template ships
     // 10 "Med-observatör" columns (note the hyphen); paste-import matches by header name, so exportTsv

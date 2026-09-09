@@ -379,6 +379,7 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
     var dTimeUnknown by mutableStateOf(false)     // time-of-day left unspecified (date still known)
     var dUncertain by mutableStateOf(false)
     val dCoObs = mutableStateListOf<String>()      // co-observers on the draft (#128)
+    var dHideUntil by mutableStateOf<Long?>(null)  // hide from others until this date (#181); null = not hidden
     val isEditing: Boolean get() = editingId != null
 
     /** Whether leaving the editor would actually lose work, so Back/✕ can skip the discard confirm
@@ -391,7 +392,7 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
             dAge != orig.age || dAct != orig.activity || dSex != orig.sex ||
             dPub != orig.publicComment || dPriv != orig.privateComment ||
             dTime != orig.time || dEndTime != orig.endTime || dTimeUnknown != orig.timeUnknown || dUncertain != orig.uncertain ||
-            dCoObs.toList() != orig.coObservers ||
+            dCoObs.toList() != orig.coObservers || dHideUntil != orig.hideUntil ||
             (loc?.lokalitet ?: "") != orig.locName ||
             (loc?.lat ?: 0.0) != orig.lat || (loc?.lon ?: 0.0) != orig.lon
     }
@@ -480,7 +481,7 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
         editingId = null; changingSpecies = false; fromCopy = false
         dSpecies = ""; dLatin = ""; dCount = 1
         dAge = ""; dAct = ""; dSex = ""; dPub = ""; dPriv = ""; dUncertain = false
-        dLoc = null; dTime = 0L; dEndTime = null; dTimeUnknown = false
+        dLoc = null; dTime = 0L; dEndTime = null; dTimeUnknown = false; dHideUntil = null
         dCoObs.clear(); dCoObs.addAll(party)   // a new obs inherits the current party (#128)
     }
 
@@ -529,6 +530,7 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
         dPub = n.publicComment; dPriv = n.privateComment
         dTime = n.time; dEndTime = n.endTime; dTimeUnknown = n.timeUnknown; dUncertain = n.uncertain
         dCoObs.clear(); dCoObs.addAll(n.coObservers)
+        dHideUntil = n.hideUntil
         dLoc = localities.firstOrNull { it.lokalitet == n.locName && it.lat == n.lat && it.lon == n.lon }
             ?: Locality("", n.locName, "", "", n.lat, n.lon, 0, 0.0)
         screen = Screen.DETAIL
@@ -670,6 +672,7 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
         val species: String, val latin: String, val count: Int,
         val age: String, val sex: String, val activity: String,
         val locKey: String?, val time: Long, val endTime: Long?, val coObs: List<String>,
+        val hideUntil: Long?,
     )
     private var batchBaseline: BatchBaseline? = null
     private fun Locality.key() = "$lokalitet|$lat|$lon"
@@ -701,8 +704,9 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
         dTime = shared { it.time } ?: 0L
         dEndTime = shared { it.endTime }
         dTimeUnknown = false   // batch edit doesn't touch the no-time flag; keep the checkbox off
+        dHideUntil = shared { it.hideUntil }
 
-        batchBaseline = BatchBaseline(dSpecies, dLatin, dCount, dAge, dSex, dAct, locKey, dTime, dEndTime, dCoObs.toList())
+        batchBaseline = BatchBaseline(dSpecies, dLatin, dCount, dAge, dSex, dAct, locKey, dTime, dEndTime, dCoObs.toList(), dHideUntil)
         batchEditing = true
         screen = Screen.DETAIL
     }
@@ -721,6 +725,10 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
             locality = dLoc?.takeIf { it.key() != b?.locKey },
             time = if (dTime > 0 && (dTime != b?.time || dEndTime != b.endTime)) BatchTime(dTime, dEndTime) else null,
             coObservers = dCoObs.toList().takeIf { it != b?.coObs },
+            // A cleared date is a real change, so wrap it - see BatchHide. When the selection
+            // *disagrees* the seed is blank like the baseline, so clearing them all can't be
+            // expressed; setting a date works either way.
+            hideUntil = if (dHideUntil != b?.hideUntil) BatchHide(dHideUntil) else null,
         )
         batchApply(change)
         // Bump the name register like a single-note save would, so a name typed here feeds the
@@ -758,6 +766,7 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
             lat = loc?.lat ?: 0.0, lon = loc?.lon ?: 0.0,
             newLoc = loc?.newLoc == true, locRadius = if (loc?.newLoc == true) loc.radius.toInt() else 0,
             uncertain = dUncertain, coObservers = dCoObs.toList(), kommune = loc?.kommune ?: "",
+            hideUntil = dHideUntil,
         )
         if (isEditing) {
             val i = notes.indexOfFirst { it.id == n.id }

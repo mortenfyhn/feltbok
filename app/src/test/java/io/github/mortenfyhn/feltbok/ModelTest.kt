@@ -42,7 +42,7 @@ class ModelTest {
         val lines = exportTsv(listOf(noteAt(noonMs))).split("\n")
         assertEquals("header + one row", 2, lines.size)
         val c = lines[1].split("\t")
-        assertEquals(16, c.size)
+        assertEquals(17, c.size)
         assertEquals("Gråmåke", c[0])
         assertEquals("3", c[1])
         assertEquals("Adult", c[2])
@@ -61,6 +61,20 @@ class ModelTest {
         assertEquals("på sjøen", c[13])
         assertEquals("test", c[14])
         assertEquals("", c[15])   // Usikker artsbestemming: blank unless flagged
+        assertEquals("", c[16])   // Skjul funn til dato: blank unless the obs is hidden
+    }
+
+    @Test
+    fun hideUntilExportsAsADateAndIsBlankWhenNotHidden() {
+        // #181: the hide date rides the same dd.MM.yyyy format as Fra/Til dato, under the v2.20
+        // template's own header (paste-import matches by name).
+        assumeTrue(isNorwayExport)
+        val until = LocalDateTime.of(2027, 8, 1, 0, 0).toInstant(ZoneOffset.UTC).toEpochMilli()
+        val lines = exportTsv(listOf(noteAt(noonMs).copy(hideUntil = until))).split("\n")
+        val i = lines[0].split("\t").indexOf("Skjul funn til dato")
+        assertEquals("01.08.2027", lines[1].split("\t")[i])
+        // Not hidden -> the cell is blank, the template's "kan stå tom".
+        assertEquals("", exportTsv(listOf(noteAt(noonMs))).split("\n")[1].split("\t")[i])
     }
 
     @Test
@@ -121,7 +135,7 @@ class ModelTest {
         val lines = exportTsv(listOf(n)).split("\n")
         assertEquals("header + one row (no comment broke the row count)", 2, lines.size)
         val c = lines[1].split("\t")
-        assertEquals(16, c.size)
+        assertEquals(Country.exportCols.size, c.size)   // runs for both flavors, which differ in width
         assertEquals("ser ut som fjellmåke", c[13])
         assertEquals("linje1 linje2", c[14])
     }
@@ -148,13 +162,14 @@ class ModelTest {
         val duo = noteAt(noonMs + 3_600_000).copy(coObservers = listOf("Kari Nordmann", "Ola Hansen"))
         val lines = exportTsv(listOf(solo, duo)).split("\n")
         val header = lines[0].split("\t")
-        assertEquals(16 + 2, header.size)
-        assertEquals("Medobservatør", header[16]); assertEquals("Medobservatør", header[17])
+        val n = Country.exportCols.size   // the co-observer columns are appended after these
+        assertEquals(n + 2, header.size)
+        assertEquals("Medobservatør", header[n]); assertEquals("Medobservatør", header[n + 1])
         val soloRow = lines[1].split("\t")   // sorted by time: solo first
-        assertEquals(18, soloRow.size)
-        assertEquals("", soloRow[16]); assertEquals("", soloRow[17])   // padded blanks
+        assertEquals(n + 2, soloRow.size)
+        assertEquals("", soloRow[n]); assertEquals("", soloRow[n + 1])   // padded blanks
         val duoRow = lines[2].split("\t")
-        assertEquals("Kari Nordmann", duoRow[16]); assertEquals("Ola Hansen", duoRow[17])
+        assertEquals("Kari Nordmann", duoRow[n]); assertEquals("Ola Hansen", duoRow[n + 1])
     }
 
     @Test
@@ -270,12 +285,15 @@ class ModelTest {
         // next launch. Every field is a distinct non-default value, so dropping any one fails
         // equality (id and time differ, so a swap is caught too).
         val n = noteAt(1717).copy(time = 1800, endTime = 1900, timeUnknown = true, newLoc = true, locRadius = 50, uncertain = true,
-            coObservers = listOf("Kari Nordmann", "Ola Hansen"))
+            coObservers = listOf("Kari Nordmann", "Ola Hansen"), hideUntil = 2000)
         assertEquals(n, noteFromJson(noteToJson(n)))
         // endTime is the only optional field (omitted from JSON when null); confirm null survives.
         assertEquals(null, noteFromJson(noteToJson(n.copy(endTime = null))).endTime)
         // coObservers is omitted from JSON when empty; confirm an empty list round-trips as empty.
         assertEquals(emptyList<String>(), noteFromJson(noteToJson(n.copy(coObservers = emptyList()))).coObservers)
+        // hideUntil is likewise omitted when null - and a note saved before #181 has no such key,
+        // so an absent key must read back as "not hidden" rather than throwing.
+        assertEquals(null, noteFromJson(noteToJson(n.copy(hideUntil = null))).hideUntil)
     }
 
     @Test

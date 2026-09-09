@@ -40,12 +40,18 @@ data class BatchChange(
     val locality: Locality? = null,
     val time: BatchTime? = null,
     val coObservers: List<String>? = null,
+    val hideUntil: BatchHide? = null,
 ) {
     /** Nothing to write - the editor was left with no field changed, so a save is a no-op. */
     val isNoOp: Boolean get() =
         species == null && count == null && age == null && sex == null &&
-            activity == null && locality == null && time == null && coObservers == null
+            activity == null && locality == null && time == null && coObservers == null &&
+            hideUntil == null
 }
+
+/** A hide-until change. Wrapped because clearing the date is itself a change to apply, so the
+ *  batch has to distinguish "set it to nothing" from "don't touch it" - both plain nulls. */
+data class BatchHide(val until: Long?)
 
 /** Apply [change] to every note whose id is in [ids]; all other notes pass through untouched, and
  *  order is preserved. The locality mapping mirrors commitDraft() exactly, so a batch relocate is
@@ -71,6 +77,7 @@ fun applyBatchEdit(notes: List<Note>, ids: Set<Long>, change: BatchChange): List
         }
         // Setting a time in bulk means the time-of-day is now known, so clear any no-time flag.
         change.time?.let { m = m.copy(time = it.start, endTime = it.end, timeUnknown = false) }
+        change.hideUntil?.let { m = m.copy(hideUntil = it.until) }
         m
     }
 

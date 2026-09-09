@@ -36,7 +36,7 @@ class ImportRoundTripTest {
         val locality: String, val lat: Double?, val lon: Double?, val accuracyM: Int?,
         val fromDate: String, val fromTime: String, val toDate: String, val toTime: String,
         val publicComment: String, val privateComment: String, val uncertain: Boolean,
-        val coObservers: List<String>,
+        val hideUntil: String, val coObservers: List<String>,
     )
 
     /** Parse a pasted TSV the way the live import does, hard-failing on everything observed to
@@ -56,6 +56,7 @@ class ImportRoundTripTest {
         val kommentar = col("Kommentar (synlig for alle)")
         val privat = col("Privat kommentar (kun synlig for deg selv)")
         val usikker = col("Usikker artsbestemming")
+        val skjul = col("Skjul funn til dato")
         val medobs = header.withIndex().filter { it.value == "Medobservatør" }.map { it.index }
 
         // Numbers are parsed with the account's Norwegian format: a period is rejected as
@@ -75,6 +76,11 @@ class ImportRoundTripTest {
         }
         fun date(cell: String) = cell.also {
             assertTrue("'$it' is not dd.MM.yyyy", Regex("""\d{2}\.\d{2}\.\d{4}""").matches(it))
+        }
+
+        // "Skjul funn til dato" takes the same dd.MM.yyyy as the other dates, or nothing at all.
+        fun optDate(cell: String) = cell.also {
+            assertTrue("'$it' is not dd.MM.yyyy or blank", it.isEmpty() || Regex("""\d{2}\.\d{2}\.\d{4}""").matches(it))
         }
         fun time(cell: String) = cell.also {
             assertTrue("'$it' is not HH:mm or blank", it.isEmpty() || Regex("""\d{2}:\d{2}""").matches(it))
@@ -97,6 +103,7 @@ class ImportRoundTripTest {
                 toDate = date(c[tilDato]), toTime = time(c[tilKl]),
                 publicComment = c[kommentar], privateComment = c[privat],
                 uncertain = c[usikker].isNotEmpty(),
+                hideUntil = optDate(c[skjul]),
                 coObservers = medobs.map { c[it] }.filter { it.isNotEmpty() },
             )
         }
@@ -126,6 +133,8 @@ class ImportRoundTripTest {
             note(at(1, 12, 0)).copy(endTime = at(2, 1, 30)),
             note(at(3, 0, 0)).copy(timeUnknown = true),
             note(at(3, 8, 0)).copy(coObservers = listOf("Kari Nordmann", "Ola Hansen")),
+            // Hidden until well past the breeding season - a date outside the batch's own June range.
+            note(at(3, 9, 0)).copy(hideUntil = LocalDateTime.of(2026, 12, 19, 12, 0).toInstant(ZoneOffset.UTC).toEpochMilli()),
         )
         val rows = fakeImport(exportTsv(notes))
         val base = ImportedRow(
@@ -133,7 +142,7 @@ class ImportRoundTripTest {
             locality = "Titran", lat = null, lon = null, accuracyM = null,
             fromDate = "01.06.2026", fromTime = "09:30", toDate = "01.06.2026", toTime = "09:30",
             publicComment = "på sjøen", privateComment = "notat", uncertain = false,
-            coObservers = emptyList(),
+            hideUntil = "", coObservers = emptyList(),
         )
         assertEquals(
             listOf(
@@ -145,6 +154,8 @@ class ImportRoundTripTest {
                 base.copy(fromDate = "03.06.2026", fromTime = "", toDate = "03.06.2026", toTime = ""),
                 base.copy(fromDate = "03.06.2026", fromTime = "08:00", toDate = "03.06.2026", toTime = "08:00",
                     coObservers = listOf("Kari Nordmann", "Ola Hansen")),
+                base.copy(fromDate = "03.06.2026", fromTime = "09:00", toDate = "03.06.2026", toTime = "09:00",
+                    hideUntil = "19.12.2026"),
             ),
             rows,
         )

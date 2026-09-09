@@ -110,6 +110,8 @@ object Strings {
         const val uncertain = "Usikker artsbestemming"
         const val coObservers = "Medobs."   // short, so the names beside it get the room (#176)
         const val time = "Tid"
+        const val hideUntil = "Skjul t.o.m."   // wording from the website's own field
+        const val hideUntilNone = "Ikke skjul"   // the date picker's neutral button
         const val delete = "Arkiver"
         const val copy = "Kopier"
         const val save = "Lagre"

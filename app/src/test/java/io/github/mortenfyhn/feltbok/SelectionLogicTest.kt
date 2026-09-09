@@ -27,11 +27,12 @@ class SelectionLogicTest {
         newLoc: Boolean = false,
         locRadius: Int = 0,
         kommune: String = "Frøya",
+        hideUntil: Long? = null,
     ) = Note(
         id = id, species = species, latin = latin, count = count,
         age = age, activity = activity, sex = sex, publicComment = pub, privateComment = priv,
         locName = locName, locFull = locFull, lat = lat, lon = lon,
-        newLoc = newLoc, locRadius = locRadius, kommune = kommune,
+        newLoc = newLoc, locRadius = locRadius, kommune = kommune, hideUntil = hideUntil,
     )
 
     private fun loc(
@@ -133,6 +134,21 @@ class SelectionLogicTest {
         assertTrue(!BatchChange(age = "").isNoOp)   // clearing age is a real change, not a no-op
         assertTrue(!BatchChange(time = BatchTime(1, null)).isNoOp)
         assertTrue(!BatchChange(coObservers = emptyList()).isNoOp)   // batch-clearing the party too
+        assertTrue(!BatchChange(hideUntil = BatchHide(null)).isNoOp)  // un-hiding is a change too (#181)
+    }
+
+    @Test
+    fun hideUntilSetsAndClearsAcrossTheSelection() {
+        val notes = listOf(note(1), note(2, hideUntil = 5000))
+        // Setting it reaches every marked note, whether or not it was already hidden.
+        val hidden = applyBatchEdit(notes, setOf(1L, 2L), BatchChange(hideUntil = BatchHide(9000)))
+        assertEquals(9000L, hidden[0].hideUntil)
+        assertEquals(9000L, hidden[1].hideUntil)
+        // Clearing needs the wrapper: a bare null would read as "don't touch it".
+        val cleared = applyBatchEdit(notes, setOf(2L), BatchChange(hideUntil = BatchHide(null)))
+        assertEquals(null, cleared[1].hideUntil)
+        // Untouched by a change that doesn't mention it.
+        assertEquals(5000L, applyBatchEdit(notes, setOf(2L), BatchChange(age = "Adult"))[1].hideUntil)
     }
 
     @Test

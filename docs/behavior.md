@@ -201,6 +201,23 @@ On export, co-observers become the template's **`Medobservatør`** columns (one 
 matched by header). They must be registered Artsobservasjoner users to link cleanly on
 import; otherwise the row validates but the name may need fixing by hand afterwards.
 
+## Skjul t.o.m. (hide until)
+
+Each observation can be hidden from other Artsobservasjoner users until a date you pick. It's
+for vulnerable birds whose site you don't want a crowd turning up at — a breeding record you'd
+rather release once the season is over.
+
+The editor's last row, **Skjul t.o.m.**, is blank by default. Tapping it opens the date picker,
+seeded a year ahead (hiding usually runs past the next breeding season). The picker's own
+**Ikke skjul** button clears the date, so an observation can be un-hidden without leaving the
+row; Back or a tap outside closes it unchanged. The row is batch-editable, so marking a run of
+observations and setting one date hides the whole trip.
+
+On export it fills the template's **`Skjul funn til dato`** column, in the same `dd.MM.yyyy`
+format as the other dates. Only the Norwegian build has this: Artportalen has no equivalent
+column (its protection field blurs coordinates instead), so the row is absent in the Sweden
+build.
+
 ## Locality picker (map)
 
 Tapping the locality field (or the status strip) opens a map of the registered localities over

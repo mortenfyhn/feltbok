@@ -2,6 +2,7 @@
 
 package io.github.mortenfyhn.feltbok
 
+import android.content.DialogInterface
 import android.widget.Toast
 import androidx.activity.compose.BackHandler
 import androidx.compose.animation.core.Animatable
@@ -1372,6 +1373,10 @@ fun DetailScreen(vm: MainViewModel) {
                         maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.weight(1f, fill = false))
                 else if (batch) BatchHint(vm.batchPreview { it.coObservers.joinToString(", ") { n -> shortCoObsName(n) } })
             }
+            // "Skjul t.o.m." (#181): keeps a vulnerable bird's site hidden from other users until
+            // after this date, so a crowd doesn't turn up to search for it. Only the Norwegian
+            // template has the column, so the row is absent where the value couldn't be exported.
+            if (Country.hideUntilCol != null) HideUntilRow(vm, batch)
         }
         // Delete and save sit side by side - red left, green right - so the destructive action
         // isn't stacked directly under the thumb's path to Lagre, where it was easy to hit by
@@ -1387,6 +1392,41 @@ fun DetailScreen(vm: MainViewModel) {
             Button(onClick = { vm.save() },
                 enabled = canSave,
                 modifier = Modifier.weight(1f)) { Text(Strings.Detail.save) }
+        }
+    }
+}
+
+/** The "Skjul t.o.m." row: the chosen date, blank when the observation isn't hidden. Tapping it
+ *  opens the platform date picker, which carries the clearing action itself - it's an AlertDialog
+ *  underneath, so "Ikke skjul" takes over its cancel button. That keeps the row a plain FieldRow
+ *  (no ✕ competing with the caret) and needs no wrapper dialog. */
+@Composable
+private fun HideUntilRow(vm: MainViewModel, batch: Boolean) {
+    val ctx = LocalContext.current
+
+    // Seeded on the current value, else a year past the observation - hiding runs to the far side
+    // of a breeding season, so next year is a closer first guess than today.
+    fun pick() {
+        val seed = vm.dHideUntil ?: ((if (vm.dTime > 0) vm.dTime else System.currentTimeMillis()) + 365L * 24 * 60 * 60 * 1000)
+        val cal = java.util.Calendar.getInstance().apply { timeInMillis = seed }
+        android.app.DatePickerDialog(ctx, { _, y, mo, d ->
+            cal.set(java.util.Calendar.YEAR, y); cal.set(java.util.Calendar.MONTH, mo)
+            cal.set(java.util.Calendar.DAY_OF_MONTH, d); vm.dHideUntil = cal.timeInMillis
+        }, cal.get(java.util.Calendar.YEAR), cal.get(java.util.Calendar.MONTH),
+            cal.get(java.util.Calendar.DAY_OF_MONTH)).apply {
+            // Overrides the picker's own "Avbryt" (set before show(), so ours wins): backing out
+            // without a change is still one Back press or a tap outside, so the slot is better
+            // spent on the one action the picker has no room for.
+            setButton(DialogInterface.BUTTON_NEGATIVE, Strings.Detail.hideUntilNone) { _, _ -> vm.dHideUntil = null }
+        }.show()
+    }
+    FieldRow(Strings.Detail.hideUntil, onClick = ::pick) {
+        val until = vm.dHideUntil
+        when {
+            until != null -> Text(displayDate(until), fontWeight = FontWeight.Medium, maxLines = 1,
+                modifier = Modifier.weight(1f, fill = false))
+            batch -> BatchHint(vm.batchPreview { it.hideUntil?.let(::displayDate) ?: "" })
+            else -> {}
         }
     }
 }

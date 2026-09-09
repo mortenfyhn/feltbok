@@ -27,6 +27,12 @@ object Country {
     val exportDateFmt = "dd.MM.yyyy"
     val exportTimeFmt = "HH:mm"
     val uncertainYes = "Ja"
+
+    // "Skjul funn til dato" (v2.20/v3.0 Fugl col 17): hides the observation from other users until
+    // after the given date, formatted like the other dates (the template's Instruksjoner sheet:
+    // "Hindrer innsyn av andre til etter datoen som angis på formatet DD.MM.YYYY"). Null in the
+    // Sweden flavor, which has no such column - hence the nullable type and the conditional cell.
+    val hideUntilCol: String? = "Skjul funn til dato"
     val exportCols = listOf(
         "Artsnavn", "Antall", "Alder", "Kjønn", "Aktivitet", "Lokalitetsnavn", "Nord", "Øst",
         "Nøyaktighet", "Fra dato", "Fra klokkeslett", "Til dato", "Til klokkeslett",
@@ -36,7 +42,7 @@ object Country {
         // verbatim or a flagged row fails validation (col 40 of the v2.20 Fugl template; checkbox
         // cells accept «X»/«ja»/«1», so "Ja" is fine).
         "Usikker artsbestemming",
-    )
+    ) + listOfNotNull(hideUntilCol)
 
     // Header for the repeated co-observer columns (#128). The v2.20/v3.0 Fugl template ships 10
     // "Medobservatør" columns (R–AA); paste-import matches by header name, so exportTsv appends as
