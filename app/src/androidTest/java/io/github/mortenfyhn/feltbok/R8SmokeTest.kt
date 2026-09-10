@@ -40,7 +40,13 @@ class R8SmokeTest {
     fun tsvExportHasHeaderAndRow() {
         val lines = exportTsv(listOf(sampleNote())).split("\n")
         assertEquals(2, lines.size)
-        assertEquals(16, lines[1].split("\t").size)
+        // Neither a literal nor Country.exportCols.size: the count is ModelTest's to pin, and
+        // reading it off Country here needs a keep rule (the test APK resolves app symbols by
+        // name against the minified app APK, so the object's INSTANCE field is gone). Header and
+        // row lining up is what this test wants anyway - a desync is what breaks a paste.
+        val header = lines[0].split("\t")
+        assertTrue("expected export columns", header.size > 10)
+        assertEquals(header.size, lines[1].split("\t").size)
         assertEquals("Gråmåke", lines[1].split("\t")[0])
     }
 
