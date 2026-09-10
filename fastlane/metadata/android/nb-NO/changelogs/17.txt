@@ -1,0 +1,4 @@
+• Medobservatører vises øverst så det er lettere å huske.
+• Superlokaliteter (mørkegrønne prikker) vises tydeligere på kartet.
+• Støtte for å skjule observasjoner til en gitt dato.
+• En hel del små feilrettinger og justeringer.

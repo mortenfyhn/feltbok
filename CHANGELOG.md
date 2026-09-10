@@ -4,15 +4,12 @@
 
 ## Neste utgivelse
 
-- Følget ditt vises øverst på lista, og du kan endre medobservatører ved å trykke på det.
-- Et nytt medobservatørnavn blir liggende i lista sjøl om du tar det bort fra observasjonen.
-- Fiksa feil antall "observasjoner arkivert" i melding etter eksport.
-- Markeringa blir oppheva etter at du har endra flere observasjoner samtidig, og Angre-meldinga står lenger.
-- Angre-melding også når du endrar en enkelt observasjon.
-- Klarere ordlyd for å tømme medobservatører: «Ingen medobservatører».
-- Navnet på hovedlokaliteter (mørkegrønne prikker) blir nå vist framfor navn på vanlige lokaliteter i kartet.
-- Kartet åpner nå på lokaliteten til observasjonen, ikke der du sjøl står.
-- Du kan skjule en observasjon for andre fram til en dato du velger, for sårbare fugler du ikke vil at folk skal lete etter.
+## v1.3 (10. september 2026)
+
+- Medobservatører vises øverst så det er lettere å huske.
+- Superlokaliteter (mørkegrønne prikker) vises tydeligere på kartet.
+- Støtte for å skjule observasjoner til en gitt dato.
+- En hel del små feilrettinger og justeringer.
 
 ## v1.2 (29. august 2026)
 

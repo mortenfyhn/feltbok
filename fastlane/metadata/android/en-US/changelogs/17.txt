@@ -1,0 +1,5 @@
+
+• Show co-observer party at the top to help remembering.
+• Emphasize parent sites (dark green dots) on the map.
+• Support for hiding sightings until a given date.
+• Several small fixes and adjustments.
