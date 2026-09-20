@@ -111,6 +111,12 @@ The only ways to silence the second one are raising `minSdk` to 30 (drops Androi
 hand-rolling edge-to-edge (same runtime behaviour, and we'd own the compat matrix). Both are worse
 than the warning. Ignore it until `minSdk` rises for an unrelated reason.
 
+A third warning, *"App Bundle som inneholder integrert kode, og du har ikke lastet opp
+feilsøkingssymboler"*, is also unfixable from our side. The only native library in the bundle is
+`libandroidx.graphics.path.so` (Compose), and it ships pre-stripped, so `ndk { debugSymbolLevel }`
+finds nothing to extract (verified: the bundle gains no symbols directory). Ignore it. The R8
+mapping, by contrast, needs no upload: the AAB embeds it under `BUNDLE-METADATA/`.
+
 ## CI
 
 Semaphore (`.semaphore/semaphore.yml`) runs tests, ktlint, and a debug build on every push;
