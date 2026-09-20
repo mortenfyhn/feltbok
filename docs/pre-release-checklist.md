@@ -13,10 +13,12 @@ not a one-off tap-through.
   osmdroid Projection, asset loads, **add-observation flow** (search → save → in list), **export
   flow** (open → TSV renders → copy). A regression in these fails the gate, not the shipped APK.
 - `just itest` also covers the UI wiring on top of the unit-tested logic: **undo** (snackbar after a
-  delete, Angre puts the note back, navigating away dismisses it), **Back** out of species search and
-  the export overlay, the **list keeping its scroll position** across a trip into the editor, **batch
-  edit** writing only to the marked notes, and **Kopier** carrying the original's locality into the
-  new draft.
+  delete, Angre puts the note back, navigating away dismisses it, undo after a **discarded draft**
+  returns to the intact editor, and undo after a **saved single edit** restores the original values,
+  **Back** out of species search, the export overlay, Synk, settings, the map picker and the
+  co-observer picker, the **list keeping its scroll position** across a trip into the editor,
+  **batch edit** writing only to the marked notes, and **Kopier** carrying the original's locality
+  into the new draft.
 
 ## Hand-test these — automation can't (or doesn't yet)
 
@@ -46,7 +48,5 @@ renders"; the real import site can't be scripted)*
 - Copy an observation → the locality picker **centres on that observation's own locality** (#91-era).
   The tests only get as far as "the copy kept the locality": `pickerCenter` is unit-tested, but the
   map is an AndroidView, so where it actually centred never reaches the semantics tree.
-- Undo after a **discarded draft** (the delete case is automated).
-- System Back on the screens the tests don't reach: the map picker, Synk, medobservatører, settings.
 
 After a clean soak (a few field days, no surprises), cut the release per [release.md](release.md).

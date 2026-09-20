@@ -2,9 +2,12 @@ package io.github.mortenfyhn.feltbok
 
 import android.app.Application
 import androidx.compose.ui.test.assertIsDisplayed
+import androidx.compose.ui.test.hasSetTextAction
 import androidx.compose.ui.test.junit4.v2.createComposeRule
+import androidx.compose.ui.test.onAllNodesWithText
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
+import androidx.compose.ui.test.performTextInput
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import org.junit.Rule
@@ -50,6 +53,47 @@ class UndoFlowTest {
         rule.onNodeWithText(Strings.Notes.deleted(1)).assertIsDisplayed()
         rule.onNodeWithText(Strings.Notes.undo).performClick()
         rule.onNodeWithText("kjøttmeis", substring = true).assertIsDisplayed()
+    }
+
+    /**
+     * The other Undoable branch: a discarded draft. Different shape from the delete case: undo
+     * doesn't re-add a note, it returns to DETAIL with the draft still sitting in the editor.
+     */
+    @Test
+    fun undoAfterDiscardingADraftReturnsToTheEditor() {
+        start()
+        rule.onNodeWithText("+").performClick()
+        rule.onNode(hasSetTextAction()).performTextInput("kjøttmei")
+        rule.waitUntil(timeoutMillis = 5_000) {
+            rule.onAllNodesWithText("kjøttmeis").fetchSemanticsNodes().isNotEmpty()
+        }
+        rule.onNodeWithText("kjøttmeis").performClick()
+
+        // The editor's ✕ discards the draft (with changes, so the undo path, not plain cancel).
+        rule.onNodeWithText("✕").performClick()
+        rule.onNodeWithText(Strings.Detail.discarded(wasEdit = false)).assertIsDisplayed()
+        rule.onNodeWithText(Strings.Notes.undo).performClick()
+
+        // Back in the editor, draft intact - not the list, and no note was saved.
+        rule.onNodeWithText(Strings.Detail.save).assertIsDisplayed()
+    }
+
+    /** The Edited branch (09fec4e): undo after *saving* an edit restores the original values. */
+    @Test
+    fun undoAfterASavedEditRestoresTheOriginal() {
+        val vm = start()
+        rule.runOnUiThread { vm.seedNote("kjøttmeis") }
+        rule.onNodeWithText("kjøttmeis", substring = true).performClick()
+
+        // Change the count the same way the batch test does (fields set through the ViewModel).
+        rule.runOnUiThread { vm.setCount(5) }
+        rule.onNodeWithText(Strings.Detail.save).performClick()
+        rule.onNodeWithText(Strings.Notes.edited(1)).assertIsDisplayed()
+        rule.onNodeWithText(Strings.Notes.undo).performClick()
+
+        // The original note is back - not the edited count of 5.
+        rule.onNodeWithText("1 kjøttmeis").assertIsDisplayed()
+        rule.onNodeWithText("5 kjøttmeis").assertDoesNotExist()
     }
 
     @Test
