@@ -4,6 +4,8 @@
 
 ## Neste utgivelse
 
+- Vis bare lokalitetsnavn, ikke kommune, i topptekst på hovedskjerm.
+
 ## v1.3 (10. september 2026)
 
 - Medobservatører vises øverst så det er lettere å huske.

@@ -567,7 +567,7 @@ private fun StatusStrip(vm: MainViewModel) {
         Column(Modifier.weight(1f).clickable { vm.openCurrentLocalityPicker() }) {
             // Name ellipsizes; the chevron is pinned beside it so it can't wrap to its own line.
             Row(verticalAlignment = Alignment.CenterVertically) {
-                Text(if (cur != null) "${cur.lokalitet}, ${cur.kommune}" else Strings.findingPosition,
+                Text(if (cur != null) cur.lokalitet else Strings.findingPosition,
                     color = Color.White, fontWeight = FontWeight.SemiBold,
                     maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.weight(1f, fill = false))
                 if (cur != null) Text(" ›", color = Color.White, fontWeight = FontWeight.SemiBold)
