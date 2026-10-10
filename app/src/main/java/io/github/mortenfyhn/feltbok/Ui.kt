@@ -1613,8 +1613,8 @@ private fun CommentField(label: String, value: String, onChange: (String) -> Uni
 /** From/to time editor. Both rows show at once; each row's date and time-of-day are tapped
  *  separately (opening the platform date/time dialog), so you can change only the date or only the
  *  time. Til mirrors Fra (dEndTime == null) until you set a Til field directly, decoupling it into a
- *  real range — possibly across midnight. "Nå" sets everything to this moment; "Uten klokkeslett"
- *  keeps the date but exports no time. */
+ *  real range — possibly across midnight. Each row's "Nå" sets just that endpoint to this moment;
+ *  "Uten klokkeslett" keeps the date but exports no time. */
 @Composable
 private fun TimeDialog(vm: MainViewModel, onDismiss: () -> Unit) {
     val ctx = LocalContext.current
@@ -1649,21 +1649,20 @@ private fun TimeDialog(vm: MainViewModel, onDismiss: () -> Unit) {
     AlertDialog(
         onDismissRequest = ::cancel,
         title = {
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Text(Strings.Time.title, modifier = Modifier.weight(1f))
-                // One "Nå" sets both endpoints to this moment (like the website's button) and
-                // re-enables a time-of-day that had been left unspecified.
-                TextButton(onClick = {
-                    vm.dTime = System.currentTimeMillis(); vm.dEndTime = null; vm.dTimeUnknown = false
-                }) { Text(Strings.Time.now) }
-            }
+            Text(Strings.Time.title)
         },
         text = {
             Column {
+                // Each row gets its own "Nå" so a single endpoint can be bumped to the current
+                // moment (e.g. just the end time while still observing). It re-enables a
+                // time-of-day that had been left unspecified.
+                fun now() = System.currentTimeMillis().also { vm.dTimeUnknown = false }
                 TimeRow(Strings.Time.from, start, vm.dTimeUnknown,
-                    onDate = { pickDate(start, ::setStart) }, onTime = { pickTime(start, ::setStart) })
+                    onDate = { pickDate(start, ::setStart) }, onTime = { pickTime(start, ::setStart) },
+                    onNow = { setStart(now()) })
                 TimeRow(Strings.Time.to, end, vm.dTimeUnknown,
-                    onDate = { pickDate(end, ::setEnd) }, onTime = { pickTime(end, ::setEnd) })
+                    onDate = { pickDate(end, ::setEnd) }, onTime = { pickTime(end, ::setEnd) },
+                    onNow = { setEnd(now()) })
                 Row(
                     Modifier.fillMaxWidth().clickable { vm.dTimeUnknown = !vm.dTimeUnknown },
                     verticalAlignment = Alignment.CenterVertically,
@@ -1681,12 +1680,13 @@ private fun TimeDialog(vm: MainViewModel, onDismiss: () -> Unit) {
 /** One "Start-tid"/"Sluttid" row: label on the left, a separately-tappable date and (unless the
  *  time is left unspecified) time-of-day on the right. */
 @Composable
-private fun TimeRow(label: String, ms: Long, timeUnknown: Boolean, onDate: () -> Unit, onTime: () -> Unit) {
+private fun TimeRow(label: String, ms: Long, timeUnknown: Boolean, onDate: () -> Unit, onTime: () -> Unit, onNow: () -> Unit) {
     Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
         Text(label, color = MaterialTheme.colorScheme.onSurfaceVariant, fontSize = 14.sp,
             modifier = Modifier.weight(1f))
         TextButton(onClick = onDate) { Text(displayDate(ms)) }
         if (!timeUnknown) TextButton(onClick = onTime) { Text(exportTime(ms)) }
+        TextButton(onClick = onNow) { Text(Strings.Time.now) }
     }
 }
 

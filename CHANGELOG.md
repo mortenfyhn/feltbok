@@ -4,6 +4,7 @@
 
 ## Neste utgivelse
 
+- Egen «Nå»-knapp ved start- og sluttid, så du kan oppdatere bare sluttiden mens du fortsatt holder på.
 - Vis bare lokalitetsnavn, ikke kommune, i topptekst på hovedskjerm.
 
 ## v1.3 (10. september 2026)

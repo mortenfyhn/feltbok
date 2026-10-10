@@ -164,8 +164,8 @@ and tapping
 The editor's time row opens a small editor with a **Start-tid** and a **Sluttid** row,
 each with a separately-tappable date and time-of-day (so you can change just the day, or
 just the clock). Sluttid mirrors Start-tid until you edit it, then it becomes a real range
-that may span midnight (the end can never fall before the start). **Nå** sets both ends to
-the current moment. **Uten klokkeslett** keeps the date but leaves the time unspecified —
+that may span midnight (the end can never fall before the start). Each row has its own
+**Nå** button that sets just that end to the current moment. **Uten klokkeslett** keeps the date but leaves the time unspecified —
 for observations logged after the fact, when you don't remember the time; it exports with
 the date filled in and both klokkeslett columns blank.
 

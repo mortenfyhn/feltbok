@@ -145,8 +145,8 @@ object Strings {
 
     object Time {
         const val title = "Tid"
-        const val from = "Start-tid"
-        const val to = "Sluttid"
+        const val from = "Start"
+        const val to = "Slutt"
         const val now = "Nå"
         const val done = "Ferdig"
         const val noTime = "Uten klokkeslett"
