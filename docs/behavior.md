@@ -137,10 +137,9 @@ the list. `Arkiver` moves the marked notes to the archive (undoable, and restora
 from the archive later — see Arkiv below); archiving more than one asks to
 confirm first, since several vanishing at once is surprising (a single mark archives
 straight away). `Eksporter` opens the export
-walkthrough scoped to just them (see below). You leave marking only via the ✕, system
-Back, or finishing an action — deselecting the last note keeps you in marking mode
-(so you can re-pick), rather than dropping out. While *not* marking, a plain tap on a
-row opens it for editing.
+walkthrough scoped to just them (see below). You leave marking via the ✕, system
+Back, finishing an action, or by clearing the last mark — the bar disappears with it.
+While *not* marking, a plain tap on a row opens it for editing.
 
 ### Endre (batch edit)
 

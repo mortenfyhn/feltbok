@@ -100,10 +100,9 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
         addAll(loadNotes(app))
     }
 
-    /** True once the list is in selection mode. Kept separate from [selected] being non-empty so the
-     *  mode stays put when you deselect the last mark - you leave it only via the ✕ / Back / an action
-     *  (Jotta-style), not by emptying the set (which would be the Google Photos "auto-exit"). */
-    var selectionMode by mutableStateOf(false); private set
+    /** True while the list shows its marking chrome. Derived from [selected], so clearing the last
+     *  mark (tapping it off, or clearing a day that held it) leaves marking. */
+    val selectionMode: Boolean get() = selected.isNotEmpty()
 
     /** True while the DETAIL screen is editing the whole selection at once (#120), rather than one
      *  note. The editor reuses the same draft; [batchBaseline] records the seeded values so save
@@ -114,21 +113,20 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
      *  editor; selection mode is entered by long-pressing a note or a day header. */
     val selected = mutableStateListOf<Long>()
     fun toggleSelect(id: Long) { if (!selected.remove(id)) selected.add(id) }
-    fun clearSelection() { selected.clear(); selectionMode = false }
+    fun clearSelection() { selected.clear() }
 
-    /** Long-press entry point on a day header: switch into selection mode and mark the whole day. */
-    fun startSelectDay(ids: List<Long>) { selectionMode = true; toggleDay(ids) }
+    /** Long-press entry point on a day header: enter marking and mark the whole day. */
+    fun startSelectDay(ids: List<Long>) = toggleDay(ids)
 
-    /** Enter selection mode on one note. The archive taps straight into this: an archived note can't
+    /** Enter marking on one note. The archive taps straight into this: an archived note can't
      *  be opened, so marking is all a tap can mean there, and it saves discovering the long-press. */
-    fun startSelect(id: Long) { selectionMode = true; toggleSelect(id) }
+    fun startSelect(id: Long) = toggleSelect(id)
 
     /** Replace the whole marked set at once - the long-press-drag range selector paints a fresh set
      *  (a base plus the swept range) on every drag move, so shrinking the drag un-marks again. Diffed
      *  rather than clear+addAll, since a drag move usually changes the set by a handful of ids and a
      *  full rebuild would copy the whole (possibly long) selection back in on every frame. */
     fun setSelection(ids: Collection<Long>) {
-        selectionMode = true
         val target = ids as? Set<Long> ?: ids.toSet()
         selected.retainAll(target)
         for (id in target) if (id !in selected) selected.add(id)
