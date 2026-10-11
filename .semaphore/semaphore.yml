@@ -66,7 +66,7 @@ blocks:
             - curl -fsSL https://releases.astral.sh/github/ruff/releases/download/0.16.1/ruff-x86_64-unknown-linux-gnu.tar.gz | tar -xz -C /tmp
             - /tmp/ruff-x86_64-unknown-linux-gnu/ruff --version
             - /tmp/ruff-x86_64-unknown-linux-gnu/ruff check scripts/
-            - pip install --quiet requests
+            - pip install --quiet --break-system-packages requests
             - python3 -m unittest discover -s scripts -p 'test_*.py'
 
   # Releases are cut locally with ./release.sh (see docs/release.md) — building the
