@@ -2,9 +2,9 @@
 
 # Feltbok
 
-[<img src="./docs/badges/fdroid.png" alt="Få den på F-Droid" height="40">](https://f-droid.org/packages/io.github.mortenfyhn.feltbok/)
+[<img src="./docs/badges/fdroid.png" alt="Få den på F-Droid" height="60">](https://f-droid.org/packages/io.github.mortenfyhn.feltbok/)
 &nbsp;&nbsp;
-[<img src="./docs/badges/play.png" alt="Nå på Google Play" height="40">](https://play.google.com/store/apps/details?id=io.github.mortenfyhn.feltbok)
+[<img src="./docs/badges/play.png" alt="Nå på Google Play" height="60">](https://play.google.com/store/apps/details?id=io.github.mortenfyhn.feltbok)
 
 <!-- Source of truth for app description is at fastlane/metadata/android/ – this and the GitHub repo "About" field are based on that. Keep them in sync. -->
 Feltbok er en Android-app for å kjapt notere fugleobservasjoner i felt og seinere eksportere til Artsobservasjoner. Krever ikke innlogging eller internett.
