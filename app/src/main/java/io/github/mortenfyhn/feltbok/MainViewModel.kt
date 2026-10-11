@@ -1,6 +1,7 @@
 package io.github.mortenfyhn.feltbok
 
 import android.app.Application
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateMapOf
@@ -101,8 +102,11 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
     }
 
     /** True while the list shows its marking chrome. Derived from [selected], so clearing the last
-     *  mark (tapping it off, or clearing a day that held it) leaves marking. */
-    val selectionMode: Boolean get() = selected.isNotEmpty()
+     *  mark (tapping it off, or clearing a day that held it) leaves marking. Wrapped in
+     *  [derivedStateOf] so a screen reading it recomposes only when marking starts or ends - the
+     *  drag-select auto-scroll mutates [selected] every frame, and reading the list directly would
+     *  recompose the whole screen each frame. */
+    val selectionMode: Boolean get() = selectionActive.value
 
     /** True while the DETAIL screen is editing the whole selection at once (#120), rather than one
      *  note. The editor reuses the same draft; [batchBaseline] records the seeded values so save
@@ -112,6 +116,7 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
     /** Notes marked for a bulk action (delete/export). A tap toggles a mark instead of opening the
      *  editor; selection mode is entered by long-pressing a note or a day header. */
     val selected = mutableStateListOf<Long>()
+    private val selectionActive = derivedStateOf { selected.isNotEmpty() }
     fun toggleSelect(id: Long) { if (!selected.remove(id)) selected.add(id) }
     fun clearSelection() { selected.clear() }
 

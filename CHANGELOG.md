@@ -4,6 +4,7 @@
 
 ## Neste utgivelse
 
+- Jevnere rulling når du markerer observasjoner ved å holde og dra mot kanten av skjermen.
 - Egen «Nå»-knapp ved start- og sluttid, så du kan oppdatere bare sluttiden mens du fortsatt holder på.
 - Vis bare lokalitetsnavn, ikke kommune, i topptekst på hovedskjerm.
 - Å fjerne siste markering avslutter markeringsmodus, så du slipper å trykke ✕.

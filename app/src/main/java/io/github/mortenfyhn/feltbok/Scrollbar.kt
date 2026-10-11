@@ -1,17 +1,21 @@
 package io.github.mortenfyhn.feltbok
 
-import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.drawWithContent
 import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.unit.dp
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.collectLatest
 
 /** A thin scroll-position indicator for a LazyColumn (#153): the day-grouped lists otherwise give
  *  no sense of where you are in a long history. An indicator only, not a drag handle - it fades in
@@ -19,18 +23,28 @@ import androidx.compose.ui.unit.dp
  *  (rows vary a little in height - day headers vs notes), which is plenty close for an indicator. */
 @Composable
 fun Modifier.scrollIndicator(state: LazyListState): Modifier {
-    val scrolling = state.isScrollInProgress
-    // Snappy in so it tracks the finger; the fade-out waits so a pause doesn't blink it away.
-    val alpha by animateFloatAsState(
-        targetValue = if (scrolling) 1f else 0f,
-        animationSpec = if (scrolling) tween(durationMillis = 100)
-        else tween(durationMillis = 500, delayMillis = 700),
-        label = "scrollIndicatorAlpha",
-    )
+    // The fade is driven from a coroutine, not animateFloatAsState. This composable returns a value,
+    // so Compose inlines it into the caller's recompose scope; reading state.isScrollInProgress
+    // during composition would therefore subscribe the whole list screen to it. The drag-select
+    // auto-scroll scrolls with a discrete scrollBy() per frame, so isScrollInProgress flips every
+    // frame and the whole screen recomposed each frame. Observing it in a flow keeps the screen out
+    // of that loop, and the draw reads only the animation value.
+    val alpha = remember { Animatable(0f) }
+    LaunchedEffect(state) {
+        snapshotFlow { state.isScrollInProgress }.collectLatest { scrolling ->
+            if (scrolling) {
+                alpha.animateTo(1f, tween(durationMillis = 100))
+            } else {
+                delay(700)  // a beat of rest before fading out, so a pause doesn't blink it away
+                alpha.animateTo(0f, tween(durationMillis = 500))
+            }
+        }
+    }
     val color = MaterialTheme.colorScheme.onSurfaceVariant
     return drawWithContent {
         drawContent()
-        if (alpha == 0f) return@drawWithContent
+        val a = alpha.value
+        if (a == 0f) return@drawWithContent
         val info = state.layoutInfo
         val total = info.totalItemsCount
         val visible = info.visibleItemsInfo
@@ -48,7 +62,7 @@ fun Modifier.scrollIndicator(state: LazyListState): Modifier {
             topLeft = Offset(size.width - w - 2.dp.toPx(), (size.height - thumbH) * progress),
             size = Size(w, thumbH),
             cornerRadius = CornerRadius(w / 2),
-            alpha = alpha * 0.6f,
+            alpha = a * 0.6f,
         )
     }
 }
