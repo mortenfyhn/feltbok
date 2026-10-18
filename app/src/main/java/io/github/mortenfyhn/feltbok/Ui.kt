@@ -100,6 +100,7 @@ import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.text.style.TextAlign
@@ -1603,7 +1604,9 @@ private fun CommentField(label: String, value: String, onChange: (String) -> Uni
                     Modifier.fillMaxSize().padding(16.dp).focusRequester(requester),
                     textStyle = LocalTextStyle.current.copy(color = cs.onSurface, fontSize = 16.sp),
                     cursorBrush = SolidColor(cs.primary),
-                    keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
+                    keyboardOptions = KeyboardOptions(
+                        capitalization = KeyboardCapitalization.Sentences,
+                        imeAction = ImeAction.Done),
                     keyboardActions = KeyboardActions(onDone = { open = false }))
             }
         }

@@ -8,6 +8,7 @@
 - Egen «Nå»-knapp ved start- og sluttid, så du kan oppdatere bare sluttiden mens du fortsatt holder på.
 - Vis bare lokalitetsnavn, ikke kommune, i topptekst på hovedskjerm.
 - Å fjerne siste markering avslutter markeringsmodus, så du slipper å trykke ✕.
+- Kommentarfeltet gir stor forbokstav automatisk.
 
 ## v1.3 (10. september 2026)
 
