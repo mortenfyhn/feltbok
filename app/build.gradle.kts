@@ -132,7 +132,9 @@ android {
             // Append the branch to the in-app version string (footer + feedback) so a dev build is
             // recognisable from inside the app, not just by its launcher label. The release build
             // has no parenthetical, so the branch alone marks this as a dev build.
-            buildConfigField("String", "GIT_VERSION", "\"$gitVersion ($gitBranch)\"")
+            // -Pscreenshots shows just the last tag (v1.3), for the store screenshots.
+            val devVersion = if (project.hasProperty("screenshots")) gitVersion.substringBefore("-") else "$gitVersion ($gitBranch)"
+            buildConfigField("String", "GIT_VERSION", "\"$devVersion\"")
             buildConfigField("boolean", "DEV", "true")
         }
         // Minified variant for the instrumented R8 smoke tests (src/androidTest). It inherits

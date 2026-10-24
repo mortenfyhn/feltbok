@@ -14,7 +14,7 @@
 .~lock.*#
 
 # Python
-scripts/__pycache__/
+__pycache__/
 # No trailing slash: also ignores a worktree's symlink (not just the dir) to the main venv.
 .venv
 

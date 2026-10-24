@@ -485,9 +485,9 @@ ROWS = [
 ]
 
 
-def build(now_ms):
+def build(now_ms, rows=ROWS):
     notes = []
-    for i, r in enumerate(ROWS):
+    for i, r in enumerate(rows):
         sp, latin, _status = r["species"]
         t = now_ms - r["mins"] * MINUTE
         new_loc = r["new_loc"]

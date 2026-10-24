@@ -164,6 +164,16 @@ seed:
     adb push /tmp/feltbok-seed-notes.json {{data_dir}}/seed-notes.json
     adb shell am force-stop {{app_id}}
 
+# Installs a dev build whose footer shows the release version, then drives it with
+# scripts/dev/screenshots.py. Clears the dev app's data.
+
+# Capture the store screenshots from the attached phone into fastlane/
+[group('dev')]
+screenshots:
+    ./gradlew assembleNorwayDebug -Pscreenshots
+    adb install -r -d app/build/outputs/apk/norway/debug/app-norway-debug.apk
+    .venv/bin/python scripts/dev/screenshots.py
+
 # Writes to fastlane/.../en-US/images from the hand-drawn SVG in scripts/dev/store-assets/.
 # Needs rsvg-convert + imagemagick.
 
