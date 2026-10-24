@@ -89,7 +89,7 @@ def make_session():
         {
             "Accept": "application/json",
             "X-CSRF": "1",
-            "User-Agent": "Mozilla/5.0 (X11; Linux x86_64; rv:151.0) Gecko/20100101 Firefox/151.0",
+            "User-Agent": "feltbok-sites/1.0 (+https://github.com/mortenfyhn/feltbok)",
         }
     )
     return s

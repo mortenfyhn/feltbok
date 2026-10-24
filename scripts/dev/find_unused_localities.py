@@ -28,7 +28,7 @@ import requests
 BASE = "https://www.artsobservasjoner.no"
 SEARCH = f"{BASE}/ViewSighting/SearchSighting"
 TABLE = f"{BASE}/ViewSighting/ViewSightingAsTable"
-UA = "Mozilla/5.0 (X11; Linux x86_64; rv:151.0) Gecko/20100101 Firefox/151.0"
+UA = "feltbok-dev/1.0 (+https://github.com/mortenfyhn/feltbok)"
 SITES_FIELD = "SearchViewModel.StoredSearchCriterias.SearchCriterias.Sites"
 DELAY = 0.4
 TOTAL_RE = re.compile(r"BindSightingsGrid\?TotalPageCount=(\d+)")

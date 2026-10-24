@@ -74,6 +74,8 @@ fun SyncScreen(vm: MainViewModel) {
             CookieManager.getInstance().setAcceptThirdPartyCookies(this, true)
             settings.javaScriptEnabled = true
             settings.domStorageEnabled = true
+            // Identify ourselves to the site operator; the stock WebView UA stays intact in front.
+            settings.userAgentString = "${settings.userAgentString} Feltbok/${BuildConfig.VERSION_NAME}"
             addJavascriptInterface(object {
                 @JavascriptInterface
                 fun deliver(json: String) { this@apply.post {   // bridge runs off-thread; hop to the UI thread
