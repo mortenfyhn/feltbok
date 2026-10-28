@@ -26,16 +26,16 @@ cat > icon.svg <<SVG
 </svg>
 SVG
 
-# 1024x500 feature graphic: artwork on the left (scaled ~3.1x), "Feltbok" wordmark on the right.
+# 1024x500 feature graphic: artwork on the left (scaled 3.6x), "Feltbok" wordmark on the right.
 # The wordmark sits at y=345 (baseline ~399) to clear F-Droid's top-overlaid back/share/menu
 # buttons; the icon's translate.y is tuned so its lower edge lines up with the wordmark's.
 cat > banner.svg <<SVG
 <svg xmlns="http://www.w3.org/2000/svg" width="1024" height="500" viewBox="0 0 1024 500">
   <rect width="1024" height="500" fill="$BG"/>
-  <g transform="translate(120,109) scale(3.10)">
+  <g transform="translate(95,72) scale(3.60)">
     $ART
   </g>
-  <text x="740" y="345" font-family="Liberation Sans, DejaVu Sans, sans-serif"
+  <text x="715" y="345" font-family="Liberation Sans, DejaVu Sans, sans-serif"
         font-weight="bold" font-size="150" fill="#FFFFFF"
         text-anchor="middle" dominant-baseline="central">Feltbok</text>
 </svg>
