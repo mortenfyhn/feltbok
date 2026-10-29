@@ -183,16 +183,15 @@ italics, and their brukeralias in brackets. Tapping one adds them and saves them
 list, with place and alias, so they show up offline next time. **Legg til «…»** is the
 fallback for when you're offline, the name isn't found, or the person isn't a user: it's
 hidden while the search runs and when a saved name or a user matches exactly, so with
-namesakes you pick the right one by place and alias. A picked user is saved under their
-plain name only if no saved name or observation uses that name yet; otherwise as
-"Navn (alias)". So picking a user never changes what existing observations export as.
+namesakes you pick the right one by place and alias. An observation stores a picked user
+as their brukeralias, so namesakes never mix and what it exports is fixed when you pick.
 
 A name you type joins the list right away, so un-ticking it doesn't make it disappear. The
 names are remembered locally; only the search text is sent to Artsobservasjoner. Each name
 has a **Slett** action to remove it from the list (for a mistype or a one-off), behind a
 short confirm so it's never mistaken for un-ticking the name from this observation — past
-observations keep whatever name they were saved with (and stay linked to the user), so
-this only prunes what you'll be offered next time.
+observations keep whatever they were saved with, so this only prunes what you'll be
+offered next time.
 
 The current field party ("følget mitt") follows **your most recent observation's
 co-observers**: every new observation is pre-filled with them, so once you note down who

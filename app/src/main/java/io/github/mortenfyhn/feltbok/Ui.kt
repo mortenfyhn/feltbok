@@ -107,6 +107,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.Constraints
+import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
@@ -604,7 +605,7 @@ private fun PartyStrip(vm: MainViewModel) {
     val party = vm.party
     Text(
         if (party.isEmpty()) Strings.CoObs.clearAll
-        else Strings.CoObs.party(party.size, party.joinToString(", ") { shortCoObsName(it) }),
+        else Strings.CoObs.party(party.size, party.joinToString(", ") { shortCoObsName(vm.coObsName(it)) }),
         color = cs.onSecondaryContainer, fontSize = 13.sp, maxLines = 1, overflow = TextOverflow.Ellipsis,
         // Centred when you're alone: with no names to read left-to-right the line is just a status,
         // and centring keeps it from looking like a truncated list.
@@ -931,7 +932,7 @@ fun CoObserverScreen(vm: MainViewModel) {
     // No auto-focus: the picker usually opens on names you already have, and a keyboard covering
     // half the list just to be dismissed is a chore. Tap the field when you do need to type.
     val query = q.trim()
-    val matches = vm.coObserverOptions().filter { query.isBlank() || fold(it).contains(fold(query)) }
+    val matches = vm.coObserverOptions().filter { query.isBlank() || fold(vm.coObsName(it)).contains(fold(query)) }
     // A name pending a delete-confirm, so a mis-tap on the always-visible "Slett" can't silently
     // forget someone (and the dialog spells out that it's a list delete, not un-ticking this obs).
     var confirmForget by remember { mutableStateOf<String?>(null) }
@@ -944,9 +945,8 @@ fun CoObserverScreen(vm: MainViewModel) {
         searching = query.length >= 3 && Country.userSearchUrl != null
         if (searching) { delay(400); aoHits = searchAoUsers(query); searching = false }
     }
-    val linked = vm.coObserverOptions().mapNotNull { vm.coObsUsers[it]?.alias }.toSet()
-    val hits = aoHits.filter { it.alias !in linked }
-    val canAdd = canAddFreeText(query, searching, vm.coObserverOptions(), aoHits)
+    val hits = aoHits.filter { it.alias !in vm.coObserverOptions() }
+    val canAdd = canAddFreeText(query, searching, vm.coObserverOptions().map(vm::coObsName), aoHits)
 
     // Everything's live on the draft, so there's nothing to cancel: Ferdig, Back and system Back all
     // just return. Typed text is never added on the way out - that skipped the search (an unlinked
@@ -1011,7 +1011,7 @@ fun CoObserverScreen(vm: MainViewModel) {
     confirmForget?.let { name ->
         AlertDialog(
             onDismissRequest = { confirmForget = null },
-            title = { Text(Strings.CoObs.forgetTitle(name)) },
+            title = { Text(Strings.CoObs.forgetTitle(vm.coObsName(name))) },
             text = { Text(Strings.CoObs.forgetBody) },
             confirmButton = {
                 Button(
@@ -1024,18 +1024,10 @@ fun CoObserverScreen(vm: MainViewModel) {
     }
 }
 
-/** A co-observer as Artsobservasjoner shows a user: name, then place in grey italics, then
- *  (brukeralias) in grey. A linked name shows the user's own name rather than its picker label, which
- *  may carry a "(By)" suffix. Unlinked free-text names are just the name. */
-@Composable
-private fun coObsName(label: String, user: AoUser?): AnnotatedString {
-    val grey = SpanStyle(color = MaterialTheme.colorScheme.onSurfaceVariant, fontWeight = FontWeight.Normal)
-    return buildAnnotatedString {
-        append(user?.name ?: label)
-        if (user == null) return@buildAnnotatedString
-        if (user.city.isNotBlank()) withStyle(grey.copy(fontStyle = FontStyle.Italic)) { append("  ${user.city}") }
-        withStyle(grey) { append("  (${user.alias})") }
-    }
+/** A user's second line, styled as on Artsobservasjoner: place in italics, then (brukeralias). */
+private fun coObsDetail(user: AoUser): AnnotatedString = buildAnnotatedString {
+    if (user.city.isNotBlank()) withStyle(SpanStyle(fontStyle = FontStyle.Italic)) { append("${user.city}  ") }
+    append("(${user.alias})")
 }
 
 /** One known-name row in the co-observer picker. Mirrors the notes-list marking idiom: a leading
@@ -1054,8 +1046,17 @@ private fun CoObsRow(name: String, user: AoUser?, selected: Boolean, onToggle: (
     ) {
         SelectCircle(selected)
         Spacer(Modifier.width(12.dp))
-        Text(coObsName(name, user), Modifier.weight(1f), color = cs.onSurface, fontWeight = FontWeight.Medium,
-            maxLines = 1, overflow = TextOverflow.Ellipsis)
+        // A user shows their name (the stored text is their alias), with place and alias on a line of
+        // their own: namesakes differ only there, so a long name mustn't cut it.
+        // The theme's 24sp line height is sized for single lines; tighter here so two-line rows stay
+        // compact. Single-line rows keep it, so they match the notes list's rows.
+        Column(Modifier.weight(1f)) {
+            Text(user?.name ?: name, color = cs.onSurface, fontWeight = FontWeight.Medium,
+                lineHeight = if (user != null) 20.sp else TextUnit.Unspecified,
+                maxLines = 1, overflow = TextOverflow.Ellipsis)
+            if (user != null) Text(coObsDetail(user), color = cs.onSurfaceVariant, fontSize = 13.sp,
+                lineHeight = 16.sp, maxLines = 1, overflow = TextOverflow.Ellipsis)
+        }
         // Horizontal-only padding: the row height stays governed by the select circle (like the
         // notes list's marking rows), so co-observer rows line up with observation rows.
         if (onForget != null) Text(Strings.CoObs.remove, color = cs.error,
@@ -1398,9 +1399,9 @@ fun DetailScreen(vm: MainViewModel) {
                 if (vm.dCoObs.isNotEmpty())
                     // First names, as in the list header (#176) - the picker one tap away spells
                     // out the full ones, and short names fit more of the party on the row.
-                    Text(vm.dCoObs.joinToString(", ") { shortCoObsName(it) }, fontWeight = FontWeight.Medium,
+                    Text(vm.dCoObs.joinToString(", ") { shortCoObsName(vm.coObsName(it)) }, fontWeight = FontWeight.Medium,
                         maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.weight(1f, fill = false))
-                else if (batch) BatchHint(vm.batchPreview { it.coObservers.joinToString(", ") { n -> shortCoObsName(n) } })
+                else if (batch) BatchHint(vm.batchPreview { it.coObservers.joinToString(", ") { n -> shortCoObsName(vm.coObsName(n)) } })
             }
             // "Skjul t.o.m." (#181): keeps a vulnerable bird's site hidden from other users until
             // after this date, so a crowd doesn't turn up to search for it. Only the Norwegian
@@ -1790,7 +1791,7 @@ fun ExportScreen(vm: MainViewModel) {
     val isSelection = vm.exportIsSelection()
     // remember'd: with a big batch the TSV runs to hundreds of KB, so don't rebuild it (or rescan
     // the kommuner) on every recomposition.
-    val text = remember(exported) { exportTsv(exported, vm.coObsAliases()) }
+    val text = remember(exported) { exportTsv(exported) }
     // The preview field shows only the first rows: laying out the FULL string in a text field is
     // what made this screen slow to open on a big batch. The copy button copies everything.
     val preview = remember(text) { text.lineSequence().take(20).joinToString("\n") }

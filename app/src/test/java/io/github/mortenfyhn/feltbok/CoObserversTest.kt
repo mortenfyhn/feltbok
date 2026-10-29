@@ -24,20 +24,6 @@ class CoObserversTest {
     }
 
     @Test
-    fun searchedUserGetsThePlainNameOnlyWhenNothingElseUsesIt() {
-        val u = AoUser("Arian Amundsen Borgaas", "122345", "Moss")
-        val own = "Arian Amundsen Borgaas (122345)"
-        assertEquals(u.name, coObsLabel(u, emptyMap(), emptySet()))                 // new name
-        assertEquals(u.name, coObsLabel(u, mapOf(u.name to u), setOf(u.name)))     // same person again
-        // A free-text entry of that name is left alone, so its notes keep exporting as typed.
-        assertEquals(own, coObsLabel(u, emptyMap(), setOf(u.name)))
-        // Same name and town as someone already linked: the alias keeps a third namesake apart too.
-        val other = mapOf(u.name to u.copy(alias = "123445566778"))
-        assertEquals(own, coObsLabel(u, other, emptySet()))
-        assertEquals(own, coObsLabel(u, other + (own to u), setOf(own)))
-    }
-
-    @Test
     fun freeTextIsOfferedOnlyWhenNothingMatchesExactly() {
         val inge = AoUser("Inge Berg", "ingeb", "Bergen")
         assertTrue(canAddFreeText("Inge Berg", searching = false, saved = emptyList(), hits = emptyList()))  // offline / not found

@@ -832,7 +832,7 @@ fun backupExport(ctx: Context, notes: List<Note>) {
                     put(MediaStore.Downloads.RELATIVE_PATH, Environment.DIRECTORY_DOWNLOADS + "/Feltbok")
                 },
             ) ?: return@runCatching
-        resolver.openOutputStream(uri, "wt")?.use { it.write(exportTsv(notes, loadCoObsUsers(ctx).mapValues { it.value.alias }).toByteArray()) }
+        resolver.openOutputStream(uri, "wt")?.use { it.write(exportTsv(notes).toByteArray()) }
     }
 }
 
@@ -892,23 +892,21 @@ fun saveCoObsUses(ctx: Context, uses: Map<String, Int>) = saveCounts(ctx, "coobs
 
 private fun coObsUserFile(ctx: Context) = File(ctx.filesDir, "coobs_users.json")
 
-/** The Artsobservasjoner user behind each co-observer name picked from the user search (see [AoUser]). */
+/** Users picked from the co-observer search (see [AoUser]), by brukeralias. */
 fun loadCoObsUsers(ctx: Context): Map<String, AoUser> {
     val f = coObsUserFile(ctx)
     if (!f.exists()) return emptyMap()
     return runCatching {
-        val o = JSONObject(f.readText())
-        o.keys().asSequence().associateWith { k ->
-            o.getJSONObject(k).let { AoUser(it.getString("name"), it.getString("alias"), it.optString("city")) }
-        }
+        val a = JSONArray(f.readText())
+        (0 until a.length()).map { a.getJSONObject(it) }
+            .map { AoUser(it.getString("name"), it.getString("alias"), it.optString("city")) }
+            .associateBy { it.alias }
     }.getOrDefault(emptyMap())
 }
 
-fun saveCoObsUsers(ctx: Context, users: Map<String, AoUser>) {
-    val o = JSONObject()
-    users.forEach { (k, u) -> o.put(k, JSONObject().put("name", u.name).put("alias", u.alias).put("city", u.city)) }
-    coObsUserFile(ctx).writeText(o.toString())
-}
+fun saveCoObsUsers(ctx: Context, users: Collection<AoUser>) = coObsUserFile(ctx).writeText(
+    JSONArray(users.map { JSONObject().put("name", it.name).put("alias", it.alias).put("city", it.city) }).toString(),
+)
 
 private fun partyFile(ctx: Context) = File(ctx.filesDir, "party.json")
 
@@ -967,7 +965,7 @@ fun saveLangPrefs(ctx: Context, prefs: LangPrefs) {
 
 // ---- export (paste format; columns/headers per Country) ----
 
-fun exportTsv(notes: List<Note>, coObsAliases: Map<String, String> = emptyMap()): String {
+fun exportTsv(notes: List<Note>): String {
     // Emit the *bare* Lokalitetsnavn with no coordinates. Paste-import behaviour
     // (tested against the live v2.20 site, see docs/artsobs-import.md):
     //  - a comma-qualified name ("Lok, Hovedlok, Kommune, Fylke") HARD-FAILS validation.
@@ -997,9 +995,9 @@ fun exportTsv(notes: List<Note>, coObsAliases: Map<String, String> = emptyMap())
         val nord = if (n.newLoc) String.format(Country.displayLocale, "%.6f", n.lat) else ""
         val ost = if (n.newLoc) String.format(Country.displayLocale, "%.6f", n.lon) else ""
         val noy = if (n.newLoc) "${n.locRadius} m" else ""
-        // Pad each row's co-observers out to maxCoObs so every row has the same column count. A linked
-        // name exports as its brukeralias: the import can't resolve a name two users share.
-        val coObs = List(maxCoObs) { n.coObservers.getOrElse(it) { "" }.let { c -> coObsAliases[c] ?: c } }
+        // Pad each row's co-observers out to maxCoObs so every row has the same column count. A user
+        // picked from the search is stored as their brukeralias, which is what the import links on.
+        val coObs = List(maxCoObs) { n.coObservers.getOrElse(it) { "" } }
         // Only the Norwegian template has a hide-until column (Artportalen's "Diffusion" blurs
         // coordinates instead - a different mechanism), so the cell exists only where the header does.
         val hide = if (Country.hideUntilCol != null) listOf(n.hideUntil?.let(::exportDate) ?: "") else emptyList()

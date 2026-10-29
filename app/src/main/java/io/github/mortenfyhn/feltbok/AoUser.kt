@@ -34,13 +34,3 @@ suspend fun searchAoUsers(query: String): List<AoUser> {
         }.getOrDefault(emptyList())
     }
 }
-
-/** The picker name to file [u] under: their plain name, unless that name is already in use - linked to
- *  someone else, or as free text in the list or on any note. Then the alias is added (unique, unlike
- *  the city: same-named users can share a town). Never reusing a free-text name means picking a user
- *  can't change what existing notes export as. */
-fun coObsLabel(u: AoUser, linked: Map<String, AoUser>, inUse: Set<String>): String = when {
-    linked[u.name]?.alias == u.alias -> u.name
-    u.name !in linked && u.name !in inUse -> u.name
-    else -> "${u.name} (${u.alias})"
-}

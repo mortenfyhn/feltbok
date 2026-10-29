@@ -314,20 +314,19 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
      *  losing your party because you tidied up an old note would be worse than a stale one. */
     private fun syncPartyToNewest() { notes.maxByOrNull { it.time }?.let { storeParty(it.coObservers) } }
 
-    /** The Artsobservasjoner user behind each name picked from the user search; their alias is exported
-     *  in place of the name. Slett leaves it, so notes that still carry the name stay linked. */
+    /** Users picked from the search, by brukeralias. A note stores a picked user as their alias (what the
+     *  import links on, so export writes it as is) and a free-text name as typed; this map is only for
+     *  showing the alias as a name. */
     val coObsUsers = mutableStateMapOf<String, AoUser>().apply { putAll(loadCoObsUsers(app)) }
 
-    /** Brukeralias per linked name, for the export. */
-    fun coObsAliases(): Map<String, String> = coObsUsers.mapValues { it.value.alias }
+    /** The name to show for a stored co-observer: the user's name for an alias, else the text itself. */
+    fun coObsName(s: String): String = coObsUsers[s]?.name ?: s
 
-    /** Add a user from the online search to the draft, filed under [coObsLabel] and linked to them. */
+    /** Add a user from the online search to the draft. */
     fun addAoUser(u: AoUser) {
-        val inUse = coObsUses.keys + dCoObs + notes.flatMap { it.coObservers }
-        val label = coObsLabel(u, coObsUsers, inUse)
-        coObsUsers[label] = u
-        saveCoObsUsers(ctx, coObsUsers)
-        addCoObs(label)
+        coObsUsers[u.alias] = u
+        saveCoObsUsers(ctx, coObsUsers.values)
+        addCoObs(u.alias)
     }
 
     /** Known co-observer names for the picker (pure ranking in [coObserverOptions]). */

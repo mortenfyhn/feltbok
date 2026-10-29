@@ -173,15 +173,6 @@ class ModelTest {
     }
 
     @Test
-    fun linkedCoObserverExportsAsBrukeralias() {
-        // The import fails on a name two users share, but links on the alias; free text stays as typed.
-        val n = Country.exportCols.size
-        val row = exportTsv(listOf(noteAt(noonMs).copy(coObservers = listOf("Audun Amundsen", "Kari"))),
-            mapOf("Audun Amundsen" to "Teupaksa")).split("\n")[1].split("\t")
-        assertEquals("Teupaksa", row[n]); assertEquals("Kari", row[n + 1])
-    }
-
-    @Test
     fun noCoObserversLeavesExportFormatUnchanged() {
         // The feature must be zero-cost when unused: no co-observers -> no extra columns at all.
         val lines = exportTsv(listOf(noteAt(noonMs))).split("\n")
