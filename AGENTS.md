@@ -47,6 +47,9 @@ a `MainViewModel` must start with `ClearAppDataRule` — otherwise the suite bec
 - **Minimal diffs.** Implement only what's asked; prefer the smallest change and removing code over
   adding it. Prefer pure functions; small focused classes. Match surrounding style and comment
   density (comments explain WHY).
+- **Keep new logic platform-free.** Put new non-UI logic in pure-Kotlin files with no Android or JVM
+  imports (like `Search.kt`), not in `Model.kt` or `MainViewModel.kt`, so it can move to shared code
+  for iOS (#115) as-is.
 - **Avoid custom styling unless necessary.** Lean on Material defaults and existing shared
   composables; extend a component (e.g. a flag on an existing row) over bespoke layout.
 - **Commit messages in English, explaining the why. No trailers** (`Co-Authored-By` etc. — history
