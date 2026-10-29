@@ -179,6 +179,7 @@ object Strings {
     }
 
     object Picker {
+        fun liveFetched(n: Int) = if (n == 1) "1 ny fyndplats hämtad" else "$n nya fyndplatser hämtade"
         const val titleNew = "Ny fyndplats"
         const val titlePick = "Välj fyndplats"
         const val newButton = "＋ Ny fyndplats"

@@ -378,7 +378,7 @@ fun groupNotesByDay(
 // ---- CSV loading (asset, or an external override pushed via adb) ----
 
 /** Split one CSV line, honouring double-quoted fields. */
-private fun parseCsvLine(line: String): List<String> {
+internal fun parseCsvLine(line: String): List<String> {
     val out = ArrayList<String>()
     val sb = StringBuilder()
     var inQuotes = false
@@ -448,7 +448,7 @@ private fun fastDouble(s: String): Double? =
     if (s.isEmpty()) null else try { s.toDouble() } catch (e: NumberFormatException) { null }
 
 /** Columns: id,lokalitet,hovedlokalitet,kommune,fylke,lat,lon,count,observers,radius,geometry,public,mine,super */
-private fun parseLocalityRow(c: List<String>): Locality? {
+internal fun parseLocalityRow(c: List<String>): Locality? {
     if (c.size < 7) return null
     val lat = fastDouble(c[5]) ?: return null
     val lon = fastDouble(c[6]) ?: return null
@@ -473,8 +473,28 @@ private fun parseLocalityRow(c: List<String>): Locality? {
  *  `localities.csv` is optional — the Sweden flavor ships none (its import is coordinate-driven,
  *  so spots are minted on the map) — so a missing file yields an empty list, not a crash. */
 fun loadLocalities(ctx: Context): List<Locality> =
-    (runCatching { readData(ctx, "localities.csv") }.getOrDefault(emptyList()) + readMyLocalities(ctx))
+    (runCatching { readData(ctx, "localities.csv") }.getOrDefault(emptyList()) + readMyLocalities(ctx) + readLiveLocalities(ctx))
         .mapNotNull(::parseLocalityRow)
+
+/** Public localities fetched live in the picker (#173), kept so they survive a restart. Only ids
+ *  missing from the loaded list are ever appended, so it never duplicates the bundle. */
+private fun liveLocalitiesFile(ctx: Context) = File(ctx.filesDir, "live-localities.csv")
+
+private fun readLiveLocalities(ctx: Context): List<List<String>> {
+    val f = liveLocalitiesFile(ctx)
+    if (!f.exists()) return emptyList()
+    return f.readText().lineSequence().filter { it.isNotBlank() }.drop(1).map { parseCsvLine(it) }.toList()
+}
+
+fun appendLiveLocalities(ctx: Context, sites: List<Locality>) {
+    val f = liveLocalitiesFile(ctx)
+    val sb = StringBuilder()
+    if (!f.exists()) sb.append("id,lokalitet,hovedlokalitet,kommune,fylke,lat,lon,count,observers,radius,geometry,public,mine,super\n")
+    for (s in sites) sb.append(liveLocalityRow(s))
+    f.appendText(sb.toString())
+}
+
+internal fun liveLocalityRow(s: Locality) = localityCsvRow(s, listOf("1", "0", if (s.isSuper) "1" else "0"))
 
 // ---- "my localities" sync (from the mobile API's /core/Sites/ByUser) ----
 
@@ -524,7 +544,7 @@ fun parseMySites(json: String): List<Locality> {
 }
 
 /** "[[lon,lat],...]" (WGS84 JSON) -> [lat,lon] vertices, matching our polygon convention. */
-private fun lonLatRingToVertices(s: String): List<DoubleArray> {
+internal fun lonLatRingToVertices(s: String): List<DoubleArray> {
     if (s.isBlank()) return emptyList()
     return try {
         val a = JSONArray(s)
@@ -538,9 +558,9 @@ private fun lonLatRingToVertices(s: String): List<DoubleArray> {
 }
 
 // Web Mercator (EPSG:3857, metres) -> WGS84, for the GeoJSON the Swedish sites API returns.
-private const val MERC_HALF = 20037508.34
-private fun mercToLon(x: Double) = x / MERC_HALF * 180.0
-private fun mercToLat(y: Double) =
+internal const val MERC_HALF = 20037508.34
+internal fun mercToLon(x: Double) = x / MERC_HALF * 180.0
+internal fun mercToLat(y: Double) =
     Math.toDegrees(2 * atan(exp(Math.toRadians(y / MERC_HALF * 180.0))) - PI / 2)
 
 /** The user's own (editable) localities from artportalen.se's GetEditableSitesGeoJson — a GeoJSON
@@ -589,16 +609,19 @@ private fun csvField(s: String): String =
 fun saveMyLocalities(ctx: Context, sites: List<Locality>) {
     val sb = StringBuilder()
     sb.append("id,lokalitet,hovedlokalitet,kommune,fylke,lat,lon,count,observers,radius,geometry,public,mine\n")
-    for (s in sites) {
-        val geom = if (s.polygon.isEmpty()) ""
-        else "POLYGON((" + s.polygon.joinToString(", ") { "${it[1]} ${it[0]}" } + "))"
-        sb.append(listOf(
-            s.id, s.lokalitet, s.hovedlokalitet, s.kommune, "",
-            s.lat.toString(), s.lon.toString(), "0", "0",
-            s.radius.toString(), geom, "0", "1",
-        ).joinToString(",", postfix = "\n") { csvField(it) })
-    }
+    for (s in sites) sb.append(localityCsvRow(s, listOf("0", "1")))
     myLocalitiesFile(ctx).writeText(sb.toString())   // internal storage: always app-writable
+}
+
+/** One CSV row up to `geometry`, then [flags] (public, mine[, super]). Polygons go back as WKT for [parsePolygon]. */
+private fun localityCsvRow(s: Locality, flags: List<String>): String {
+    val geom = if (s.polygon.isEmpty()) ""
+    else "POLYGON((" + s.polygon.joinToString(", ") { "${it[1]} ${it[0]}" } + "))"
+    return (listOf(
+        s.id, s.lokalitet, s.hovedlokalitet, s.kommune, "",
+        s.lat.toString(), s.lon.toString(), "0", "0",
+        s.radius.toString(), geom,
+    ) + flags).joinToString(",", postfix = "\n") { csvField(it) }
 }
 
 /** Columns: latin,norsk,svensk,status,count. `latin` is the stable key (unique; the vernacular

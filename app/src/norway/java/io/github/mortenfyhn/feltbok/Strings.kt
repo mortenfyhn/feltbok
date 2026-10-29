@@ -202,6 +202,7 @@ object Strings {
     }
 
     object Picker {
+        fun liveFetched(n: Int) = if (n == 1) "1 ny lokalitet henta" else "$n nye lokaliteter henta"
         const val titleNew = "Ny lokalitet"
         const val titlePick = "Velg lokalitet"
         const val newButton = "＋ Ny lokalitet"

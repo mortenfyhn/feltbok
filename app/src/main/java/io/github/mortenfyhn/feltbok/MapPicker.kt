@@ -36,6 +36,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -50,7 +51,9 @@ import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.viewinterop.AndroidView
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 import org.osmdroid.config.Configuration
 import org.osmdroid.events.MapListener
 import org.osmdroid.events.ScrollEvent
@@ -141,13 +144,29 @@ fun LocalityScreen(vm: MainViewModel) {
     }
     LaunchedEffect(vm.fix) { recomputeCentered() }
 
+    // Once the map has settled for a second, look up public localities in view (#173). Skip it when
+    // zoomed out: you're not picking there yet, and a dense area would take many requests.
+    val scope = rememberCoroutineScope()
+    val settle = remember { arrayOfNulls<Job>(1) }
+    fun scheduleLiveFetch() {
+        settle[0]?.cancel()
+        settle[0] = scope.launch {
+            delay(1000)
+            if (mapView.width == 0) return@launch
+            val bb = mapView.boundingBox
+            if (fitsSiteQuery(bb.latSouth, bb.lonWest, bb.latNorth, bb.lonEast))
+                vm.fetchLiveSites(bb.latSouth, bb.lonWest, bb.latNorth, bb.lonEast)
+        }
+    }
+
     DisposableEffect(Unit) {
         mapView.onResume()
         val listener = object : MapListener {
-            override fun onScroll(e: ScrollEvent?): Boolean { recomputeCentered(); return false }
-            override fun onZoom(e: ZoomEvent?): Boolean { recomputeCentered(); return false }
+            override fun onScroll(e: ScrollEvent?): Boolean { recomputeCentered(); scheduleLiveFetch(); return false }
+            override fun onZoom(e: ZoomEvent?): Boolean { recomputeCentered(); scheduleLiveFetch(); return false }
         }
         mapView.addMapListener(listener)
+        scheduleLiveFetch()
         onDispose {
             mapView.removeMapListener(listener)
             vm.mapZoom = mapView.zoomLevelDouble     // keep the zoom for next time

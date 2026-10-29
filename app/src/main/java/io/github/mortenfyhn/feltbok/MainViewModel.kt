@@ -1,6 +1,7 @@
 package io.github.mortenfyhn.feltbok
 
 import android.app.Application
+import android.widget.Toast
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateListOf
@@ -598,6 +599,40 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
     /** Leave the picker without choosing, back to wherever it was opened from. */
     fun leaveLocalityPicker() {
         if (pickingCurrent) { pickingCurrent = false; screen = Screen.LIST } else backToDetail()
+    }
+
+    // Grid cells checked since the app started -> when. Kept for the whole process, so killing the
+    // app is the way to look again for a locality created on the website a moment ago; a cell is
+    // also re-checked after a day, since Android can keep the process alive for days.
+    private val checkedCells = HashMap<Long, Long>()
+
+    // Ids added live this process. Each request diffs against its own copy of [localities], so two
+    // overlapping requests in flight at once could otherwise both add the same locality.
+    private val liveAdded = HashSet<String>()
+
+    /** Look up public localities in the picker's visible box and add any we don't have (#173).
+     *  Only the cells not yet checked are queried. Silent unless something new turns up; cells whose
+     *  request failed (offline etc.) are retried on the next pan. */
+    fun fetchLiveSites(s: Double, w: Double, n: Double, e: Double) {
+        val now = System.currentTimeMillis()
+        val cells = cellsIn(s, w, n, e).filter { now - (checkedCells[it] ?: 0L) > 24 * 3600_000L }
+        if (cells.isEmpty()) return
+        for (c in cells) checkedCells[c] = now
+        viewModelScope.launch {
+            val (done, rows) = fetchCells(cells)
+            checkedCells.keys.removeAll(cells.toSet() - done.toSet())
+            // Parse and diff off the main thread: ~80k localities to compare against would drop frames.
+            val known = localities.toList()
+            val fresh = withContext(Dispatchers.Default) {
+                val names = known.associate { it.id to it.lokalitet }
+                runCatching { parsePublicSites(rows) { names[it] } }.getOrDefault(emptyList())
+                    .filter { it.id !in names }
+            }.filter { liveAdded.add(it.id) }
+            if (fresh.isEmpty()) return@launch
+            localities.addAll(fresh)
+            withContext(Dispatchers.IO) { appendLiveLocalities(ctx, fresh) }
+            Toast.makeText(ctx, Strings.Picker.liveFetched(fresh.size), Toast.LENGTH_LONG).show()
+        }
     }
 
     // ---- co-observer picker (#128) ----

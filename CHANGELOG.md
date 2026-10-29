@@ -10,6 +10,7 @@
 - Å fjerne siste markering avslutter markeringsmodus, så du slipper å trykke ✕.
 - Kommentarfeltet gir stor forbokstav automatisk.
 - Søk opp medobservatører blant brukerne på Artsobservasjoner, så riktig person blir koblet ved import, også når flere har samme navn.
+- Nye allmenne lokaliteter på Artsobservasjoner dukker opp på kartet med en gang, uten å vente på ny versjon av appen.
 
 ## v1.3 (10. september 2026)
 

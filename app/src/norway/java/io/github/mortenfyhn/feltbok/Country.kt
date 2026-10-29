@@ -116,6 +116,8 @@ object Country {
 
     // Co-observer lookup by name (the mobile site's own, undocumented; no login needed). Returns each
     // user's brukeralias, which is what the import links a Medobservatør cell on.
+    // Live public-locality lookup in the picker's visible box (#173); null disables it.
+    val publicSitesUrl: String? = "$sitesHost/core/Sites/ByBoundingBox"
     val userSearchUrl: String? = "$sitesHost/core/Users/Search"
     val mySitesParse: (String) -> List<Locality> = ::parseMySites
     val mySitesFetchJs = """
