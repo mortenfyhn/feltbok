@@ -122,6 +122,7 @@ object Strings {
         fun forgetTitle(name: String) = "Ta bort «$name»?"
         const val forgetBody = "Namnet tas bort från listan över medobservatörer. Tidigare observationer behåller det."
         fun add(name: String) = "Lägg till «$name»"
+        const val searching = "Söker…"   // unused until Sweden gets a user search
     }
 
     object Time {

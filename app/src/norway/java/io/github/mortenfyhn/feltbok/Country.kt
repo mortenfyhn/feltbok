@@ -113,6 +113,10 @@ object Country {
     val syncProbeUrl = "$sitesHost/my-sites"
     val syncLoginUrl = "$sitesHost/bff/login?returnUrl=/my-page"
     val loginPathMarker = "/bff/" // while the URL still contains this we're mid-login; don't fetch yet
+
+    // Co-observer lookup by name (the mobile site's own, undocumented; no login needed). Returns each
+    // user's brukeralias, which is what the import links a Medobservatør cell on.
+    val userSearchUrl: String? = "$sitesHost/core/Users/Search"
     val mySitesParse: (String) -> List<Locality> = ::parseMySites
     val mySitesFetchJs = """
         (async () => {

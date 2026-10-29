@@ -9,6 +9,7 @@
 - Vis bare lokalitetsnavn, ikke kommune, i topptekst på hovedskjerm.
 - Å fjerne siste markering avslutter markeringsmodus, så du slipper å trykke ✕.
 - Kommentarfeltet gir stor forbokstav automatisk.
+- Søk opp medobservatører blant brukerne på Artsobservasjoner, så riktig person blir koblet ved import, også når flere har samme navn.
 
 ## v1.3 (10. september 2026)
 

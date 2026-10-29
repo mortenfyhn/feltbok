@@ -171,13 +171,28 @@ the date filled in and both klokkeslett columns blank.
 ## Medobservatører (co-observers)
 
 Each observation can record who you observed with. The editor has a **Medobs** row
-showing first names; tapping it opens a picker that filters the names you've used before (most-used
-first) — tap a name to add or remove it, or type a new one and tap **Legg til «…»** to
-add it as free text. A name you type joins that list right away, so un-ticking it doesn't
-make it disappear. The names are remembered locally; nothing leaves the phone. Each name has a **Slett** action to remove it
-from the list (for a mistype or a one-off), behind a short confirm so it's never mistaken
-for un-ticking the name from this observation — past observations keep whatever name they
-were saved with, so this only prunes what you'll be offered next time.
+showing first names; tapping it opens a picker. It works like the species search: one list
+with the names you've used before that match what you type (most-used first; tap to add or
+remove), then matching **Artsobservasjoner users**, then **Legg til «…»** at the bottom to
+add the typed name as free text. The keyboard's Done key only hides the keyboard, and
+leaving the picker never adds what's in the field.
+
+The user search (Norway only) runs when you've typed 3 or more letters and you're online;
+**Søker…** shows while it runs. Users show like on Artsobservasjoner: name, place in grey
+italics, and their brukeralias in brackets. Tapping one adds them and saves them to your
+list, with place and alias, so they show up offline next time. **Legg til «…»** is the
+fallback for when you're offline, the name isn't found, or the person isn't a user: it's
+hidden while the search runs and when a saved name or a user matches exactly, so with
+namesakes you pick the right one by place and alias. A picked user is saved under their
+plain name only if no saved name or observation uses that name yet; otherwise as
+"Navn (alias)". So picking a user never changes what existing observations export as.
+
+A name you type joins the list right away, so un-ticking it doesn't make it disappear. The
+names are remembered locally; only the search text is sent to Artsobservasjoner. Each name
+has a **Slett** action to remove it from the list (for a mistype or a one-off), behind a
+short confirm so it's never mistaken for un-ticking the name from this observation — past
+observations keep whatever name they were saved with (and stay linked to the user), so
+this only prunes what you'll be offered next time.
 
 The current field party ("følget mitt") follows **your most recent observation's
 co-observers**: every new observation is pre-filled with them, so once you note down who
@@ -197,8 +212,10 @@ tracks exactly what you last saved, since wrongly crediting someone who wasn't t
 public database) is worse than the small chore of clearing it.
 
 On export, co-observers become the template's **`Medobservatør`** columns (one per name,
-matched by header). They must be registered Artsobservasjoner users to link cleanly on
-import; otherwise the row validates but the name may need fixing by hand afterwards.
+matched by header). A user picked from the search exports as their **brukeralias**, which
+the import links to exactly that person. A free-text name exports as typed: it links if
+exactly one user has that name, fails when several do, and must otherwise be fixed to free
+text in the import's error dialog. The numeric user id is not accepted by the import.
 
 ## Skjul t.o.m. (hide until)
 

@@ -12,6 +12,12 @@ package io.github.mortenfyhn.feltbok
 fun coObserverOptions(uses: Map<String, Int>, onDraft: List<String>): List<String> =
     (uses.entries.sortedByDescending { it.value }.map { it.key } + onDraft).distinct()
 
+/** Whether the picker offers "Legg til «[query]»" as free text. It's the fallback: hidden while the
+ *  user search runs (it would flash, then vanish), and when a saved name or a user from the search
+ *  matches exactly, so a namesake gets picked by place and alias instead of typed in unlinked. */
+fun canAddFreeText(query: String, searching: Boolean, saved: List<String>, hits: List<AoUser>): Boolean =
+    query.isNotBlank() && !searching && saved.none { fold(it) == fold(query) } && hits.none { fold(it.name) == fold(query) }
+
 /** Short form for the list-screen party header (#176): the first name only. Collisions ("two Annes")
  *  are accepted - the header is one tap from the picker, which spells out the full names. */
 fun shortCoObsName(name: String): String = name.trim().substringBefore(' ')

@@ -141,6 +141,7 @@ object Strings {
         fun forgetTitle(name: String) = "Slett «$name»?"
         const val forgetBody = "Navnet fjernes fra lista over medobservatører. Tidligere observasjoner beholder det."
         fun add(name: String) = "Legg til «$name»"
+        const val searching = "Søker…"   // while the Artsobservasjoner user search runs
     }
 
     object Time {

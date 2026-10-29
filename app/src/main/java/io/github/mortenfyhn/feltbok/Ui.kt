@@ -917,10 +917,11 @@ fun SearchScreen(vm: MainViewModel) {
 
 // ============================ CO-OBSERVERS ============================
 
-/** The co-observer name picker (#128): mirrors the species search - a filter field over the names
- *  you've used before (most-used first), a checkmark on the ones on this observation, and a free-text
- *  "Legg til …" row for a brand-new name. Toggles apply live to the draft, so leaving is just a back
- *  press. "Tøm følget" clears the set (and, on save, the sticky party with it). */
+/** The co-observer name picker (#128): mirrors the species search - one list of the names you've used
+ *  before (most-used first, a checkmark on the ones on this observation), then Artsobservasjoner users
+ *  matching what you type, then a free-text "Legg til …" row as the fallback for offline or a name not
+ *  found. Toggles apply live to the draft, so leaving is just a back press. "Tøm følget" clears the set
+ *  (and, on save, the sticky party with it). */
 @Composable
 fun CoObserverScreen(vm: MainViewModel) {
     val cs = MaterialTheme.colorScheme
@@ -931,22 +932,26 @@ fun CoObserverScreen(vm: MainViewModel) {
     // half the list just to be dismissed is a chore. Tap the field when you do need to type.
     val query = q.trim()
     val matches = vm.coObserverOptions().filter { query.isBlank() || fold(it).contains(fold(query)) }
-    // Offer an "add" row only when the typed name isn't already a known option (case-insensitive).
-    val canAdd = query.isNotBlank() && vm.coObserverOptions().none { fold(it) == fold(query) }
     // A name pending a delete-confirm, so a mis-tap on the always-visible "Slett" can't silently
     // forget someone (and the dialog spells out that it's a list delete, not un-ticking this obs).
     var confirmForget by remember { mutableStateOf<String?>(null) }
-
-    // Everything's live on the draft, so there's nothing to cancel: adding any half-typed name and
-    // returning to the editor is the "done" action - shared by Ferdig, Back, and system Back.
-    fun done() { if (query.isNotBlank()) vm.addCoObs(query); vm.closeCoObs() }
-
-    // The keyboard's Done key adds the typed name and stays put (refocus keeps it up), so you can
-    // rattle off several names; pressing it again on an empty field just drops the keyboard (a
-    // natural "done adding" signal), leaving the picker open. You finish via Ferdig/Back (#128).
-    fun addTyped() {
-        if (query.isNotBlank()) { vm.addCoObs(query); q = ""; focus.requestFocus() } else focusManager.clearFocus()
+    // Online name-search hits, debounced so typing a name doesn't fire a request per letter. People
+    // already in your list are left out - they show among your own names above.
+    var aoHits by remember { mutableStateOf(emptyList<AoUser>()) }
+    var searching by remember { mutableStateOf(false) }
+    LaunchedEffect(query) {
+        aoHits = emptyList()
+        searching = query.length >= 3 && Country.userSearchUrl != null
+        if (searching) { delay(400); aoHits = searchAoUsers(query); searching = false }
     }
+    val linked = vm.coObserverOptions().mapNotNull { vm.coObsUsers[it]?.alias }.toSet()
+    val hits = aoHits.filter { it.alias !in linked }
+    val canAdd = canAddFreeText(query, searching, vm.coObserverOptions(), aoHits)
+
+    // Everything's live on the draft, so there's nothing to cancel: Ferdig, Back and system Back all
+    // just return. Typed text is never added on the way out - that skipped the search (an unlinked
+    // name); free text goes in only via the "Legg til" row.
+    fun done() = vm.closeCoObs()
     Column(Modifier.fillMaxSize()) {
         ScreenHeader(
             Strings.CoObs.title,
@@ -964,7 +969,8 @@ fun CoObserverScreen(vm: MainViewModel) {
                 textStyle = LocalTextStyle.current.copy(color = cs.onSurface),
                 cursorBrush = SolidColor(cs.primary),
                 keyboardOptions = KeyboardOptions(autoCorrectEnabled = false, imeAction = ImeAction.Done),
-                keyboardActions = KeyboardActions(onDone = { addTyped() }),
+                // Done just folds the keyboard away to show more results, as in the species search (#166).
+                keyboardActions = KeyboardActions(onDone = { focusManager.clearFocus() }),
                 decorationBox = { inner ->
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         Box(Modifier.weight(1f)) {
@@ -977,12 +983,20 @@ fun CoObserverScreen(vm: MainViewModel) {
                 })
         }
         LazyColumn(Modifier.weight(1f)) {
+            items(matches, key = { it }) { name ->
+                CoObsRow(name, vm.coObsUsers[name], selected = name in vm.dCoObs,
+                    onToggle = { vm.toggleCoObs(name) }, onForget = { confirmForget = name })
+            }
+            // AO users look like unticked saved names; picking one saves and ticks them.
+            items(hits, key = { "ao:${it.alias}" }) { u ->
+                CoObsRow(u.name, u, selected = false, onToggle = { vm.addAoUser(u); q = "" }, onForget = null)
+            }
+            if (searching) item(key = "searching") {
+                Text(Strings.CoObs.searching, color = cs.onSurfaceVariant,
+                    modifier = Modifier.padding(horizontal = 16.dp, vertical = 9.dp))
+            }
             if (canAdd) item(key = "add") {
                 OptionItem(Strings.CoObs.add(query), selected = false, fullScreen = true) { vm.addCoObs(query); q = "" }
-            }
-            items(matches, key = { it }) { name ->
-                CoObsRow(name, selected = name in vm.dCoObs,
-                    onToggle = { vm.toggleCoObs(name) }, onForget = { confirmForget = name })
             }
         }
         // Clearing the party is a rare housekeeping action, not the screen's confirm - so it sits at
@@ -1010,13 +1024,27 @@ fun CoObserverScreen(vm: MainViewModel) {
     }
 }
 
+/** A co-observer as Artsobservasjoner shows a user: name, then place in grey italics, then
+ *  (brukeralias) in grey. A linked name shows the user's own name rather than its picker label, which
+ *  may carry a "(By)" suffix. Unlinked free-text names are just the name. */
+@Composable
+private fun coObsName(label: String, user: AoUser?): AnnotatedString {
+    val grey = SpanStyle(color = MaterialTheme.colorScheme.onSurfaceVariant, fontWeight = FontWeight.Normal)
+    return buildAnnotatedString {
+        append(user?.name ?: label)
+        if (user == null) return@buildAnnotatedString
+        if (user.city.isNotBlank()) withStyle(grey.copy(fontStyle = FontStyle.Italic)) { append("  ${user.city}") }
+        withStyle(grey) { append("  (${user.alias})") }
+    }
+}
+
 /** One known-name row in the co-observer picker. Mirrors the notes-list marking idiom: a leading
  *  [SelectCircle] that fills with a check when the name is on the observation (tap the row to toggle),
  *  and a matching selected-row tint. A trailing **Fjern** forgets the name from the autocomplete list
  *  (mistype / one-off) - its own tap target. Every element is fixed-size so the row never reflows as
  *  you select/deselect. */
 @Composable
-private fun CoObsRow(name: String, selected: Boolean, onToggle: () -> Unit, onForget: () -> Unit) {
+private fun CoObsRow(name: String, user: AoUser?, selected: Boolean, onToggle: () -> Unit, onForget: (() -> Unit)?) {
     val cs = MaterialTheme.colorScheme
     Row(
         Modifier.fillMaxWidth().clickable(onClick = onToggle)
@@ -1026,11 +1054,11 @@ private fun CoObsRow(name: String, selected: Boolean, onToggle: () -> Unit, onFo
     ) {
         SelectCircle(selected)
         Spacer(Modifier.width(12.dp))
-        Text(name, Modifier.weight(1f), color = cs.onSurface, fontWeight = FontWeight.Medium,
+        Text(coObsName(name, user), Modifier.weight(1f), color = cs.onSurface, fontWeight = FontWeight.Medium,
             maxLines = 1, overflow = TextOverflow.Ellipsis)
         // Horizontal-only padding: the row height stays governed by the select circle (like the
         // notes list's marking rows), so co-observer rows line up with observation rows.
-        Text(Strings.CoObs.remove, color = cs.error,
+        if (onForget != null) Text(Strings.CoObs.remove, color = cs.error,
             modifier = Modifier.clickable(onClick = onForget).padding(horizontal = 12.dp))
     }
     HorizontalDivider(color = cs.outline.copy(alpha = 0.4f))
@@ -1762,7 +1790,7 @@ fun ExportScreen(vm: MainViewModel) {
     val isSelection = vm.exportIsSelection()
     // remember'd: with a big batch the TSV runs to hundreds of KB, so don't rebuild it (or rescan
     // the kommuner) on every recomposition.
-    val text = remember(exported) { exportTsv(exported) }
+    val text = remember(exported) { exportTsv(exported, vm.coObsAliases()) }
     // The preview field shows only the first rows: laying out the FULL string in a text field is
     // what made this screen slow to open on a big batch. The copy button copies everything.
     val preview = remember(text) { text.lineSequence().take(20).joinToString("\n") }

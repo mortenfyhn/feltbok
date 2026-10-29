@@ -102,6 +102,9 @@ object Country {
     val userId = BuildConfig.SE_USER_ID
     val mySitesParse: (String) -> List<Locality> = ::parseEditableSitesGeoJson
 
+    // No co-observer user search on Artportalen yet; names export as typed.
+    val userSearchUrl: String? = null
+
     // One POST returns all the user's editable sites within a national bbox (GeoJSON, Web Mercator).
     val mySitesFetchJs = """
         (async () => {
