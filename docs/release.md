@@ -10,6 +10,18 @@ The bundled APK ships **public localities only** - the maintainer's own customs
 
 ## Cut a release
 
+Usually refresh the public localities first. The app only learns about new ones live, in the area
+you look at on the map (#173), so name search and unvisited areas rely on the bundled list. It's a
+suggestion, not a gate: skip it for a quick fix release.
+
+```sh
+just harvest            # a few hours; resumable, so Ctrl-C and rerun is fine
+just build-localities   # rewrites app/src/norway/assets/localities.csv
+```
+
+Commit the new `localities.csv` before soaking, so the soak covers it, and mention it in the
+changelog the way v1.2 did ("Oppdaterte allmenne lokaliteter (249 nye)").
+
 Soak the build first and walk the [pre-release checklist](pre-release-checklist.md) — the
 interaction paths (map tap-gating especially) that the automated suites can't cover.
 
