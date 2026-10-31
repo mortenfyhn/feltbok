@@ -271,7 +271,11 @@ about 0.75 MB, nearly all of it other people's private localities.
 To avoid repeat requests, the map is split into fixed 2 × 2 km cells (Web Mercator), and a cell is
 checked at most once per 24 hours while the app is running; restarting the app checks again, for
 example for a locality you just created on the website. Fetched localities are saved to
-`live-localities.csv` in internal storage and load with the bundled list at startup.
+`live-localities-<versionCode>.csv` in internal storage and load with the bundled list at startup;
+one already in the bundle is skipped. An app update starts a new file and deletes the old one, since
+the new bundle is re-harvested: that drops localities since deleted, renamed or made private, and
+still-new ones are fetched again when viewed. Lookups wait until the bundled list has loaded, so a
+picker opened right after launch doesn't count every locality in view as new.
 
 The locality suggested by default (before you pick one) is based on your GPS fix's position relative
 to each **footprint**, not just the nearest centre. If you're standing inside one or more localities,

@@ -470,16 +470,21 @@ internal fun parseLocalityRow(c: List<String>): Locality? {
  *  customs from the external-only `my-localities.csv` (present only on the maintainer's device).
  *  `localities.csv` is optional — the Sweden flavor ships none (its import is coordinate-driven,
  *  so spots are minted on the map) — so a missing file yields an empty list, not a crash. */
-fun loadLocalities(ctx: Context): List<Locality> =
-    (runCatching { readData(ctx, "localities.csv") }.getOrDefault(emptyList()) + readMyLocalities(ctx) + readLiveLocalities(ctx))
+fun loadLocalities(ctx: Context): List<Locality> {
+    val base = (runCatching { readData(ctx, "localities.csv") }.getOrDefault(emptyList()) + readMyLocalities(ctx))
         .mapNotNull(::parseLocalityRow)
+    return base + withoutKnownIds(readLiveLocalities(ctx).mapNotNull(::parseLocalityRow), base)
+}
 
-/** Public localities fetched live in the picker (#173), kept so they survive a restart. Only ids
- *  missing from the loaded list are ever appended, so it never duplicates the bundle. */
-private fun liveLocalitiesFile(ctx: Context) = File(ctx.filesDir, "live-localities.csv")
+/** Public localities fetched live in the picker (#173), kept so they survive a restart. One file per
+ *  app version: a release brings a re-harvested bundle, so rows fetched against the old one are
+ *  dropped, including any since deleted, renamed or made private. Still-new ones are fetched again
+ *  when viewed. */
+private fun liveLocalitiesFile(ctx: Context) = File(ctx.filesDir, "live-localities-${BuildConfig.VERSION_CODE}.csv")
 
 private fun readLiveLocalities(ctx: Context): List<List<String>> {
     val f = liveLocalitiesFile(ctx)
+    ctx.filesDir.listFiles { o -> o.name.startsWith("live-localities") && o != f }?.forEach { it.delete() }
     if (!f.exists()) return emptyList()
     return f.readText().lineSequence().filter { it.isNotBlank() }.drop(1).map { parseCsvLine(it) }.toList()
 }
@@ -530,9 +535,9 @@ fun parseMySites(json: String): List<Locality> {
         else emptyList()
         out.add(Locality(
             id = o.optLong("id").toString(),
-            lokalitet = o.optString("name"),
+            lokalitet = o.str("name"),
             hovedlokalitet = "",
-            kommune = o.optString("municipalityName"),
+            kommune = o.str("municipalityName"),
             lat = lat, lon = lon,
             observers = 0, radius = o.optDouble("accuracy", 0.0),
             polygon = poly, public = false, mine = true,
@@ -540,6 +545,10 @@ fun parseMySites(json: String): List<Locality> {
     }
     return out
 }
+
+/** A string field, "" when missing or JSON null. Android's optString turns null into "null" (the JVM
+ *  org.json in unit tests doesn't, so tests can't catch it). */
+internal fun JSONObject.str(key: String): String = if (isNull(key)) "" else optString(key)
 
 /** "[[lon,lat],...]" (WGS84 JSON) -> [lat,lon] vertices, matching our polygon convention. */
 internal fun lonLatRingToVertices(s: String): List<DoubleArray> {

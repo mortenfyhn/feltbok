@@ -422,6 +422,7 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
         viewModelScope.launch {
             val loaded = withContext(Dispatchers.Default) { loadLocalities(ctx) }
             localities.addAll(loaded)
+            localitiesLoaded = true
             onLocalitiesLoaded()
         }
         viewModelScope.launch {
@@ -443,6 +444,7 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
             addNewLocality(Locality("", n.locName, "", n.kommune, n.lat, n.lon, 0,
                 n.locRadius.toDouble(), public = false, newLoc = true))
         nearestFix = null   // invalidate the fix-keyed memo so nearest() rescans now that we have data
+        deferredLiveView?.let { (s, w, n, e) -> deferredLiveView = null; if (screen == Screen.LOCALITY) fetchLiveSites(s, w, n, e) }
     }
 
     fun startLocationUpdates() = tracker.start()
@@ -615,7 +617,14 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
      *  (#173). Only cells not yet checked are queried, view first, within [LIVE_FETCH_BUDGET]. Silent
      *  unless something new turns up; cells left over (budget spent, or a failed request) are tried
      *  again on the next settle. */
-    fun fetchLiveSites(s: Double, w: Double, n: Double, e: Double) = fetchLive(s, w, n, e, ++liveGen, null)
+    fun fetchLiveSites(s: Double, w: Double, n: Double, e: Double) {
+        // Until the bundle has loaded every site in view would look new, and be saved as such. Keep the
+        // view and look it up once loading is done.
+        if (!localitiesLoaded) { deferredLiveView = doubleArrayOf(s, w, n, e); return }
+        fetchLive(s, w, n, e, ++liveGen, null)
+    }
+    private var localitiesLoaded = false
+    private var deferredLiveView: DoubleArray? = null
 
     // Bumped on every map settle, so a continuation for a view the map has left stops.
     private var liveGen = 0
@@ -644,7 +653,7 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
             if (fresh.isNotEmpty()) {
                 localities.addAll(fresh)
                 withContext(Dispatchers.IO) { appendLiveLocalities(ctx, fresh) }
-                Toast.makeText(ctx, Strings.Picker.liveFetched(fresh.size), Toast.LENGTH_LONG).show()
+                if (screen == Screen.LOCALITY) Toast.makeText(ctx, Strings.Picker.liveFetched(fresh.size), Toast.LENGTH_LONG).show()
             }
             // A dense view can need more than one budget. Carry on while the map stays put, so you
             // don't have to nudge it; only for zoomed-in views, as completing a wide city view would

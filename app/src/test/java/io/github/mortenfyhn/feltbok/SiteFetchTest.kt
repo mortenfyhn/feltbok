@@ -142,4 +142,12 @@ class SiteFetchTest {
         assertEquals("no cell in two groups", all.size, all.toSet().size)
         assertEquals(cellsIn(s - 0.015, w - 0.05, n + 0.015, e + 0.05).toSet(), all.toSet())
     }
+
+    @Test
+    fun liveRowsAlreadyInTheBundleAreDroppedOnLoad() {
+        // A re-harvested bundle contains localities fetched live before; they must not show twice.
+        val bundled = parsePublicSites(siteRows(json)) { null }
+        val live = bundled.take(1) + bundled.first().copy(id = "999")
+        assertEquals(listOf("999"), withoutKnownIds(live, bundled).map { it.id })
+    }
 }

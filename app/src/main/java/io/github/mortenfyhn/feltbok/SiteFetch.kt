@@ -31,12 +31,12 @@ internal fun siteRows(json: String): List<SiteRow> {
     return (0 until a.length()).map { a.getJSONObject(it) }.map { r ->
         SiteRow(
             id = r.optLong("id").toString(),
-            name = r.optString("name"),
+            name = r.str("name"),
             lat = r.optDouble("latitude", Double.NaN),
             lon = r.optDouble("longitude", Double.NaN),
             isPrivate = r.optBoolean("isPrivate", true),
             radius = r.optDouble("accuracy", 0.0),
-            municipality = r.optString("municipalityName"),
+            municipality = r.str("municipalityName"),
             parentId = r.optLong("parentSiteId").takeIf { it != 0L }?.toString(),
             polygon = if (r.optBoolean("isPolygon")) lonLatRingToVertices(r.optString("polygonCoordinates")) else emptyList(),
         )

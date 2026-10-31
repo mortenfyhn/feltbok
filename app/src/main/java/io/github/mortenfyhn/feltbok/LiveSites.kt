@@ -124,6 +124,13 @@ suspend fun fetchCells(
     return Fetched(parts.flatMap { it.done }, rows + parts.flatMap { it.rows }, parts.flatMap { it.pending })
 }
 
+/** [live] without the localities whose id is already in [known]. A re-harvested bundle (or rows
+ *  fetched before the bundle had finished loading) would otherwise show them twice. */
+fun withoutKnownIds(live: List<Locality>, known: List<Locality>): List<Locality> {
+    val ids = known.mapTo(HashSet()) { it.id }
+    return live.filter { it.id !in ids }
+}
+
 /** One ByBoundingBox row, with only the fields we use. [lat]/[lon] are NaN when missing; such rows
  *  still count towards the truncation check, so they are kept until [parsePublicSites]. */
 data class SiteRow(
