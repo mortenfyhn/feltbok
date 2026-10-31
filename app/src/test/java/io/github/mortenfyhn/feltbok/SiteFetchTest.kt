@@ -1,7 +1,6 @@
 package io.github.mortenfyhn.feltbok
 
 import kotlinx.coroutines.runBlocking
-import org.json.JSONObject
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Test
@@ -26,7 +25,7 @@ class SiteFetchTest {
     fun parsePublicSitesDropsPrivateAndResolvesParents() {
         // Private rows are strangers' own sites and must never be shown or stored. A parent outside
         // the box is looked up in the already-loaded list.
-        val sites = parsePublicSites(jsonRows(json)) { if (it == "99") "Known" else null }.associateBy { it.id }
+        val sites = parsePublicSites(siteRows(json)) { if (it == "99") "Known" else null }.associateBy { it.id }
         assertEquals(setOf("1", "2", "3"), sites.keys)
         assertEquals("Parent", sites.getValue("2").hovedlokalitet)
         assertEquals("Known", sites.getValue("3").hovedlokalitet)
@@ -40,7 +39,7 @@ class SiteFetchTest {
     @Test
     fun liveRowsSurviveTheCsvRoundTrip() {
         // Fetched rows are appended to live-localities.csv and read back at the next launch.
-        for (s in parsePublicSites(jsonRows(json)) { null }) {
+        for (s in parsePublicSites(siteRows(json)) { null }) {
             val back = parseLocalityRow(parseCsvLine(liveLocalityRow(s).trimEnd('\n')))!!
             assertEquals(s.id, back.id); assertEquals(s.lokalitet, back.lokalitet)
             assertEquals(s.hovedlokalitet, back.hovedlokalitet); assertEquals(s.isSuper, back.isSuper)
@@ -83,16 +82,16 @@ class SiteFetchTest {
         val sites = cells.flatMap { c ->
             val (s, w, n, e) = cellsBox(listOf(c))
             (1..150).map { i ->
-                JSONObject().put("id", "$c$i".hashCode()).put("isPrivate", false)
-                    .put("latitude", s + (n - s) * (i % 10 + 0.5) / 10).put("longitude", w + (e - w) * (i / 10 + 0.5) / 16)
+                val lat = s + (n - s) * (i % 10 + 0.5) / 10; val lon = w + (e - w) * (i / 10 + 0.5) / 16
+                SiteRow("$c-$i", "", lat, lon, isPrivate = false, radius = 0.0, municipality = "", parentId = null, polygon = emptyList())
             }
         }
         fun inBox(s: Double, w: Double, n: Double, e: Double) =
-            sites.filter { it.getDouble("latitude") in s..n && it.getDouble("longitude") in w..e }
+            sites.filter { it.lat in s..n && it.lon in w..e }
 
         val (done, rows) = fetchCells(cells, RequestBudget(100)) { s, w, n, e -> inBox(s, w, n, e).take(1000) }
         assertEquals("every cell complete", cells.toSet(), done.toSet())
-        assertEquals("every site found", sites.size, rows.distinctBy { it.getInt("id") }.size)
+        assertEquals("every site found", sites.size, rows.distinctBy { it.id }.size)
 
         // The quarter holding the first cell fails (offline): only its cells stay unchecked.
         val dead = cellsBox(listOf(cells[0]))

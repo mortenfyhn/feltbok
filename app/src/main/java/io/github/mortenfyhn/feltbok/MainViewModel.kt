@@ -630,7 +630,7 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
         for (c in cells) checkedCells[c] = now
         viewModelScope.launch {
             val budget = RequestBudget(LIVE_FETCH_BUDGET)
-            val results = groups.map { fetchCells(it, budget) }
+            val results = groups.map { fetchCells(it, budget, ::fetchSites) }
             val done = results.flatMap { it.done }
             val rows = results.flatMap { it.rows }
             checkedCells.keys.removeAll(cells.toSet() - done.toSet())

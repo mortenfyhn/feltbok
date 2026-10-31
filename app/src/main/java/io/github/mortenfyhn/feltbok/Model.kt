@@ -19,10 +19,8 @@ import java.util.Date
 import java.util.Locale
 import kotlin.math.PI
 import kotlin.math.abs
-import kotlin.math.atan
 import kotlin.math.atan2
 import kotlin.math.cos
-import kotlin.math.exp
 import kotlin.math.sin
 import kotlin.math.sqrt
 
@@ -556,12 +554,6 @@ internal fun lonLatRingToVertices(s: String): List<DoubleArray> {
         }
     } catch (e: Exception) { emptyList() }
 }
-
-// Web Mercator (EPSG:3857, metres) -> WGS84, for the GeoJSON the Swedish sites API returns.
-internal const val MERC_HALF = 20037508.34
-internal fun mercToLon(x: Double) = x / MERC_HALF * 180.0
-internal fun mercToLat(y: Double) =
-    Math.toDegrees(2 * atan(exp(Math.toRadians(y / MERC_HALF * 180.0))) - PI / 2)
 
 /** The user's own (editable) localities from artportalen.se's GetEditableSitesGeoJson — a GeoJSON
  *  FeatureCollection of points + polygons in Web Mercator. The Swedish counterpart of [parseMySites]:
