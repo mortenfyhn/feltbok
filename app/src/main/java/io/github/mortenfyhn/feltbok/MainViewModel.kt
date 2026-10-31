@@ -11,6 +11,7 @@ import androidx.compose.runtime.setValue
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
@@ -610,16 +611,28 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
     // overlapping requests in flight at once could otherwise both add the same locality.
     private val liveAdded = HashSet<String>()
 
-    /** Look up public localities in the picker's visible box and add any we don't have (#173).
-     *  Only the cells not yet checked are queried. Silent unless something new turns up; cells whose
-     *  request failed (offline etc.) are retried on the next pan. */
-    fun fetchLiveSites(s: Double, w: Double, n: Double, e: Double) {
+    /** Look up public localities in and around the picker's visible box and add any we don't have
+     *  (#173). Only cells not yet checked are queried, view first, within [LIVE_FETCH_BUDGET]. Silent
+     *  unless something new turns up; cells left over (budget spent, or a failed request) are tried
+     *  again on the next settle. */
+    fun fetchLiveSites(s: Double, w: Double, n: Double, e: Double) = fetchLive(s, w, n, e, ++liveGen, null)
+
+    // Bumped on every map settle, so a continuation for a view the map has left stops.
+    private var liveGen = 0
+
+    /** [resume]: the groups a previous round for this same view didn't get to, if continuing. */
+    private fun fetchLive(s: Double, w: Double, n: Double, e: Double, gen: Int, resume: List<List<Long>>?) {
         val now = System.currentTimeMillis()
-        val cells = cellsIn(s, w, n, e).filter { now - (checkedCells[it] ?: 0L) > 24 * 3600_000L }
+        val groups = (resume ?: fetchGroups(s, w, n, e))
+            .map { g -> g.filter { now - (checkedCells[it] ?: 0L) > 24 * 3600_000L } }.filter { it.isNotEmpty() }
+        val cells = groups.flatten()
         if (cells.isEmpty()) return
         for (c in cells) checkedCells[c] = now
         viewModelScope.launch {
-            val (done, rows) = fetchCells(cells)
+            val budget = RequestBudget(LIVE_FETCH_BUDGET)
+            val results = groups.map { fetchCells(it, budget) }
+            val done = results.flatMap { it.done }
+            val rows = results.flatMap { it.rows }
             checkedCells.keys.removeAll(cells.toSet() - done.toSet())
             // Parse and diff off the main thread: ~80k localities to compare against would drop frames.
             val known = localities.toList()
@@ -628,10 +641,19 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
                 runCatching { parsePublicSites(rows) { names[it] } }.getOrDefault(emptyList())
                     .filter { it.id !in names }
             }.filter { liveAdded.add(it.id) }
-            if (fresh.isEmpty()) return@launch
-            localities.addAll(fresh)
-            withContext(Dispatchers.IO) { appendLiveLocalities(ctx, fresh) }
-            Toast.makeText(ctx, Strings.Picker.liveFetched(fresh.size), Toast.LENGTH_LONG).show()
+            if (fresh.isNotEmpty()) {
+                localities.addAll(fresh)
+                withContext(Dispatchers.IO) { appendLiveLocalities(ctx, fresh) }
+                Toast.makeText(ctx, Strings.Picker.liveFetched(fresh.size), Toast.LENGTH_LONG).show()
+            }
+            // A dense view can need more than one budget. Carry on while the map stays put, so you
+            // don't have to nudge it; only for zoomed-in views, as completing a wide city view would
+            // cost many MB. Not after a failure (budget left over), so it doesn't spin while offline.
+            val viewLeft = cellsIn(s, w, n, e).any { it !in checkedCells }
+            if (budget.left == 0 && viewLeft && fitsSiteQuery(s, w, n, e, LIVE_CONTINUE_MAX_M)) {
+                delay(500)
+                if (gen == liveGen && screen == Screen.LOCALITY) fetchLive(s, w, n, e, gen, results.flatMap { it.pending })
+            }
         }
     }
 

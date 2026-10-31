@@ -90,17 +90,57 @@ class SiteFetchTest {
         fun inBox(s: Double, w: Double, n: Double, e: Double) =
             sites.filter { it.getDouble("latitude") in s..n && it.getDouble("longitude") in w..e }
 
-        val (done, rows) = fetchCells(cells) { s, w, n, e -> inBox(s, w, n, e).take(1000) }
+        val (done, rows) = fetchCells(cells, RequestBudget(100)) { s, w, n, e -> inBox(s, w, n, e).take(1000) }
         assertEquals("every cell complete", cells.toSet(), done.toSet())
         assertEquals("every site found", sites.size, rows.distinctBy { it.getInt("id") }.size)
 
         // The quarter holding the first cell fails (offline): only its cells stay unchecked.
         val dead = cellsBox(listOf(cells[0]))
-        val (done2, _) = fetchCells(cells) { s, w, n, e ->
+        val (done2, _) = fetchCells(cells, RequestBudget(100)) { s, w, n, e ->
             val rows2 = inBox(s, w, n, e)
             if (rows2.size < 1000 && s <= dead[0] && w <= dead[1] && n >= dead[2] && e >= dead[3]) null else rows2.take(1000)
         }
         assertEquals(12, done2.size)
         assertTrue(cells[0] !in done2)
+
+        // With budget for three requests: the truncated whole and two quarters. Those two quarters'
+        // cells are complete, the rest wait for the next settle, and the truncated rows still count.
+        var requests = 0
+        val (done3, rows3) = fetchCells(cells, RequestBudget(3)) { s, w, n, e -> requests++; inBox(s, w, n, e).take(1000) }
+        assertEquals(3, requests)
+        assertEquals(8, done3.size)
+        assertEquals("truncated 1000 + two quarters of 600", 2200, rows3.size)
+
+        // Resuming from what was left asks only for the two remaining quarters, not the whole again.
+        requests = 0
+        val pending = fetchCells(cells, RequestBudget(3)) { s, w, n, e -> inBox(s, w, n, e).take(1000) }.pending
+        val resumed = pending.map { g -> fetchCells(g, RequestBudget(100)) { s, w, n, e -> requests++; inBox(s, w, n, e).take(1000) } }
+        assertEquals(2, requests)
+        assertEquals(cells.toSet() - done3.toSet(), resumed.flatMap { it.done }.toSet())
+    }
+
+    @Test
+    fun fetchCellsSplitsGroupsTooWideForTheServerWithoutAsking() = runBlocking {
+        // A 60 km strip (the padded margin can reach 80 km): the server would reject it, so it is
+        // split first, and only boxes it accepts are sent and charged to the budget.
+        val (x0, y0) = cellsIn(63.3, 8.0, 63.3, 8.0).single().let { (it shr 32).toInt() to it.toInt() }
+        val strip = (x0 until x0 + 30).map { x -> (x.toLong() shl 32) or (y0.toLong() and 0xffffffffL) }
+        val budget = RequestBudget(100)
+        val (done, _) = fetchCells(strip, budget) { _, w, _, e ->
+            assertTrue(mercX(e) - mercX(w) < 50_000)
+            emptyList()
+        }
+        assertEquals(strip.toSet(), done.toSet())
+        assertEquals(98, budget.left)
+    }
+
+    @Test
+    fun fetchGroupsPutsTheViewFirstAndCoversTheMarginOnce() {
+        val (s, w, n, e) = doubleArrayOf(63.85, 8.50, 63.88, 8.60)
+        val groups = fetchGroups(s, w, n, e)
+        assertEquals(cellsIn(s, w, n, e), groups.first())
+        val all = groups.flatten()
+        assertEquals("no cell in two groups", all.size, all.toSet().size)
+        assertEquals(cellsIn(s - 0.015, w - 0.05, n + 0.015, e + 0.05).toSet(), all.toSet())
     }
 }

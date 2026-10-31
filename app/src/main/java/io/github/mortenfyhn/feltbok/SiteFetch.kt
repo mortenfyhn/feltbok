@@ -14,10 +14,23 @@ import kotlin.math.tan
 // Live fetch of public localities in the picker's visible box (#173 layer C), so a locality
 // created on Artsobservasjoner since the bundle was harvested shows up without a release.
 
-/** Only fetch when zoomed in to roughly picking level (default picker zoom shows ~2.6 km). Dense
- *  areas truncate and split into several requests, so a zoomed-out view would cost many. */
-const val LIVE_FETCH_MAX_M = 10_000.0
+/** Widest view that gets looked up (~18 km on the ground at 63°N). Sparse areas load whole from this
+ *  far out; dense ones run out of [LIVE_FETCH_BUDGET] and complete as you zoom in. */
+const val LIVE_FETCH_MAX_M = 40_000.0
+
+/** Requests per map settle. Dense areas truncate and need splitting, so this caps what one settle
+ *  can cost (a truncated response is ~350 KB of JSON, ~60 KB gzipped on the wire); whatever is left
+ *  stays unchecked for the next one. */
+const val LIVE_FETCH_BUDGET = 8
+
+/** Requests left for one settle, shared by all its [fetchCells] calls. */
+class RequestBudget(var left: Int)
+
 private const val CELL_M = 2_000.0
+
+// The server rejects a box over 50 km per side in Web Mercator, so wider groups are split before
+// asking (the padded view can reach 80 km).
+private const val SERVER_MAX_M = 45_000.0
 
 // The server truncates silently, and returns up to about twice MaxSites when it does; treat a
 // response this long as truncated (same check as harvest_sites_mobil.py). The website's own map
@@ -27,9 +40,14 @@ private const val MAX_SITES = 1000
 internal fun mercX(lon: Double) = lon * MERC_HALF / 180
 internal fun mercY(lat: Double) = ln(tan((90 + lat) * PI / 360)) / (PI / 180) * MERC_HALF / 180
 
-/** Whether a south/west/north/east box is small enough to look up. */
-fun fitsSiteQuery(s: Double, w: Double, n: Double, e: Double) =
-    mercX(e) - mercX(w) <= LIVE_FETCH_MAX_M && mercY(n) - mercY(s) <= LIVE_FETCH_MAX_M
+/** Widest view whose leftover cells are fetched in further rounds while the map stays still. A
+ *  complete 10 km view of central Trondheim is ~30 requests (a ~5 km one 23 requests, 4.2 MB of
+ *  JSON, ~0.7 MB gzipped), nearly all of it other people's private rows. */
+const val LIVE_CONTINUE_MAX_M = 10_000.0
+
+/** Whether a south/west/north/east box is at most [maxM] across in Web Mercator. */
+fun fitsSiteQuery(s: Double, w: Double, n: Double, e: Double, maxM: Double = LIVE_FETCH_MAX_M) =
+    mercX(e) - mercX(w) <= maxM && mercY(n) - mercY(s) <= maxM
 
 private fun cellX(c: Long) = (c shr 32).toInt()
 private fun cellY(c: Long) = c.toInt()
@@ -49,6 +67,24 @@ fun cellsBox(cells: Collection<Long>): DoubleArray {
         mercToLat(ys.min() * CELL_M), mercToLon(xs.min() * CELL_M),
         mercToLat((ys.max() + 1) * CELL_M), mercToLon((xs.max() + 1) * CELL_M),
     )
+}
+
+/** The cells to look up for a view, in priority order: the view itself, then a margin of half a view
+ *  on each side as four strips, so a short pan shows localities that are already loaded. */
+fun fetchGroups(s: Double, w: Double, n: Double, e: Double): List<List<Long>> {
+    val view = cellsIn(s, w, n, e)
+    val vx = view.map(::cellX).let { it.min()..it.max() }; val vy = view.map(::cellY).let { it.min()..it.max() }
+    val dLat = (n - s) / 2; val dLon = (e - w) / 2
+    val margin = cellsIn(s - dLat, w - dLon, n + dLat, e + dLon).filter { cellX(it) !in vx || cellY(it) !in vy }
+    val strips = margin.groupBy {
+        when {
+            cellY(it) > vy.last -> 0
+            cellY(it) < vy.first -> 1
+            cellX(it) < vx.first -> 2
+            else -> 3
+        }
+    }
+    return listOf(view) + strips.values
 }
 
 /** [cells] split into up to four groups at the middle of their range. Each group is strictly smaller
@@ -78,18 +114,33 @@ private suspend fun fetchSites(s: Double, w: Double, n: Double, e: Double): List
     }
 }
 
-/** Rows for [cells], split into quarters for as long as the server truncates. Returns the cells
- *  that were covered completely, and their rows. A failed request leaves its cells out; a single
- *  cell that still truncates is accepted as it is, as the harvest does. */
+/** What [fetchCells] got: the cells covered completely, all rows seen, and the groups the budget
+ *  ran out before, to resume from. Their parents were already fetched (and truncated), so resuming
+ *  from these instead of from the remaining cells doesn't ask for the same boxes again. */
+data class Fetched(val done: List<Long>, val rows: List<JSONObject>, val pending: List<List<Long>>)
+
+/** Rows for [cells], split into quarters for as long as the server truncates, spending [budget].
+ *  A truncated response's rows are kept too: they're real localities, and all we get if the budget
+ *  runs out before its parts. A failed request leaves its cells out (neither done nor pending); a
+ *  single cell that still truncates is accepted as it is, as the harvest does. */
 suspend fun fetchCells(
     cells: List<Long>,
+    budget: RequestBudget,
     fetch: suspend (s: Double, w: Double, n: Double, e: Double) -> List<JSONObject>? = ::fetchSites,
-): Pair<List<Long>, List<JSONObject>> {
-    val (s, w, n, e) = cellsBox(cells)
-    val rows = fetch(s, w, n, e) ?: return emptyList<Long>() to emptyList()
-    if (rows.size < MAX_SITES || cells.size == 1) return cells to rows
-    val parts = splitCells(cells).map { fetchCells(it, fetch) }
-    return parts.flatMap { it.first } to parts.flatMap { it.second }
+): Fetched {
+    val xs = cells.map(::cellX); val ys = cells.map(::cellY)
+    val tooBig = (xs.max() - xs.min() + 1) * CELL_M > SERVER_MAX_M || (ys.max() - ys.min() + 1) * CELL_M > SERVER_MAX_M
+    if (!tooBig) {
+        if (budget.left <= 0) return Fetched(emptyList(), emptyList(), listOf(cells))
+        budget.left--
+    }
+    val rows = if (tooBig) emptyList() else {
+        val (s, w, n, e) = cellsBox(cells)
+        fetch(s, w, n, e) ?: return Fetched(emptyList(), emptyList(), emptyList())
+    }
+    if (!tooBig && (rows.size < MAX_SITES || cells.size == 1)) return Fetched(cells, rows, emptyList())
+    val parts = splitCells(cells).map { fetchCells(it, budget, fetch) }
+    return Fetched(parts.flatMap { it.done }, rows + parts.flatMap { it.rows }, parts.flatMap { it.pending })
 }
 
 /** Public localities from ByBoundingBox rows. Private rows are other people's own sites and are

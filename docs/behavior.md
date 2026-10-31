@@ -253,16 +253,25 @@ GPS fix — you opened the picker to adjust around that place. Only when there's
 it centre on your own position.
 
 **Norway** also looks up public localities created after the bundled list was harvested. When the map
-has been still for a second, and the view is under 10 km across in Web Mercator, the app asks
-Artsobservasjoner's `ByBoundingBox` endpoint for the public localities in view. The endpoint also
-returns everyone's private localities and cuts a long response off without saying so, so in dense
-areas the app splits a cut-off request into quarters until each answer is complete. Any it doesn't already
-have appear on the map, with a toast saying how many. Nothing shows when there is nothing new or the
-request fails (offline). Other people's private localities in the response are dropped. To avoid
-repeat requests, the map is split into fixed 2 × 2 km cells, and a cell is checked at most once per
-24 hours while the app is running; restarting the app checks again, for example for a locality you
-just created on the website. Fetched localities are saved to `live-localities.csv` in internal storage
-and load with the bundled list at startup.
+has been still for a second, and the view is under 40 km across in Web Mercator (about 18 km on the
+ground at 63°N), the app asks Artsobservasjoner's `ByBoundingBox` endpoint for the public localities
+in view, plus a margin of half a view on each side, so a short pan shows localities that are already
+loaded. Any it doesn't already have appear on the map, with a toast saying how many. Nothing shows when
+there is nothing new or the request fails (offline). Other people's private localities in the response
+are dropped.
+
+The endpoint also returns everyone's private localities and cuts a long response off without saying
+so. In dense areas the app therefore splits a cut-off request into quarters until each answer is
+complete. One map settle makes at most 8 requests, view first, then margin. If cells in view are left
+when they're used up, and the view is under 10 km across, it carries on in further rounds while the
+map stays still and the picker is open. So rural areas load whole from far out, and a city centre
+completes at about zoom 15-16. Responses are gzipped; a complete zoom-15 view of central Trondheim is
+about 0.75 MB, nearly all of it other people's private localities.
+
+To avoid repeat requests, the map is split into fixed 2 × 2 km cells (Web Mercator), and a cell is
+checked at most once per 24 hours while the app is running; restarting the app checks again, for
+example for a locality you just created on the website. Fetched localities are saved to
+`live-localities.csv` in internal storage and load with the bundled list at startup.
 
 The locality suggested by default (before you pick one) is based on your GPS fix's position relative
 to each **footprint**, not just the nearest centre. If you're standing inside one or more localities,
