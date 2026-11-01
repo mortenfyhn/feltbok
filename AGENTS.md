@@ -84,10 +84,11 @@ a `MainViewModel` must start with `ClearAppDataRule` — otherwise the suite bec
 ## Where things live
 - `shared/` — Kotlin Multiplatform module with the platform-free code (search, frequency, use
   scores, the species, locality and note models, locality geometry, live localities, co-observer and
-  selection logic, date formatting, the JSON formats of the app's files and API responses), consumed
-  by the app as a JVM library. Being moved into piece by piece for the iOS port (#115).
-- `app/src/main/java/io/github/mortenfyhn/feltbok/Model.kt` — CSV loading, file load+save, TSV
-  export.
+  selection logic, date formatting, the JSON formats of the app's files and API responses, loading
+  and saving them through a per-platform `Storage`), consumed by the app as a JVM library. Being
+  moved into piece by piece for the iOS port (#115).
+- `app/src/main/java/io/github/mortenfyhn/feltbok/Model.kt` — TSV export, the Downloads backup.
+  `AndroidStorage.kt` — the app's files on Android.
 - `MainViewModel.kt` — all UI state (four-ish screens, no nav lib). `Ui.kt` — the Compose screens.
 - `MapPicker.kt` — osmdroid locality-picker map + overlays. `SyncScreen.kt` — WebView "Synk mine
   lokaliteter".

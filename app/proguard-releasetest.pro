@@ -31,6 +31,9 @@
 -keep class io.github.mortenfyhn.feltbok.Species { *; }
 -keep class io.github.mortenfyhn.feltbok.ModelKt { *; }
 -keep class io.github.mortenfyhn.feltbok.NotesJsonKt { *; }
+-keep class io.github.mortenfyhn.feltbok.CsvDataKt { *; }
+-keep class io.github.mortenfyhn.feltbok.Storage { *; }
+-keep class io.github.mortenfyhn.feltbok.AndroidStorage { *; }
 
 # The Compose UI-flow test (AddObservationFlowTest) hosts App(vm) and drives it by name: the App
 # composable (UiKt), the MainViewModel it takes (whose Compose-generated $stable field the test's

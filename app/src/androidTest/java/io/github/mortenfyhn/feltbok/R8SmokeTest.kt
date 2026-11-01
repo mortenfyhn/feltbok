@@ -54,7 +54,7 @@ class R8SmokeTest {
      *  R8/resource-shrinking kept the asset and the CSV parser works on the device. */
     @Test
     fun bundledLocalitiesLoad() {
-        val locs = loadLocalities(ctx)
+        val locs = loadLocalities(AndroidStorage(ctx), BuildConfig.VERSION_CODE)
         assertTrue("expected bundled localities", locs.isNotEmpty())
         assertTrue("expected named localities", locs.all { it.lokalitet.isNotBlank() })
     }
@@ -62,7 +62,7 @@ class R8SmokeTest {
     /** The bundled species checklist loads and parses. */
     @Test
     fun bundledSpeciesLoad() {
-        val species = loadSpecies(ctx)
+        val species = loadSpecies(AndroidStorage(ctx))
         assertTrue("expected bundled species", species.isNotEmpty())
     }
 
@@ -70,7 +70,7 @@ class R8SmokeTest {
      *  shrinking + flavor packaging actually ship it into the built APK. */
     @Test
     fun bundledUbestemtLoads() {
-        val ubestemt = loadUbestemt(ctx)
+        val ubestemt = loadUbestemt(AndroidStorage(ctx))
         assertTrue("expected bundled ub. entries", ubestemt.isNotEmpty())
     }
 }

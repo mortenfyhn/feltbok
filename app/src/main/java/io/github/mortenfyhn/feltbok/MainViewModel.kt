@@ -24,6 +24,7 @@ enum class Screen { LIST, SEARCH, DETAIL, LOCALITY, COOBS, SYNC, SETTINGS, ARCHI
  */
 class MainViewModel(app: Application) : AndroidViewModel(app) {
     private val ctx = app
+    private val storage = AndroidStorage(app)
     private val tracker = LocationTracker(app)
 
     // Parsing the ~11.5k bundled localities takes ~0.7 s, so load them off the main thread and
@@ -31,7 +32,7 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
     // Nothing on the first screen needs localities; nearest()/the picker just see an empty list
     // until it populates (a beat later), then recompose.
     val localities = mutableStateListOf<Locality>()
-    val species: List<Species> = loadSpecies(app) + loadUbestemt(app)
+    val species: List<Species> = loadSpecies(storage) + loadUbestemt(storage)
 
     /** Species normalized (folded forms, token splits) for the search scorer - never per keystroke.
      *  Cached per active-language set ([LangPrefs.searchLangs]) and rebuilt only when that changes,
@@ -53,11 +54,11 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
 
     /** The chosen display languages (primary + optional secondary); observable so changing them on
      *  the Settings screen relabels the species list and note rows without a restart. */
-    var langPrefs by mutableStateOf(loadLangPrefs(app)); private set
+    var langPrefs by mutableStateOf(loadLangPrefs(storage, LangPrefs(Country.defaultPrimary, Country.defaultSecondary))); private set
 
     fun updateLangPrefs(prefs: LangPrefs) {
         langPrefs = prefs
-        saveLangPrefs(ctx, prefs)
+        saveLangPrefs(storage, prefs)
     }
 
     /** Swedish names are shown with an initial capital ("Svartvit flugsnappare"); Norwegian stays
@@ -100,7 +101,7 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
 
     val notes = mutableStateListOf<Note>().apply {
         importSeedNotes(app)   // dev-build only: import a pushed seed file, if any (see importSeedNotes)
-        addAll(loadNotes(app))
+        addAll(loadNotes(storage))
     }
 
     /** True while the list shows its marking chrome. Derived from [selected], so clearing the last
@@ -160,7 +161,7 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
      *  lose them; the undo therefore also takes them back OUT of the archive (see [undo]). */
     private fun archive(gone: List<Note>) {
         if (gone.isEmpty()) return
-        appendToArchive(ctx, gone)
+        appendToArchive(storage, gone)
         setUndo(Undoable.Deleted(gone))
         val ids = gone.map { it.id }.toSet()
         notes.removeAll { it.id in ids }
@@ -170,7 +171,7 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
     fun openArchive() {
         clearSelection()
         archived.clear()
-        archived.addAll(loadArchive(ctx))
+        archived.addAll(loadArchive(storage))
         screen = Screen.ARCHIVE
     }
 
@@ -184,7 +185,7 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
         val sel = archived.filter { it.id in selected }
         if (sel.isEmpty()) return
         archived.removeAll { it.id in selected }
-        saveArchive(ctx, archived.toList())
+        saveArchive(storage, archived.toList())
         notes.addAll(sel)
         clearSelection()
         persist()
@@ -221,7 +222,7 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
                 // They were archived at once (see archive()), so take them back out - a note must
                 // never exist in both lists.
                 val ids = u.notes.map { it.id }.toSet()
-                saveArchive(ctx, loadArchive(ctx).filterNot { it.id in ids })
+                saveArchive(storage, loadArchive(storage).filterNot { it.id in ids })
                 persist()
             }
             is Undoable.Discarded -> screen = Screen.DETAIL              // draft is still in the editor
@@ -240,7 +241,7 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
      *  from the pre-#155 file (keyed by the then-displayed name) are migrated to latin on load. */
     private val uses = mutableStateMapOf<String, UseEntry>().apply {
         val byName = species.associateBy { it.norsk } + species.associateBy { it.svensk }
-        loadUses(app).forEach { (key, entry) ->
+        loadUses(storage).forEach { (key, entry) ->
             val latin = if (species.any { it.latin == key }) key else byName[key]?.latin
             if (latin != null) merge(latin, entry) { a, b -> if (a.lastTouched >= b.lastTouched) a else b }
         }
@@ -253,7 +254,7 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
     /** Context-aware report frequency for ranking: what's reported in the current month and near the
      *  current GPS fix. Off-season/elsewhere/rare birds drop in rank but stay findable (tiers still
      *  match). The app blends this into the commonness weight handed to [rankSpecies]. */
-    private val ctxFreq = ContextualFrequency(species, loadSpeciesMonths(app), loadSpeciesRegions(app))
+    private val ctxFreq = ContextualFrequency(species, loadSpeciesMonths(storage), loadSpeciesRegions(storage))
 
     /** The blank-search quick list: your most-recently-picked species, newest first. If the bird isn't
      *  right at the top you'd start typing anyway, so a short recents list beats a ranked blend. When
@@ -295,11 +296,11 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
     }
 
     /** Per-activity use counts, so each user's most-used activities rise to the top. */
-    private val actUses = mutableStateMapOf<String, Int>().apply { putAll(loadActUses(app)) }
+    private val actUses = mutableStateMapOf<String, Int>().apply { putAll(loadActUses(storage)) }
 
     // ---- co-observers (#128): a name register for autocomplete, plus the sticky "følget mitt" party.
     /** Pick counts per co-observer name, so names you enter often surface first in the picker. */
-    private val coObsUses = mutableStateMapOf<String, Int>().apply { putAll(loadCoObsUses(app)) }
+    private val coObsUses = mutableStateMapOf<String, Int>().apply { putAll(loadCoObsUses(storage)) }
 
     /** The current field party ("følget mitt"), pre-filled onto every new observation and shown in
      *  the list header (#176). It follows the newest note's co-observers - whoever your latest obs
@@ -307,10 +308,10 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
      *  next one, and editing older notes can't hijack it (#128) - and the header sets it directly.
      *  Stored rather than derived so a header-set party works with no notes yet and survives a
      *  restart; seeded from the newest note so nothing changes for existing data. */
-    var party by mutableStateOf(loadParty(app) ?: notes.maxByOrNull { it.time }?.coObservers ?: emptyList())
+    var party by mutableStateOf(loadParty(storage) ?: notes.maxByOrNull { it.time }?.coObservers ?: emptyList())
         private set
 
-    private fun storeParty(names: List<String>) { party = names; saveParty(ctx, names) }
+    private fun storeParty(names: List<String>) { party = names; saveParty(storage, names) }
 
     /** After a note write: the party follows the newest note. A delete/archive leaves it alone -
      *  losing your party because you tidied up an old note would be worse than a stale one. */
@@ -319,7 +320,7 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
     /** Users picked from the search, by brukeralias. A note stores a picked user as their alias (what the
      *  import links on, so export writes it as is) and a free-text name as typed; this map is only for
      *  showing the alias as a name. */
-    val coObsUsers = mutableStateMapOf<String, AoUser>().apply { putAll(loadCoObsUsers(app)) }
+    val coObsUsers = mutableStateMapOf<String, AoUser>().apply { putAll(loadCoObsUsers(storage)) }
 
     /** The name to show for a stored co-observer: the user's name for an alias, else the text itself. */
     fun coObsName(s: String): String = coObsUsers[s]?.name ?: s
@@ -327,7 +328,7 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
     /** Add a user from the online search to the draft. */
     fun addAoUser(u: AoUser) {
         coObsUsers[u.alias] = u
-        saveCoObsUsers(ctx, coObsUsers.values)
+        saveCoObsUsers(storage, coObsUsers.values)
         addCoObs(u.alias)
     }
 
@@ -345,7 +346,7 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
         val n = name.trim()
         if (n.isBlank()) return
         if (n !in dCoObs) dCoObs.add(n)
-        if (n !in coObsUses) { coObsUses[n] = 0; saveCoObsUses(ctx, coObsUses) }
+        if (n !in coObsUses) { coObsUses[n] = 0; saveCoObsUses(storage, coObsUses) }
     }
 
     /** Clear the draft's co-observers ("tøm følget"); the party syncs to this on save. */
@@ -356,7 +357,7 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
      *  so this only prunes what you'll be *offered* going forward. */
     fun forgetCoObs(name: String) {
         coObsUses.remove(name)
-        saveCoObsUses(ctx, coObsUses)
+        saveCoObsUses(storage, coObsUses)
         dCoObs.remove(name)
     }
 
@@ -420,7 +421,7 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
     init {
         // Load localities off the main thread, then run the steps that depend on them.
         viewModelScope.launch {
-            val loaded = withContext(Dispatchers.Default) { loadLocalities(ctx) }
+            val loaded = withContext(Dispatchers.Default) { loadLocalities(storage, BuildConfig.VERSION_CODE) }
             localities.addAll(loaded)
             localitiesLoaded = true
             onLocalitiesLoaded()
@@ -522,7 +523,7 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
         dSpecies = s.name(Country.exportLang); dLatin = s.latin
         val now = System.currentTimeMillis()
         uses[s.latin] = bumpUse(uses[s.latin], now)
-        saveUses(ctx, uses)
+        saveUses(storage, uses)
         if (!changingSpecies && !isEditing && !batchEditing) {
             dTime = now  // stamp the entry time now
             dLoc = currentLocality()
@@ -652,7 +653,7 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
             }.filter { liveAdded.add(it.id) }
             if (fresh.isNotEmpty()) {
                 localities.addAll(fresh)
-                withContext(Dispatchers.IO) { appendLiveLocalities(ctx, fresh) }
+                withContext(Dispatchers.IO) { appendLiveLocalities(storage, BuildConfig.VERSION_CODE, fresh) }
                 if (screen == Screen.LOCALITY) Toast.makeText(ctx, Strings.Picker.liveFetched(fresh.size), Toast.LENGTH_LONG).show()
             }
             // A dense view can need more than one budget. Carry on while the map stays put, so you
@@ -692,7 +693,7 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
     private fun bumpCoObsUses(names: List<String>) {
         if (names.isEmpty()) return
         names.forEach { coObsUses[it] = (coObsUses[it] ?: 0) + 1 }
-        saveCoObsUses(ctx, coObsUses)
+        saveCoObsUses(storage, coObsUses)
     }
 
     // ---- settings (#155: species-name languages) ----
@@ -710,7 +711,7 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
         val diff = diffMySites(localities.filter { it.mine }, sites)
         localities.removeAll { it.mine }
         localities.addAll(sites)
-        saveMyLocalities(ctx, sites)
+        saveMyLocalities(storage, sites)
         nearestFix = null   // invalidate the fix-keyed memo so nearest() rescans
         return diff
     }
@@ -864,7 +865,7 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
         if (loc != null && !isEditing) { lastUsedLoc = loc; lastUsedFix = fix }   // stick it for the next obs
         if (dAct.isNotBlank()) {
             actUses[dAct] = (actUses[dAct] ?: 0) + 1
-            saveActUses(ctx, actUses)
+            saveActUses(storage, actUses)
         }
         bumpCoObsUses(dCoObs)
         syncPartyToNewest()
@@ -911,7 +912,7 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
     }
 
     private fun persist() {
-        saveNotes(ctx, notes)
+        saveNotes(storage, notes)
         backupExport(ctx, notes)   // mirror to Downloads so a UI crash can't trap field data (#85)
     }
 }
