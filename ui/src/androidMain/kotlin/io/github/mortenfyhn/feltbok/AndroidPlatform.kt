@@ -8,7 +8,11 @@ import android.os.Build
 import android.os.Environment
 import android.provider.MediaStore
 import android.widget.Toast
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 import java.io.File
+import java.net.HttpURLConnection
+import java.net.URL
 
 /** [Platform] on Android. */
 class AndroidPlatform(private val app: Application) : Platform {
@@ -18,9 +22,16 @@ class AndroidPlatform(private val app: Application) : Platform {
     override fun toast(message: String, long: Boolean) =
         Toast.makeText(app, message, if (long) Toast.LENGTH_LONG else Toast.LENGTH_SHORT).show()
 
-    override suspend fun searchUsers(query: String) = searchAoUsers(query)
-
-    override suspend fun fetchSites(s: Double, w: Double, n: Double, e: Double) = fetchSitesHttp(s, w, n, e)
+    override suspend fun httpGet(url: String, headers: Map<String, String>, timeoutMs: Int): String? =
+        withContext(Dispatchers.IO) {
+            runCatching {
+                val c = URL(url).openConnection() as HttpURLConnection
+                c.connectTimeout = 5000
+                c.readTimeout = timeoutMs
+                headers.forEach { (k, v) -> c.setRequestProperty(k, v) }
+                try { c.inputStream.bufferedReader().readText() } finally { c.disconnect() }
+            }.getOrNull()
+        }
 
     override fun backupExport(notes: List<Note>) = backupExport(app, notes)
 

@@ -94,8 +94,12 @@ a `MainViewModel` must start with `ClearAppDataRule` — otherwise the suite bec
   (pickers, links, toasts) and `expect` composables for the map and sync screens. `androidMain`
   implements them: `AndroidPlatform.kt` (+ Downloads backup), `PlatformUi.android.kt`,
   `MapPicker.kt` (osmdroid picker map), `SyncScreen.kt` (WebView "Hent mine lokaliteter"),
-  `LocationTracker.kt`, the HTTP calls, `AndroidStorage.kt`. `iosMain` has placeholders until the
-  iOS app (#115). Unit tests are `androidHostTest` (`:ui:testAndroidHostTest`).
+  `LocationTracker.kt`, `AndroidStorage.kt`. `iosMain` is the same for iOS (`IosPlatform.kt`,
+  `PlatformUi.ios.kt`, CoreLocation, `MainViewController.kt` as the root). Unit tests are
+  `androidHostTest` (`:ui:testAndroidHostTest`).
+- `iosApp/` — the iOS app: a thin SwiftUI host for `:ui`'s framework. `xcodegen` there generates the
+  Xcode project from `project.yml` (not committed); `install-device.sh` builds and installs on a
+  connected iPhone (Xcode 26 for iOS 15 devices). The bundled CSVs come from `app/src/main/assets`.
 - `app/` — just the Android shell: `MainActivity`, `FeltbokApp` (fills `AppInfo` from BuildConfig),
   resources, assets, and the instrumented tests.
 - `app/src/main/assets/localities.csv` (public, bundled), `species.csv` (checklist + Rødlista

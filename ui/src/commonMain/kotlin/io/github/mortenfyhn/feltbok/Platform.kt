@@ -15,11 +15,8 @@ interface Platform {
     /** A short message over whatever screen is showing; [long] for one worth reading twice. */
     fun toast(message: String, long: Boolean = false)
 
-    /** Co-observer search by name; empty on any failure, so the picker falls back to free text. */
-    suspend fun searchUsers(query: String): List<AoUser>
-
-    /** ByBoundingBox rows for the box, or null on any failure (offline, endpoint changed). */
-    suspend fun fetchSites(s: Double, w: Double, n: Double, e: Double): List<SiteRow>?
+    /** The body of a successful GET of [url], or null on any failure (offline, timeout, HTTP error). */
+    suspend fun httpGet(url: String, headers: Map<String, String>, timeoutMs: Int): String?
 
     /** Mirror the export somewhere a user can reach without the app (Android: Downloads), so a
      *  crash can't trap field notes (#85). Never throws. */

@@ -448,7 +448,7 @@ class MainViewModel(private val platform: Platform) : ViewModel() {
     }
 
     /** Co-observer search by name (#128); empty on any failure. */
-    suspend fun searchUsers(query: String): List<AoUser> = platform.searchUsers(query)
+    suspend fun searchUsers(query: String): List<AoUser> = searchAoUsers(platform, query)
 
     fun startLocationUpdates() = tracker.start()
     fun stopLocationUpdates() = tracker.stop()
@@ -642,7 +642,7 @@ class MainViewModel(private val platform: Platform) : ViewModel() {
         for (c in cells) checkedCells[c] = now
         viewModelScope.launch {
             val budget = RequestBudget(LIVE_FETCH_BUDGET)
-            val results = groups.map { fetchCells(it, budget, platform::fetchSites) }
+            val results = groups.map { fetchCells(it, budget) { s, w, n, e -> fetchSites(platform, s, w, n, e) } }
             val done = results.flatMap { it.done }
             val rows = results.flatMap { it.rows }
             checkedCells.keys.removeAll(cells.toSet() - done.toSet())

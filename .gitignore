@@ -65,3 +65,5 @@ __pycache__/
 /scripts/dev/store-assets/icon.svg
 /scripts/dev/store-assets/banner.svg
 /ui/build/
+/iosApp/*.xcodeproj/
+/iosApp/Feltbok/Info.plist

@@ -1,15 +1,16 @@
 package io.github.mortenfyhn.feltbok
 
-import kotlinx.datetime.Clock
 import kotlinx.datetime.DateTimeUnit
-import kotlinx.datetime.Instant
 import kotlinx.datetime.LocalDate
 import kotlinx.datetime.LocalDateTime
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.isoDayNumber
 import kotlinx.datetime.minus
+import kotlinx.datetime.number
 import kotlinx.datetime.toLocalDateTime
 import kotlinx.datetime.todayIn
+import kotlin.time.Clock
+import kotlin.time.Instant
 
 /** Month and weekday names for display, plus the day-header words. Spelled out per language rather
  *  than taken from the platform's locale tables: common Kotlin has none, and they disagree anyway
@@ -28,13 +29,13 @@ private fun two(n: Int) = n.toString().padStart(2, '0')
 /** [ms] in a numeric pattern of yyyy, MM, dd, HH and mm - the export formats, e.g. "dd.MM.yyyy". */
 fun formatDateTime(ms: Long, pattern: String, zone: TimeZone = TimeZone.currentSystemDefault()): String {
     val t = ms.local(zone)
-    return pattern.replace("yyyy", t.year.toString()).replace("MM", two(t.monthNumber)).replace("dd", two(t.dayOfMonth))
+    return pattern.replace("yyyy", t.year.toString()).replace("MM", two(t.month.number)).replace("dd", two(t.day))
         .replace("HH", two(t.hour)).replace("mm", two(t.minute))
 }
 
 fun shortTime(ms: Long, zone: TimeZone = TimeZone.currentSystemDefault()): String = formatDateTime(ms, "HH:mm", zone)
 
-private fun dayMonth(d: LocalDate, names: DateNames) = "${d.dayOfMonth}. ${names.months[d.monthNumber - 1]}"
+private fun dayMonth(d: LocalDate, names: DateNames) = "${d.day}. ${names.months[d.month.number - 1]}"
 
 /** The editor's one-line time summary: a single point, or "from – to" for a range. When the
  *  time-of-day is unspecified only the date shows (no HH:mm), matching how it exports. */
@@ -88,4 +89,4 @@ fun groupNotesByDay(
 fun nowMs(): Long = Clock.System.now().toEpochMilliseconds()
 
 /** This month, 1-12, in the device's time zone. */
-fun currentMonth(): Int = Clock.System.todayIn(TimeZone.currentSystemDefault()).monthNumber
+fun currentMonth(): Int = Clock.System.todayIn(TimeZone.currentSystemDefault()).month.number

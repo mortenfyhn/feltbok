@@ -12,6 +12,23 @@ plugins {
 // app's BOM pins, so Android keeps the same Compose underneath.
 val composeVersion = "1.11.1"
 
+// The in-app version string on iOS, from `git describe` like the Android build's BuildConfig.
+val gitVersion = providers.exec {
+    commandLine("git", "describe", "--tags", "--always", "--dirty")
+    isIgnoreExitValue = true
+}.standardOutput.asText.map { it.trim().ifEmpty { "dev" } }
+val generateIosBuildInfo by tasks.registering {
+    val out = layout.buildDirectory.dir("generated/iosBuildInfo")
+    val version = gitVersion
+    inputs.property("version", version)
+    outputs.dir(out)
+    doLast {
+        val f = out.get().file("io/github/mortenfyhn/feltbok/IosBuildInfo.kt").asFile
+        f.parentFile.mkdirs()
+        f.writeText("package io.github.mortenfyhn.feltbok\n\ninternal const val GIT_VERSION = \"${version.get()}\"\n")
+    }
+}
+
 kotlin {
     androidLibrary {
         namespace = "io.github.mortenfyhn.feltbok.ui"
@@ -21,8 +38,11 @@ kotlin {
         withHostTestBuilder {}
     }
     if (System.getProperty("os.name").startsWith("Mac")) {
-        iosArm64()
-        iosSimulatorArm64()
+        // The iOS app (iosApp/) links this as a static framework.
+        listOf(iosArm64(), iosSimulatorArm64()).forEach { it.binaries.framework { baseName = "FeltbokUi"; isStatic = true } }
+    }
+    if (System.getProperty("os.name").startsWith("Mac")) {
+        sourceSets.iosMain { kotlin.srcDir(generateIosBuildInfo) }
     }
     compilerOptions { allWarningsAsErrors.set(true) }
     sourceSets {

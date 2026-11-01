@@ -1,6 +1,6 @@
 package io.github.mortenfyhn.feltbok
 
-import kotlinx.datetime.Clock
+import kotlin.time.Clock
 
 /** The app's files by name, implemented per platform (on Android: internal storage, the APK's
  *  assets, and the external dir `adb push` can reach). */
