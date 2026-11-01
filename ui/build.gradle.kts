@@ -44,7 +44,16 @@ kotlin {
         listOf(iosArm64(), iosSimulatorArm64()).forEach { it.binaries.framework { baseName = "FeltbokUi"; isStatic = true } }
     }
     if (System.getProperty("os.name").startsWith("Mac")) {
-        sourceSets.iosMain { kotlin.srcDir(generateIosBuildInfo) }
+        sourceSets.iosMain {
+            kotlin.srcDir(generateIosBuildInfo)
+            dependencies {
+                // iOS draws the picker map with MapLibre (Android uses osmdroid). Its iOS build brings
+                // Compose Multiplatform 1.12 with it on iOS only; Android stays on 1.11.
+                implementation("org.maplibre.compose:maplibre-compose:0.20.0")
+                // The edge-swipe back gesture's progress, which Compose's iOS host reports through this.
+                implementation("org.jetbrains.androidx.navigationevent:navigationevent-compose:1.1.0")
+            }
+        }
     }
     compilerOptions { allWarningsAsErrors.set(true) }
     sourceSets {
@@ -63,13 +72,6 @@ kotlin {
             implementation("androidx.lifecycle:lifecycle-viewmodel-compose:2.9.4")
             implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.9.0")
             implementation("org.osmdroid:osmdroid-android:6.1.20")
-        }
-        // iOS draws the picker map with MapLibre (Android uses osmdroid). Its iOS build brings
-        // Compose Multiplatform 1.12 with it on iOS only; Android stays on 1.11.
-        iosMain.dependencies {
-            implementation("org.maplibre.compose:maplibre-compose:0.20.0")
-            // The edge-swipe back gesture's progress, which Compose's iOS host reports through this.
-            implementation("org.jetbrains.androidx.navigationevent:navigationevent-compose:1.1.0")
         }
         getByName("androidHostTest").dependencies {
             implementation("junit:junit:4.13.2")
