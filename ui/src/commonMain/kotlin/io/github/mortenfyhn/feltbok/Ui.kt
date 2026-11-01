@@ -694,7 +694,7 @@ private fun AnnotatedString.Builder.appendBoldSymbols(text: String) {
         val c = text[i]
         if (c == '♂' || c == '♀') {   // ♂ / ♀
             val end = if (i + 1 < text.length && text[i + 1] == '︎') i + 2 else i + 1   // keep VS15 attached
-            withStyle(SpanStyle(fontWeight = FontWeight.Bold)) { append(text.substring(i, end)) }
+            withStyle(boldSymbolStyle) { append(text.substring(i, end)) }
             i = end
         } else {
             append(c)
@@ -758,7 +758,7 @@ private fun NoteRow(n: Note, name: String, nameItalic: Boolean, status: String, 
                             if (bold) appendBoldSymbols(text) else append(text)
                         }
                     },
-                    color = cs.onSurfaceVariant, fontSize = 13.sp, maxLines = 1, overflow = TextOverflow.Ellipsis,
+                    color = cs.onSurfaceVariant, fontSize = 13.sp, maxLines = 1, overflow = previewOverflow,
                 )
                 // End-align so a truncated name's "…" hugs the right edge instead of leaving the
                 // ellipsized box's trailing slack, keeping every locality flush against the timestamp.
@@ -1083,7 +1083,7 @@ internal fun ScreenHeader(
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically,
         ) {
-            TextButton(onClick = onCancel) { cancelContent() }
+            TextButton(onClick = onCancel, modifier = Modifier.padding(start = headerLeadingInset)) { cancelContent() }
             Row(verticalAlignment = Alignment.CenterVertically) { trailing() }
         }
     }
@@ -1480,6 +1480,7 @@ private fun AntallRow(vm: MainViewModel) {
                 },
                 modifier = Modifier.width(64.dp).padding(vertical = 10.dp)
                     .onFocusChanged { f ->
+                        NumberPadDone.visible = f.isFocused
                         // The focusing tap places the cursor *after* this callback runs, collapsing
                         // any selection set here - so defer a frame, then select all. Runs only on
                         // focus (never during typing), so it can't swallow a keystroke.

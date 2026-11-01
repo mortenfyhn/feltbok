@@ -479,8 +479,10 @@ class MainViewModel(private val platform: Platform) : ViewModel() {
 
     // The last locality you used + the fix where you used it, so a run of observations from one
     // spot "sticks" to your chosen locality instead of snapping to whatever you're closest to.
-    private var lastUsedLoc: Locality? = null
-    private var lastUsedFix: GpsFix? = null
+    // Observable, so the status strip follows a pick even while the list stays composed (iOS keeps
+    // it under the other screens).
+    private var lastUsedLoc by mutableStateOf<Locality?>(null)
+    private var lastUsedFix by mutableStateOf<GpsFix?>(null)
 
     /** The "current" locality: keep the last one used/picked while you're still within ~50 m of
      *  where you used it; re-snap to the GPS-nearest only after a genuine move (good fix). Shown on

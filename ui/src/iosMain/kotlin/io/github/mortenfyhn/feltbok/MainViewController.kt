@@ -30,7 +30,7 @@ fun MainViewController() = run { configureMapRuntime(); ComposeUIViewController 
     }
     LaunchedEffect(Unit) { vm.startLocationUpdates() }
     Box(Modifier.fillMaxSize()) {
-        App(vm)
+        App(vm) { listState -> IosNavigation(vm, listState) }
         ToastOverlay()
     }
 } }

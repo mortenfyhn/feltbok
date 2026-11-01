@@ -14,6 +14,10 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.platform.ClipEntry
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.PlatformTextStyle
+import androidx.compose.ui.text.SpanStyle
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.DialogProperties
 import java.util.Calendar
 import androidx.activity.compose.BackHandler as ActivityBackHandler
@@ -71,3 +75,9 @@ actual val noFontPadding: PlatformTextStyle? = PlatformTextStyle(includeFontPadd
 // decorFitsSystemWindows = false so the keyboard inset reaches safeDrawingPadding instead of the
 // dialog window swallowing it (the activity is edge-to-edge, so nothing resizes on its own).
 actual fun fullScreenDialogProperties() = DialogProperties(usePlatformDefaultWidth = false, decorFitsSystemWindows = false)
+
+actual val boldSymbolStyle = SpanStyle(fontWeight = FontWeight.Bold)
+
+actual val previewOverflow = TextOverflow.Ellipsis
+
+actual val headerLeadingInset = 0.dp

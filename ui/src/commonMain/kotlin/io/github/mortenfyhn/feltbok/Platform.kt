@@ -1,9 +1,15 @@
 package io.github.mortenfyhn.feltbok
 
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.ClipEntry
 import androidx.compose.ui.text.PlatformTextStyle
+import androidx.compose.ui.text.SpanStyle
+import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.window.DialogProperties
 import kotlinx.coroutines.flow.StateFlow
 
@@ -70,6 +76,21 @@ expect val noFontPadding: PlatformTextStyle?
 
 /** Properties for a dialog that fills the screen and lets the keyboard inset reach the content. */
 expect fun fullScreenDialogProperties(): DialogProperties
+
+/** The style of the ♂/♀ symbols in a list row's preview: bold, where the platform can draw it whole. */
+expect val boldSymbolStyle: SpanStyle
+
+/** How a list row's sex/age preview overflows its line. */
+expect val previewOverflow: TextOverflow
+
+/** Space between the screen edge and a header's leading back/✕ button. */
+expect val headerLeadingInset: Dp
+
+/** Whether the count field (a number pad) has focus. iOS's number pad has no return key, so iOS
+ *  shows a Ferdig bar above it while this is set; Android's has a Done key and ignores it. */
+object NumberPadDone {
+    var visible by mutableStateOf(false)
+}
 
 /** The locality picker map. */
 @Composable

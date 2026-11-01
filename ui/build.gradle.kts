@@ -68,6 +68,8 @@ kotlin {
         // Compose Multiplatform 1.12 with it on iOS only; Android stays on 1.11.
         iosMain.dependencies {
             implementation("org.maplibre.compose:maplibre-compose:0.20.0")
+            // The edge-swipe back gesture's progress, which Compose's iOS host reports through this.
+            implementation("org.jetbrains.androidx.navigationevent:navigationevent-compose:1.1.0")
         }
         getByName("androidHostTest").dependencies {
             implementation("junit:junit:4.13.2")

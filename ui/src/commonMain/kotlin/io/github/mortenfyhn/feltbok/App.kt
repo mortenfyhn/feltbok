@@ -2,6 +2,7 @@ package io.github.mortenfyhn.feltbok
 
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.safeDrawingPadding
+import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
@@ -17,8 +18,10 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 
+/** The app: theme, undo snackbar and back handling around [screens], which lays the screens out
+ *  (by default one at a time; iOS supplies its own with page transitions and an edge swipe). */
 @Composable
-fun App(vm: MainViewModel) {
+fun App(vm: MainViewModel, screens: @Composable (LazyListState) -> Unit = { Screens(vm, it) }) {
     AppTheme {
         val snackbar = remember { SnackbarHostState() }
         // After a delete or a draft discard, offer to undo it (#122). Keyed on undoToken so a fresh
@@ -78,18 +81,24 @@ fun App(vm: MainViewModel) {
                 snackbarHost = { SnackbarHost(snackbar, Modifier.padding(bottom = 40.dp)) },
                 containerColor = Color.Transparent,
             ) { _ ->
-                when (vm.screen) {
-                    Screen.LIST -> ListScreen(vm, listState)
-                    Screen.SEARCH -> SearchScreen(vm)
-                    Screen.DETAIL -> DetailScreen(vm)
-                    Screen.LOCALITY -> LocalityScreen(vm)
-                    Screen.COOBS -> CoObserverScreen(vm)
-                    Screen.SYNC -> SyncScreen(vm)
-                    Screen.SETTINGS -> SettingsScreen(vm)
-                    Screen.ARCHIVE -> ArchiveScreen(vm)
-                }
-                if (vm.showExport) ExportScreen(vm)
+                screens(listState)
             }
         }
     }
+}
+
+/** The current screen, with Eksporter over it when open. */
+@Composable
+fun Screens(vm: MainViewModel, listState: LazyListState) {
+    when (vm.screen) {
+        Screen.LIST -> ListScreen(vm, listState)
+        Screen.SEARCH -> SearchScreen(vm)
+        Screen.DETAIL -> DetailScreen(vm)
+        Screen.LOCALITY -> LocalityScreen(vm)
+        Screen.COOBS -> CoObserverScreen(vm)
+        Screen.SYNC -> SyncScreen(vm)
+        Screen.SETTINGS -> SettingsScreen(vm)
+        Screen.ARCHIVE -> ArchiveScreen(vm)
+    }
+    if (vm.showExport) ExportScreen(vm)
 }
