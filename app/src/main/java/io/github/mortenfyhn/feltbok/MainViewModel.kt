@@ -912,6 +912,5 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
 
     private fun persist() {
         saveNotes(ctx, notes)
-        backupExport(ctx, notes)   // mirror to Downloads so a UI crash can't trap field data (#85)
     }
 }

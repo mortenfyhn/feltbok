@@ -11,6 +11,7 @@
 - Kommentarfeltet gir stor forbokstav automatisk.
 - Søk opp medobservatører blant brukerne på Artsobservasjoner, så riktig person blir koblet ved import, også når flere har samme navn.
 - Nye allmenne lokaliteter på Artsobservasjoner dukker opp på kartet med en gang, uten å vente på ny versjon av appen.
+- Appen lager ikke lenger sikkerhetskopi i Nedlastinger. Du kan trygt slette mappa Feltbok der.
 
 ## v1.3 (10. september 2026)
 
