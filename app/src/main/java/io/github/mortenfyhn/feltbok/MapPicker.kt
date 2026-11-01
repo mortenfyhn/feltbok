@@ -197,7 +197,7 @@ fun LocalityScreen(vm: MainViewModel) {
                     // mid-gesture doesn't force a redraw (which flickers the view).
                     val sel = tapped ?: vm.pickerFocus  // highlight the just-tapped one, else the current pick
                     val newFix = vm.fix?.let { GeoPoint(it.lat, it.lon) }
-                    val newAcc = vm.fix?.accuracyM?.toFloat() ?: Float.NaN
+                    val newAcc = vm.fix?.accuracyM ?: Float.NaN
                     val nr = if (newMode) newRadius.toDouble() else -1.0
                     val off = if (newMode) sheetH.toFloat() else 0f
                     if (overlay.picked !== sel || overlay.fix != newFix ||
@@ -363,7 +363,7 @@ fun LocalityPreview(vm: MainViewModel, modifier: Modifier = Modifier) {
             val n = vm.nearest()
             overlay.loc = n
             overlay.fix = f?.let { GeoPoint(it.lat, it.lon) }
-            overlay.accuracyM = f?.accuracyM?.toFloat() ?: Float.NaN
+            overlay.accuracyM = f?.accuracyM ?: Float.NaN
             // Centre on the locality so it's always shown, with your GPS pin beside it.
             val cLat = n?.lat ?: f?.lat
             val cLon = n?.lon ?: f?.lon

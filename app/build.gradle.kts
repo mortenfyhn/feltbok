@@ -164,11 +164,6 @@ android {
         targetCompatibility = JavaVersion.VERSION_17
     }
 
-    kotlinOptions {
-        jvmTarget = "17"
-        allWarningsAsErrors = true
-    }
-
     buildFeatures {
         compose = true
         buildConfig = true
@@ -226,4 +221,11 @@ dependencies {
 // in the terminal, not just the HTML report. Normal tests are silent, so this adds no noise.
 tasks.withType<Test> {
     testLogging.showStandardStreams = true
+}
+
+kotlin {
+    compilerOptions {
+        jvmTarget.set(org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_17)
+        allWarningsAsErrors.set(true)
+    }
 }
