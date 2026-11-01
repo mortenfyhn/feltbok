@@ -33,9 +33,9 @@ blocks:
           # variants - same sources, no release-only tests, just wasted work).
           # ktlintCheck gates formatting (run `just fmt` locally to fix).
           commands:
-            - cache restore gradle-$(checksum app/build.gradle.kts)-$(checksum shared/build.gradle.kts)
+            - cache restore gradle-$(checksum app/build.gradle.kts)-$(checksum shared/build.gradle.kts)-$(checksum ui/build.gradle.kts)
             - ./gradlew ktlintCheck testDebugUnitTest :shared:jvmTest assembleDebug --console=plain --no-daemon
-            - cache store gradle-$(checksum app/build.gradle.kts)-$(checksum shared/build.gradle.kts) ~/.gradle
+            - cache store gradle-$(checksum app/build.gradle.kts)-$(checksum shared/build.gradle.kts)-$(checksum ui/build.gradle.kts) ~/.gradle
       # Publish the debug APK as a workflow artifact so the Claude issue→PR loop (and
       # any branch build) gives a downloadable APK to test, without pulling the branch locally.
       # Named like the GitHub release APKs (feltbok-<describe>.apk) so they're recognisable.

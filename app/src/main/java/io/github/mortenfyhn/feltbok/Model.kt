@@ -94,6 +94,9 @@ fun backupExport(ctx: Context, notes: List<Note>) {
 
 // ---- export (paste format; columns/headers per Country) ----
 
+// Bokmål number format for the coordinates: the import reads the account's locale, so a comma decimal.
+private val NB = Locale.forLanguageTag("nb-NO")
+
 fun exportTsv(notes: List<Note>): String {
     // Emit the *bare* Lokalitetsnavn with no coordinates. Paste-import behaviour
     // (tested against the live v2.20 site, see docs/artsobs-import.md):
@@ -121,8 +124,8 @@ fun exportTsv(notes: List<Note>): String {
         // Coordinates use the display locale (comma decimal) - the paste-import parses numbers with
         // the account's number format (Norwegian), so a period reads as "not a decimal
         // number". The TSV is tab-delimited, so a comma in the value is safe.
-        val nord = if (n.newLoc) String.format(Country.displayLocale, "%.6f", n.lat) else ""
-        val ost = if (n.newLoc) String.format(Country.displayLocale, "%.6f", n.lon) else ""
+        val nord = if (n.newLoc) String.format(NB, "%.6f", n.lat) else ""
+        val ost = if (n.newLoc) String.format(NB, "%.6f", n.lon) else ""
         val noy = if (n.newLoc) "${n.locRadius} m" else ""
         // Pad each row's co-observers out to maxCoObs so every row has the same column count. A user
         // picked from the search is stored as their brukeralias, which is what the import links on.

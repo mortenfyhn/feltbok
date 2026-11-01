@@ -1,7 +1,5 @@
 package io.github.mortenfyhn.feltbok
 
-import java.util.Locale
-
 /**
  * Everything tied to the target site, Artsobservasjoner: export format, option vocabularies,
  * geography and service URLs. (Once one of two country flavors; the Swedish one was dropped.)
@@ -10,9 +8,6 @@ import java.util.Locale
  * picked value is exported verbatim — no per-country translation at export time.
  */
 object Country {
-    // Locale for *display* date/time (weekday + month names in the UI); export dates are numeric.
-    val displayLocale: Locale = Locale.forLanguageTag("nb-NO")
-
     // ---- species-name languages (#155) ----
     // The export always writes the Norwegian name (what Artsobservasjoner accepts on import),
     // regardless of which language the user chooses to *see*. The defaults reproduce the old

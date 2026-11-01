@@ -13,4 +13,4 @@ dependencyResolutionManagement {
     }
 }
 rootProject.name = "feltbok"
-include(":app", ":shared")
+include(":app", ":shared", ":ui")

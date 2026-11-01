@@ -87,6 +87,8 @@ a `MainViewModel` must start with `ClearAppDataRule` — otherwise the suite bec
   selection logic, date formatting, the JSON formats of the app's files and API responses, loading
   and saving them through a per-platform `Storage`), consumed by the app as a JVM library. Being
   moved into piece by piece for the iOS port (#115).
+- `ui/` — Kotlin Multiplatform module (Android + iOS, Compose Multiplatform) with the shared UI,
+  built on `:shared`: so far the theme, strings and `Country` config. Being moved into for #115.
 - `app/src/main/java/io/github/mortenfyhn/feltbok/Model.kt` — TSV export, the Downloads backup.
   `AndroidStorage.kt` — the app's files on Android.
 - `MainViewModel.kt` — all UI state (four-ish screens, no nav lib). `Ui.kt` — the Compose screens.
