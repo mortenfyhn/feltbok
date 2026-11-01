@@ -6,6 +6,11 @@ package io.github.mortenfyhn.feltbok
  * [MainViewModel] (it needs persistence, not logic).
  */
 
+/** A registered Artsobservasjoner user, as the co-observer search returns them. The import links a
+ *  Medobservatør cell on [alias] ("brukeralias"): a bare name fails when two users share it, and the
+ *  numeric user id isn't accepted at all (both found by test paste-import). */
+data class AoUser(val name: String, val alias: String, val city: String)
+
 /** The picker's name list: the names you've used before, most-used first, unioned with whoever's on
  *  the draft right now (so a just-added free-text name shows up too). Deduped, keeping first (highest)
  *  occurrence. */

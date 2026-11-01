@@ -83,8 +83,8 @@ a `MainViewModel` must start with `ClearAppDataRule` — otherwise the suite bec
 
 ## Where things live
 - `shared/` — Kotlin Multiplatform module with the platform-free code (search, frequency, use
-  scores, the species and locality models, locality geometry, the live locality logic), consumed by
-  the app as a JVM library. Being moved into piece by piece for the iOS port (#115).
+  scores, the species, locality and note models, locality geometry, live localities, co-observer and
+  selection logic), consumed by the app as a JVM library. Being moved into piece by piece for the iOS port (#115).
 - `app/src/main/java/io/github/mortenfyhn/feltbok/Model.kt` — data classes, CSV/JSON load+save, TSV
   export.
 - `MainViewModel.kt` — all UI state (four-ish screens, no nav lib). `Ui.kt` — the Compose screens.

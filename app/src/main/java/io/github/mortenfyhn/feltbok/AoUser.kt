@@ -7,11 +7,6 @@ import java.net.HttpURLConnection
 import java.net.URL
 import java.net.URLEncoder
 
-/** A registered Artsobservasjoner user, as the co-observer search returns them. The import links a
- *  Medobservatør cell on [alias] ("brukeralias"): a bare name fails when two users share it, and the
- *  numeric user id isn't accepted at all (both found by test paste-import). */
-data class AoUser(val name: String, val alias: String, val city: String)
-
 fun parseAoUsers(json: String): List<AoUser> {
     val a = JSONArray(json)
     return (0 until a.length()).map { a.getJSONObject(it) }
