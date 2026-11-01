@@ -32,6 +32,8 @@ kotlin {
             implementation("org.jetbrains.compose.foundation:foundation:$composeVersion")
             implementation("org.jetbrains.compose.ui:ui:$composeVersion")
             implementation("org.jetbrains.compose.material3:material3:1.9.0")
+            // Maps to androidx lifecycle 2.9.4 on Android, the app's own version.
+            implementation("org.jetbrains.androidx.lifecycle:lifecycle-viewmodel-compose:2.9.6")
         }
         androidMain.dependencies {
             implementation("androidx.activity:activity-compose:1.13.0")

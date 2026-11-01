@@ -1,18 +1,9 @@
 package io.github.mortenfyhn.feltbok
 
-import android.content.ContentUris
-import android.content.ContentValues
-import android.content.Context
-import android.os.Build
-import android.os.Environment
-import android.provider.MediaStore
-import java.io.File
-import java.util.Locale
-
 // Per-country option vocabularies, export format, geography and service URLs now live in Country.kt.
 
 fun formatDistance(m: Double): String =
-    if (m < 1000) "${m.toInt()} m" else String.format(Locale.US, "%.1f km", m / 1000)
+    if (m < 1000) "${m.toInt()} m" else "${formatDecimal(m / 1000, 1)} km"
 
 // ---- date/time formatting (the rest is in Dates.kt) ----
 
@@ -40,62 +31,7 @@ fun sexSymbol(sex: String): String = when (sex) {
 fun exportDate(ms: Long): String = formatDateTime(ms, Country.exportDateFmt)
 fun exportTime(ms: Long): String = formatDateTime(ms, Country.exportTimeFmt)
 
-// ---- Android-only storage: the dev seed and the Downloads backup (the rest is in Storage.kt) ----
-
-/**
- * Dev seeding. The debug build ships non-debuggable (it runs at release speed), so `run-as` can't
- * reach its files, and notes.json lives in internal storage that `adb push` can't write either. So
- * `just seed` pushes a seed file to the external files dir (which adb push *can* reach), and
- * the dev build imports it into notes.json on the next launch and deletes it. Gated to the `.debug`
- * package so the real release app never imports a pushed file. Call before [loadNotes].
- */
-fun importSeedNotes(ctx: Context) {
-    if (!ctx.packageName.endsWith(".debug")) return
-    val seed = File(ctx.getExternalFilesDir(null), "seed-notes.json")
-    if (!seed.exists()) return
-    runCatching {
-        File(ctx.filesDir, "notes.json").writeText(seed.readText())
-        seed.delete()
-    }
-}
-
-/**
- * Best-effort mirror of the export into the public Downloads folder, refreshed on every persist.
- * notes.json lives in private internal storage, which a non-debuggable release seals off (no
- * run-as, no pull) - so a UI crash like #85 left field observations unreachable until a rebuild.
- * A submit-ready TSV in Downloads is recoverable with any file manager, and survives even an
- * uninstall. Q+ only: MediaStore needs no permission there; older devices would need a runtime
- * storage grant, not worth it. Never throws - a failed backup must not break saving.
- */
-fun backupExport(ctx: Context, notes: List<Note>) {
-    if (Build.VERSION.SDK_INT < Build.VERSION_CODES.Q) return
-    runCatching {
-        val name = "feltbok-sikkerhetskopi.tsv"
-        val resolver = ctx.contentResolver
-        val collection = MediaStore.Downloads.EXTERNAL_CONTENT_URI
-        // Reuse the existing mirror (matched by its distinctive name) so saves overwrite one
-        // file instead of accumulating copies; otherwise mint a fresh one under Downloads/Feltbok.
-        val existing = resolver.query(
-            collection, arrayOf(MediaStore.Downloads._ID),
-            "${MediaStore.Downloads.DISPLAY_NAME}=?", arrayOf(name), null,
-        )?.use { c -> if (c.moveToFirst()) c.getLong(0) else null }
-        val uri = existing?.let { ContentUris.withAppendedId(collection, it) }
-            ?: resolver.insert(
-                collection,
-                ContentValues().apply {
-                    put(MediaStore.Downloads.DISPLAY_NAME, name)
-                    put(MediaStore.Downloads.MIME_TYPE, "text/tab-separated-values")
-                    put(MediaStore.Downloads.RELATIVE_PATH, Environment.DIRECTORY_DOWNLOADS + "/Feltbok")
-                },
-            ) ?: return@runCatching
-        resolver.openOutputStream(uri, "wt")?.use { it.write(exportTsv(notes).toByteArray()) }
-    }
-}
-
 // ---- export (paste format; columns/headers per Country) ----
-
-// Bokmål number format for the coordinates: the import reads the account's locale, so a comma decimal.
-private val NB = Locale.forLanguageTag("nb-NO")
 
 fun exportTsv(notes: List<Note>): String {
     // Emit the *bare* Lokalitetsnavn with no coordinates. Paste-import behaviour
@@ -124,8 +60,8 @@ fun exportTsv(notes: List<Note>): String {
         // Coordinates use the display locale (comma decimal) - the paste-import parses numbers with
         // the account's number format (Norwegian), so a period reads as "not a decimal
         // number". The TSV is tab-delimited, so a comma in the value is safe.
-        val nord = if (n.newLoc) String.format(NB, "%.6f", n.lat) else ""
-        val ost = if (n.newLoc) String.format(NB, "%.6f", n.lon) else ""
+        val nord = if (n.newLoc) formatDecimal(n.lat, 6, ',') else ""
+        val ost = if (n.newLoc) formatDecimal(n.lon, 6, ',') else ""
         val noy = if (n.newLoc) "${n.locRadius} m" else ""
         // Pad each row's co-observers out to maxCoObs so every row has the same column count. A user
         // picked from the search is stored as their brukeralias, which is what the import links on.

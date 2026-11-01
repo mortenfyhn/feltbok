@@ -11,9 +11,11 @@ import androidx.activity.enableEdgeToEdge
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.viewModels
 import androidx.core.content.ContextCompat
+import androidx.lifecycle.viewmodel.initializer
+import androidx.lifecycle.viewmodel.viewModelFactory
 
 class MainActivity : ComponentActivity() {
-    private val vm: MainViewModel by viewModels()
+    private val vm: MainViewModel by viewModels { viewModelFactory { initializer { MainViewModel(application) } } }
 
     private val askLocation =
         registerForActivityResult(ActivityResultContracts.RequestPermission()) { granted ->

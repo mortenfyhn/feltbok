@@ -8,7 +8,7 @@ import java.net.URL
 // The network side of the live locality lookup (#173); the logic lives in LiveSites.kt.
 
 /** ByBoundingBox rows for the box, or null on any failure (offline, endpoint changed). */
-suspend fun fetchSites(s: Double, w: Double, n: Double, e: Double): List<SiteRow>? {
+suspend fun fetchSitesHttp(s: Double, w: Double, n: Double, e: Double): List<SiteRow>? {
     val base = Country.publicSitesUrl ?: return null
     return withContext(Dispatchers.IO) {
         runCatching {

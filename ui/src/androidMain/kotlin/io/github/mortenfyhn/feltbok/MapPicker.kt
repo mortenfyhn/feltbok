@@ -88,7 +88,7 @@ private class NorwegianCopyrightOverlay(ctx: android.content.Context) : Copyrigh
  * caches on disk for offline reuse. Tap a disk to highlight it, then "Velg" confirms.
  */
 @Composable
-fun LocalityScreen(vm: MainViewModel) {
+actual fun LocalityScreen(vm: MainViewModel) {
     val cs = MaterialTheme.colorScheme
     val ctx = LocalContext.current
     var tapped by remember { mutableStateOf<Locality?>(null) }
@@ -336,7 +336,7 @@ fun configureOsmdroid(ctx: Context) {
  * non-interactive; tiles are the same cached OSM ones as the picker.
  */
 @Composable
-fun LocalityPreview(vm: MainViewModel, modifier: Modifier = Modifier) {
+actual fun LocalityPreview(vm: MainViewModel, modifier: Modifier) {
     vm.nearest() ?: return                       // nothing to preview until GPS settles
     val ctx = LocalContext.current
     val cs = MaterialTheme.colorScheme

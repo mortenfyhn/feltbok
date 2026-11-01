@@ -1,16 +1,15 @@
 package io.github.mortenfyhn.feltbok
 
-import android.app.Application
-import android.widget.Toast
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateMapOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
-import androidx.lifecycle.AndroidViewModel
+import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.IO
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -22,10 +21,9 @@ enum class Screen { LIST, SEARCH, DETAIL, LOCALITY, COOBS, SYNC, SETTINGS, ARCHI
  * GPS fix, and the draft being added/edited. The whole app is four screens driven
  * by [screen]; there's no nav library - overkill for this.
  */
-class MainViewModel(app: Application) : AndroidViewModel(app) {
-    private val ctx = app
-    private val storage = AndroidStorage(app)
-    private val tracker = LocationTracker(app)
+class MainViewModel(private val platform: Platform) : ViewModel() {
+    private val storage = platform.storage
+    private val tracker = platform.location
 
     // Parsing the ~11.5k bundled localities takes ~0.7 s, so load them off the main thread and
     // fill this observable list when ready - the app shows the notes list instantly meanwhile.
@@ -100,7 +98,7 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
     fun secondaryNameForLatin(latin: String): String? = speciesByLatin[latin]?.let { secondaryName(it) }
 
     val notes = mutableStateListOf<Note>().apply {
-        importSeedNotes(app)   // dev-build only: import a pushed seed file, if any (see importSeedNotes)
+        platform.importSeedNotes()   // dev-build only: import a pushed seed file, if any (see importSeedNotes)
         addAll(loadNotes(storage))
     }
 
@@ -243,12 +241,13 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
         val byName = species.associateBy { it.norsk } + species.associateBy { it.svensk }
         loadUses(storage).forEach { (key, entry) ->
             val latin = if (species.any { it.latin == key }) key else byName[key]?.latin
-            if (latin != null) merge(latin, entry) { a, b -> if (a.lastTouched >= b.lastTouched) a else b }
+            // Two legacy keys can land on one latin: keep the more recently touched entry.
+            if (latin != null && (this[latin]?.lastTouched ?: Long.MIN_VALUE) < entry.lastTouched) this[latin] = entry
         }
     }
 
     /** Your decayed personal score for [latin] as of [now] - the soft boost folded into rankings. */
-    fun useScore(latin: String, now: Long = System.currentTimeMillis()): Double =
+    fun useScore(latin: String, now: Long = nowMs()): Double =
         uses[latin]?.let { decayedScore(it, now) } ?: 0.0
 
     /** Context-aware report frequency for ranking: what's reported in the current month and near the
@@ -260,14 +259,14 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
      *  right at the top you'd start typing anyway, so a short recents list beats a ranked blend. When
      *  you have too few recents to fill it (a fresh install, early in an outing), it's padded with what
      *  the typed search shows for an empty query - the season + use-score blend - so it's never sparse. */
-    fun blankQuickList(now: Long = System.currentTimeMillis()): List<Species> {
+    fun blankQuickList(now: Long = nowMs()): List<Species> {
         val byLatin = species.associateBy { it.latin }
         val recent = uses.entries
             .sortedByDescending { it.value.lastTouched }
             .mapNotNull { byLatin[it.key] }
         if (recent.size >= 20) return recent.take(20)
         val have = recent.mapTo(HashSet()) { it.latin }
-        val month = java.time.LocalDate.now().monthValue
+        val month = currentMonth()
         val filler = species
             .filter { it.latin !in have }
             .sortedByDescending { blendedWeight(ctxFreq.weight(it, month, fix?.lat, fix?.lon), useScore(it.latin, now)) }
@@ -281,9 +280,9 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
     suspend fun searchResults(query: String): List<Species> {
         val index = searchIndex() // reads langPrefs on the caller (main) context before going off-thread
         return withContext(Dispatchers.Default) {
-            val month = java.time.LocalDate.now().monthValue
+            val month = currentMonth()
             val f = fix
-            val now = System.currentTimeMillis()
+            val now = nowMs()
             // Snapshot context + your decayed use score into one per-species likelihood (see
             // blendedWeight) - computed once per query here, off the main thread.
             val likelihood: (Species) -> Double = { s ->
@@ -448,6 +447,9 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
         deferredLiveView?.let { (s, w, n, e) -> deferredLiveView = null; if (screen == Screen.LOCALITY) fetchLiveSites(s, w, n, e) }
     }
 
+    /** Co-observer search by name (#128); empty on any failure. */
+    suspend fun searchUsers(query: String): List<AoUser> = platform.searchUsers(query)
+
     fun startLocationUpdates() = tracker.start()
     fun stopLocationUpdates() = tracker.stop()
 
@@ -521,7 +523,7 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
         // dSpecies holds the exported Artnamn/Artsnavn: always the registry's language, whatever the
         // user displays (#155). dLatin is the stable key used for display resolution + use scores.
         dSpecies = s.name(Country.exportLang); dLatin = s.latin
-        val now = System.currentTimeMillis()
+        val now = nowMs()
         uses[s.latin] = bumpUse(uses[s.latin], now)
         saveUses(storage, uses)
         if (!changingSpecies && !isEditing && !batchEditing) {
@@ -539,7 +541,7 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
     fun pickArbitrarySpecies(name: String) {
         dSpecies = name.trim(); dLatin = ""
         if (!changingSpecies && !isEditing && !batchEditing) {
-            dTime = System.currentTimeMillis()
+            dTime = nowMs()
             dLoc = currentLocality()
         }
         changingSpecies = false
@@ -632,7 +634,7 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
 
     /** [resume]: the groups a previous round for this same view didn't get to, if continuing. */
     private fun fetchLive(s: Double, w: Double, n: Double, e: Double, gen: Int, resume: List<List<Long>>?) {
-        val now = System.currentTimeMillis()
+        val now = nowMs()
         val groups = (resume ?: fetchGroups(s, w, n, e))
             .map { g -> g.filter { now - (checkedCells[it] ?: 0L) > 24 * 3600_000L } }.filter { it.isNotEmpty() }
         val cells = groups.flatten()
@@ -640,7 +642,7 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
         for (c in cells) checkedCells[c] = now
         viewModelScope.launch {
             val budget = RequestBudget(LIVE_FETCH_BUDGET)
-            val results = groups.map { fetchCells(it, budget, ::fetchSites) }
+            val results = groups.map { fetchCells(it, budget, platform::fetchSites) }
             val done = results.flatMap { it.done }
             val rows = results.flatMap { it.rows }
             checkedCells.keys.removeAll(cells.toSet() - done.toSet())
@@ -654,7 +656,7 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
             if (fresh.isNotEmpty()) {
                 localities.addAll(fresh)
                 withContext(Dispatchers.IO) { appendLiveLocalities(storage, AppInfo.versionCode, fresh) }
-                if (screen == Screen.LOCALITY) Toast.makeText(ctx, Strings.Picker.liveFetched(fresh.size), Toast.LENGTH_LONG).show()
+                if (screen == Screen.LOCALITY) platform.toast(Strings.Picker.liveFetched(fresh.size), long = true)
             }
             // A dense view can need more than one budget. Carry on while the map stays put, so you
             // don't have to nudge it; only for zoomed-in views, as completing a wide city view would
@@ -837,11 +839,11 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
         val n = Note(
             // id is the stable key; bump past any same-millisecond collision so it stays unique.
             id = if (isEditing) editingId!! else {
-                var id = dTime.takeIf { it > 0 } ?: System.currentTimeMillis()
+                var id = dTime.takeIf { it > 0 } ?: nowMs()
                 while (notes.any { it.id == id }) id++
                 id
             },
-            time = dTime.takeIf { it > 0 } ?: System.currentTimeMillis(),
+            time = dTime.takeIf { it > 0 } ?: nowMs(),
             endTime = dEndTime,
             timeUnknown = dTimeUnknown,
             species = dSpecies, latin = dLatin, count = dCount,
@@ -913,6 +915,6 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
 
     private fun persist() {
         saveNotes(storage, notes)
-        backupExport(ctx, notes)   // mirror to Downloads so a UI crash can't trap field data (#85)
+        platform.backupExport(notes)   // mirror to Downloads so a UI crash can't trap field data (#85)
     }
 }

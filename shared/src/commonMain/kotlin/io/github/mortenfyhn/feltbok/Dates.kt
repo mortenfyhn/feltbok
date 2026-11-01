@@ -83,3 +83,9 @@ fun groupNotesByDay(
     notes.groupBy { it.time.local(zone).date }
         .entries.sortedByDescending { it.key }
         .map { (day, ns) -> DayGroup(dayLabel(day, today, names), ns.sortedByDescending { it.time }) }
+
+/** The current time in epoch milliseconds. */
+fun nowMs(): Long = Clock.System.now().toEpochMilliseconds()
+
+/** This month, 1-12, in the device's time zone. */
+fun currentMonth(): Int = Clock.System.todayIn(TimeZone.currentSystemDefault()).monthNumber

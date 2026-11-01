@@ -88,11 +88,14 @@ a `MainViewModel` must start with `ClearAppDataRule` — otherwise the suite bec
   and saving them through a per-platform `Storage`), consumed by the app as a JVM library. Being
   moved into piece by piece for the iOS port (#115).
 - `ui/` — Kotlin Multiplatform module (Android + iOS, Compose Multiplatform) with the UI, built on
-  `:shared`. `commonMain` has what's already platform-free (theme, `Strings`, `Country`, `AppInfo`);
-  the rest is in `androidMain` until it's made platform-free (#115): `MainViewModel.kt` (all UI
-  state, no nav lib), `Ui.kt` and `App.kt` (the Compose screens), `MapPicker.kt` (osmdroid picker
-  map), `SyncScreen.kt` (WebView "Hent mine lokaliteter"), `Model.kt` (TSV export, Downloads
-  backup), `AndroidStorage.kt`. Its unit tests are `androidHostTest` (`:ui:testAndroidHostTest`).
+  `:shared`. `commonMain`: `MainViewModel.kt` (all UI state, no nav lib), `Ui.kt` and `App.kt` (the
+  Compose screens), `Model.kt` (TSV export), theme, `Strings`, `Country`, and `Platform.kt` — what
+  the UI needs from each platform: the `Platform` interface the view model gets, `PlatformUi`
+  (pickers, links, toasts) and `expect` composables for the map and sync screens. `androidMain`
+  implements them: `AndroidPlatform.kt` (+ Downloads backup), `PlatformUi.android.kt`,
+  `MapPicker.kt` (osmdroid picker map), `SyncScreen.kt` (WebView "Hent mine lokaliteter"),
+  `LocationTracker.kt`, the HTTP calls, `AndroidStorage.kt`. `iosMain` has placeholders until the
+  iOS app (#115). Unit tests are `androidHostTest` (`:ui:testAndroidHostTest`).
 - `app/` — just the Android shell: `MainActivity`, `FeltbokApp` (fills `AppInfo` from BuildConfig),
   resources, assets, and the instrumented tests.
 - `app/src/main/assets/localities.csv` (public, bundled), `species.csv` (checklist + Rødlista

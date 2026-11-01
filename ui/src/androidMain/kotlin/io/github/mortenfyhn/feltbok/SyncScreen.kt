@@ -55,7 +55,7 @@ private enum class Stage { CHECKING, INTRO, LOGIN, FETCHING, DONE, ERROR }
  */
 @SuppressLint("SetJavaScriptEnabled")
 @Composable
-fun SyncScreen(vm: MainViewModel) {
+actual fun SyncScreen(vm: MainViewModel) {
     val cs = MaterialTheme.colorScheme
     val ctx = LocalContext.current
     val scope = rememberCoroutineScope()

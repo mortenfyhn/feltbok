@@ -2,9 +2,6 @@
 
 package io.github.mortenfyhn.feltbok
 
-import android.content.DialogInterface
-import android.widget.Toast
-import androidx.activity.compose.BackHandler
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Canvas
@@ -86,14 +83,11 @@ import androidx.compose.ui.hapticfeedback.HapticFeedback
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.Layout
-import androidx.compose.ui.platform.ClipEntry
 import androidx.compose.ui.platform.LocalClipboard
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.text.AnnotatedString
-import androidx.compose.ui.text.PlatformTextStyle
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.TextRange
 import androidx.compose.ui.text.buildAnnotatedString
@@ -403,16 +397,10 @@ private fun Modifier.dragToSelect(
  *  filing a GitHub issue (via a guided issue form) and plain email. */
 @Composable
 private fun FeedbackDialog(onDismiss: () -> Unit) {
-    val ctx = LocalContext.current
+    val platform = rememberPlatformUi()
     // Version + device + OS we'd otherwise have to ask the reporter for; auto-filled into
     // both the issue form and the email.
-    val tech = "Feltbok ${AppInfo.gitVersion}\n" +
-        "${android.os.Build.MANUFACTURER} ${android.os.Build.MODEL}\n" +
-        "Android ${android.os.Build.VERSION.RELEASE} (API ${android.os.Build.VERSION.SDK_INT})"
-    fun open(intent: android.content.Intent) {
-        runCatching { ctx.startActivity(intent) }
-        onDismiss()
-    }
+    val tech = "Feltbok ${AppInfo.gitVersion}\n${platform.deviceInfo}"
     AlertDialog(
         onDismissRequest = onDismiss,
         title = { Text(Strings.Feedback.title) },
@@ -420,19 +408,19 @@ private fun FeedbackDialog(onDismiss: () -> Unit) {
         confirmButton = {
             TextButton(onClick = {
                 // Issue forms accept query params keyed by field id, so we prefill "teknisk".
-                open(android.content.Intent(android.content.Intent.ACTION_VIEW,
-                    android.net.Uri.parse("https://github.com/mortenfyhn/feltbok/issues/new?template=tilbakemelding.yml" +
-                        "&teknisk=" + android.net.Uri.encode(tech))))
+                platform.openUrl("https://github.com/mortenfyhn/feltbok/issues/new?template=tilbakemelding.yml" +
+                    "&teknisk=" + uriEncode(tech))
+                onDismiss()
             }) { Text(Strings.Feedback.githubIssue) }
         },
         dismissButton = {
             TextButton(onClick = {
                 // A mailto intent can't pre-attach files, so we just nudge for a screenshot.
                 val body = "\n\n---\n${Strings.Feedback.mailHint}\n$tech"
-                open(android.content.Intent(android.content.Intent.ACTION_SENDTO,
-                    android.net.Uri.parse("mailto:morten.fyhn.amundsen+feltbok@gmail.com" +
-                        "?subject=" + android.net.Uri.encode(Strings.Feedback.mailSubject) +
-                        "&body=" + android.net.Uri.encode(body))))
+                platform.sendMail("mailto:morten.fyhn.amundsen+feltbok@gmail.com" +
+                    "?subject=" + uriEncode(Strings.Feedback.mailSubject) +
+                    "&body=" + uriEncode(body))
+                onDismiss()
             }) { Text(Strings.Feedback.email) }
         },
     )
@@ -677,7 +665,7 @@ private fun CommentBadge(n: Note) {
     ) {
         // Drop the line-height font padding so the lone "i" sits in the visual centre of the circle.
         Text("i", color = Color.White, fontWeight = FontWeight.Bold, fontSize = 10.sp, lineHeight = 10.sp,
-            style = LocalTextStyle.current.copy(platformStyle = PlatformTextStyle(includeFontPadding = false)))
+            style = LocalTextStyle.current.copy(platformStyle = noFontPadding))
     }
 }
 
@@ -694,7 +682,7 @@ private fun CoObserverBadge(n: Note) {
     ) {
         Text("+${n.coObservers.size}", color = cs.onSecondaryContainer, fontWeight = FontWeight.Bold,
             fontSize = 10.sp, lineHeight = 10.sp,
-            style = LocalTextStyle.current.copy(platformStyle = PlatformTextStyle(includeFontPadding = false)))
+            style = LocalTextStyle.current.copy(platformStyle = noFontPadding))
     }
 }
 
@@ -942,7 +930,7 @@ fun CoObserverScreen(vm: MainViewModel) {
     LaunchedEffect(query) {
         aoHits = emptyList()
         searching = query.length >= 3 && Country.userSearchUrl != null
-        if (searching) { delay(400); aoHits = searchAoUsers(query); searching = false }
+        if (searching) { delay(400); aoHits = vm.searchUsers(query); searching = false }
     }
     val hits = aoHits.filter { it.alias !in vm.coObserverOptions() }
     val canAdd = canAddFreeText(query, searching, vm.coObserverOptions().map(vm::coObsName), aoHits)
@@ -1249,7 +1237,7 @@ private fun BatchHint(text: String) {
 @Composable
 fun DetailScreen(vm: MainViewModel) {
     val cs = MaterialTheme.colorScheme
-    val ctx = LocalContext.current
+    val platform = rememberPlatformUi()
     // Batch mode (#120): the editor is changing the whole selection at once, not one note.
     val batch = vm.batchEditing
     // Same precondition for saving and for copying (copy commits the draft first). Batch edit acts on
@@ -1310,7 +1298,7 @@ fun DetailScreen(vm: MainViewModel) {
                         if (saved) {
                             val msg = if (editing) Strings.Detail.savedChangesToast(species)
                             else Strings.Detail.savedNewToast(species)
-                            Toast.makeText(ctx, msg, Toast.LENGTH_SHORT).show()
+                            platform.toast(msg)
                         }
                     },
                     enabled = canSave,
@@ -1384,7 +1372,7 @@ fun DetailScreen(vm: MainViewModel) {
                 CommentField(Strings.Detail.commentPrivate, vm.dPriv) { vm.dPriv = it }
             }
             // One row to save space; tap to open the from/to editor (point or range).
-            val tMs = if (vm.dTime > 0) vm.dTime else System.currentTimeMillis()
+            val tMs = if (vm.dTime > 0) vm.dTime else nowMs()
             var showTime by remember { mutableStateOf(false) }
             FieldRow(Strings.Detail.time, onClick = { showTime = true }) {
                 if (batch && vm.dTime <= 0L) BatchHint(vm.batchPreview { displayTimeRange(it.time, it.endTime, it.timeUnknown, Strings.dateNames) })
@@ -1431,23 +1419,16 @@ fun DetailScreen(vm: MainViewModel) {
  *  (no ✕ competing with the caret) and needs no wrapper dialog. */
 @Composable
 private fun HideUntilRow(vm: MainViewModel, batch: Boolean) {
-    val ctx = LocalContext.current
+    val platform = rememberPlatformUi()
 
     // Seeded on the current value, else a year past the observation - hiding runs to the far side
     // of a breeding season, so next year is a closer first guess than today.
     fun pick() {
-        val seed = vm.dHideUntil ?: ((if (vm.dTime > 0) vm.dTime else System.currentTimeMillis()) + 365L * 24 * 60 * 60 * 1000)
-        val cal = java.util.Calendar.getInstance().apply { timeInMillis = seed }
-        android.app.DatePickerDialog(ctx, { _, y, mo, d ->
-            cal.set(java.util.Calendar.YEAR, y); cal.set(java.util.Calendar.MONTH, mo)
-            cal.set(java.util.Calendar.DAY_OF_MONTH, d); vm.dHideUntil = cal.timeInMillis
-        }, cal.get(java.util.Calendar.YEAR), cal.get(java.util.Calendar.MONTH),
-            cal.get(java.util.Calendar.DAY_OF_MONTH)).apply {
-            // Overrides the picker's own "Avbryt" (set before show(), so ours wins): backing out
-            // without a change is still one Back press or a tap outside, so the slot is better
-            // spent on the one action the picker has no room for.
-            setButton(DialogInterface.BUTTON_NEGATIVE, Strings.Detail.hideUntilNone) { _, _ -> vm.dHideUntil = null }
-        }.show()
+        val seed = vm.dHideUntil ?: ((if (vm.dTime > 0) vm.dTime else nowMs()) + 365L * 24 * 60 * 60 * 1000)
+        // "Ikke skjul" takes the picker's cancel slot: backing out without a change is still one
+        // Back press or a tap outside, so the slot is better spent on the one action the picker
+        // has no room for.
+        platform.pickDate(seed, onPick = { vm.dHideUntil = it }, clearLabel = Strings.Detail.hideUntilNone, onClear = { vm.dHideUntil = null })
     }
     FieldRow(Strings.Detail.hideUntil, onClick = ::pick) {
         val until = vm.dHideUntil
@@ -1606,10 +1587,7 @@ private fun CommentField(label: String, value: String, onChange: (String) -> Uni
     // Held as a TextFieldValue purely to place the caret at the end of an existing comment - a plain
     // String field starts it at offset 0, so you'd have to tap to the end before adding a word.
     var tfv by remember { mutableStateOf(TextFieldValue(value, selection = TextRange(value.length))) }
-    // decorFitsSystemWindows = false so the keyboard inset reaches safeDrawingPadding below instead
-    // of the dialog window swallowing it (the activity is edge-to-edge, so nothing resizes on its own).
-    Dialog(onDismissRequest = { open = false },
-        properties = DialogProperties(usePlatformDefaultWidth = false, decorFitsSystemWindows = false)) {
+    Dialog(onDismissRequest = { open = false }, properties = fullScreenDialogProperties()) {
         Surface(Modifier.fillMaxSize(), color = cs.surface) {
             // Keeps the header's actions clear of the system bars and of the keyboard - the writing
             // area shrinks instead, like any notes app. On the Column, not the Surface, so the
@@ -1648,30 +1626,17 @@ private fun CommentField(label: String, value: String, onChange: (String) -> Uni
  *  "Uten klokkeslett" keeps the date but exports no time. */
 @Composable
 private fun TimeDialog(vm: MainViewModel, onDismiss: () -> Unit) {
-    val ctx = LocalContext.current
+    val platform = rememberPlatformUi()
     // Picks mutate the draft live, so snapshot the open-time values to restore if the edit is cancelled.
     val orig = remember { Triple(vm.dTime, vm.dEndTime, vm.dTimeUnknown) }
     fun cancel() { vm.dTime = orig.first; vm.dEndTime = orig.second; vm.dTimeUnknown = orig.third; onDismiss() }
-    val start = if (vm.dTime > 0) vm.dTime else System.currentTimeMillis()
+    val start = if (vm.dTime > 0) vm.dTime else nowMs()
     val end = vm.dEndTime ?: start
 
-    // The platform pickers (same as before): imperative dialogs shown on tap. They keep the
-    // untouched half of the instant, so a date pick leaves the time alone and vice versa.
-    fun pickDate(ms: Long, onSet: (Long) -> Unit) {
-        val cal = java.util.Calendar.getInstance().apply { timeInMillis = ms }
-        android.app.DatePickerDialog(ctx, { _, y, mo, d ->
-            cal.set(java.util.Calendar.YEAR, y); cal.set(java.util.Calendar.MONTH, mo)
-            cal.set(java.util.Calendar.DAY_OF_MONTH, d); onSet(cal.timeInMillis)
-        }, cal.get(java.util.Calendar.YEAR), cal.get(java.util.Calendar.MONTH),
-            cal.get(java.util.Calendar.DAY_OF_MONTH)).show()
-    }
-    fun pickTime(ms: Long, onSet: (Long) -> Unit) {
-        val cal = java.util.Calendar.getInstance().apply { timeInMillis = ms }
-        android.app.TimePickerDialog(ctx, { _, h, mi ->
-            cal.set(java.util.Calendar.HOUR_OF_DAY, h); cal.set(java.util.Calendar.MINUTE, mi)
-            onSet(cal.timeInMillis)
-        }, cal.get(java.util.Calendar.HOUR_OF_DAY), cal.get(java.util.Calendar.MINUTE), true).show()
-    }
+    // The platform pickers: imperative dialogs shown on tap. They keep the untouched half of the
+    // instant, so a date pick leaves the time alone and vice versa.
+    fun pickDate(ms: Long, onSet: (Long) -> Unit) = platform.pickDate(ms, onSet)
+    fun pickTime(ms: Long, onSet: (Long) -> Unit) = platform.pickTime(ms, onSet)
 
     // Keep the range non-inverted: moving the start forward drags the end with it; the end
     // can't be set before the start.
@@ -1687,7 +1652,7 @@ private fun TimeDialog(vm: MainViewModel, onDismiss: () -> Unit) {
                 // Each row gets its own "Nå" so a single endpoint can be bumped to the current
                 // moment (e.g. just the end time while still observing). It re-enables a
                 // time-of-day that had been left unspecified.
-                fun now() = System.currentTimeMillis().also { vm.dTimeUnknown = false }
+                fun now() = nowMs().also { vm.dTimeUnknown = false }
                 TimeRow(Strings.Time.from, start, vm.dTimeUnknown,
                     onDate = { pickDate(start, ::setStart) }, onTime = { pickTime(start, ::setStart) },
                     onNow = { setStart(now()) })
@@ -1784,7 +1749,7 @@ fun ExportScreen(vm: MainViewModel) {
     val cs = MaterialTheme.colorScheme
     val clip = LocalClipboard.current
     val scope = rememberCoroutineScope()
-    val ctx = LocalContext.current
+    val platform = rememberPlatformUi()
     // Scope: whatever the export covers - the marked notes when opened from selection, else all.
     val exported = vm.exportNotes()
     val isSelection = vm.exportIsSelection()
@@ -1808,10 +1773,9 @@ fun ExportScreen(vm: MainViewModel) {
                     textStyle = androidx.compose.ui.text.TextStyle(fontSize = 11.sp))
                 Button(
                     onClick = {
-                        // Setting the clipboard is suspending since Compose 1.9; the label is unused
-                        // by the import form, so pass null.
+                        // Setting the clipboard is suspending since Compose 1.9.
                         scope.launch {
-                            clip.setClipEntry(ClipEntry(android.content.ClipData.newPlainText(null, text)))
+                            clip.setClipEntry(plainTextClip(text))
                         }
                         copied = true
                     },
@@ -1821,11 +1785,7 @@ fun ExportScreen(vm: MainViewModel) {
             Step(2, Strings.Export.step2) {
                 Button(
                     onClick = {
-                        runCatching {
-                            ctx.startActivity(android.content.Intent(
-                                android.content.Intent.ACTION_VIEW,
-                                android.net.Uri.parse(Country.importUrl)))
-                        }
+                        platform.openUrl(Country.importUrl)
                     },
                     modifier = Modifier.padding(top = 6.dp),
                 ) { Text(Strings.Export.open) }
