@@ -47,9 +47,10 @@ a `MainViewModel` must start with `ClearAppDataRule` — otherwise the suite bec
 - **Minimal diffs.** Implement only what's asked; prefer the smallest change and removing code over
   adding it. Prefer pure functions; small focused classes. Match surrounding style and comment
   density (comments explain WHY).
-- **Keep new logic platform-free.** Put new non-UI logic in pure-Kotlin files with no Android or JVM
-  imports (like `Search.kt`), not in `Model.kt` or `MainViewModel.kt`, so it can move to shared code
-  for iOS (#115) as-is.
+- **Keep new logic platform-free.** Put new non-UI logic in the `:shared` module
+  (`shared/src/commonMain`, plain Kotlin, no Android or JVM imports; like `Search.kt`), not in
+  `Model.kt` or `MainViewModel.kt`, so the coming iOS app (#115) gets it too. It builds for JVM
+  everywhere and for iOS on macOS hosts only.
 - **Avoid custom styling unless necessary.** Lean on Material defaults and existing shared
   composables; extend a component (e.g. a flag on an existing row) over bespoke layout.
 - **Commit messages in English, explaining the why. No trailers** (`Co-Authored-By` etc. — history
@@ -81,11 +82,15 @@ a `MainViewModel` must start with `ClearAppDataRule` — otherwise the suite bec
   trusting a build.
 
 ## Where things live
-- `app/src/main/java/com/feltbok/Model.kt` — data classes, CSV/JSON load+save, TSV export.
+- `shared/` — Kotlin Multiplatform module with the platform-free code (search, frequency, use
+  scores, the species model), consumed by the app as a JVM library. Being moved into piece by piece
+  for the iOS port (#115).
+- `app/src/main/java/io/github/mortenfyhn/feltbok/Model.kt` — data classes, CSV/JSON load+save, TSV
+  export.
 - `MainViewModel.kt` — all UI state (four-ish screens, no nav lib). `Ui.kt` — the Compose screens.
 - `MapPicker.kt` — osmdroid locality-picker map + overlays. `SyncScreen.kt` — WebView "Synk mine
   lokaliteter".
-- `app/src/main/assets/localities.csv` (public, bundled), `species.csv` (checklist + Rødlista
+- `app/src/<flavor>/assets/localities.csv` (public, bundled), `species.csv` (checklist + Rødlista
   status). The user's own privates live in `my-localities.csv` — device-only, never bundled.
 - `scripts/` — Python build/harvest pipelines (localities, species, red list) + dev helpers
   (`scripts/dev/`) and the ruff config. Driven by the `justfile`.

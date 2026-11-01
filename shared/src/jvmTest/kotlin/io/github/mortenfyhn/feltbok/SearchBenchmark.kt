@@ -54,7 +54,7 @@ class SearchBenchmark {
     fun scoreboard() {
         // A reporting tool, not a pass/fail test (no perf threshold) - so it's skipped by default
         // rather than burning ~17s on every unit-test/CI run. Run it deliberately (see KDoc) with:
-        //   BENCH_SEARCH=1 ./gradlew testDebugUnitTest --tests "*SearchBenchmark.scoreboard" --rerun-tasks
+        //   BENCH_SEARCH=1 ./gradlew :shared:jvmTest --tests "*SearchBenchmark.scoreboard" --rerun-tasks
         assumeTrue("set BENCH_SEARCH=1 to run the search scoreboard", System.getenv("BENCH_SEARCH") != null)
         require(species.size > 100) { "expected the real checklist; got ${species.size} species" }
         val scorers = Scorers.all(species, suffixes = suffixes)
@@ -73,7 +73,7 @@ class SearchBenchmark {
      * Grid-search tuner: tries every combination of a few [TierWeights] knobs and reports the ones
      * that maximise the prevalence-weighted top-3 (the realistic-mix objective). Heavy (~1 min), so
      * it's skipped by default - run it deliberately with (env var, so it reaches the forked test JVM):
-     *   TUNE_SEARCH=1 ./gradlew testDebugUnitTest --tests "*SearchBenchmark.tuneWeights"
+     *   TUNE_SEARCH=1 ./gradlew :shared:jvmTest --tests "*SearchBenchmark.tuneWeights"
      * The winner is a *proposal*: eyeball its per-kind table (and golden, once seeded) before adopting.
      */
     @Test
@@ -264,7 +264,7 @@ class SearchBenchmark {
     private fun loadSpeciesFromDisk(): List<Species> {
         // The golden queries are Norwegian, so benchmark the (shared) search ranking against the
         // Norway flavor's checklist regardless of which flavor's tests are running.
-        val f = listOf("src/norway/assets/species.csv", "app/src/norway/assets/species.csv")
+        val f = listOf("../app/src/norway/assets/species.csv", "app/src/norway/assets/species.csv")
             .map(::File).firstOrNull { it.exists() }
             ?: error("species.csv not found (cwd=${File(".").absolutePath})")
         return f.readLines().drop(1).filter { it.isNotBlank() }.mapNotNull { line ->

@@ -1,6 +1,7 @@
 # Build output
 /build/
 /app/build/
+/shared/build/
 /.gradle/
 /app/.cxx/
 /.kotlin/

@@ -25,7 +25,7 @@ build country="no": (_check-country country)
 [group('check')]
 test:
     .venv/bin/python -m unittest discover -s scripts -p 'test_*.py'
-    ./gradlew testNorwayDebugUnitTest testSwedenDebugUnitTest
+    ./gradlew testNorwayDebugUnitTest testSwedenDebugUnitTest :shared:jvmTest
 
 # Install git hooks
 [group('dev')]
