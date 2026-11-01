@@ -1,0 +1,46 @@
+# The iOS app (#115): a thin Swift host for the shared Compose UI in :ui. Generate the Xcode project
+# with `xcodegen` in this folder (the .xcodeproj is not committed).
+name: Feltbok
+options:
+  bundleIdPrefix: io.github.mortenfyhn
+  deploymentTarget:
+    iOS: "15.5" # MapLibre's floor; the oldest iPhone it reaches is the 7 (iOS 15.8)
+targets:
+  Feltbok:
+    type: application
+    platform: iOS
+    sources:
+      - Feltbok
+      # The same bundled data the Android app ships.
+      - path: ../app/src/main/assets
+        type: folder
+        buildPhase: resources
+    info:
+      path: Feltbok/Info.plist
+      properties:
+        CFBundleDisplayName: Feltbok
+        CFBundleShortVersionString: $(MARKETING_VERSION)
+        CFBundleVersion: $(CURRENT_PROJECT_VERSION)
+        UILaunchScreen: {}
+        CADisableMinimumFrameDurationOnPhone: true
+        NSLocationWhenInUseUsageDescription: Feltbok bruker posisjonen til å foreslå nærmeste lokalitet.
+        UISupportedInterfaceOrientations: [UIInterfaceOrientationPortrait]
+        UIUserInterfaceStyle: Light # the app theme is light-only, so iOS's own pickers must be too
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: io.github.mortenfyhn.feltbok
+        MARKETING_VERSION: "1.3"
+        CURRENT_PROJECT_VERSION: "17"
+        GENERATE_INFOPLIST_FILE: YES
+        ENABLE_USER_SCRIPT_SANDBOXING: NO
+        CODE_SIGN_STYLE: Automatic
+        FRAMEWORK_SEARCH_PATHS: $(SRCROOT)/../ui/build/xcode-frameworks/$(CONFIGURATION)/$(SDK_NAME)
+        OTHER_LDFLAGS: -framework FeltbokUi -l"c++" -lz -framework CoreFoundation -framework CoreGraphics -framework CoreText -framework Foundation -framework ImageIO -framework Metal -framework QuartzCore -framework CoreLocation -framework WebKit
+    preBuildScripts:
+      - name: Build Kotlin framework
+        basedOnDependencyAnalysis: false
+        # Kotlin/Native's optimized link of the whole app (Compose + MapLibre) needs more heap
+        # than the Android build's daemon has (gradle.properties), so iOS builds get their own.
+        script: |
+          cd "$SRCROOT/.."
+          ./gradlew -Dorg.gradle.jvmargs="-Xmx4g -Dfile.encoding=UTF-8" :ui:embedAndSignAppleFrameworkForXcode

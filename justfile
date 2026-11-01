@@ -2,30 +2,23 @@ export ANDROID_HOME := env("ANDROID_HOME", home_directory() / "Android/Sdk")
 
 # Dev build carries the .debug applicationId suffix so it installs alongside the release app
 # I use daily. Every device-facing recipe targets this id, not the release "io.github.mortenfyhn.feltbok".
-# build/install/run take a country code (no=Norway [default], se=Sweden) so `just run` stays the
-# Norway daily driver and `just run se` drives the Sweden flavor. Extend _check-country and the
-# per-recipe flavor mappings when a new country flavor lands.
 app_id := "io.github.mortenfyhn.feltbok.debug"
 data_dir := "/sdcard/Android/data/" + app_id + "/files"
 
 
-# Reject an unknown country code before a recipe derives a flavor from it (silent-default footgun).
-_check-country country:
-    @case "{{country}}" in no|se) ;; *) echo "Unknown country '{{country}}' (use: no or se)" >&2; exit 1 ;; esac
-
 # List all recipes
 set default-list := true
 
-# Build the dev APK (no=Norway [default], se=Sweden)
+# Build the dev APK
 [group('app')]
-build country="no": (_check-country country)
-    ./gradlew assemble{{ if country == "se" { "Sweden" } else { "Norway" } }}Debug
+build:
+    ./gradlew assembleDebug
 
-# Run all tests: Python units (if any) + Kotlin units (both flavors)
+# Run all tests: Python units (if any) + Kotlin units
 [group('check')]
 test:
     .venv/bin/python -m unittest discover -s scripts -p 'test_*.py'
-    ./gradlew testNorwayDebugUnitTest testSwedenDebugUnitTest
+    ./gradlew :ui:testAndroidHostTest :shared:jvmTest
 
 # Install git hooks
 [group('dev')]
@@ -53,9 +46,7 @@ itest:
     adb shell svc power stayon true
     adb shell input keyevent KEYCODE_WAKEUP
     adb shell wm dismiss-keyguard
-    # Just the norway flavor: the tests are flavor-agnostic, so the sweden variant would only
-    # re-run the same checks. (Per-flavor task names exist since the country flavors landed.)
-    ./gradlew connectedNorwayReleaseTestAndroidTest
+    ./gradlew connectedReleaseTestAndroidTest
 
 # Auto-format Kotlin (ktlint) + Python (ruff); run before committing manual tweaks
 [group('check')]
@@ -78,19 +69,17 @@ ci: lint test build
 
 # Install the dev APK on a connected device (-d allows downgrading over a newer build)
 [group('app')]
-install country="no": (build country)
-    #!/usr/bin/env bash
-    flavor={{ if country == "se" { "sweden" } else { "norway" } }}
-    adb install -r -d "app/build/outputs/apk/$flavor/debug/app-$flavor-debug.apk"
+install: build
+    adb install -r -d app/build/outputs/apk/debug/app-debug.apk
 
 # The activity class is io.github.mortenfyhn.feltbok.MainActivity (the .debug suffix changes the
 # package id, not the code namespace), so spell out the full component rather than the
 # /.MainActivity shorthand.
 
-# Build, install, and launch the dev app (no=Norway [default], se=Sweden)
+# Build, install, and launch the dev app
 [group('app')]
-run country="no": (install country)
-    adb shell am start -n io.github.mortenfyhn.feltbok{{ if country == "se" { ".se" } else { "" } }}.debug/io.github.mortenfyhn.feltbok.MainActivity
+run: install
+    adb shell am start -n io.github.mortenfyhn.feltbok.debug/io.github.mortenfyhn.feltbok.MainActivity
 
 # Show device logs for the app
 [group('app')]
@@ -109,7 +98,7 @@ uninstall:
 harvest *args:
     .venv/bin/python scripts/harvest_sites_mobil.py {{args}}
 
-# Build app/src/norway/assets/localities.csv from the harvested sites
+# Build app/src/main/assets/localities.csv from the harvested sites
 [group('data')]
 build-localities *args:
     .venv/bin/python scripts/build_sites.py {{args}}
@@ -119,16 +108,16 @@ build-localities *args:
 build-species:
     .venv/bin/python scripts/build_species.py
 
-# Build app/src/norway/assets/ubestemt.csv ("ub." unidentified-species entries, issue #162)
+# Build app/src/main/assets/ubestemt.csv ("ub." unidentified-species entries, issue #162)
 [group('data')]
 build-ubestemt:
     .venv/bin/python scripts/build_ubestemt.py
-    mv ubestemt.csv app/src/norway/assets/ubestemt.csv
+    mv ubestemt.csv app/src/main/assets/ubestemt.csv
 
 # Merges into the unified latin,norsk,svensk,status,count schema, with authoritative names from the
 # IOC World Bird List (pass --ioc for a non-default xlsx path).
 
-# Merge both flavors' checklists into one schema, with IOC names
+# Fill in species.csv's names in all three languages, from IOC
 [group('data')]
 merge-species-names *args:
     .venv/bin/python scripts/build_species_names.py {{args}}
@@ -146,11 +135,11 @@ build-species-regions:
 # Push the built localities/species CSVs to the device (overrides the bundled assets, no rebuild)
 [group('data')]
 push-data:
-    adb push app/src/norway/assets/localities.csv {{data_dir}}/localities.csv
-    -adb push app/src/norway/assets/species.csv {{data_dir}}/species.csv
-    -adb push app/src/norway/assets/species_months.csv {{data_dir}}/species_months.csv
-    -adb push app/src/norway/assets/species_regions.csv {{data_dir}}/species_regions.csv
-    -adb push app/src/norway/assets/ubestemt.csv {{data_dir}}/ubestemt.csv
+    adb push app/src/main/assets/localities.csv {{data_dir}}/localities.csv
+    -adb push app/src/main/assets/species.csv {{data_dir}}/species.csv
+    -adb push app/src/main/assets/species_months.csv {{data_dir}}/species_months.csv
+    -adb push app/src/main/assets/species_regions.csv {{data_dir}}/species_regions.csv
+    -adb push app/src/main/assets/ubestemt.csv {{data_dir}}/ubestemt.csv
     -adb push my-localities.csv {{data_dir}}/my-localities.csv   # maintainer's own customs (device-only)
 
 # The debug build ships non-debuggable (release speed), so run-as can't reach internal storage;
@@ -170,8 +159,8 @@ seed:
 # Capture the store screenshots from the attached phone into fastlane/
 [group('dev')]
 screenshots:
-    ./gradlew assembleNorwayDebug -Pscreenshots
-    adb install -r -d app/build/outputs/apk/norway/debug/app-norway-debug.apk
+    ./gradlew assembleDebug -Pscreenshots
+    adb install -r -d app/build/outputs/apk/debug/app-debug.apk
     .venv/bin/python scripts/dev/screenshots.py
 
 # Writes to fastlane/.../en-US/images from the hand-drawn SVG in scripts/dev/store-assets/.

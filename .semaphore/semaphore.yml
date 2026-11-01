@@ -41,14 +41,14 @@ blocks:
           - git fetch --tags --force --quiet
       jobs:
         - name: unit tests + debug APK
-          # Test both flavors' debug variant (not `test`, which would also run the release
-          # unit-test variants - same sources, no release-only tests, just wasted work).
+          # The unit tests live in :shared (JVM) and :ui (Android host tests); the app module
+          # has none left.
           # ktlintCheck gates formatting (run `just fmt` locally to fix).
           commands:
-            - cache restore gradle-$(checksum app/build.gradle.kts)
-            - ./gradlew ktlintCheck testNorwayDebugUnitTest testSwedenDebugUnitTest assembleNorwayDebug assembleSwedenDebug --console=plain --no-daemon
-            - cache store gradle-$(checksum app/build.gradle.kts) ~/.gradle
-      # Publish both flavors' debug APK as workflow artifacts so the Claude issue→PR loop (and
+            - cache restore gradle-$(checksum app/build.gradle.kts)-$(checksum shared/build.gradle.kts)-$(checksum ui/build.gradle.kts)
+            - ./gradlew ktlintCheck :ui:testAndroidHostTest :shared:jvmTest assembleDebug --console=plain --no-daemon
+            - cache store gradle-$(checksum app/build.gradle.kts)-$(checksum shared/build.gradle.kts)-$(checksum ui/build.gradle.kts) ~/.gradle
+      # Publish the debug APK as a workflow artifact so the Claude issue→PR loop (and
       # any branch build) gives a downloadable APK to test, without pulling the branch locally.
       # Named like the GitHub release APKs (feltbok-<describe>.apk) so they're recognisable.
       # on_pass only: a failed build won't have produced one.
@@ -56,8 +56,7 @@ blocks:
         on_pass:
           commands:
             - export VERSION=$(git describe --tags --always --dirty)
-            - artifact push workflow app/build/outputs/apk/norway/debug/app-norway-debug.apk --destination feltbok-$VERSION.apk
-            - artifact push workflow app/build/outputs/apk/sweden/debug/app-sweden-debug.apk --destination feltbok-se-$VERSION.apk
+            - artifact push workflow app/build/outputs/apk/debug/app-debug.apk --destination feltbok-$VERSION.apk
 
   # Lint + test scripts/ Python on a plain VM (no Android container) - it needs no SDK/JDK.
   # Parallel with Test & build via dependencies: []. Grab ruff's prebuilt binary (like the

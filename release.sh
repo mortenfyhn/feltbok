@@ -163,25 +163,21 @@ git commit -aqm "Release $tag"
 git tag "$tag"
 
 # Build AFTER tagging so `git describe` bakes the clean tag into the in-app version string.
-# Both flavors ship in the one release: Norway (io.github.mortenfyhn.feltbok) and Sweden
-# (io.github.mortenfyhn.feltbok.se). F-Droid is unaffected — it builds each applicationId from
-# source on its own servers and never redistributes these APKs; the attachments are just for
-# sideloading.
-./gradlew assembleNorwayRelease assembleSwedenRelease --console=plain
-# Recognisable names, not Gradle's app-<flavor>-release.apk. The -se suffix mirrors the .se appId.
+# F-Droid builds from source on its own servers and never redistributes this APK; the attachment
+# is just for sideloading.
+./gradlew assembleRelease --console=plain
+# A recognisable name, not Gradle's app-release.apk.
 apk="feltbok-$tag.apk"
-apk_se="feltbok-se-$tag.apk"
-cp app/build/outputs/apk/norway/release/app-norway-release.apk "$apk"
-cp app/build/outputs/apk/sweden/release/app-sweden-release.apk "$apk_se"
+cp app/build/outputs/apk/release/app-release.apk "$apk"
 
 # ---- The only outward-facing step, behind its own gate so a rehearsal stops here.
 
 echo
-echo "Built $apk + $apk_se, tagged $tag locally."
+echo "Built $apk, tagged $tag locally."
 read -rp "Push and publish the GitHub release? (yes / anything else keeps it local): " ans
 if [ "$ans" != yes ]; then
     cat <<EOF
-Not pushed. $tag exists locally only, and the APKs are kept for sideloading. To undo:
+Not pushed. $tag exists locally only, and the APK is kept for sideloading. To undo:
   git tag -d $tag
   git reset HEAD~1     # mixed, so your CHANGELOG edits stay in the working tree
 EOF
@@ -193,10 +189,10 @@ notes=$(mktemp)
 { printf '## Nytt i %s\n%s\n\n' "$tag" "$notes_body"; cat docs/release-notes-install.md; } > "$notes"
 
 git push origin master "$tag"
-gh release create "$tag" "$apk" "$apk_se" \
+gh release create "$tag" "$apk" \
     --title "Feltbok $tag" \
     --notes-file "$notes"
 
-rm -f "$apk" "$apk_se" "$notes"
+rm -f "$apk" "$notes"
 printf '\n  %s🎉  Feltbok %s er ute!  🎉%s\n' "$green" "$tag" "$reset"
 printf '  https://github.com/mortenfyhn/feltbok/releases/tag/%s\n\n' "$tag"

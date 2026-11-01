@@ -27,12 +27,12 @@ class R8SmokeTest {
         locName = "Titran", locFull = "Titran, Frøya, Tø", lat = 63.67, lon = 8.31,
     )
 
-    /** noteToJson/noteFromJson use android's real org.json on ART; a round-trip proves R8 kept
+    /** notes.json goes through kotlinx.serialization's JSON tree; a round-trip proves R8 kept
      *  the JSON paths and the field mapping survives. */
     @Test
     fun noteJsonRoundTrips() {
         val n = sampleNote()
-        assertEquals(n, noteFromJson(noteToJson(n)))
+        assertEquals(listOf(n), parseNotes(notesJson(listOf(n))))
     }
 
     /** TSV export exercises String.format(Locale.US, …) + the column layout on the device. */
@@ -54,7 +54,7 @@ class R8SmokeTest {
      *  R8/resource-shrinking kept the asset and the CSV parser works on the device. */
     @Test
     fun bundledLocalitiesLoad() {
-        val locs = loadLocalities(ctx)
+        val locs = loadLocalities(AndroidStorage(ctx), BuildConfig.VERSION_CODE)
         assertTrue("expected bundled localities", locs.isNotEmpty())
         assertTrue("expected named localities", locs.all { it.lokalitet.isNotBlank() })
     }
@@ -62,15 +62,15 @@ class R8SmokeTest {
     /** The bundled species checklist loads and parses. */
     @Test
     fun bundledSpeciesLoad() {
-        val species = loadSpecies(ctx)
+        val species = loadSpecies(AndroidStorage(ctx))
         assertTrue("expected bundled species", species.isNotEmpty())
     }
 
-    /** ubestemt.csv (#162) only exists in the Norway flavor's assets, so this proves R8/resource
-     *  shrinking + flavor packaging actually ship it into the built APK. */
+    /** ubestemt.csv (#162) is an optional asset (loadUbestemt reads a missing one as empty), so this
+     *  proves R8/resource shrinking actually ships it into the built APK. */
     @Test
     fun bundledUbestemtLoads() {
-        val ubestemt = loadUbestemt(ctx)
+        val ubestemt = loadUbestemt(AndroidStorage(ctx))
         assertTrue("expected bundled ub. entries", ubestemt.isNotEmpty())
     }
 }

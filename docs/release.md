@@ -16,7 +16,7 @@ suggestion, not a gate: skip it for a quick fix release.
 
 ```sh
 just harvest            # a few hours; resumable, so Ctrl-C and rerun is fine
-just build-localities   # rewrites app/src/norway/assets/localities.csv
+just build-localities   # rewrites app/src/main/assets/localities.csv
 ```
 
 Commit the new `localities.csv` before soaking, so the soak covers it, and mention it in the
@@ -43,12 +43,11 @@ which the script sets up for you on request — `just install`, `just seed`, `ju
 app is loaded with the sample batch and you only do the paste by hand. Both are skippable, but only
 by typing `skip`.
 
-After that it commits (version bump + changelog), tags `v0.8`, and builds both flavors' signed APK
-(`feltbok-v0.8.apk` for Norway and `feltbok-se-v0.8.apk` for Sweden — both attached to the one
-release). All of that is local.
+After that it commits (version bump + changelog), tags `v0.8`, and builds the signed APK
+(`feltbok-v0.8.apk`). All of that is local.
 
 **Pushing is its own prompt at the end.** Answer anything but `yes` and the tag stays local, the
-APKs are kept for sideloading, and the script prints the two commands that undo it (`git tag -d` +
+APK is kept for sideloading, and the script prints the two commands that undo it (`git tag -d` +
 a *mixed* `git reset HEAD~1`, so your hand-written changelog survives in the working tree). That
 makes the whole script safe to rehearse: Ctrl-C at the "build + tag" pause touches nothing at all,
 and stopping at the push prompt costs one `git reset`. On `yes` it pushes and runs
@@ -113,7 +112,7 @@ an afternoon to re-diagnose from scratch, so:
   `MainActivity.onCreate` plus `Modifier.safeDrawingPadding()` on the Scaffold.
 - *"Appen din bruker avviklede API-er ... `LAYOUT_IN_DISPLAY_CUTOUT_MODE_SHORT_EDGES`"*, blamed on
   an obfuscated class like `b.r.k` — that's `androidx.activity.EdgeToEdgeApi28`. Resolve such names
-  through `app/build/outputs/mapping/norwayRelease/mapping.txt`. `enableEdgeToEdge()` picks its
+  through `app/build/outputs/mapping/release/mapping.txt`. `enableEdgeToEdge()` picks its
   implementation off a descending `SDK_INT` ladder, and only the API 28 rung uses `SHORT_EDGES`;
   `EdgeToEdgeApi35` inherits `EdgeToEdgeApi30`'s non-deprecated `..._ALWAYS`. So Android 15 never
   executes the flagged line — Play scans the dex statically and can't see the `SDK_INT` gate. The
@@ -144,8 +143,7 @@ or future-proof it.
 
 - **Google Play** (#74, free — in closed testing since Aug 2026). The only channel with *no*
   Play Protect prompt — apps installed via Play aren't treated as unknown. Upload is an
-  **AAB**, not an APK: `./gradlew bundleNorwayRelease` (plain `bundleRelease` builds both
-  flavors). With **Play App Signing** Google holds the final signing key and we upload with an
+  **AAB**, not an APK: `./gradlew bundleRelease`. With **Play App Signing** Google holds the final signing key and we upload with an
   *upload key*, so a Play install carries a third signature (GitHub keystore / F-Droid key /
   Play key all differ). Consequence worth knowing: nobody can move between channels without
   uninstalling first. Harmless here — notes are exported then deleted, so there's nothing to

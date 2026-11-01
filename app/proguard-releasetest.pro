@@ -30,12 +30,17 @@
 -keep class io.github.mortenfyhn.feltbok.Locality { *; }
 -keep class io.github.mortenfyhn.feltbok.Species { *; }
 -keep class io.github.mortenfyhn.feltbok.ModelKt { *; }
+-keep class io.github.mortenfyhn.feltbok.NotesJsonKt { *; }
+-keep class io.github.mortenfyhn.feltbok.CsvDataKt { *; }
+-keep class io.github.mortenfyhn.feltbok.Storage { *; }
+-keep class io.github.mortenfyhn.feltbok.AndroidStorage { *; }
+-keep class io.github.mortenfyhn.feltbok.AndroidPlatformKt { *; }
 
 # The Compose UI-flow test (AddObservationFlowTest) hosts App(vm) and drives it by name: the App
-# composable (UiKt), the MainViewModel it takes (whose Compose-generated $stable field the test's
+# composable (AppKt, in :ui), the MainViewModel it takes (whose Compose-generated $stable field the test's
 # call site reads — without the keep, R8 drops it and setContent throws NoSuchFieldError), and the
 # Strings it asserts on. All statically reachable from the app, so never R8-strip candidates anyway.
--keep class io.github.mortenfyhn.feltbok.MainActivityKt { *; }
+-keep class io.github.mortenfyhn.feltbok.AppKt { *; }
 -keep class io.github.mortenfyhn.feltbok.MainViewModel { *; }
 -keep class io.github.mortenfyhn.feltbok.Strings { *; }
 -keep class io.github.mortenfyhn.feltbok.Strings$* { *; }

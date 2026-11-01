@@ -13,7 +13,7 @@ Recipes live in `just --list`. Gotchas not covered there:
 - `allWarningsAsErrors` means any deprecation introduced by a dependency bump is a build failure.
   `./gradlew test` and `assembleRelease` do NOT compile `src/androidTest`, so after bumping
   Compose/AndroidX, also compile that source set (`just itest` or
-  `assembleNorwayReleaseTestAndroidTest`, no device needed).
+  `assembleReleaseTestAndroidTest`, no device needed).
 - Always run `./gradlew test` before opening a PR; `just test` also runs the Python tests.
 - **Release runs through R8** (`isMinifyEnabled`, keep rules in `app/proguard-rules.pro`). R8
   tree-shakes by static reachability, so reflective code (reflective mappers, `Class.forName`,
@@ -47,9 +47,10 @@ a `MainViewModel` must start with `ClearAppDataRule` — otherwise the suite bec
 - **Minimal diffs.** Implement only what's asked; prefer the smallest change and removing code over
   adding it. Prefer pure functions; small focused classes. Match surrounding style and comment
   density (comments explain WHY).
-- **Keep new logic platform-free.** Put new non-UI logic in pure-Kotlin files with no Android or JVM
-  imports (like `Search.kt`), not in `Model.kt` or `MainViewModel.kt`, so it can move to shared code
-  for iOS (#115) as-is.
+- **Keep new logic platform-free.** Put new non-UI logic in the `:shared` module
+  (`shared/src/commonMain`, plain Kotlin, no Android or JVM imports; like `Search.kt`), not in
+  `Model.kt` or `MainViewModel.kt`, so the coming iOS app (#115) gets it too. It builds for JVM
+  everywhere and for iOS on macOS hosts only.
 - **Avoid custom styling unless necessary.** Lean on Material defaults and existing shared
   composables; extend a component (e.g. a flag on an existing row) over bespoke layout.
 - **Commit messages in English, explaining the why. No trailers** (`Co-Authored-By` etc. — history
@@ -81,10 +82,28 @@ a `MainViewModel` must start with `ClearAppDataRule` — otherwise the suite bec
   trusting a build.
 
 ## Where things live
-- `app/src/main/java/com/feltbok/Model.kt` — data classes, CSV/JSON load+save, TSV export.
-- `MainViewModel.kt` — all UI state (four-ish screens, no nav lib). `Ui.kt` — the Compose screens.
-- `MapPicker.kt` — osmdroid locality-picker map + overlays. `SyncScreen.kt` — WebView "Synk mine
-  lokaliteter".
+- `shared/` — Kotlin Multiplatform module with the platform-free code (search, frequency, use
+  scores, the species, locality and note models, locality geometry, live localities, co-observer and
+  selection logic, date formatting, the JSON formats of the app's files and API responses, loading
+  and saving them through a per-platform `Storage`), consumed by the app as a JVM library. Being
+  moved into piece by piece for the iOS port (#115).
+- `ui/` — Kotlin Multiplatform module (Android + iOS, Compose Multiplatform) with the UI, built on
+  `:shared`. `commonMain`: `MainViewModel.kt` (all UI state, no nav lib), `Ui.kt` and `App.kt` (the
+  Compose screens), `Model.kt` (TSV export), `SyncScreen.kt` ("Hent mine lokaliteter", over a
+  platform `SyncWeb`), `MapLogic.kt` (the picker map's shared rules), theme, `Strings`, `Country`,
+  and `Platform.kt` — what the UI needs from each platform: the `Platform` interface the view model
+  gets, `PlatformUi` (pickers, links, toasts) and `expect` composables for the map. `androidMain`
+  implements them: `AndroidPlatform.kt`, `PlatformUi.android.kt`,
+  `MapPicker.kt` (osmdroid picker map), `SyncWeb.android.kt` (WebView), `LocationTracker.kt`,
+  `AndroidStorage.kt`. `iosMain` is the same for iOS (`IosPlatform.kt`, `PlatformUi.ios.kt`,
+  `MapPicker.kt` + `MapLayers.kt` on MapLibre, `SyncWeb.ios.kt` on WKWebView, CoreLocation, and
+  `MainViewController.kt` as the root). Unit tests are
+  `androidHostTest` (`:ui:testAndroidHostTest`).
+- `iosApp/` — the iOS app: a thin SwiftUI host for `:ui`'s framework. `xcodegen` there generates the
+  Xcode project from `project.yml` (not committed); `install-device.sh` builds and installs on a
+  connected iPhone (Xcode 26 for iOS 15 devices). The bundled CSVs come from `app/src/main/assets`.
+- `app/` — just the Android shell: `MainActivity`, `FeltbokApp` (fills `AppInfo` from BuildConfig),
+  resources, assets, and the instrumented tests.
 - `app/src/main/assets/localities.csv` (public, bundled), `species.csv` (checklist + Rødlista
   status). The user's own privates live in `my-localities.csv` — device-only, never bundled.
 - `scripts/` — Python build/harvest pipelines (localities, species, red list) + dev helpers

@@ -58,14 +58,6 @@ fun signingValue(prop: String, env: String): String? =
     keystoreProps?.getProperty(prop) ?: System.getenv(env)
 val signStore = signingValue("storeFile", "KEYSTORE_FILE")
 
-// The Sweden flavor's "my localities" sync needs the maintainer's Artportalen userId. Kept out of
-// git (in local.properties, like the signing secrets) so it isn't published; absent -> "0", which
-// just means the personal sync returns nothing useful on a fresh clone/CI. Not a secret per se, but
-// it links to a profile and we'd rather not commit it.
-val localProps = rootProject.file("local.properties").takeIf { it.exists() }
-    ?.let { Properties().apply { load(it.inputStream()) } }
-val seUserId = localProps?.getProperty("feltbok.se.userId") ?: System.getenv("SE_USER_ID") ?: "0"
-
 android {
     namespace = "io.github.mortenfyhn.feltbok"
     compileSdk = 36
@@ -81,23 +73,6 @@ android {
         // BuildConfig.DEBUG tracks the `debuggable` flag, which the debug build type turns OFF for
         // speed - so it's false even in the dev build. Use this DEV flag for dev-only code instead.
         buildConfigField("boolean", "DEV", "false")
-        // Artportalen userId for the Sweden flavor's locality sync (from local.properties; see above).
-        buildConfigField("String", "SE_USER_ID", "\"$seUserId\"")
-    }
-
-    // One flavor per country: a separate app per Artsobservasjoner-family site (issue #127), so
-    // Swedish field notes never mix with Norwegian ones and each ships only its own data. Norway
-    // keeps the original applicationId untouched (the maintainer's real app + field notes).
-    flavorDimensions += "country"
-    productFlavors {
-        create("norway") {
-            dimension = "country"
-            // applicationId stays the defaultConfig value: io.github.mortenfyhn.feltbok
-        }
-        create("sweden") {
-            dimension = "country"
-            applicationId = "io.github.mortenfyhn.feltbok.se"
-        }
     }
 
     signingConfigs {
@@ -164,29 +139,17 @@ android {
         targetCompatibility = JavaVersion.VERSION_17
     }
 
-    kotlinOptions {
-        jvmTarget = "17"
-        allWarningsAsErrors = true
-    }
-
     buildFeatures {
         compose = true
         buildConfig = true
     }
 }
 
-// app_name combines the flavor base ("Feltbok"/"Fältbok") with a marker so all four installs are
-// tellable apart on-device. Dev builds are always "(dev)". Norway is stable from v1.0, so its
-// release carries no marker; Sweden is still beta, so its release stays "(beta)". Done via the
-// variant API because a resValue set per-flavor and per-build-type would override rather than combine.
+// app_name marks the dev build "(dev)" so it's tellable apart from the release app on-device.
 androidComponents {
     onVariants { variant ->
-        val base = if (variant.flavorName == "sweden") "Fältbok" else "Feltbok"
-        val marker = when {
-            variant.buildType == "debug" -> " (dev)"
-            variant.flavorName == "sweden" -> " (beta)"
-            else -> ""
-        }
+        val base = "Feltbok"
+        val marker = if (variant.buildType == "debug") " (dev)" else ""
         variant.resValues.put(
             variant.makeResValueKey("string", "app_name"),
             com.android.build.api.variant.ResValue(base + marker),
@@ -195,18 +158,14 @@ androidComponents {
 }
 
 dependencies {
+    implementation(project(":ui"))
     implementation("androidx.activity:activity-compose:1.13.0")
+    // The BOM still pins the Compose the app ships: :ui's Compose Multiplatform resolves to these
+    // androidx artifacts on Android, and the instrumented tests' ui-test must match them.
     implementation(platform("androidx.compose:compose-bom:2026.06.01"))
-    implementation("androidx.compose.material3:material3")
     implementation("androidx.compose.ui:ui")
     implementation("androidx.core:core-ktx:1.18.0")
     implementation("androidx.lifecycle:lifecycle-viewmodel-compose:2.9.4")
-    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.9.0")
-    implementation("org.osmdroid:osmdroid-android:6.1.20")
-    testImplementation("junit:junit:4.13.2")
-    // Real org.json on the unit-test classpath: android.jar's stub throws, so the Note
-    // JSON round-trip test (noteToJson/noteFromJson) needs the actual implementation.
-    testImplementation("org.json:json:20240303")
     // Instrumented R8 smoke tests (src/androidTest, run on a device against the minified
     // releaseTest variant). ext:junit pulls the runner + core transitively.
     androidTestImplementation("androidx.test.ext:junit:1.2.1")
@@ -215,6 +174,8 @@ dependencies {
     // it the test APK has no runner class and instrumentation crashes on launch.
     androidTestImplementation("androidx.test:runner:1.6.2")
     androidTestImplementation("androidx.test:rules:1.6.1") // GrantPermissionRule
+    // MapAndLaunchSmokeTest sets up an osmdroid map inline (osmdroid itself comes in through :ui).
+    androidTestImplementation("org.osmdroid:osmdroid-android:6.1.20")
     // Compose UI-flow tests (src/androidTest): drive the real screens and assert on the tree. The
     // BOM versions ui-test-junit4 to match the app's Compose. ui-test-manifest supplies the empty
     // ComponentActivity that createComposeRule() hosts App(vm) in - it must land in the variant
@@ -228,4 +189,11 @@ dependencies {
 // in the terminal, not just the HTML report. Normal tests are silent, so this adds no noise.
 tasks.withType<Test> {
     testLogging.showStandardStreams = true
+}
+
+kotlin {
+    compilerOptions {
+        jvmTarget.set(org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_17)
+        allWarningsAsErrors.set(true)
+    }
 }
