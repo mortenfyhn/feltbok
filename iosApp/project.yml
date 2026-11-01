@@ -39,6 +39,8 @@ targets:
     preBuildScripts:
       - name: Build Kotlin framework
         basedOnDependencyAnalysis: false
+        # Kotlin/Native's optimized link of the whole app (Compose + MapLibre) needs more heap
+        # than the Android build's daemon has (gradle.properties), so iOS builds get their own.
         script: |
           cd "$SRCROOT/.."
-          ./gradlew :ui:embedAndSignAppleFrameworkForXcode
+          ./gradlew -Dorg.gradle.jvmargs="-Xmx4g -Dfile.encoding=UTF-8" :ui:embedAndSignAppleFrameworkForXcode
