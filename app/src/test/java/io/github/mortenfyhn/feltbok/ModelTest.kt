@@ -232,6 +232,8 @@ class ModelTest {
         assertEquals("first occurrence keeps its id", 100, healed[0].id)
     }
 
+    private fun roundTrip(n: Note) = parseNotes(notesJson(listOf(n))).single()
+
     @Test
     fun noteJsonRoundTripPreservesEveryField() {
         // Guard against a field saved but not restored (or vice versa): silent data loss on the
@@ -239,14 +241,14 @@ class ModelTest {
         // equality (id and time differ, so a swap is caught too).
         val n = noteAt(1717).copy(time = 1800, endTime = 1900, timeUnknown = true, newLoc = true, locRadius = 50, uncertain = true,
             coObservers = listOf("Kari Nordmann", "Ola Hansen"), hideUntil = 2000)
-        assertEquals(n, noteFromJson(noteToJson(n)))
+        assertEquals(n, roundTrip(n))
         // endTime is the only optional field (omitted from JSON when null); confirm null survives.
-        assertEquals(null, noteFromJson(noteToJson(n.copy(endTime = null))).endTime)
+        assertEquals(null, roundTrip(n.copy(endTime = null)).endTime)
         // coObservers is omitted from JSON when empty; confirm an empty list round-trips as empty.
-        assertEquals(emptyList<String>(), noteFromJson(noteToJson(n.copy(coObservers = emptyList()))).coObservers)
+        assertEquals(emptyList<String>(), roundTrip(n.copy(coObservers = emptyList())).coObservers)
         // hideUntil is likewise omitted when null - and a note saved before #181 has no such key,
         // so an absent key must read back as "not hidden" rather than throwing.
-        assertEquals(null, noteFromJson(noteToJson(n.copy(hideUntil = null))).hideUntil)
+        assertEquals(null, roundTrip(n.copy(hideUntil = null)).hideUntil)
     }
 
     @Test

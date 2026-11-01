@@ -6,8 +6,6 @@ import android.content.Context
 import android.os.Build
 import android.os.Environment
 import android.provider.MediaStore
-import org.json.JSONArray
-import org.json.JSONObject
 import java.io.File
 import java.text.DateFormatSymbols
 import java.text.SimpleDateFormat
@@ -257,88 +255,6 @@ fun diffMySites(old: List<Locality>, new: List<Locality>): SyncDiff {
     return SyncDiff(total = new.size, changed = added.size + removed.size + modified, firstSync = old.isEmpty())
 }
 
-/** Map the mobile API's accumulated `{data:[...]}` rows to the user's own private localities.
- *  Coordinates are already WGS84; only `isPrivate` sites go to the mine-file (public ones are
- *  already in the bundled set). */
-fun parseMySites(json: String): List<Locality> {
-    val arr = JSONObject(json).optJSONArray("data") ?: return emptyList()
-    val out = ArrayList<Locality>(arr.length())
-    for (i in 0 until arr.length()) {
-        val o = arr.getJSONObject(i)
-        if (!o.optBoolean("isPrivate")) continue
-        val lat = o.optDouble("latitude", Double.NaN); val lon = o.optDouble("longitude", Double.NaN)
-        if (lat.isNaN() || lon.isNaN()) continue
-        val poly = if (o.optBoolean("isPolygon")) lonLatRingToVertices(o.optString("polygonCoordinates"))
-        else emptyList()
-        out.add(Locality(
-            id = o.optLong("id").toString(),
-            lokalitet = o.str("name"),
-            hovedlokalitet = "",
-            kommune = o.str("municipalityName"),
-            lat = lat, lon = lon,
-            observers = 0, radius = o.optDouble("accuracy", 0.0),
-            polygon = poly, public = false, mine = true,
-        ))
-    }
-    return out
-}
-
-/** A string field, "" when missing or JSON null. Android's optString turns null into "null" (the JVM
- *  org.json in unit tests doesn't, so tests can't catch it). */
-internal fun JSONObject.str(key: String): String = if (isNull(key)) "" else optString(key)
-
-/** "[[lon,lat],...]" (WGS84 JSON) -> [lat,lon] vertices, matching our polygon convention. */
-internal fun lonLatRingToVertices(s: String): List<DoubleArray> {
-    if (s.isBlank()) return emptyList()
-    return try {
-        val a = JSONArray(s)
-        ArrayList<DoubleArray>(a.length()).apply {
-            for (i in 0 until a.length()) {
-                val p = a.getJSONArray(i)
-                add(doubleArrayOf(p.getDouble(1), p.getDouble(0)))
-            }
-        }
-    } catch (e: Exception) { emptyList() }
-}
-
-/** The user's own (editable) localities from artportalen.se's GetEditableSitesGeoJson — a GeoJSON
- *  FeatureCollection of points + polygons in Web Mercator. The Swedish counterpart of [parseMySites]:
- *  reproject to WGS84 and mark each as the user's own (private). */
-fun parseEditableSitesGeoJson(json: String): List<Locality> {
-    val root = JSONObject(json)
-    val out = ArrayList<Locality>()
-    fun locOf(p: JSONObject, lat: Double, lon: Double, poly: List<DoubleArray>) = Locality(
-        id = p.optLong("siteId").toString(),
-        lokalitet = p.optString("siteName"),
-        hovedlokalitet = "",
-        kommune = if (p.optString("siteAreaDescription") == "Kommun") p.optString("siteAreaName") else "",
-        lat = lat, lon = lon,
-        observers = 0, radius = p.optDouble("accuracy", 0.0),
-        polygon = poly, public = false, mine = true,
-    )
-    root.optJSONObject("points")?.optJSONArray("features")?.let { feats ->
-        for (i in 0 until feats.length()) {
-            val f = feats.getJSONObject(i)
-            val c = f.getJSONObject("geometry").getJSONArray("coordinates")
-            out.add(locOf(f.getJSONObject("properties"), mercToLat(c.getDouble(1)), mercToLon(c.getDouble(0)), emptyList()))
-        }
-    }
-    root.optJSONObject("polygons")?.optJSONArray("features")?.let { feats ->
-        for (i in 0 until feats.length()) {
-            val f = feats.getJSONObject(i)
-            val outer = f.getJSONObject("geometry").getJSONArray("coordinates").getJSONArray(0)
-            val verts = ArrayList<DoubleArray>(outer.length())
-            for (j in 0 until outer.length()) {
-                val p = outer.getJSONArray(j)
-                verts.add(doubleArrayOf(mercToLat(p.getDouble(1)), mercToLon(p.getDouble(0))))
-            }
-            if (verts.isEmpty()) continue
-            out.add(locOf(f.getJSONObject("properties"), verts.sumOf { it[0] } / verts.size, verts.sumOf { it[1] } / verts.size, verts))
-        }
-    }
-    return out
-}
-
 private fun csvField(s: String): String =
     if (s.any { it == ',' || it == '"' || it == '\n' }) "\"" + s.replace("\"", "\"\"") + "\"" else s
 
@@ -434,64 +350,6 @@ private fun writeAtomic(f: File, text: String) {
 }
 
 /**
- * Two observations entered in the same millisecond share an `id` (it's the creation time).
- * `id` is the list's stable key and the handle for edit/delete/select, so a collision both
- * crashes LazyColumn and makes those actions ambiguous. Heal by nudging duplicates forward
- * a millisecond until unique - `id` is internal only (not shown or exported), so this is safe.
- */
-internal fun withUniqueIds(notes: List<Note>): List<Note> {
-    val seen = HashSet<Long>()
-    return notes.map { n ->
-        var id = n.id
-        while (!seen.add(id)) id++
-        if (id == n.id) n else n.copy(id = id)
-    }
-}
-
-/** The per-field JSON mapping for a [Note], kept as pure functions (no Context) so a round-trip
- *  test can catch a field that's saved but not loaded, or vice versa - a silent data-loss bug on
- *  the next launch. endTime is the one optional field: omitted when null, restored as null. */
-fun noteToJson(n: Note): JSONObject = JSONObject().apply {
-    put("id", n.id); put("time", n.time); put("species", n.species); put("latin", n.latin)
-    n.endTime?.let { put("endTime", it) }
-    if (n.timeUnknown) put("timeUnknown", true)
-    put("count", n.count); put("age", n.age); put("activity", n.activity)
-    put("sex", n.sex); put("publicComment", n.publicComment)
-    put("privateComment", n.privateComment)
-    put("locName", n.locName); put("locFull", n.locFull)
-    put("lat", n.lat); put("lon", n.lon)
-    put("newLoc", n.newLoc); put("locRadius", n.locRadius); put("uncertain", n.uncertain)
-    if (n.coObservers.isNotEmpty()) put("coObservers", JSONArray(n.coObservers))
-    if (n.kommune.isNotBlank()) put("kommune", n.kommune)
-    n.hideUntil?.let { put("hideUntil", it) }
-}
-
-fun noteFromJson(o: JSONObject): Note = Note(
-    id = o.getLong("id"),
-    time = o.optLong("time", o.getLong("id")),
-    endTime = if (o.has("endTime")) o.getLong("endTime") else null,
-    timeUnknown = o.optBoolean("timeUnknown", false),
-    species = o.getString("species"),
-    latin = o.optString("latin"),
-    count = o.getInt("count"),
-    age = o.optString("age"),
-    activity = o.optString("activity"),
-    sex = o.optString("sex"),
-    publicComment = o.optString("publicComment"),
-    privateComment = o.optString("privateComment"),
-    locName = o.optString("locName"),
-    locFull = o.optString("locFull"),
-    lat = o.getDouble("lat"),
-    lon = o.getDouble("lon"),
-    newLoc = o.optBoolean("newLoc"),
-    locRadius = o.optInt("locRadius"),
-    uncertain = o.optBoolean("uncertain"),
-    coObservers = o.optJSONArray("coObservers")?.let { a -> (0 until a.length()).map { a.getString(it) } } ?: emptyList(),
-    kommune = o.optString("kommune"),
-    hideUntil = if (o.has("hideUntil")) o.getLong("hideUntil") else null,
-)
-
-/**
  * Dev seeding. The debug build ships non-debuggable (it runs at release speed), so `run-as` can't
  * reach its files, and notes.json lives in internal storage that `adb push` can't write either. So
  * `just seed` pushes a seed file to the external files dir (which adb push *can* reach), and
@@ -508,35 +366,13 @@ fun importSeedNotes(ctx: Context) {
     }
 }
 
-// ---- archive (#153): archived (ex-deleted) observations, one JSON object per line ----
-// JSON Lines rather than a JSON array so archiving can APPEND without parsing the existing
-// archive; only the archive screen and a restore read the whole file.
-
-fun notesToJsonl(notes: List<Note>): String =
-    notes.joinToString("") { noteToJson(it).toString() + "\n" }
-
-/** A malformed line (e.g. a torn append from a crash) is skipped, not fatal - the archive is a
- *  safety net, so one bad line must never take the rest of it down. */
-fun notesFromJsonl(text: String): List<Note> =
-    text.lineSequence()
-        .filter { it.isNotBlank() }
-        .mapNotNull { line -> runCatching { noteFromJson(JSONObject(line)) }.getOrNull() }
-        .toList()
-
 fun loadNotes(ctx: Context): List<Note> {
     val f = notesFile(ctx)
     if (!f.exists()) return emptyList()
-    return runCatching {
-        val arr = JSONArray(f.readText())
-        withUniqueIds((0 until arr.length()).map { noteFromJson(arr.getJSONObject(it)) })
-    }.getOrDefault(emptyList())
+    return runCatching { parseNotes(f.readText()) }.getOrDefault(emptyList())
 }
 
-fun saveNotes(ctx: Context, notes: List<Note>) {
-    val arr = JSONArray()
-    notes.forEach { arr.put(noteToJson(it)) }
-    writeAtomic(notesFile(ctx), arr.toString())
-}
+fun saveNotes(ctx: Context, notes: List<Note>) = writeAtomic(notesFile(ctx), notesJson(notes))
 
 // ---- archive file (#153): where "deleted" observations go, restorable from the archive screen.
 // Separate from notes.json so the hot paths (launch parse, every-save rewrite, the Downloads TSV
@@ -605,42 +441,21 @@ private fun usesFile(ctx: Context) = File(ctx.filesDir, "uses.json")
 fun loadUses(ctx: Context, now: Long = System.currentTimeMillis()): Map<String, UseEntry> {
     val f = usesFile(ctx)
     if (!f.exists()) return emptyMap()
-    return runCatching {
-        val o = JSONObject(f.readText())
-        o.keys().asSequence().associateWith { k ->
-            when (val v = o.get(k)) {
-                is JSONObject -> UseEntry(v.getDouble("s"), v.getLong("t"))
-                // Legacy format was a bare count, no timestamp. Seed it a day back: clear of the pin
-                // window (so migrated regulars aren't mistaken for the current batch), and the tiny
-                // uniform decay doesn't change their relative order.
-                else -> UseEntry((v as Number).toDouble(), now - 24L * 60 * 60 * 1000)
-            }
-        }
-    }.getOrDefault(emptyMap())
+    return runCatching { parseUses(f.readText(), now) }.getOrDefault(emptyMap())
 }
 
-fun saveUses(ctx: Context, uses: Map<String, UseEntry>) {
-    val o = JSONObject()
-    uses.forEach { (k, e) -> o.put(k, JSONObject().put("s", e.score).put("t", e.lastTouched)) }
-    usesFile(ctx).writeText(o.toString())
-}
+fun saveUses(ctx: Context, uses: Map<String, UseEntry>) = usesFile(ctx).writeText(usesJson(uses))
 
 // ---- per-activity use counts, so your most-used activities rank to the top ----
 
 private fun loadCounts(ctx: Context, file: String): Map<String, Int> {
     val f = File(ctx.filesDir, file)
     if (!f.exists()) return emptyMap()
-    return runCatching {
-        val o = JSONObject(f.readText())
-        o.keys().asSequence().associateWith { o.getInt(it) }
-    }.getOrDefault(emptyMap())
+    return runCatching { parseCounts(f.readText()) }.getOrDefault(emptyMap())
 }
 
-private fun saveCounts(ctx: Context, file: String, counts: Map<String, Int>) {
-    val o = JSONObject()
-    counts.forEach { (k, v) -> o.put(k, v) }
-    File(ctx.filesDir, file).writeText(o.toString())
-}
+private fun saveCounts(ctx: Context, file: String, counts: Map<String, Int>) =
+    File(ctx.filesDir, file).writeText(countsJson(counts))
 
 fun loadActUses(ctx: Context) = loadCounts(ctx, "act_uses.json")
 fun saveActUses(ctx: Context, uses: Map<String, Int>) = saveCounts(ctx, "act_uses.json", uses)
@@ -657,17 +472,10 @@ private fun coObsUserFile(ctx: Context) = File(ctx.filesDir, "coobs_users.json")
 fun loadCoObsUsers(ctx: Context): Map<String, AoUser> {
     val f = coObsUserFile(ctx)
     if (!f.exists()) return emptyMap()
-    return runCatching {
-        val a = JSONArray(f.readText())
-        (0 until a.length()).map { a.getJSONObject(it) }
-            .map { AoUser(it.getString("name"), it.getString("alias"), it.optString("city")) }
-            .associateBy { it.alias }
-    }.getOrDefault(emptyMap())
+    return runCatching { parseCoObsUsers(f.readText()) }.getOrDefault(emptyMap())
 }
 
-fun saveCoObsUsers(ctx: Context, users: Collection<AoUser>) = coObsUserFile(ctx).writeText(
-    JSONArray(users.map { JSONObject().put("name", it.name).put("alias", it.alias).put("city", it.city) }).toString(),
-)
+fun saveCoObsUsers(ctx: Context, users: Collection<AoUser>) = coObsUserFile(ctx).writeText(coObsUsersJson(users))
 
 private fun partyFile(ctx: Context) = File(ctx.filesDir, "party.json")
 
@@ -677,26 +485,12 @@ private fun partyFile(ctx: Context) = File(ctx.filesDir, "party.json")
 fun loadParty(ctx: Context): List<String>? {
     val f = partyFile(ctx)
     if (!f.exists()) return null
-    return runCatching {
-        val a = JSONArray(f.readText())
-        (0 until a.length()).map { a.getString(it) }
-    }.getOrNull()
+    return runCatching { parseParty(f.readText()) }.getOrNull()
 }
 
-fun saveParty(ctx: Context, party: List<String>) = partyFile(ctx).writeText(JSONArray(party).toString())
+fun saveParty(ctx: Context, party: List<String>) = partyFile(ctx).writeText(partyJson(party))
 
 // ---- species-name language preference (#155): which language to show as primary + secondary ----
-
-/** The two display languages shown for each species: [primary] on top, [secondary] beneath. Both are
- *  always set (there's no "no secondary" - Latin fills that role); a secondary equal to the primary
- *  just isn't drawn. Search matches the [primary] name only, unless [searchSecondary] is on, which
- *  also searches the secondary language (a fallback for "I forget the primary-language name"); it's
- *  off by default so, e.g., typing "t" in the Norway build doesn't surface birds via their Swedish
- *  name. None of this affects export - that stays the registry's [Country.exportLang]. */
-data class LangPrefs(val primary: Lang, val secondary: Lang, val searchSecondary: Boolean = false) {
-    /** The name languages the search matches against, given these prefs. */
-    val searchLangs: Set<Lang> get() = setOf(primary) + if (searchSecondary) setOf(secondary) else emptySet()
-}
 
 private fun langPrefsFile(ctx: Context) = File(ctx.filesDir, "lang_prefs.json")
 
@@ -706,23 +500,10 @@ fun loadLangPrefs(ctx: Context): LangPrefs {
     val f = langPrefsFile(ctx)
     val default = LangPrefs(Country.defaultPrimary, Country.defaultSecondary)
     if (!f.exists()) return default
-    return runCatching {
-        val o = JSONObject(f.readText())
-        LangPrefs(
-            Lang.valueOf(o.getString("primary")),
-            o.optString("secondary").takeIf { it.isNotBlank() }?.let { Lang.valueOf(it) } ?: default.secondary,
-            o.optBoolean("searchSecondary", default.searchSecondary),
-        )
-    }.getOrDefault(default)
+    return runCatching { parseLangPrefs(f.readText(), default) }.getOrDefault(default)
 }
 
-fun saveLangPrefs(ctx: Context, prefs: LangPrefs) {
-    val o = JSONObject()
-        .put("primary", prefs.primary.name)
-        .put("secondary", prefs.secondary.name)
-        .put("searchSecondary", prefs.searchSecondary)
-    langPrefsFile(ctx).writeText(o.toString())
-}
+fun saveLangPrefs(ctx: Context, prefs: LangPrefs) = langPrefsFile(ctx).writeText(langPrefsJson(prefs))
 
 // ---- export (paste format; columns/headers per Country) ----
 

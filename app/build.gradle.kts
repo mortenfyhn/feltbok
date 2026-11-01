@@ -205,9 +205,6 @@ dependencies {
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.9.0")
     implementation("org.osmdroid:osmdroid-android:6.1.20")
     testImplementation("junit:junit:4.13.2")
-    // Real org.json on the unit-test classpath: android.jar's stub throws, so the Note
-    // JSON round-trip test (noteToJson/noteFromJson) needs the actual implementation.
-    testImplementation("org.json:json:20240303")
     // Instrumented R8 smoke tests (src/androidTest, run on a device against the minified
     // releaseTest variant). ext:junit pulls the runner + core transitively.
     androidTestImplementation("androidx.test.ext:junit:1.2.1")

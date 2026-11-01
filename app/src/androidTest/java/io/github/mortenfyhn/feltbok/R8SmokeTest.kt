@@ -27,12 +27,12 @@ class R8SmokeTest {
         locName = "Titran", locFull = "Titran, Frøya, Tø", lat = 63.67, lon = 8.31,
     )
 
-    /** noteToJson/noteFromJson use android's real org.json on ART; a round-trip proves R8 kept
+    /** notes.json goes through kotlinx.serialization's JSON tree; a round-trip proves R8 kept
      *  the JSON paths and the field mapping survives. */
     @Test
     fun noteJsonRoundTrips() {
         val n = sampleNote()
-        assertEquals(n, noteFromJson(noteToJson(n)))
+        assertEquals(listOf(n), parseNotes(notesJson(listOf(n))))
     }
 
     /** TSV export exercises String.format(Locale.US, …) + the column layout on the device. */

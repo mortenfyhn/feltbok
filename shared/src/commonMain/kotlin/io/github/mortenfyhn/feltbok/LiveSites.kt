@@ -1,5 +1,7 @@
 package io.github.mortenfyhn.feltbok
 
+import kotlinx.serialization.json.jsonArray
+import kotlinx.serialization.json.jsonObject
 import kotlin.math.PI
 import kotlin.math.atan
 import kotlin.math.exp
@@ -162,6 +164,23 @@ fun parsePublicSites(rows: List<SiteRow>, knownName: (String) -> String?): List<
             observers = 0, radius = r.radius,
             polygon = r.polygon,
             isSuper = r.id in supers,
+        )
+    }
+}
+
+/** A ByBoundingBox response as [SiteRow]s. A missing isPrivate counts as private, so it's dropped. */
+fun siteRows(json: String): List<SiteRow> {
+    return parseJson(json).jsonArray.map { it.jsonObject }.map { r ->
+        SiteRow(
+            id = r.optLong("id").toString(),
+            name = r.optString("name"),
+            lat = r.optDouble("latitude", Double.NaN),
+            lon = r.optDouble("longitude", Double.NaN),
+            isPrivate = r.optBoolean("isPrivate", true),
+            radius = r.optDouble("accuracy", 0.0),
+            municipality = r.optString("municipalityName"),
+            parentId = r.optLong("parentSiteId").takeIf { it != 0L }?.toString(),
+            polygon = if (r.optBoolean("isPolygon")) lonLatRingToVertices(r["polygonCoordinates"]) else emptyList(),
         )
     }
 }

@@ -2,17 +2,9 @@ package io.github.mortenfyhn.feltbok
 
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
-import org.json.JSONArray
 import java.net.HttpURLConnection
 import java.net.URL
 import java.net.URLEncoder
-
-fun parseAoUsers(json: String): List<AoUser> {
-    val a = JSONArray(json)
-    return (0 until a.length()).map { a.getJSONObject(it) }
-        .map { AoUser(it.optString("name").trim(), it.optString("userAlias"), it.optString("city").trim()) }
-        .filter { it.name.isNotEmpty() && it.alias.isNotEmpty() }
-}
 
 /** Search users by name (substring match, at most 15 hits). Empty on any failure - offline, or the
  *  undocumented endpoint changed - so the picker just falls back to free text. */

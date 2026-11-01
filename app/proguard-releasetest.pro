@@ -30,6 +30,7 @@
 -keep class io.github.mortenfyhn.feltbok.Locality { *; }
 -keep class io.github.mortenfyhn.feltbok.Species { *; }
 -keep class io.github.mortenfyhn.feltbok.ModelKt { *; }
+-keep class io.github.mortenfyhn.feltbok.NotesJsonKt { *; }
 
 # The Compose UI-flow test (AddObservationFlowTest) hosts App(vm) and drives it by name: the App
 # composable (UiKt), the MainViewModel it takes (whose Compose-generated $stable field the test's

@@ -1,5 +1,8 @@
 package io.github.mortenfyhn.feltbok
 
+import kotlinx.serialization.json.jsonArray
+import kotlinx.serialization.json.jsonObject
+
 /**
  * Pure, Android-free logic behind co-observer support (#128), kept out of [MainViewModel] so it can
  * be unit-tested (see CoObserversTest). The sticky "følget mitt" party itself lives in
@@ -10,6 +13,12 @@ package io.github.mortenfyhn.feltbok
  *  Medobservatør cell on [alias] ("brukeralias"): a bare name fails when two users share it, and the
  *  numeric user id isn't accepted at all (both found by test paste-import). */
 data class AoUser(val name: String, val alias: String, val city: String)
+
+fun parseAoUsers(json: String): List<AoUser> {
+    return parseJson(json).jsonArray.map { it.jsonObject }
+        .map { AoUser(it.optString("name").trim(), it.optString("userAlias"), it.optString("city").trim()) }
+        .filter { it.name.isNotEmpty() && it.alias.isNotEmpty() }
+}
 
 /** The picker's name list: the names you've used before, most-used first, unioned with whoever's on
  *  the draft right now (so a just-added free-text name shows up too). Deduped, keeping first (highest)
