@@ -319,7 +319,7 @@ start marking, so getting one note back needs no long-press. The single action i
 **Gjenopprett**, which moves the marked notes back into the live list. There is no
 true delete in the app — clearing the app's data is the escape hatch if someone
 really wants everything gone. The archive lives in its own file (`archive.jsonl`,
-append-only on archiving), so launch, saving and the Downloads backup stay
+append-only on archiving), so launch and saving stay
 proportional to the *live* notes however big the archive grows.
 
 ## About / credits

@@ -1,11 +1,6 @@
 package io.github.mortenfyhn.feltbok
 
-import android.content.ContentUris
-import android.content.ContentValues
 import android.content.Context
-import android.os.Build
-import android.os.Environment
-import android.provider.MediaStore
 import org.json.JSONArray
 import org.json.JSONObject
 import java.io.File
@@ -825,39 +820,6 @@ fun loadArchive(ctx: Context): List<Note> {
 fun saveArchive(ctx: Context, notes: List<Note>) {
     val f = archiveFile(ctx)
     if (notes.isEmpty()) f.delete() else writeAtomic(f, notesToJsonl(notes))
-}
-
-/**
- * Best-effort mirror of the export into the public Downloads folder, refreshed on every persist.
- * notes.json lives in private internal storage, which a non-debuggable release seals off (no
- * run-as, no pull) - so a UI crash like #85 left field observations unreachable until a rebuild.
- * A submit-ready TSV in Downloads is recoverable with any file manager, and survives even an
- * uninstall. Q+ only: MediaStore needs no permission there; older devices would need a runtime
- * storage grant, not worth it. Never throws - a failed backup must not break saving.
- */
-fun backupExport(ctx: Context, notes: List<Note>) {
-    if (Build.VERSION.SDK_INT < Build.VERSION_CODES.Q) return
-    runCatching {
-        val name = "feltbok-sikkerhetskopi.tsv"
-        val resolver = ctx.contentResolver
-        val collection = MediaStore.Downloads.EXTERNAL_CONTENT_URI
-        // Reuse the existing mirror (matched by its distinctive name) so saves overwrite one
-        // file instead of accumulating copies; otherwise mint a fresh one under Downloads/Feltbok.
-        val existing = resolver.query(
-            collection, arrayOf(MediaStore.Downloads._ID),
-            "${MediaStore.Downloads.DISPLAY_NAME}=?", arrayOf(name), null,
-        )?.use { c -> if (c.moveToFirst()) c.getLong(0) else null }
-        val uri = existing?.let { ContentUris.withAppendedId(collection, it) }
-            ?: resolver.insert(
-                collection,
-                ContentValues().apply {
-                    put(MediaStore.Downloads.DISPLAY_NAME, name)
-                    put(MediaStore.Downloads.MIME_TYPE, "text/tab-separated-values")
-                    put(MediaStore.Downloads.RELATIVE_PATH, Environment.DIRECTORY_DOWNLOADS + "/Feltbok")
-                },
-            ) ?: return@runCatching
-        resolver.openOutputStream(uri, "wt")?.use { it.write(exportTsv(notes).toByteArray()) }
-    }
 }
 
 // ---- per-species use scores: a pick count that fades with time (see UseScore.kt), so recent
