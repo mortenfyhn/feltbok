@@ -54,6 +54,27 @@ and stopping at the push prompt costs one `git reset`. On `yes` it pushes and ru
 `gh release create` with notes assembled from the install steps + the changelog entry. No manual
 GitHub edit afterwards.
 
+## iOS (TestFlight)
+
+The iOS app (#115) goes to testers through TestFlight, with the paid Apple Developer Program team.
+One-time setup in the web UI: register the bundle id `io.github.mortenfyhn.feltbok` and create the
+app's record in App Store Connect, with `PRIVACY.md` on GitHub as the privacy policy URL and "no
+data collected" in the privacy questionnaire. Then, from a Mac with that team signed in to Xcode 26:
+
+```sh
+TEAM=<team id> iosApp/upload-testflight.sh
+```
+
+It archives a signed Release build and uploads it; Apple's processing takes 10-30 minutes before
+the build appears in TestFlight. The version is the Android `versionName` and the build number the
+commit count, so nothing needs bumping by hand. Internal testers (up to 100, added in App Store
+Connect) get builds without review; external ones (by email or a public link) need a light beta
+review the first time. Export compliance is answered once in the app's Info.plist
+(`ITSAppUsesNonExemptEncryption`: standard HTTPS only).
+
+Xcode 26 because App Store builds need the iOS 26 SDK, and it's the last Xcode that still targets
+iOS 15 (the iPhone 7). Revisit when Apple starts requiring the next SDK.
+
 ## Releases are cut from master's tip
 
 The script refuses to release anything else, so that **what you soaked is exactly what ships**. If

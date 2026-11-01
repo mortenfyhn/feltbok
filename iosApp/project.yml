@@ -26,6 +26,8 @@ targets:
         NSLocationWhenInUseUsageDescription: Feltbok bruker posisjonen til å foreslå nærmeste lokalitet.
         UISupportedInterfaceOrientations: [UIInterfaceOrientationPortrait]
         UIUserInterfaceStyle: Light # the app theme is light-only, so iOS's own pickers must be too
+        # Only standard HTTPS, which is exempt, so App Store Connect needn't ask on every upload.
+        ITSAppUsesNonExemptEncryption: false
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: io.github.mortenfyhn.feltbok

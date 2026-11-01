@@ -101,7 +101,8 @@ a `MainViewModel` must start with `ClearAppDataRule` — otherwise the suite bec
   `androidHostTest` (`:ui:testAndroidHostTest`).
 - `iosApp/` — the iOS app: a thin SwiftUI host for `:ui`'s framework. `xcodegen` there generates the
   Xcode project from `project.yml` (not committed); `install-device.sh` builds and installs on a
-  connected iPhone (Xcode 26 for iOS 15 devices). The bundled CSVs come from `app/src/main/assets`.
+  connected iPhone (Xcode 26 for iOS 15 devices), `upload-testflight.sh` uploads a TestFlight build
+  (see `docs/release.md`). The bundled CSVs come from `app/src/main/assets`.
 - `app/` — just the Android shell: `MainActivity`, `FeltbokApp` (fills `AppInfo` from BuildConfig),
   resources, assets, and the instrumented tests.
 - `app/src/main/assets/localities.csv` (public, bundled), `species.csv` (checklist + Rødlista
