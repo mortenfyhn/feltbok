@@ -78,7 +78,3 @@ expect fun LocalityScreen(vm: MainViewModel)
 /** The small map on the editor's locality row. */
 @Composable
 expect fun LocalityPreview(vm: MainViewModel, modifier: Modifier = Modifier)
-
-/** "Hent mine lokaliteter": log in on the site and fetch the user's own localities. */
-@Composable
-expect fun SyncScreen(vm: MainViewModel)

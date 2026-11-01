@@ -5,6 +5,8 @@ plugins {
     id("org.jetbrains.kotlin.multiplatform")
     id("com.android.kotlin.multiplatform.library")
     id("org.jetbrains.kotlin.plugin.compose")
+    // Copies libraries' Compose resources (MapLibre's attribution strings) into the iOS app bundle.
+    id("org.jetbrains.compose")
     id("org.jlleitschuh.gradle.ktlint")
 }
 
@@ -61,6 +63,11 @@ kotlin {
             implementation("androidx.lifecycle:lifecycle-viewmodel-compose:2.9.4")
             implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.9.0")
             implementation("org.osmdroid:osmdroid-android:6.1.20")
+        }
+        // iOS draws the picker map with MapLibre (Android uses osmdroid). Its iOS build brings
+        // Compose Multiplatform 1.12 with it on iOS only; Android stays on 1.11.
+        iosMain.dependencies {
+            implementation("org.maplibre.compose:maplibre-compose:0.20.0")
         }
         getByName("androidHostTest").dependencies {
             implementation("junit:junit:4.13.2")

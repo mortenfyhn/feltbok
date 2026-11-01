@@ -89,13 +89,15 @@ a `MainViewModel` must start with `ClearAppDataRule` — otherwise the suite bec
   moved into piece by piece for the iOS port (#115).
 - `ui/` — Kotlin Multiplatform module (Android + iOS, Compose Multiplatform) with the UI, built on
   `:shared`. `commonMain`: `MainViewModel.kt` (all UI state, no nav lib), `Ui.kt` and `App.kt` (the
-  Compose screens), `Model.kt` (TSV export), theme, `Strings`, `Country`, and `Platform.kt` — what
-  the UI needs from each platform: the `Platform` interface the view model gets, `PlatformUi`
-  (pickers, links, toasts) and `expect` composables for the map and sync screens. `androidMain`
+  Compose screens), `Model.kt` (TSV export), `SyncScreen.kt` ("Hent mine lokaliteter", over a
+  platform `SyncWeb`), `MapLogic.kt` (the picker map's shared rules), theme, `Strings`, `Country`,
+  and `Platform.kt` — what the UI needs from each platform: the `Platform` interface the view model
+  gets, `PlatformUi` (pickers, links, toasts) and `expect` composables for the map. `androidMain`
   implements them: `AndroidPlatform.kt` (+ Downloads backup), `PlatformUi.android.kt`,
-  `MapPicker.kt` (osmdroid picker map), `SyncScreen.kt` (WebView "Hent mine lokaliteter"),
-  `LocationTracker.kt`, `AndroidStorage.kt`. `iosMain` is the same for iOS (`IosPlatform.kt`,
-  `PlatformUi.ios.kt`, CoreLocation, `MainViewController.kt` as the root). Unit tests are
+  `MapPicker.kt` (osmdroid picker map), `SyncWeb.android.kt` (WebView), `LocationTracker.kt`,
+  `AndroidStorage.kt`. `iosMain` is the same for iOS (`IosPlatform.kt`, `PlatformUi.ios.kt`,
+  `MapPicker.kt` + `MapLayers.kt` on MapLibre, `SyncWeb.ios.kt` on WKWebView, CoreLocation, and
+  `MainViewController.kt` as the root). Unit tests are
   `androidHostTest` (`:ui:testAndroidHostTest`).
 - `iosApp/` — the iOS app: a thin SwiftUI host for `:ui`'s framework. `xcodegen` there generates the
   Xcode project from `project.yml` (not committed); `install-device.sh` builds and installs on a

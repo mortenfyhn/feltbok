@@ -20,7 +20,7 @@ import kotlinx.coroutines.delay
 import platform.Foundation.NSBundle
 
 /** The iOS app's root view controller, hosted by the Swift app (iosApp/). */
-fun MainViewController() = ComposeUIViewController {
+fun MainViewController() = run { configureMapRuntime(); ComposeUIViewController {
     val vm = remember {
         val info = NSBundle.mainBundle.infoDictionary
         AppInfo.gitVersion = GIT_VERSION
@@ -33,7 +33,7 @@ fun MainViewController() = ComposeUIViewController {
         App(vm)
         ToastOverlay()
     }
-}
+} }
 
 /** Android's Toast, as a dark pill near the bottom. */
 @Composable

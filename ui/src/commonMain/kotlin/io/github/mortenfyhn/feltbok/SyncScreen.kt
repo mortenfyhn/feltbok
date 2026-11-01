@@ -1,10 +1,5 @@
 package io.github.mortenfyhn.feltbok
 
-import android.annotation.SuppressLint
-import android.webkit.CookieManager
-import android.webkit.JavascriptInterface
-import android.webkit.WebView
-import android.webkit.WebViewClient
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -19,7 +14,7 @@ import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -27,20 +22,36 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.viewinterop.AndroidView
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
 // The sites host, login/probe URLs, the my-sites fetch JS, and the response parser live in
 // Country.kt: it pages /core/Sites/ByUser on mobil.artsobservasjoner.no. The fetch runs same-origin
-// inside the logged-in WebView so the session cookie rides along and we never read or store it.
+// inside the logged-in web view so the session cookie rides along and we never read or store it.
 
-/** The flow the screen walks through. The WebView is only ever shown to the user during [LOGIN];
+/** The platform web view the sync screen drives (Android: WebView, iOS: WKWebView). */
+interface SyncWeb {
+    fun load(url: String)
+
+    /** Run [Country.mySitesFetchJs] in the page; it answers through FeltbokSync.deliver(json). */
+    fun runFetch()
+
+    /** Make sure the session cookie outlives the app process. */
+    fun persistSession() {}
+
+    @Composable
+    fun View(modifier: Modifier)
+}
+
+/** A [SyncWeb] that reports finished page loads and the fetch script's answers. */
+@Composable
+expect fun rememberSyncWeb(onPageFinished: (SyncWeb, String) -> Unit, onDelivered: (SyncWeb, String) -> Unit): SyncWeb
+
+/** The flow the screen walks through. The web view is only ever shown to the user during [LOGIN];
  *  every other stage covers it with a Feltbok-native surface, so the third-party login never
  *  ambushes them. */
 private enum class Stage { CHECKING, INTRO, LOGIN, FETCHING, DONE, ERROR }
@@ -50,83 +61,64 @@ private enum class Stage { CHECKING, INTRO, LOGIN, FETCHING, DONE, ERROR }
  * session cookie; if it is still valid the user's own private localities are pulled and cached
  * locally (yellow, alongside the bundled public ones) without ever showing a browser. Only when
  * the probe says "not logged in" do we explain what's about to happen and, on the user's go-ahead,
- * reveal the Artsobservasjoner login. The session lives only in this WebView's cookie store - the
+ * reveal the Artsobservasjoner login. The session lives only in the web view's cookie store - the
  * rest of the app stays offline-first and has no "logged in" state.
  */
-@SuppressLint("SetJavaScriptEnabled")
 @Composable
-actual fun SyncScreen(vm: MainViewModel) {
+fun SyncScreen(vm: MainViewModel) {
     val cs = MaterialTheme.colorScheme
-    val ctx = LocalContext.current
     val scope = rememberCoroutineScope()
     var stage by remember { mutableStateOf(Stage.CHECKING) }
     var result by remember { mutableStateOf<SyncDiff?>(null) }
     var inFlight by remember { mutableStateOf(false) }   // guards against re-entrant fetches
 
-    val webView = remember {
-        WebView(ctx).apply {
-            // Default WebView background is white; on first attach it flashes full-bleed for a frame
-            // before Compose settles it into its slot, briefly whitening the green header area. A
-            // transparent background lets the grey behind show through instead of that white flash.
-            setBackgroundColor(android.graphics.Color.TRANSPARENT)
-            CookieManager.getInstance().setAcceptCookie(true)
-            CookieManager.getInstance().setAcceptThirdPartyCookies(this, true)
-            settings.javaScriptEnabled = true
-            settings.domStorageEnabled = true
-            // Identify ourselves to the site operator; the stock WebView UA stays intact in front.
-            settings.userAgentString = "${settings.userAgentString} Feltbok/${AppInfo.versionName}"
-            addJavascriptInterface(object {
-                @JavascriptInterface
-                fun deliver(json: String) { this@apply.post {   // bridge runs off-thread; hop to the UI thread
-                    scope.launch {
-                        inFlight = false
-                        when {
-                            json.contains("\"error\":\"auth\"") ->
-                                // Not logged in. During the login flow we just keep waiting; otherwise
-                                // this is the probe telling us we need to explain and log in.
-                                if (stage != Stage.LOGIN) stage = Stage.INTRO
-                            json.contains("\"error\"") -> stage = Stage.ERROR
-                            else -> {
-                                val sites = withContext(Dispatchers.Default) { Country.mySitesParse(json) }
-                                val diff = runCatching { vm.applyMySites(sites) }.getOrNull()
-                                if (diff != null) {
-                                    CookieManager.getInstance().flush()   // persist the session for next time
-                                    result = diff
-                                    stage = Stage.DONE
-                                } else stage = Stage.ERROR
-                            }
+    val web = rememberSyncWeb(
+        onPageFinished = { view, url ->
+            if (!inFlight) {
+                val onSite = url.startsWith(Country.sitesHost)
+                // A login page is either the same-host login path or, should the site move to
+                // an external SSO, any off-site host.
+                val onLoginPage = !onSite || url.contains(Country.loginPathMarker)
+                when (stage) {
+                    // Probe: on the site, fetch with the cached cookie; bounced to a login page
+                    // means we're not logged in, so explain and offer to log in.
+                    Stage.CHECKING ->
+                        if (onLoginPage) {
+                            stage = Stage.INTRO
+                        } else {
+                            inFlight = true; view.runFetch()
                         }
+                    // After login we land back on the site; login pages must not trigger a fetch.
+                    Stage.LOGIN -> if (onSite && !url.contains(Country.loginPathMarker)) {
+                        inFlight = true; stage = Stage.FETCHING; view.runFetch()
                     }
-                } }
-            }, "FeltbokSync")
-            webViewClient = object : WebViewClient() {
-                override fun onPageFinished(view: WebView, url: String?) {
-                    if (inFlight || url == null) return
-                    val onSite = url.startsWith(Country.sitesHost)
-                    // A login page is either the same-host login path or, should the site move to
-                    // an external SSO, any off-site host.
-                    val onLoginPage = !onSite || url.contains(Country.loginPathMarker)
-                    when (stage) {
-                        // Probe: on the site, fetch with the cached cookie; bounced to a login page
-                        // means we're not logged in, so explain and offer to log in.
-                        Stage.CHECKING ->
-                            if (onLoginPage) {
-                                stage = Stage.INTRO
-                            } else {
-                                inFlight = true; view.evaluateJavascript(Country.mySitesFetchJs, null)
-                            }
-                        // After login we land back on the site; login pages must not trigger a fetch.
-                        Stage.LOGIN -> if (onSite && !url.contains(Country.loginPathMarker)) {
-                            inFlight = true; stage = Stage.FETCHING; view.evaluateJavascript(Country.mySitesFetchJs, null)
-                        }
-                        else -> {}
+                    else -> {}
+                }
+            }
+        },
+        onDelivered = { view, json ->
+            scope.launch {
+                inFlight = false
+                when {
+                    json.contains("\"error\":\"auth\"") ->
+                        // Not logged in. During the login flow we just keep waiting; otherwise
+                        // this is the probe telling us we need to explain and log in.
+                        if (stage != Stage.LOGIN) stage = Stage.INTRO
+                    json.contains("\"error\"") -> stage = Stage.ERROR
+                    else -> {
+                        val sites = withContext(Dispatchers.Default) { Country.mySitesParse(json) }
+                        val diff = runCatching { vm.applyMySites(sites) }.getOrNull()
+                        if (diff != null) {
+                            view.persistSession()   // keep the session for next time
+                            result = diff
+                            stage = Stage.DONE
+                        } else stage = Stage.ERROR
                     }
                 }
             }
-            loadUrl(Country.syncProbeUrl)
-        }
-    }
-    DisposableEffect(Unit) { onDispose { webView.destroy() } }
+        },
+    )
+    LaunchedEffect(Unit) { web.load(Country.syncProbeUrl) }
 
     Column(Modifier.fillMaxSize()) {
         ScreenHeader(
@@ -141,13 +133,13 @@ actual fun SyncScreen(vm: MainViewModel) {
             Text(Strings.Sync.afterLogin,
                 color = cs.onSurfaceVariant, modifier = Modifier.padding(14.dp))
 
-        // The WebView stays mounted the whole time (it holds the session cookie and does the probe);
+        // The web view stays mounted the whole time (it holds the session cookie and does the probe);
         // every non-login stage simply covers it with a Feltbok surface.
         Box(Modifier.weight(1f).fillMaxWidth()) {
-            AndroidView(factory = { webView }, modifier = Modifier.fillMaxSize())
+            web.View(Modifier.fillMaxSize())
             if (stage != Stage.LOGIN) StageContent(stage, result, cs,
-                onLogin = { stage = Stage.LOGIN; webView.loadUrl(Country.syncLoginUrl) },
-                onRetry = { stage = Stage.CHECKING; webView.loadUrl(Country.syncProbeUrl) },
+                onLogin = { stage = Stage.LOGIN; web.load(Country.syncLoginUrl) },
+                onRetry = { stage = Stage.CHECKING; web.load(Country.syncProbeUrl) },
                 onDone = { vm.closeSync() })
         }
     }
