@@ -18,7 +18,11 @@ kotlin {
     }
     compilerOptions { allWarningsAsErrors.set(true) }
     sourceSets {
-        commonMain.dependencies { implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.8.0") }
+        commonMain.dependencies {
+            implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.8.0")
+            // api: the date functions take kotlinx-datetime types, which the app's callers see.
+            api("org.jetbrains.kotlinx:kotlinx-datetime:0.6.2")
+        }
         jvmTest.dependencies { implementation("junit:junit:4.13.2") }
     }
 }

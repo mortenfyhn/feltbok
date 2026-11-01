@@ -10,6 +10,14 @@ object Strings {
     const val back = "Tillbaka"
     const val findingPosition = "Hittar position…"
 
+    // What Android's sv-SE locale shows, minus the trailing dots ("aug.", "sön.").
+    val dateNames = DateNames(
+        months = listOf("jan", "feb", "mars", "apr", "maj", "juni", "juli", "aug", "sep", "okt", "nov", "dec"),
+        weekdays = listOf("Mån", "Tis", "Ons", "Tors", "Fre", "Lör", "Sön"),
+        today = Notes.today,
+        yesterday = Notes.yesterday,
+    )
+
     object Notes {
         const val empty = "Tryck + för ny observation"
         const val today = "Idag"

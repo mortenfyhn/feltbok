@@ -159,7 +159,7 @@ fun ListScreen(vm: MainViewModel, listState: LazyListState) {
                     // each row/header - nothing is inserted here, so marking never shifts the list.
                     // Notes in display order (for long-press-drag range selection, which maps a
                     // drag's Y to items via the list's layout info and sweeps this order).
-                    val groups = groupNotesByDay(vm.notes)
+                    val groups = groupNotesByDay(vm.notes, Strings.dateNames)
                     val orderedIds = groups.flatMap { g -> g.notes.map { it.id } }
                     // Inverted lookup for the drag-select range sweep, so it's O(1) instead of an O(n)
                     // indexOf on every drag move / auto-scroll frame.
@@ -1172,7 +1172,7 @@ fun ArchiveScreen(vm: MainViewModel) {
             }
         } else {
             val listState = rememberLazyListState()
-            val groups = groupNotesByDay(vm.archived)
+            val groups = groupNotesByDay(vm.archived, Strings.dateNames)
             val orderedIds = groups.flatMap { g -> g.notes.map { it.id } }
             val orderedIndex = remember(orderedIds) { orderedIds.withIndex().associate { (i, id) -> id to i } }
             val ds = remember { DragSelect() }
@@ -1388,8 +1388,8 @@ fun DetailScreen(vm: MainViewModel) {
             val tMs = if (vm.dTime > 0) vm.dTime else System.currentTimeMillis()
             var showTime by remember { mutableStateOf(false) }
             FieldRow(Strings.Detail.time, onClick = { showTime = true }) {
-                if (batch && vm.dTime <= 0L) BatchHint(vm.batchPreview { displayTimeRange(it.time, it.endTime, it.timeUnknown) })
-                else Text(displayTimeRange(tMs, vm.dEndTime, vm.dTimeUnknown))
+                if (batch && vm.dTime <= 0L) BatchHint(vm.batchPreview { displayTimeRange(it.time, it.endTime, it.timeUnknown, Strings.dateNames) })
+                else Text(displayTimeRange(tMs, vm.dEndTime, vm.dTimeUnknown, Strings.dateNames))
             }
             if (showTime) TimeDialog(vm) { showTime = false }
             // Co-observers (#128) sit last, below time: tap to open the name picker. Blank value when
@@ -1453,9 +1453,9 @@ private fun HideUntilRow(vm: MainViewModel, batch: Boolean) {
     FieldRow(Strings.Detail.hideUntil, onClick = ::pick) {
         val until = vm.dHideUntil
         when {
-            until != null -> Text(displayDate(until), fontWeight = FontWeight.Medium, maxLines = 1,
+            until != null -> Text(displayDate(until, Strings.dateNames), fontWeight = FontWeight.Medium, maxLines = 1,
                 modifier = Modifier.weight(1f, fill = false))
-            batch -> BatchHint(vm.batchPreview { it.hideUntil?.let(::displayDate) ?: "" })
+            batch -> BatchHint(vm.batchPreview { it.hideUntil?.let { ms -> displayDate(ms, Strings.dateNames) } ?: "" })
             else -> {}
         }
     }
@@ -1716,7 +1716,7 @@ private fun TimeRow(label: String, ms: Long, timeUnknown: Boolean, onDate: () ->
     Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
         Text(label, color = MaterialTheme.colorScheme.onSurfaceVariant, fontSize = 14.sp,
             modifier = Modifier.weight(1f))
-        TextButton(onClick = onDate) { Text(displayDate(ms)) }
+        TextButton(onClick = onDate) { Text(displayDate(ms, Strings.dateNames)) }
         if (!timeUnknown) TextButton(onClick = onTime) { Text(exportTime(ms)) }
         TextButton(onClick = onNow) { Text(Strings.Time.now) }
     }

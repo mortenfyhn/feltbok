@@ -14,6 +14,14 @@ object Strings {
     const val back = "Tilbake"                        // header back action on screens that discard nothing
     const val findingPosition = "Finner posisjon…"   // shared by the status strip and the detail screen
 
+    // What Android's nb-NO locale shows, minus the trailing dots ("jun.", "søn.").
+    val dateNames = DateNames(
+        months = listOf("jan", "feb", "mar", "apr", "mai", "jun", "jul", "aug", "sep", "okt", "nov", "des"),
+        weekdays = listOf("Man", "Tir", "Ons", "Tor", "Fre", "Lør", "Søn"),
+        today = Notes.today,
+        yesterday = Notes.yesterday,
+    )
+
     object Notes {
         const val empty = "Trykk + for ny observasjon"
         const val today = "I dag"
