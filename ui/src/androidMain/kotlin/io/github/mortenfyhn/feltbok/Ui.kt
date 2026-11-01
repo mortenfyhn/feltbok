@@ -262,7 +262,7 @@ fun ListScreen(vm: MainViewModel, listState: LazyListState) {
                     Text(Strings.Notes.feedback, color = cs.primary, fontWeight = FontWeight.Medium, fontSize = 13.sp,
                         maxLines = 1, modifier = Modifier.clickable { showFeedback = true }.padding(horizontal = 14.dp, vertical = 10.dp))
                 }
-                Text(BuildConfig.GIT_VERSION, color = cs.onSurfaceVariant.copy(alpha = 0.6f),
+                Text(AppInfo.gitVersion, color = cs.onSurfaceVariant.copy(alpha = 0.6f),
                     fontSize = 11.sp, maxLines = 1, softWrap = false, overflow = TextOverflow.Visible,
                     modifier = Modifier.align(Alignment.BottomCenter).clickable { showAbout = true }.offset(y = 5.dp))
             }
@@ -406,7 +406,7 @@ private fun FeedbackDialog(onDismiss: () -> Unit) {
     val ctx = LocalContext.current
     // Version + device + OS we'd otherwise have to ask the reporter for; auto-filled into
     // both the issue form and the email.
-    val tech = "Feltbok ${BuildConfig.GIT_VERSION}\n" +
+    val tech = "Feltbok ${AppInfo.gitVersion}\n" +
         "${android.os.Build.MANUFACTURER} ${android.os.Build.MODEL}\n" +
         "Android ${android.os.Build.VERSION.RELEASE} (API ${android.os.Build.VERSION.SDK_INT})"
     fun open(intent: android.content.Intent) {

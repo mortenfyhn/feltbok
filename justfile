@@ -18,7 +18,7 @@ build:
 [group('check')]
 test:
     .venv/bin/python -m unittest discover -s scripts -p 'test_*.py'
-    ./gradlew testDebugUnitTest :shared:jvmTest
+    ./gradlew :ui:testAndroidHostTest :shared:jvmTest
 
 # Install git hooks
 [group('dev')]

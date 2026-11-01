@@ -421,7 +421,7 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
     init {
         // Load localities off the main thread, then run the steps that depend on them.
         viewModelScope.launch {
-            val loaded = withContext(Dispatchers.Default) { loadLocalities(storage, BuildConfig.VERSION_CODE) }
+            val loaded = withContext(Dispatchers.Default) { loadLocalities(storage, AppInfo.versionCode) }
             localities.addAll(loaded)
             localitiesLoaded = true
             onLocalitiesLoaded()
@@ -653,7 +653,7 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
             }.filter { liveAdded.add(it.id) }
             if (fresh.isNotEmpty()) {
                 localities.addAll(fresh)
-                withContext(Dispatchers.IO) { appendLiveLocalities(storage, BuildConfig.VERSION_CODE, fresh) }
+                withContext(Dispatchers.IO) { appendLiveLocalities(storage, AppInfo.versionCode, fresh) }
                 if (screen == Screen.LOCALITY) Toast.makeText(ctx, Strings.Picker.liveFetched(fresh.size), Toast.LENGTH_LONG).show()
             }
             // A dense view can need more than one budget. Carry on while the map stays put, so you

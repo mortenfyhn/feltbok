@@ -29,12 +29,12 @@ blocks:
           - git fetch --tags --force --quiet
       jobs:
         - name: unit tests + debug APK
-          # Test the debug variant (not `test`, which would also run the release unit-test
-          # variants - same sources, no release-only tests, just wasted work).
+          # The unit tests live in :shared (JVM) and :ui (Android host tests); the app module
+          # has none left.
           # ktlintCheck gates formatting (run `just fmt` locally to fix).
           commands:
             - cache restore gradle-$(checksum app/build.gradle.kts)-$(checksum shared/build.gradle.kts)-$(checksum ui/build.gradle.kts)
-            - ./gradlew ktlintCheck testDebugUnitTest :shared:jvmTest assembleDebug --console=plain --no-daemon
+            - ./gradlew ktlintCheck :ui:testAndroidHostTest :shared:jvmTest assembleDebug --console=plain --no-daemon
             - cache store gradle-$(checksum app/build.gradle.kts)-$(checksum shared/build.gradle.kts)-$(checksum ui/build.gradle.kts) ~/.gradle
       # Publish the debug APK as a workflow artifact so the Claude issue→PR loop (and
       # any branch build) gives a downloadable APK to test, without pulling the branch locally.

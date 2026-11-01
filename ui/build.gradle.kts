@@ -18,6 +18,7 @@ kotlin {
         compileSdk = 36
         minSdk = 26
         compilerOptions { jvmTarget.set(org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_17) }
+        withHostTestBuilder {}
     }
     if (System.getProperty("os.name").startsWith("Mac")) {
         iosArm64()
@@ -32,5 +33,19 @@ kotlin {
             implementation("org.jetbrains.compose.ui:ui:$composeVersion")
             implementation("org.jetbrains.compose.material3:material3:1.9.0")
         }
+        androidMain.dependencies {
+            implementation("androidx.activity:activity-compose:1.13.0")
+            implementation("androidx.core:core-ktx:1.18.0")
+            implementation("androidx.lifecycle:lifecycle-viewmodel-compose:2.9.4")
+            implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.9.0")
+            implementation("org.osmdroid:osmdroid-android:6.1.20")
+        }
+        getByName("androidHostTest").dependencies {
+            implementation("junit:junit:4.13.2")
+        }
     }
 }
+
+// `./gradlew test` (the repo's pre-PR check) runs every module's `test`; the KMP Android library
+// names its unit tests testAndroidHostTest.
+tasks.register("test") { dependsOn("testAndroidHostTest") }

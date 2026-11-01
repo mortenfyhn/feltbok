@@ -16,7 +16,7 @@ suspend fun searchAoUsers(query: String): List<AoUser> {
             c.connectTimeout = 5000
             c.readTimeout = 5000
             c.setRequestProperty("X-CSRF", "1")
-            c.setRequestProperty("User-Agent", "Feltbok/${BuildConfig.VERSION_NAME}")
+            c.setRequestProperty("User-Agent", "Feltbok/${AppInfo.versionName}")
             try { parseAoUsers(c.inputStream.bufferedReader().readText()) } finally { c.disconnect() }
         }.getOrDefault(emptyList())
     }

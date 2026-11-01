@@ -160,14 +160,12 @@ androidComponents {
 dependencies {
     implementation(project(":ui"))
     implementation("androidx.activity:activity-compose:1.13.0")
+    // The BOM still pins the Compose the app ships: :ui's Compose Multiplatform resolves to these
+    // androidx artifacts on Android, and the instrumented tests' ui-test must match them.
     implementation(platform("androidx.compose:compose-bom:2026.06.01"))
-    implementation("androidx.compose.material3:material3")
     implementation("androidx.compose.ui:ui")
     implementation("androidx.core:core-ktx:1.18.0")
     implementation("androidx.lifecycle:lifecycle-viewmodel-compose:2.9.4")
-    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.9.0")
-    implementation("org.osmdroid:osmdroid-android:6.1.20")
-    testImplementation("junit:junit:4.13.2")
     // Instrumented R8 smoke tests (src/androidTest, run on a device against the minified
     // releaseTest variant). ext:junit pulls the runner + core transitively.
     androidTestImplementation("androidx.test.ext:junit:1.2.1")
@@ -176,6 +174,8 @@ dependencies {
     // it the test APK has no runner class and instrumentation crashes on launch.
     androidTestImplementation("androidx.test:runner:1.6.2")
     androidTestImplementation("androidx.test:rules:1.6.1") // GrantPermissionRule
+    // MapAndLaunchSmokeTest sets up an osmdroid map inline (osmdroid itself comes in through :ui).
+    androidTestImplementation("org.osmdroid:osmdroid-android:6.1.20")
     // Compose UI-flow tests (src/androidTest): drive the real screens and assert on the tree. The
     // BOM versions ui-test-junit4 to match the app's Compose. ui-test-manifest supplies the empty
     // ComponentActivity that createComposeRule() hosts App(vm) in - it must land in the variant

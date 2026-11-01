@@ -320,7 +320,7 @@ private fun RecenterButton(onClick: () -> Unit) {
     }
 }
 
-internal fun configureOsmdroid(ctx: Context) {
+fun configureOsmdroid(ctx: Context) {
     Configuration.getInstance().apply {
         userAgentValue = ctx.packageName               // required by the OSM tile policy
         osmdroidBasePath = File(ctx.cacheDir, "osmdroid")
@@ -483,7 +483,7 @@ internal fun tooBigToTap(loc: Locality, ppm: Double, viewWpx: Int, viewHpx: Int)
 /** Dev tool: when on (and on a dev build), the map draws each locality's tap hitbox on top —
  *  magenta ring = a point's finger-reach, blue outline = a footprint's exact tap shape, red dashed
  *  = a footprint excluded by [tooBigToTap]. A compile-time `const`, so when off it strips out like a
- *  C `#ifdef` (and [BuildConfig.DEV] keeps it out of release even if left on). Flip to true and
+ *  C `#ifdef` (and [AppInfo.dev] keeps it out of release even if left on). Flip to true and
  *  rebuild the dev app (`just install`) to eyeball hitboxes while tuning [TAP_SLOP_DP] /
  *  [MAX_TAP_FIT_FRACTION]. */
 private const val SHOW_HITBOXES = false
@@ -786,7 +786,7 @@ private class LocalityOverlay(
                 else -> stroke
             }
             drawShape(c, proj, loc, px, py, rPx, fp, sp)
-            if (BuildConfig.DEV && SHOW_HITBOXES) {  // dev hitbox overlay (off by default)
+            if (AppInfo.dev && SHOW_HITBOXES) {  // dev hitbox overlay (off by default)
                 val fpPaint = if (tooBigToTap(loc, ppm, map.width, map.height)) dbgBlocked else dbgFootprint
                 when {
                     loc.polygon.isEmpty() && loc.radius <= 0.0 -> c.drawCircle(px, py, slop, dbgSlop)

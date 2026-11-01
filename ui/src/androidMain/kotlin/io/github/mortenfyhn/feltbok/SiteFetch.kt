@@ -18,7 +18,7 @@ suspend fun fetchSites(s: Double, w: Double, n: Double, e: Double): List<SiteRow
             c.readTimeout = 10000
             c.setRequestProperty("Accept", "application/json")
             c.setRequestProperty("X-CSRF", "1")
-            c.setRequestProperty("User-Agent", "Feltbok/${BuildConfig.VERSION_NAME}")
+            c.setRequestProperty("User-Agent", "Feltbok/${AppInfo.versionName}")
             try { siteRows(c.inputStream.bufferedReader().readText()) } finally { c.disconnect() }
         }.getOrNull()
     }
