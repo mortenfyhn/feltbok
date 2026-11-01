@@ -1,7 +1,7 @@
-// iOS version of the locality picker (the Android one is androidMain/MapPicker.kt). The screen (header, zoom/re-centre buttons, new-spot panel) and the
-// overlay's drawing and tap logic are the Android code, nearly line for line; what changed is the
-// map underneath: MapLibre draws the OSM tiles and handles pan/zoom, and LocalityOverlay draws on a
-// Compose Canvas above it instead of an osmdroid Canvas.
+// iOS version of the locality picker (the Android one is androidMain/MapPicker.kt). The screen
+// (header, zoom/re-centre buttons, new-spot panel) and the tap logic are the Android code, nearly
+// line for line; what changed is the map: MapLibre draws the OSM tiles and the localities
+// (MapLayers.kt) and handles pan/zoom, and a Compose Canvas on top draws the new-spot crosshair.
 //
 // Units: the Android overlay is tuned in physical pixels at osmdroid zoom levels on a ~2.6x phone
 // (osmdroid tiles aren't DPI-scaled). [Proj] reproduces that: "android px" are dp × ANDROID_DENSITY,
@@ -29,7 +29,6 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.Button
 import androidx.compose.material3.MaterialTheme
@@ -51,23 +50,16 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.ui.geometry.Offset
-import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.PathEffect
 import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.graphics.drawscope.Fill
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalDensity
-import androidx.compose.ui.text.TextMeasurer
-import androidx.compose.ui.text.TextStyle
-import androidx.compose.ui.text.drawText
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardCapitalization
-import androidx.compose.ui.text.rememberTextMeasurer
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import kotlinx.cinterop.ExperimentalForeignApi
@@ -102,7 +94,6 @@ import kotlin.math.exp
 import kotlin.math.hypot
 import kotlin.math.ln
 import kotlin.math.log2
-import kotlin.math.max
 import kotlin.math.pow
 import kotlin.math.tan
 
@@ -123,10 +114,6 @@ private val OsmStyle = BaseStyle.Json(
                {"id":"osm","type":"raster","source":"osm"}]}
     """.trimIndent(),
 )
-
-/** Spike toggle: draw localities as MapLibre layers (true) or on the Compose Canvas (false), so the
- *  two can be compared on a device. Kept for the app run, not saved. */
-private var drawAsLayers by mutableStateOf(true)
 
 /** Serves the label font from the app bundle (glyphs-<range>.pbf: Noto Sans, OFL, from OpenFreeMap's
  *  font server), so map labels also work offline. Ranges cover Latin, Latin Extended and
@@ -221,11 +208,11 @@ actual fun LocalityScreen(vm: MainViewModel) {
     }
     var layerData by remember { mutableStateOf(LayerData.Empty) }
     val state = rememberMapState(baseStyle = OsmStyle, initialCameraPosition = start) {
-        if (drawAsLayers) LocalityLayers(layerData)
+        LocalityLayers(layerData)
     }
     val overlay = remember { LocalityOverlay() }
     // Plain-List snapshot of the localities, refreshed only when the set changes (the draw loop
-    // iterates it every frame, and snapshot-list reads there are slow) - as on Android.
+    // and the layer build iterate it, and snapshot-list reads there are slow) - as on Android.
     LaunchedEffect(vm.localities.size) { overlay.localities = vm.localities.toList() }
     // Flash the tapped locality highlighted, then return to the entry screen.
     LaunchedEffect(tapped) { tapped?.let { delay(300); vm.pickLocality(it) } }
@@ -257,16 +244,16 @@ actual fun LocalityScreen(vm: MainViewModel) {
             }
         }
     }
-    // Layers mode: rebuild the GeoJSON when the view leaves the padded area it was built for, the
+    // Rebuild the GeoJSON when the view leaves the padded area it was built for, the
     // zoom moves enough to change decluttering, or the pick/fix/locality set changes.
     LaunchedEffect(state) {
         var built: DoubleArray? = null
         var builtZoom = 0.0
         var builtKey: Any? = null
-        snapshotFlow { Triple(proj(), Triple(tapped ?: vm.pickerFocus, vm.fix, vm.localities.size), drawAsLayers) }
+        snapshotFlow { proj() to Triple(tapped ?: vm.pickerFocus, vm.fix, vm.localities.size) }
             .conflate()
-            .collect { (p, key, layers) ->
-                if (p == null || !layers) return@collect
+            .collect { (p, key) ->
+                if (p == null) return@collect
                 val v = p.bounds()
                 val b = built
                 val inside = b != null && v[0] >= b[0] && v[1] >= b[1] && v[2] <= b[2] && v[3] <= b[3]
@@ -292,7 +279,6 @@ actual fun LocalityScreen(vm: MainViewModel) {
     val back = { if (newMode) newMode = false else vm.leaveLocalityPicker() }
     BackHandler { back() }
 
-    val textMeasurer = rememberTextMeasurer(cacheSize = 512)
     Column(Modifier.fillMaxSize()) {
         ScreenHeader(
             title = if (newMode) Strings.Picker.titleNew else Strings.Picker.titlePick,
@@ -331,19 +317,13 @@ actual fun LocalityScreen(vm: MainViewModel) {
                 uiOptions = MapUiOptions { bindings { doubleTap { enabled = false } } },
                 overlay = {},
             )
-            Canvas(Modifier.fillMaxSize()) {
-                val p = proj() ?: return@Canvas
-                overlay.picked = tapped ?: vm.pickerFocus
-                overlay.fix = vm.fix
-                overlay.newRadiusM = if (newMode) newRadius.toDouble() else -1.0
-                overlay.newOffsetPx = if (newMode) sheetH.toFloat() else 0f
-                with(overlay) { draw(p, textMeasurer, this@Canvas, crosshairOnly = drawAsLayers) }
+            overlay.picked = tapped ?: vm.pickerFocus
+            if (newMode) {
+                Canvas(Modifier.fillMaxSize()) {
+                    val p = proj() ?: return@Canvas
+                    with(overlay) { drawNewSpot(p, newRadius.toDouble(), sheetH.toFloat()) }
+                }
             }
-            // Spike-only: flip between the two renderers to compare them on the phone.
-            Text(if (drawAsLayers) "Tegning: MapLibre" else "Tegning: Canvas", fontSize = 12.sp, color = Color.White,
-                modifier = Modifier.align(Alignment.TopStart).padding(8.dp)
-                    .background(Color(0xCC333333), RoundedCornerShape(12.dp))
-                    .clickable { drawAsLayers = !drawAsLayers }.padding(horizontal = 10.dp, vertical = 6.dp))
             // osmdroid's CopyrightOverlay: the OSM tile policy requires the credit.
             Text("© OpenStreetMap-bidragsytere", fontSize = 10.sp, color = Color(0xFF444444),
                 modifier = Modifier.align(Alignment.BottomStart).background(Color(0x99FFFFFF)).padding(horizontal = 4.dp, vertical = 1.dp))
@@ -472,16 +452,13 @@ private fun RecenterButton(onClick: () -> Unit) {
 @Composable
 actual fun LocalityPreview(vm: MainViewModel, modifier: Modifier) {}
 
-// ---- pure helpers, verbatim from MapPicker.kt ----
-
 private fun c(argb: Long) = Color(argb.toInt())
 
+/** What MapLibre doesn't do for the picker: resolving a tap to a locality (Android's rules, in
+ *  MapLogic.kt) and drawing the new-spot crosshair. */
 private class LocalityOverlay {
     var localities: List<Locality> = emptyList()
     var picked: Locality? = null
-    var fix: GpsFix? = null
-    var newRadiusM: Double = -1.0
-    var newOffsetPx: Float = 0f
     var tapsBlocked = false
 
     private fun radiusPx(loc: Locality, ppm: Double): Float {
@@ -489,173 +466,21 @@ private class LocalityOverlay {
         return (loc.radius * ppm).toFloat().coerceAtLeast(POINT_DOT_PX)
     }
 
-    private fun boundsVisible(loc: Locality, bb: DoubleArray): Boolean {
-        val b = loc.cullBounds
-        return !(b[1] < bb[0] || b[0] > bb[2] || b[3] < bb[1] || b[2] > bb[3])
-    }
-
-    private fun polyPath(p: Proj, polygon: List<DoubleArray>) = Path().apply {
-        for ((j, v) in polygon.withIndex()) {
-            val o = p.toPixels(v[0], v[1])
-            if (j == 0) moveTo(o.x, o.y) else lineTo(o.x, o.y)
+    /** The new spot's radius circle ([radiusM], 0 = none) and crosshair, centred in the map area
+     *  above the [offsetPx]-high bottom panel. */
+    fun DrawScope.drawNewSpot(p: Proj, radiusM: Double, offsetPx: Float) {
+        val cx = p.widthPx / 2f
+        val cy = (p.heightPx - offsetPx) / 2f
+        val ctr = Offset(cx, cy)
+        if (radiusM > 0.0) {
+            val r = (radiusM * p.ppm).toFloat().coerceAtLeast(10f) * p.s
+            drawCircle(c(MapPalette.YellowFill), r, ctr, style = Fill)
+            drawCircle(c(MapPalette.YellowStroke), r, ctr,
+                style = Stroke(6f * p.s, pathEffect = PathEffect.dashPathEffect(floatArrayOf(20f * p.s, 14f * p.s))))
         }
-        close()
-    }
-
-    private fun DrawScope.shape(p: Proj, loc: Locality, at: Offset, rPx: Float, fill: Long, stroke: Long, strokeW: Float) {
-        if (loc.polygon.isNotEmpty()) {
-            val path = polyPath(p, loc.polygon)
-            drawPath(path, c(fill), style = Fill)
-            drawPath(path, c(stroke), style = Stroke(strokeW * p.s))
-        } else {
-            drawCircle(c(fill), rPx * p.s, at, style = Fill)
-            drawCircle(c(stroke), rPx * p.s, at, style = Stroke(strokeW * p.s))
-        }
-    }
-
-    private fun labelSpanPx(loc: Locality, ppm: Double): Float =
-        if (loc.polygon.isEmpty() && loc.radius <= 0.0)
-            ((if (loc.isSuper) SUPER_POINT_LABEL_EXTENT_M else POINT_LABEL_EXTENT_M) * ppm).toFloat()
-        else screenSpanPx(loc, ppm)
-
-    private class LabelCandidate(
-        val lines: List<String>, val cx: Float, val firstBaseline: Float,
-        val box: Rect, val priority: Float, val public: Boolean, val isSuper: Boolean,
-    )
-
-    private fun style(p: Proj, d: Density) = with(d) { TextStyle(fontSize = (38f * p.s).toSp(), color = c(MapPalette.LabelText)) }
-
-    private fun measure(tm: TextMeasurer, text: String, st: TextStyle) = tm.measure(text, st, softWrap = false)
-
-    private fun wrapLabel(tm: TextMeasurer, st: TextStyle, name: String, maxW: Float): List<String> {
-        if (measure(tm, name, st).size.width <= maxW) return listOf(name)
-        val out = ArrayList<String>()
-        val sb = StringBuilder()
-        for (word in name.split(" ")) {
-            val trial = if (sb.isEmpty()) word else "$sb $word"
-            if (sb.isEmpty() || measure(tm, trial, st).size.width <= maxW) {
-                sb.setLength(0); sb.append(trial)
-            } else {
-                out.add(sb.toString()); sb.setLength(0); sb.append(word)
-            }
-        }
-        if (sb.isNotEmpty()) out.add(sb.toString())
-        return out
-    }
-
-    private fun labelFor(p: Proj, tm: TextMeasurer, st: TextStyle, loc: Locality, markerR: Float, priority: Float): LabelCandidate {
-        val s = p.s
-        val a = loc.labelAnchor
-        val at = p.toPixels(a[0], a[1])
-        val centred = loc.polygon.isNotEmpty() || (loc.radius > 0.0 && loc.radius * p.ppm >= POINT_DOT_PX)
-        val mr = markerR
-        val lineH = 32f * s
-        val lines = wrapLabel(tm, st, loc.lokalitet, 210f * s)
-        var maxW = 0f
-        for (l in lines) maxW = max(maxW, measure(tm, l, st).size.width.toFloat())
-        val halfW = maxW / 2f + LABEL_PAD * s
-        val first = if (centred) at.y - (lines.size - 1) * lineH / 2f + lineH * 0.32f
-        else at.y + mr.coerceAtMost(40f) * s + lineH
-        val top = first - lineH * 0.8f
-        val bottom = first + (lines.size - 1) * lineH + lineH * 0.2f
-        val box = Rect(at.x - halfW, top - LABEL_PAD * s, at.x + halfW, bottom + LABEL_PAD * s)
-        return LabelCandidate(lines, at.x, first, box, priority, loc.public, loc.isSuper)
-    }
-
-    private fun DrawScope.drawLabel(p: Proj, tm: TextMeasurer, st: TextStyle, cand: LabelCandidate) {
-        val halo = when {
-            !cand.public -> MapPalette.LabelHaloYellow
-            cand.isSuper -> MapPalette.LabelHaloSuper
-            else -> MapPalette.LabelHaloGreen
-        }
-        val haloStyle = st.copy(color = c(halo), drawStyle = Stroke(5f * p.s))
-        var ty = cand.firstBaseline
-        for (line in cand.lines) {
-            val fill = measure(tm, line, st)
-            val outline = measure(tm, line, haloStyle)
-            val topLeft = Offset(cand.cx - fill.size.width / 2f, ty - fill.firstBaseline)
-            drawText(outline, topLeft = topLeft)
-            drawText(fill, topLeft = topLeft)
-            ty += 32f * p.s
-        }
-    }
-
-    fun draw(p: Proj, tm: TextMeasurer, scope: DrawScope, crosshairOnly: Boolean = false) = with(scope) {
-        val ppm = p.ppm
-        if (!crosshairOnly) drawLocalities(p, tm)
-        if (newRadiusM >= 0.0) {
-            val cx = p.widthPx / 2f
-            val cy = (p.heightPx - newOffsetPx) / 2f
-            val ctr = Offset(cx, cy)
-            if (newRadiusM > 0.0) {
-                val r = (newRadiusM * ppm).toFloat().coerceAtLeast(10f) * p.s
-                drawCircle(c(MapPalette.YellowFill), r, ctr, style = Fill)
-                drawCircle(c(MapPalette.YellowStroke), r, ctr,
-                    style = Stroke(6f * p.s, pathEffect = PathEffect.dashPathEffect(floatArrayOf(20f * p.s, 14f * p.s))))
-            }
-            val cross = c(MapPalette.YellowStroke)
-            drawLine(cross, Offset(cx - 22f * p.s, cy), Offset(cx + 22f * p.s, cy), 4f * p.s)
-            drawLine(cross, Offset(cx, cy - 22f * p.s), Offset(cx, cy + 22f * p.s), 4f * p.s)
-        }
-    }
-
-    private fun DrawScope.drawLocalities(p: Proj, tm: TextMeasurer) {
-        val ppm = p.ppm
-        val bb = p.bounds()
-        val st = style(p, this)
-        val labels = ArrayList<LabelCandidate>()
-        for (loc in localities) {
-            if (loc === picked) continue
-            if (!boundsVisible(loc, bb)) continue
-            val span = screenSpanPx(loc, ppm)
-            if (declutteredAtZoom(p.zoom, span)) continue
-            val at = p.toPixels(loc.lat, loc.lon)
-            val rPx = radiusPx(loc, ppm)
-            val big = span > LARGE_FOOTPRINT_PX
-            val fp = when {
-                !loc.public -> if (big) MapPalette.YellowFillPale else MapPalette.YellowFill
-                loc.isSuper -> when {
-                    big -> MapPalette.SuperFillPale
-                    loc.polygon.isEmpty() && loc.radius <= 0.0 -> MapPalette.SuperFillSolid
-                    else -> MapPalette.SuperFill
-                }
-                else -> if (big) MapPalette.GreenFillPale else MapPalette.GreenFill
-            }
-            val sp = when {
-                !loc.public -> MapPalette.YellowStroke
-                loc.isSuper -> MapPalette.SuperStroke
-                else -> MapPalette.GreenStroke
-            }
-            shape(p, loc, at, rPx, fp, sp, 2f)
-            val labelSpan = labelSpanPx(loc, ppm)
-            if (labelSpan >= LABEL_MIN_SPAN_PX) labels += labelFor(p, tm, st, loc, rPx, labelSpan)
-        }
-        picked?.let { pl ->
-            val at = p.toPixels(pl.lat, pl.lon)
-            val faint = selectedFillIsFaint(pl, ppm)
-            val fp = if (pl.public) (if (faint) MapPalette.SelFillFaint else MapPalette.SelFill)
-            else (if (faint) MapPalette.SelFillFaintPriv else MapPalette.SelFillPriv)
-            val sp = if (pl.public) MapPalette.SelStroke else MapPalette.SelStrokePriv
-            shape(p, pl, at, radiusPx(pl, ppm), fp, sp, 6f)
-            labels += labelFor(p, tm, st, pl, radiusPx(pl, ppm), Float.MAX_VALUE)
-        }
-        labels.sortByDescending { it.priority }
-        val placed = ArrayList<Rect>()
-        for (cand in labels) {
-            if (placed.any { it.overlaps(cand.box) }) continue
-            placed += cand.box
-            drawLabel(p, tm, st, cand)
-        }
-        fix?.let { f ->
-            val at = p.toPixels(f.lat, f.lon)
-            if (!f.accuracyM.isNaN() && f.accuracyM > 0f) {
-                val rAcc = (f.accuracyM * ppm).toFloat().coerceIn(8f, 600f) * p.s
-                drawCircle(c(MapPalette.GpsAccFillFaint), rAcc, at, style = Fill)
-                drawCircle(c(MapPalette.GpsAccStrokeFaint), rAcc, at, style = Stroke(2f * p.s))
-            }
-            drawCircle(c(MapPalette.Gps), 18f * p.s, at, style = Fill)
-            drawCircle(c(MapPalette.GpsRing), 18f * p.s, at, style = Stroke(3f * p.s))
-        }
+        val cross = c(MapPalette.YellowStroke)
+        drawLine(cross, Offset(cx - 22f * p.s, cy), Offset(cx + 22f * p.s, cy), 4f * p.s)
+        drawLine(cross, Offset(cx, cy - 22f * p.s), Offset(cx, cy + 22f * p.s), 4f * p.s)
     }
 
     /** MapPicker.kt's onSingleTapUp, unchanged apart from units: [x]/[y] are device pixels. */

@@ -1,8 +1,8 @@
-// The locality picker drawn as MapLibre layers instead of on a Compose Canvas, so the shapes render
-// in the same frame as the tiles and stay glued to the map while panning and zooming.
+// The picker's localities as MapLibre layers, so the shapes render in the same frame as the tiles
+// and stay glued to the map while panning and zooming.
 //
 // Kotlin still decides *what* to draw - the same cull, declutter, colours and label priorities as
-// LocalityOverlay - and hands MapLibre GeoJSON for the area around the view. MapLibre draws it and
+// the Android map - and hands MapLibre GeoJSON for the area around the view. MapLibre draws it and
 // places the labels with its own collision pass (symbol sort key = Android's label priority).
 package io.github.mortenfyhn.feltbok
 
@@ -195,7 +195,7 @@ private val ExactShapes: org.maplibre.compose.sources.GeoJsonOptions.Builder.() 
 private val LabelFont = const(listOf("Noto Sans Regular"))
 
 // Android draws 38 px labels wrapped at 210 px on the reference phone; Noto Sans runs larger than
-// the system font at the same size, so it's scaled down to match the Canvas renderer's look.
+// the system font at the same size, so it's scaled down to match the Android labels' look.
 private const val LABEL_SP = 38f / 2.625f * 0.94f
 private val LabelSize = const(LABEL_SP.sp)
 private val LabelMaxWidth = const((210f / 2.625f / LABEL_SP).em)
