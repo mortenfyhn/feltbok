@@ -16,6 +16,18 @@ auto_cancel:
   running:
     when: "true"
 
+# Email me about every failed job on master (issue #163), so a broken CI can't go unnoticed. The
+# email goes to the verified address of the ntfy account that owns $NTFY_TOKEN. Inline rather than
+# a script so it still fires when `checkout` itself is what failed. The ref-type check skips PR
+# builds, where SEMAPHORE_GIT_BRANCH is the PR's target branch.
+global_job_config:
+  secrets:
+    - name: ntfy-token
+  epilogue:
+    on_fail:
+      commands:
+        - 'if [ "$SEMAPHORE_GIT_REF_TYPE" = branch ] && [ "$SEMAPHORE_GIT_BRANCH" = master ]; then curl --silent --show-error --fail -H "Authorization: Bearer $NTFY_TOKEN" -H "Email: yes" -H "Title: Feltbok CI failed" -d "$SEMAPHORE_JOB_NAME failed on $SEMAPHORE_GIT_BRANCH: https://fyhn.semaphoreci.com/workflows/$SEMAPHORE_WORKFLOW_ID" https://ntfy.sh/mortenfyhn-feltbok-ci; fi'
+
 blocks:
   - name: Test & build
     dependencies: []
