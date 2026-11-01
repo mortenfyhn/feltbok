@@ -31,14 +31,14 @@ private const val SERVER_MAX_M = 45_000.0
 // The server truncates silently, and returns up to about twice MaxSites when it does; treat a
 // response this long as truncated (same check as harvest_sites_mobil.py). The website's own map
 // does the same with MaxSites=200.
-internal const val MAX_SITES = 1000
+const val MAX_SITES = 1000
 
 // Web Mercator (EPSG:3857, metres) <-> WGS84. Also used for the GeoJSON the Swedish sites API returns.
 internal const val MERC_HALF = 20037508.34
-internal fun mercToLon(x: Double) = x / MERC_HALF * 180.0
-internal fun mercToLat(y: Double) = (2 * atan(exp(y / MERC_HALF * PI)) - PI / 2) * 180 / PI
-internal fun mercX(lon: Double) = lon * MERC_HALF / 180
-internal fun mercY(lat: Double) = ln(tan((90 + lat) * PI / 360)) / (PI / 180) * MERC_HALF / 180
+fun mercToLon(x: Double) = x / MERC_HALF * 180.0
+fun mercToLat(y: Double) = (2 * atan(exp(y / MERC_HALF * PI)) - PI / 2) * 180 / PI
+fun mercX(lon: Double) = lon * MERC_HALF / 180
+fun mercY(lat: Double) = ln(tan((90 + lat) * PI / 360)) / (PI / 180) * MERC_HALF / 180
 
 /** Widest view whose leftover cells are fetched in further rounds while the map stays still. A
  *  complete 10 km view of central Trondheim is ~30 requests (a ~5 km one 23 requests, 4.2 MB of
@@ -89,7 +89,7 @@ fun fetchGroups(s: Double, w: Double, n: Double, e: Double): List<List<Long>> {
 
 /** [cells] split into up to four groups at the middle of their range. Each group is strictly smaller
  *  when there is more than one cell, so repeated splitting ends at single cells. */
-internal fun splitCells(cells: List<Long>): Collection<List<Long>> {
+fun splitCells(cells: List<Long>): Collection<List<Long>> {
     val xs = cells.map(::cellX); val ys = cells.map(::cellY)
     val xm = (xs.min() + xs.max()).floorDiv(2); val ym = (ys.min() + ys.max()).floorDiv(2)
     return cells.groupBy { (cellX(it) > xm) to (cellY(it) > ym) }.values
