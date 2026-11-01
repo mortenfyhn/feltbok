@@ -61,7 +61,6 @@
             android:pathData="M61,41 a2.3,2.3 0 1,0 4.6,0 a2.3,2.3 0 1,0 -4.6,0 Z" />
         <path android:fillColor="#FFFFFF"
             android:pathData="M62.1,40.2 a0.7,0.7 0 1,0 1.4,0 a0.7,0.7 0 1,0 -1.4,0 Z" />
-        <!-- No "beta" scrawl here: Norway is stable from v1.0. The Sweden flavor still-beta keeps it
-             via its own sweden/res/drawable/ic_launcher_foreground.xml override. -->
+        <!-- No "beta" scrawl here: stable from v1.0. -->
     </group>
 </vector>

@@ -36,10 +36,9 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
-// The sites host, login/probe URLs, the my-sites fetch JS, and the response parser are all
-// per-country (see Country.kt): Norway pages /core/Sites/ByUser on mobil.artsobservasjoner.no;
-// Sweden POSTs GetEditableSitesGeoJson on artportalen.se. The fetch runs same-origin inside the
-// logged-in WebView so the session cookie rides along and we never read or store it.
+// The sites host, login/probe URLs, the my-sites fetch JS, and the response parser live in
+// Country.kt: it pages /core/Sites/ByUser on mobil.artsobservasjoner.no. The fetch runs same-origin
+// inside the logged-in WebView so the session cookie rides along and we never read or store it.
 
 /** The flow the screen walks through. The WebView is only ever shown to the user during [LOGIN];
  *  every other stage covers it with a Feltbok-native surface, so the third-party login never
@@ -104,8 +103,8 @@ fun SyncScreen(vm: MainViewModel) {
                 override fun onPageFinished(view: WebView, url: String?) {
                     if (inFlight || url == null) return
                     val onSite = url.startsWith(Country.sitesHost)
-                    // A login page is either the same-host login path or, when the site uses an
-                    // external SSO (Sweden -> useradmin-auth.slu.se), any off-site host.
+                    // A login page is either the same-host login path or, should the site move to
+                    // an external SSO, any off-site host.
                     val onLoginPage = !onSite || url.contains(Country.loginPathMarker)
                     when (stage) {
                         // Probe: on the site, fetch with the cached cookie; bounced to a login page

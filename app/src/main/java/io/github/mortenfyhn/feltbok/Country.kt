@@ -3,10 +3,8 @@ package io.github.mortenfyhn.feltbok
 import java.util.Locale
 
 /**
- * Per-country (build flavor) configuration: everything that differs between the Norwegian
- * (Artsobservasjoner) build and the Swedish (Artportalen) one. This file is the Norway
- * build's values; the Sweden flavor supplies its own copy so the rest of the app stays
- * country-agnostic and just reads `Country.*`.
+ * Everything tied to the target site, Artsobservasjoner: export format, option vocabularies,
+ * geography and service URLs. (Once one of two country flavors; the Swedish one was dropped.)
  *
  * Note vocabularies (ages/activities/sexes) are the *exact* values the import expects, so a
  * picked value is exported verbatim — no per-country translation at export time.
@@ -30,8 +28,8 @@ object Country {
 
     // "Skjul funn til dato" (v2.20/v3.0 Fugl col 17): hides the observation from other users until
     // after the given date, formatted like the other dates (the template's Instruksjoner sheet:
-    // "Hindrer innsyn av andre til etter datoen som angis på formatet DD.MM.YYYY"). Null in the
-    // Sweden flavor, which has no such column - hence the nullable type and the conditional cell.
+    // "Hindrer innsyn av andre til etter datoen som angis på formatet DD.MM.YYYY"). Nullable
+    // (with a conditional cell) from when a Swedish flavor without the column existed.
     val hideUntilCol: String? = "Skjul funn til dato"
     val exportCols = listOf(
         "Artsnavn", "Antall", "Alder", "Kjønn", "Aktivitet", "Lokalitetsnavn", "Nord", "Øst",
@@ -95,10 +93,6 @@ object Country {
     val accuracy = "100 m"
 
     // ---- geography / online services ----
-    // Locality map style. Norway has real polygons and lower density, so filled disks read fine.
-    // (Sweden's near-all-circle, heavily-overlapping localities use the hollow style instead.)
-    val hollowLocalities = false
-
     // Fallback map centre when there's no GPS fix or nearby locality (central Norway).
     val mapCenterLat = 63.7
     val mapCenterLon = 8.7

@@ -71,8 +71,7 @@ the exact species. These are fetched from Artsobservasjoner itself
 (`scripts/build_ubestemt.py`) and searchable like any other checklist entry — but they carry no
 observation-count data, so they never get the "what's likely here and now" boost real species get;
 a matching real species generally ranks above a same-tier ub. entry, though a better match tier
-(e.g. typing "ub. …" exactly) still wins outright, same as for two real species. Norway-only for
-now.
+(e.g. typing "ub. …" exactly) still wins outright, same as for two real species.
 
 ### Names and languages
 
@@ -83,8 +82,7 @@ builds.
 Under **Innstillinger** (open the About dialog from the footer version, then
 "Innstillinger") you pick a **primary** name language and a **secondary** one shown
 beneath it — each any of the three (Latin doubles as the "no second common name"
-choice). Out of the box the Norway build shows Norwegian with Latin underneath, the
-Sweden build Swedish with Norwegian underneath. A secondary equal to the primary just
+choice). Out of the box it shows Norwegian with Latin underneath. A secondary equal to the primary just
 isn't drawn; a species a source lacks the chosen name for falls back to Latin, so a
 primary name is never blank.
 
@@ -93,15 +91,14 @@ flugsnappare", as on Artportalen), **Norwegian** stays all-lower-case, and the *
 name keeps its capitalised genus and is always shown *italic* (whether primary or
 secondary). This is display-only — the stored data and the export name stay lower-case.
 
-**Search** matches the **primary** name only by default — so typing `t` in the Norway
-build won't surface a bird via its Swedish name. A **"søk i begge språk"** toggle
+**Search** matches the **primary** name only by default — so typing `t` won't surface a
+bird via its Swedish name. A **"søk i begge språk"** toggle
 (same screen) also searches the secondary language, as a fallback for when you can't
 recall the primary-language name (e.g. a Swedish birder searching Norwegian). The third,
 unshown language is never searched.
 
-The **export is unaffected** by this choice: the pasted `Artsnavn`/`Artnamn` is always
-the name the destination portal accepts (Norwegian for Artsobservasjoner, Swedish for
-Artportalen) — so, e.g., a feral rock dove exports and is looked up as `bydue` even
+The **export is unaffected** by this choice: the pasted `Artsnavn` is always the
+Norwegian name Artsobservasjoner accepts — so, e.g., a feral rock dove exports and is looked up as `bydue` even
 though IOC's species name is `klippedue`.
 
 ## The notes list
@@ -177,7 +174,7 @@ remove), then matching **Artsobservasjoner users**, then **Legg til «…»** at
 add the typed name as free text. The keyboard's Done key only hides the keyboard, and
 leaving the picker never adds what's in the field.
 
-The user search (Norway only) runs when you've typed 3 or more letters and you're online;
+The user search runs when you've typed 3 or more letters and you're online;
 **Søker…** shows while it runs. Users show like on Artsobservasjoner: name, place in grey
 italics, and their brukeralias in brackets. Tapping one adds them and saves them to your
 list, with place and alias, so they show up offline next time. **Legg til «…»** is the
@@ -229,30 +226,20 @@ row; Back or a tap outside closes it unchanged. The row is batch-editable, so ma
 observations and setting one date hides the whole trip.
 
 On export it fills the template's **`Skjul funn til dato`** column, in the same `dd.MM.yyyy`
-format as the other dates. Only the Norwegian build has this: Artportalen has no equivalent
-column (its protection field blurs coordinates instead), so the row is absent in the Sweden
-build.
+format as the other dates.
 
 ## Locality picker (map)
 
 Tapping the locality field (or the status strip) opens a map of the registered localities over
-OpenStreetMap tiles. **Norway** draws each locality as a filled green disk at its real radius
+OpenStreetMap tiles. Each locality is a filled green disk at its real radius
 (polygons trace their real outline; superlocalities are a deeper green), and the selected one is
 highlighted; far-out views hide the smallest ones so the map doesn't clutter.
-
-**Sweden** renders them the way Artportalen does, because Artportalen's localities are almost all
-overlapping circles (5 polygons in ~29 000) — filled disks turn a city like Stockholm into a solid
-green blob. So each locality is instead a **grey outline ring** (no fill) with a small centre marker:
-a **green dot** for a regular locality (identical to a Norway 0 m locality) or a **deep-green
-triangle** for a superlocality, with the name just below the marker. The full green fill appears only
-on the one you've selected. Everything else about the picker (tap-to-select, new-spot placement,
-zoom declutter, GPS dot) is the same across both builds. The one flag is `Country.hollowLocalities`.
 
 The map opens centred on the locality the observation already has, however far that is from your
 GPS fix — you opened the picker to adjust around that place. Only when there's no locality yet does
 it centre on your own position.
 
-**Norway** also looks up public localities created after the bundled list was harvested. When the map
+The picker also looks up public localities created after the bundled list was harvested. When the map
 has been still for a second, and the view is under 40 km across in Web Mercator (about 18 km on the
 ground at 63°N), the app asks Artsobservasjoner's `ByBoundingBox` endpoint for the public localities
 in view, plus a margin of half a view on each side, so a short pan shows localities that are already
@@ -325,10 +312,8 @@ proportional to the *live* notes however big the archive grows.
 ## About / credits
 
 Tapping the version string in the footer opens a small "Om Feltbok" dialog with the
-maker line and the data credits — IOC World Bird List (species names), Artsdatabanken /
-SLU Artdatabanken (red-list status **and** alien-species status), Artsobservasjoner /
-Artportalen (localities), and OpenStreetMap (map). The dialog also links to
-**Innstillinger** (the name-language settings). Norway's Artsdatabanken data is CC BY 4.0,
-whose licence *requires* attribution — this is its home; Sweden's SLU Artdatabanken data is
-CC0, credited as a courtesy rather than an obligation. The map also carries an
+maker line and the data credits — IOC World Bird List (species names), Artsdatabanken
+(red-list status **and** alien-species status), Artsobservasjoner (localities), and
+OpenStreetMap (map). The dialog also links to **Innstillinger** (the name-language settings).
+Artsdatabanken's data is CC BY 4.0, whose licence *requires* attribution — this is its home. The map also carries an
 "© OpenStreetMap-bidragsytere" corner credit, as the OSM tile policy requires.

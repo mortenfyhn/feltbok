@@ -58,14 +58,6 @@ fun signingValue(prop: String, env: String): String? =
     keystoreProps?.getProperty(prop) ?: System.getenv(env)
 val signStore = signingValue("storeFile", "KEYSTORE_FILE")
 
-// The Sweden flavor's "my localities" sync needs the maintainer's Artportalen userId. Kept out of
-// git (in local.properties, like the signing secrets) so it isn't published; absent -> "0", which
-// just means the personal sync returns nothing useful on a fresh clone/CI. Not a secret per se, but
-// it links to a profile and we'd rather not commit it.
-val localProps = rootProject.file("local.properties").takeIf { it.exists() }
-    ?.let { Properties().apply { load(it.inputStream()) } }
-val seUserId = localProps?.getProperty("feltbok.se.userId") ?: System.getenv("SE_USER_ID") ?: "0"
-
 android {
     namespace = "io.github.mortenfyhn.feltbok"
     compileSdk = 36
@@ -81,23 +73,6 @@ android {
         // BuildConfig.DEBUG tracks the `debuggable` flag, which the debug build type turns OFF for
         // speed - so it's false even in the dev build. Use this DEV flag for dev-only code instead.
         buildConfigField("boolean", "DEV", "false")
-        // Artportalen userId for the Sweden flavor's locality sync (from local.properties; see above).
-        buildConfigField("String", "SE_USER_ID", "\"$seUserId\"")
-    }
-
-    // One flavor per country: a separate app per Artsobservasjoner-family site (issue #127), so
-    // Swedish field notes never mix with Norwegian ones and each ships only its own data. Norway
-    // keeps the original applicationId untouched (the maintainer's real app + field notes).
-    flavorDimensions += "country"
-    productFlavors {
-        create("norway") {
-            dimension = "country"
-            // applicationId stays the defaultConfig value: io.github.mortenfyhn.feltbok
-        }
-        create("sweden") {
-            dimension = "country"
-            applicationId = "io.github.mortenfyhn.feltbok.se"
-        }
     }
 
     signingConfigs {
@@ -170,18 +145,11 @@ android {
     }
 }
 
-// app_name combines the flavor base ("Feltbok"/"Fältbok") with a marker so all four installs are
-// tellable apart on-device. Dev builds are always "(dev)". Norway is stable from v1.0, so its
-// release carries no marker; Sweden is still beta, so its release stays "(beta)". Done via the
-// variant API because a resValue set per-flavor and per-build-type would override rather than combine.
+// app_name marks the dev build "(dev)" so it's tellable apart from the release app on-device.
 androidComponents {
     onVariants { variant ->
-        val base = if (variant.flavorName == "sweden") "Fältbok" else "Feltbok"
-        val marker = when {
-            variant.buildType == "debug" -> " (dev)"
-            variant.flavorName == "sweden" -> " (beta)"
-            else -> ""
-        }
+        val base = "Feltbok"
+        val marker = if (variant.buildType == "debug") " (dev)" else ""
         variant.resValues.put(
             variant.makeResValueKey("string", "app_name"),
             com.android.build.api.variant.ResValue(base + marker),

@@ -35,10 +35,10 @@ private const val SERVER_MAX_M = 45_000.0
 // does the same with MaxSites=200.
 const val MAX_SITES = 1000
 
-// Web Mercator (EPSG:3857, metres) <-> WGS84. Also used for the GeoJSON the Swedish sites API returns.
+// Web Mercator (EPSG:3857, metres) <-> WGS84.
 internal const val MERC_HALF = 20037508.34
-fun mercToLon(x: Double) = x / MERC_HALF * 180.0
-fun mercToLat(y: Double) = (2 * atan(exp(y / MERC_HALF * PI)) - PI / 2) * 180 / PI
+internal fun mercToLon(x: Double) = x / MERC_HALF * 180.0
+internal fun mercToLat(y: Double) = (2 * atan(exp(y / MERC_HALF * PI)) - PI / 2) * 180 / PI
 fun mercX(lon: Double) = lon * MERC_HALF / 180
 fun mercY(lat: Double) = ln(tan((90 + lat) * PI / 360)) / (PI / 180) * MERC_HALF / 180
 

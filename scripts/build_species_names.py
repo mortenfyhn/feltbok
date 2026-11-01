@@ -1,10 +1,11 @@
 #!/usr/bin/env python3
-"""Merge the two flavors' bird checklists into one unified schema carrying all three names.
+"""Fill in the bird checklist's names in all three languages.
 
-Output schema (both flavors): latin,norsk,svensk,status,count
-  - `norsk` and `svensk` are identical across the two files (one shared, authoritative name table).
-  - `status` (red list) and `count` (national report count, for search ranking) stay per-country,
-    taken verbatim from the existing per-flavor species.csv (not re-scraped here).
+Output schema: latin,norsk,svensk,status,count
+  - `status` (red list) and `count` (national report count, for search ranking) are taken verbatim
+    from the existing species.csv (not re-scraped here).
+  - This once merged two flavors' checklists; the Swedish flavor is gone, and the Swedish names it
+    supplied live on in species.csv's own `svensk` column, which is the fallback below.
 
 Names come from the IOC World Bird List (multilingual), joined by scientific name, EXCEPT:
   - Norwegian: the existing Norway species.csv is already Artsobservasjoner-authoritative and
@@ -19,7 +20,7 @@ Names come from the IOC World Bird List (multilingual), joined by scientific nam
 
 This is an offline merge of files already in the repo plus the IOC spreadsheet; no network.
 
-    just merge-species-names          # regenerates both app/src/*/assets/species.csv
+    just merge-species-names          # regenerates app/src/main/assets/species.csv
 """
 
 import argparse
@@ -35,8 +36,7 @@ DEFAULT_IOC = os.path.expanduser("~/workspace/lifelist/ioc_multiling.xlsx")
 IOC_LATIN, IOC_NORWEGIAN, IOC_SWEDISH = 3, 18, 26
 
 REPO = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-NO_CSV = os.path.join(REPO, "app/src/norway/assets/species.csv")
-SE_CSV = os.path.join(REPO, "app/src/sweden/assets/species.csv")
+NO_CSV = os.path.join(REPO, "app/src/main/assets/species.csv")
 
 # Swedish names to keep from the old column instead of IOC: names the Artportalen import expects
 # that differ from IOC's wild-species/split name (cf. "bydue" for Columba livia on the Norway side).
@@ -103,11 +103,9 @@ def main():
 
     ioc = load_ioc(args.ioc)
     no_rows, no_name = load_flavor(NO_CSV, "norsk")
-    se_rows, se_name = load_flavor(SE_CSV, "svensk")
+    _, se_name = load_flavor(NO_CSV, "svensk")
 
-    # Shared name table over the union of both checklists.
     latins = {norm(r["latin"]): r["latin"].strip() for r in no_rows}
-    latins.update({norm(r["latin"]): r["latin"].strip() for r in se_rows})
 
     norsk, svensk = {}, {}
     se_fixes = []
@@ -130,10 +128,8 @@ def main():
             svensk[key] = se_name.get(key, "")
 
     n_no = write(NO_CSV, no_rows, norsk, svensk)
-    n_se = write(SE_CSV, se_rows, norsk, svensk)
 
     print(f"Norway: {n_no} species -> {NO_CSV}", file=sys.stderr)
-    print(f"Sweden: {n_se} species -> {SE_CSV}", file=sys.stderr)
     print(
         f"\n{len(se_fixes)} Swedish names corrected to IOC (latin | old | new):",
         file=sys.stderr,

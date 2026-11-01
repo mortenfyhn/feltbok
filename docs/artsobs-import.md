@@ -144,9 +144,7 @@ on it.
 `Skjul funn til dato` (col 17) hides the observation from other users until after the date given
 (#181). The template's *Instruksjoner* sheet documents it as *"Hindrer innsyn av andre til etter
 datoen som angis på formatet DD.MM.YYYY (Kan stå tom)"* — the same `dd.MM.yyyy` as the other dates,
-blank when not hidden. This is the one column the **Sweden** flavor doesn't emit: Artportalen's
-v4.17 `Fåglar` template has no equivalent (its `Diffusion` field blurs the coordinates instead of
-hiding the record for a while), so `Country.hideUntilCol` is null there and the cell is dropped.
+blank when not hidden.
 **Paste-tested against the live site (2026-09-09):** the seed's hidden row imports and registers
 the hide. Still unverified is whether a date in the *past* is accepted, which the app never emits
 anyway since the picker seeds a year ahead.

@@ -2,7 +2,6 @@ package io.github.mortenfyhn.feltbok
 
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
-import org.junit.Assume.assumeTrue
 import org.junit.Before
 import org.junit.Test
 import java.time.LocalDateTime
@@ -25,10 +24,6 @@ class ImportRoundTripTest {
         // exportDate/exportTime use the default zone; pin it so dates are deterministic.
         TimeZone.setDefault(TimeZone.getTimeZone("UTC"))
     }
-
-    // The fake importer encodes the Norwegian (old-site v2.20) headers and number format; the
-    // Sweden flavor has its own. The alignment/empty-batch tests below run for both.
-    private val isNorwayExport = "Artsnavn" in Country.exportCols
 
     /** What the paste-import reconstructs from one row — the fields the app round-trips. */
     private data class ImportedRow(
@@ -121,7 +116,6 @@ class ImportRoundTripTest {
 
     @Test
     fun exportRoundTripsThroughTheFakeImporter() {
-        assumeTrue(isNorwayExport)
         // One note per exportTsv path, mirroring the live seed batch: a plain registry locality, a
         // brand-new spot (coords + radius), unknown count, uncertain, a multi-day range, a no-time
         // day, and co-observers (which pad every other row with blank trailing columns).
@@ -169,8 +163,8 @@ class ImportRoundTripTest {
 
     @Test
     fun everyRowKeepsTheHeadersColumnCountAcrossAHeterogeneousBatch() {
-        // The alignment guarantee across a whole mixed batch (fakeImport re-checks it per row, but
-        // only for the Norway flavor - this one runs for both): co-observer padding, flattened
+        // The alignment guarantee across a whole mixed batch (fakeImport re-checks it per row too):
+        // co-observer padding, flattened
         // tabs/newlines, and new-spot coordinates must never change a row's cell count.
         val notes = listOf(
             note(at(1, 9, 0)),

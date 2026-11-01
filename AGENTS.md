@@ -13,7 +13,7 @@ Recipes live in `just --list`. Gotchas not covered there:
 - `allWarningsAsErrors` means any deprecation introduced by a dependency bump is a build failure.
   `./gradlew test` and `assembleRelease` do NOT compile `src/androidTest`, so after bumping
   Compose/AndroidX, also compile that source set (`just itest` or
-  `assembleNorwayReleaseTestAndroidTest`, no device needed).
+  `assembleReleaseTestAndroidTest`, no device needed).
 - Always run `./gradlew test` before opening a PR; `just test` also runs the Python tests.
 - **Release runs through R8** (`isMinifyEnabled`, keep rules in `app/proguard-rules.pro`). R8
   tree-shakes by static reachability, so reflective code (reflective mappers, `Class.forName`,
@@ -92,7 +92,7 @@ a `MainViewModel` must start with `ClearAppDataRule` — otherwise the suite bec
 - `MainViewModel.kt` — all UI state (four-ish screens, no nav lib). `Ui.kt` — the Compose screens.
 - `MapPicker.kt` — osmdroid locality-picker map + overlays. `SyncScreen.kt` — WebView "Synk mine
   lokaliteter".
-- `app/src/<flavor>/assets/localities.csv` (public, bundled), `species.csv` (checklist + Rødlista
+- `app/src/main/assets/localities.csv` (public, bundled), `species.csv` (checklist + Rødlista
   status). The user's own privates live in `my-localities.csv` — device-only, never bundled.
 - `scripts/` — Python build/harvest pipelines (localities, species, red list) + dev helpers
   (`scripts/dev/`) and the ruff config. Driven by the `justfile`.

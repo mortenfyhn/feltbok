@@ -12,7 +12,7 @@ import androidx.compose.ui.graphics.Color
 val BadgeBlue = Color(0xFF4985D4)
 val BadgeGrey = Color(0xFFB0B5B8)
 
-// Brand (chrome) colours come from the flavor (Brand.kt): moss green for Norway, blue for Sweden.
+// Brand (chrome) colours come from Brand.kt: moss green.
 private val BrandColors = lightColorScheme(
     primary = Brand.primary,
     onPrimary = Color.White,
@@ -53,13 +53,6 @@ object MapPalette {
     // sub-localities inside a super stay visible and tappable.
     const val SuperFillSolid = 0xE62E7A33L
     const val SuperStroke = 0xFF173A14L
-
-    // Sweden's "hollow" style (#155): Artportalen's localities are almost all overlapping circles, so
-    // filled disks turn dense areas (Stockholm) into a solid blob. Draw them the way artportalen.se
-    // does — a grey boundary ring (this colour), no fill, with the same centre marker Norway draws for
-    // a 0 m locality: a green dot for a regular locality, a deep-green triangle for a superlocality
-    // (reusing the green fills/strokes below). The full fill only appears on the selected one.
-    const val SeRing = 0x99555555L         // grey boundary ring (all localities)
 
     // Your own locality — yellow
     const val YellowFill = 0x55E0A100L

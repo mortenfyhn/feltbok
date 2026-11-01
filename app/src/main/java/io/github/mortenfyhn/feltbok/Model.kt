@@ -18,25 +18,20 @@ fun formatDistance(m: Double): String =
 
 // Compact forms of age/sex for the list-row preview, so two near-identical observations are
 // tellable apart at a glance (which is the chicks, which the parents). The row builds the preview
-// itself (it bolds the thin sex symbol), so these stay as small reusable formatters. Both flavors'
-// vocabularies are handled here (Norway capitalised, Sweden lower-case) so the preview reads "ad ♂"
-// rather than "adult hane" on the Sweden build (#155).
+// itself (it bolds the thin sex symbol), so these stay as small reusable formatters.
 fun shortAge(age: String): String = when (age) {
     "Adult" -> "Ad"
-    "adult" -> "ad"
     "Pulli" -> "Pu"
-    "pulli" -> "pu"
     "Egg" -> "Eg"
-    "ägg" -> "äg"
     else -> age // the K-ages (1K, 2K+, …) are already short
 }
 
 // The trailing ︎ (VS15) forces text presentation, so ♂/♀ render from the regular text font
 // instead of the emoji font — without it they come out as tall colour emoji that inflate the row.
 fun sexSymbol(sex: String): String = when (sex) {
-    "Hann", "Hane" -> "♂︎"
-    "Hunn", "Hona" -> "♀︎"
-    "Hunnfarget", "Honfärgad" -> "(♀︎)"
+    "Hann" -> "♂︎"
+    "Hunn" -> "♀︎"
+    "Hunnfarget" -> "(♀︎)"
     "I par" -> "♂︎♀︎"
     else -> sex
 }
@@ -123,8 +118,8 @@ fun exportTsv(notes: List<Note>): String {
         // A brand-new spot is exported WITH coordinates (+ its radius as Nøyaktighet), which
         // mints a new custom locality on import; registry localities stay name-only so the import
         // links them to the public site (verified on both Artsobservasjoner and Artportalen).
-        // Coordinates use the flavor's locale (comma decimal) - the paste-import parses numbers with
-        // the account's number format (Norwegian/Swedish), so a period reads as "not a decimal
+        // Coordinates use the display locale (comma decimal) - the paste-import parses numbers with
+        // the account's number format (Norwegian), so a period reads as "not a decimal
         // number". The TSV is tab-delimited, so a comma in the value is safe.
         val nord = if (n.newLoc) String.format(Country.displayLocale, "%.6f", n.lat) else ""
         val ost = if (n.newLoc) String.format(Country.displayLocale, "%.6f", n.lon) else ""

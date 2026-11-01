@@ -2,7 +2,6 @@ package io.github.mortenfyhn.feltbok
 
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
-import org.junit.Assume.assumeTrue
 import org.junit.Before
 import org.junit.Test
 import java.time.LocalDateTime
@@ -29,14 +28,8 @@ class ModelTest {
     private val noonMs = LocalDateTime.of(2026, 6, 1, 9, 30, 0)
         .toInstant(ZoneOffset.UTC).toEpochMilli()
 
-    // These golden tests pin the Norwegian Artsobservasjoner export format (dd.MM.yyyy dates,
-    // name-only/blank coordinates, the deliberately-misspelt header). Under another country flavor
-    // Country yields a different format, so they only apply to the Norway build.
-    private val isNorwayExport = "Artsnavn" in Country.exportCols
-
     @Test
     fun exportRowHasColumnsInOrderWithBlankCoords() {
-        assumeTrue(isNorwayExport)
         val lines = exportTsv(listOf(noteAt(noonMs))).split("\n")
         assertEquals("header + one row", 2, lines.size)
         val c = lines[1].split("\t")
@@ -66,7 +59,6 @@ class ModelTest {
     fun hideUntilExportsAsADateAndIsBlankWhenNotHidden() {
         // #181: the hide date rides the same dd.MM.yyyy format as Fra/Til dato, under the v2.20
         // template's own header (paste-import matches by name).
-        assumeTrue(isNorwayExport)
         val until = LocalDateTime.of(2027, 8, 1, 0, 0).toInstant(ZoneOffset.UTC).toEpochMilli()
         val lines = exportTsv(listOf(noteAt(noonMs).copy(hideUntil = until))).split("\n")
         val i = lines[0].split("\t").indexOf("Skjul funn til dato")
@@ -79,7 +71,6 @@ class ModelTest {
     fun uncertainExportsUnderTheRegisteredMisspeltHeader() {
         // Paste-import matches columns by header name; the header must reproduce the
         // template's "artsbestemming" misspelling or a flagged row fails validation.
-        assumeTrue(isNorwayExport)
         val lines = exportTsv(listOf(noteAt(noonMs).copy(uncertain = true))).split("\n")
         assertEquals("Usikker artsbestemming", lines[0].split("\t")[15])
         assertEquals("Ja", lines[1].split("\t")[15])
@@ -96,7 +87,6 @@ class ModelTest {
     @Test
     fun exportUsesEndTimeForTilWhenSet() {
         // A range spanning into the next day: Fra and Til must differ on both date and time.
-        assumeTrue(isNorwayExport)
         val end = noonMs + 16 * 3_600_000  // +16h -> next day 01:30
         val c = exportTsv(listOf(noteAt(noonMs).copy(endTime = end))).split("\n")[1].split("\t")
         assertEquals("01.06.2026", c[9]); assertEquals("09:30", c[10])
@@ -107,7 +97,6 @@ class ModelTest {
     fun timeUnknownExportsBlankKlokkeslettButKeepsDates() {
         // "Uten klokkeslett": the date is still emitted (from and til), only the two time
         // columns go blank - the site accepts a date-only observation.
-        assumeTrue(isNorwayExport)
         val c = exportTsv(listOf(noteAt(noonMs).copy(endTime = noonMs, timeUnknown = true))).split("\n")[1].split("\t")
         assertEquals("01.06.2026", c[9]); assertEquals("", c[10])
         assertEquals("01.06.2026", c[11]); assertEquals("", c[12])
@@ -133,7 +122,7 @@ class ModelTest {
         val lines = exportTsv(listOf(n)).split("\n")
         assertEquals("header + one row (no comment broke the row count)", 2, lines.size)
         val c = lines[1].split("\t")
-        assertEquals(Country.exportCols.size, c.size)   // runs for both flavors, which differ in width
+        assertEquals(Country.exportCols.size, c.size)
         assertEquals("ser ut som fjellmåke", c[13])
         assertEquals("linje1 linje2", c[14])
     }
@@ -155,7 +144,6 @@ class ModelTest {
     fun coObserversAppendMedobservatorColumnsPaddedToTheBusiestRow() {
         // Paste-import matches by header name, so each co-observer becomes an identically-headed
         // trailing column; every row is padded to the max count so the grid stays rectangular (#128).
-        assumeTrue(isNorwayExport)
         val solo = noteAt(noonMs)
         val duo = noteAt(noonMs + 3_600_000).copy(coObservers = listOf("Kari Nordmann", "Ola Hansen"))
         val lines = exportTsv(listOf(solo, duo)).split("\n")
@@ -177,18 +165,6 @@ class ModelTest {
         assertEquals(Country.exportCols.size, lines[0].split("\t").size)
     }
 
-    @Test
-    fun swedenExportUsesSwedishHeadersAndIsoDateAndNameOnly() {
-        assumeTrue(!isNorwayExport) // the Sweden (Artportalen) flavor's export format
-        val lines = exportTsv(listOf(noteAt(noonMs))).split("\n")
-        val header = lines[0].split("\t")
-        assertEquals("Artnamn", header[0])
-        assertEquals("Osäker artbestämning", header.last())
-        val c = lines[1].split("\t")
-        assertEquals("2026-06-01", c[9])        // ISO date, not dd.MM.yyyy
-        assertEquals("", c[6]); assertEquals("", c[7])  // registry locality: name-only, links to public
-    }
-
     // ---- multilingual species search + name selection (#155) ----
 
     @Test
@@ -205,7 +181,7 @@ class ModelTest {
         // user has chosen to *see*. So export is decoupled from the display-language setting (#155).
         val crow = Species(latin = "Corvus corone", norsk = "kråke", svensk = "kråka")
         val exportName = crow.name(Country.exportLang) // what MainViewModel.pickSpecies writes to the note
-        assertEquals(if (isNorwayExport) "kråke" else "kråka", exportName)
+        assertEquals("kråke", exportName)
         // A vernacular registry name, never the Latin (or other language) a user might be displaying.
         assertTrue(exportName != crow.latin && exportName != crow.name(Lang.LATIN))
 
@@ -485,7 +461,6 @@ class ModelTest {
 
     @Test
     fun groupNotesByDaySplitsLabelsAndOrdersByTimeNotEntry() {
-        assumeTrue(isNorwayExport) // labels are locale-specific (Bokmål here); Sweden renders Swedish
         // Regression for #44: notes spanning days land in separate, correctly-labelled sections,
         // ordered newest-day-first by observation time — a note dated in the past must NOT jump to
         // the top just because it was entered last (input here is deliberately out of order).
@@ -509,10 +484,6 @@ class ModelTest {
         assertEquals("Pu", shortAge("Pulli"))
         assertEquals("Eg", shortAge("Egg"))
         assertEquals("2K+", shortAge("2K+")) // K-ages are already short - passed through
-        // Sweden's lower-case vocabulary abbreviates too (#155), so the preview isn't "adult".
-        assertEquals("ad", shortAge("adult"))
-        assertEquals("pu", shortAge("pulli"))
-        assertEquals("äg", shortAge("ägg"))
     }
 
     @Test
@@ -526,9 +497,5 @@ class ModelTest {
         assertEquals("\u2640\uFE0E", sexSymbol("Hunn")) // ♀ + VS15
         assertEquals("(\u2640\uFE0E)", sexSymbol("Hunnfarget"))
         assertEquals("\u2642\uFE0E\u2640\uFE0E", sexSymbol("I par"))
-        // Sweden's sex vocabulary maps to the same symbols (#155).
-        assertEquals("\u2642\uFE0E", sexSymbol("Hane"))
-        assertEquals("\u2640\uFE0E", sexSymbol("Hona"))
-        assertEquals("(\u2640\uFE0E)", sexSymbol("Honfärgad"))
     }
 }

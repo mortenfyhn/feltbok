@@ -615,9 +615,8 @@ private fun PartyStrip(vm: MainViewModel) {
     )
 }
 
-/** Credits / attribution (#139). Norway's Artsdatabanken data is CC BY 4.0 (attribution required);
- *  Sweden's SLU Artdatabanken data is CC0 (credited as courtesy, not obligation). OSM is credited on
- *  the map too but gathered here for one tidy home. */
+/** Credits / attribution (#139). Artsdatabanken's data is CC BY 4.0 (attribution required). OSM is
+ *  credited on the map too but gathered here for one tidy home. */
 @Composable
 private fun AboutDialog(onDismiss: () -> Unit, onSettings: () -> Unit) {
     val cs = MaterialTheme.colorScheme
