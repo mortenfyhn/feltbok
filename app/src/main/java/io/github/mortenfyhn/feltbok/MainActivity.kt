@@ -25,11 +25,11 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         // From targetSdk 35 the system draws the app behind the status and navigation bars and
         // there's no opting out, so declare it rather than inherit it half-configured: transparent
-        // bars, and `light` styles (= dark icons) because AppTheme is light-only and would
-        // otherwise get white icons on a near-white background. The Scaffold below re-insets the
-        // content, so the layout still looks like it did before edge-to-edge.
+        // bars. The status bar sits on the app's green band (StatusBarBand), so `dark` (= white
+        // icons); the navigation bar on the light screens, so `light` (= dark icons), since
+        // AppTheme is light-only. The screens pad themselves clear of both.
         enableEdgeToEdge(
-            statusBarStyle = SystemBarStyle.light(TRANSPARENT, TRANSPARENT),
+            statusBarStyle = SystemBarStyle.dark(TRANSPARENT),
             navigationBarStyle = SystemBarStyle.light(TRANSPARENT, TRANSPARENT),
         )
         super.onCreate(savedInstanceState)

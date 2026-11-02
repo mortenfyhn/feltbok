@@ -72,6 +72,10 @@ Connect) get builds without review; external ones (by email or a public link) ne
 review the first time. Export compliance is answered once in the app's Info.plist
 (`ITSAppUsesNonExemptEncryption`: standard HTTPS only).
 
+Store screenshots come from `just screenshots-ios`, the twin of Android's `just screenshots`: the
+same showcase notes on an iPhone Pro Max simulator, into `fastlane/screenshots/no/` at the 6.9"
+size App Store Connect asks for. Upload them there by hand.
+
 Xcode 26 because App Store builds need the iOS 26 SDK, and it's the last Xcode that still targets
 iOS 15 (the iPhone 7). Revisit when Apple starts requiring the next SDK.
 

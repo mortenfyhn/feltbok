@@ -5,6 +5,7 @@
 ## Neste utgivelse
 
 - Den svenske betaversjonen (Fältbok) er lagt ned.
+- Den grønne toppen og bunnlinja går helt ut til kanten av skjermen.
 
 ## v1.4 (2. november 2026)
 

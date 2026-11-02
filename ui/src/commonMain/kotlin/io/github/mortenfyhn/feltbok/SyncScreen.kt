@@ -120,7 +120,7 @@ fun SyncScreen(vm: MainViewModel) {
     )
     LaunchedEffect(Unit) { web.load(Country.syncProbeUrl) }
 
-    Column(Modifier.fillMaxSize()) {
+    Column(Modifier.fillMaxSize().bottomInsetPadding()) {
         ScreenHeader(
             when {
                 stage == Stage.LOGIN -> Strings.Sync.login
