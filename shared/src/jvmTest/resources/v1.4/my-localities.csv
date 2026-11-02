@@ -1,0 +1,3 @@
+id,lokalitet,hovedlokalitet,kommune,fylke,lat,lon,count,observers,radius,geometry,public,mine
+123,"Mitt, ""hemmelige"" sted",,Trondheim,,63.43,10.39,0,0,50.0,"POLYGON((10.39 63.43, 10.39 63.44, 10.4 63.44))",0,1
+456,Bakgården,,Trondheim,,63.42,10.38,0,0,25.0,,0,1
