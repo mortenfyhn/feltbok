@@ -1,8 +1,8 @@
 package io.github.mortenfyhn.feltbok
 
-import org.junit.Assert.assertEquals
-import org.junit.Assert.assertTrue
-import org.junit.Test
+import kotlin.test.Test
+import kotlin.test.assertEquals
+import kotlin.test.assertTrue
 
 /** The decayed use-score: the core of how recent picks outrank once-frequent-but-stale ones. */
 class UseScoreTest {

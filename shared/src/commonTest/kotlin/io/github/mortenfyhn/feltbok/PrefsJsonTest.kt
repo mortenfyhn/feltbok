@@ -1,7 +1,7 @@
 package io.github.mortenfyhn.feltbok
 
-import org.junit.Assert.assertEquals
-import org.junit.Test
+import kotlin.test.Test
+import kotlin.test.assertEquals
 
 /** The settings files as the shipped app writes them (Android's org.json), so a change to the JSON
  *  code can't silently reset someone's use scores, party or language choice. */

@@ -23,6 +23,10 @@ kotlin {
             // api: the date functions take kotlinx-datetime types, which the app's callers see.
             api("org.jetbrains.kotlinx:kotlinx-datetime:0.7.1")
         }
+        // Most tests are plain Kotlin (commonTest), so they also run on the iOS simulator
+        // (iosSimulatorArm64Test, in the iOS CI). The JVM-only ones (the search benchmark, the
+        // String.format comparison) stay in jvmTest.
+        commonTest.dependencies { implementation(kotlin("test")) }
         jvmTest.dependencies { implementation("junit:junit:4.13.2") }
     }
 }

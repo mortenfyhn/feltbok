@@ -30,6 +30,10 @@ Recipes live in `just --list`. Gotchas not covered there:
   the Python venv: `ln -s ../../../.venv .venv` from the worktree root.
 - CI runs on Semaphore (`.semaphore/semaphore.yml`); inspect failures with `sem get pipelines` /
   `sem logs <jobid>`. Releases are cut locally with `./release.sh` (see `docs/release.md`).
+- iOS CI runs on GitHub Actions' free macOS runners (`.github/workflows/ios.yml` ->
+  `iosApp/ci-test.sh`): `:shared`'s tests on the iOS simulator, then the app's launch smoke test (an
+  XCUITest that opens the list and the map). Put new `:shared` tests in `commonTest` (`kotlin.test`)
+  so they run on both JVM and iOS; only JVM-only ones go in `jvmTest`.
 
 ## Device safety
 Two builds coexist on the device: debug carries the `.debug` applicationId suffix and label
@@ -101,7 +105,8 @@ a `MainViewModel` must start with `ClearAppDataRule` — otherwise the suite bec
   `androidHostTest` (`:ui:testAndroidHostTest`).
 - `iosApp/` — the iOS app: a thin SwiftUI host for `:ui`'s framework. `xcodegen` there generates the
   Xcode project from `project.yml` (not committed); `install-device.sh` builds and installs on a
-  connected iPhone (Xcode 26 for iOS 15 devices). The bundled CSVs come from `app/src/main/assets`.
+  connected iPhone (Xcode 26 for iOS 15 devices), `upload-testflight.sh` uploads a TestFlight build
+  (see `docs/release.md`). The bundled CSVs come from `app/src/main/assets`.
 - `app/` — just the Android shell: `MainActivity`, `FeltbokApp` (fills `AppInfo` from BuildConfig),
   resources, assets, and the instrumented tests.
 - `app/src/main/assets/localities.csv` (public, bundled), `species.csv` (checklist + Rødlista

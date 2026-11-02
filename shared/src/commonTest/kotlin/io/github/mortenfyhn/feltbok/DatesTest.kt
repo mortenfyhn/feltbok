@@ -3,8 +3,8 @@ package io.github.mortenfyhn.feltbok
 import kotlinx.datetime.LocalDateTime
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.toInstant
-import org.junit.Assert.assertEquals
-import org.junit.Test
+import kotlin.test.Test
+import kotlin.test.assertEquals
 
 class DatesTest {
     private val names = DateNames(

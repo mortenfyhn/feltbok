@@ -26,9 +26,14 @@ targets:
         NSLocationWhenInUseUsageDescription: Feltbok bruker posisjonen til å foreslå nærmeste lokalitet.
         UISupportedInterfaceOrientations: [UIInterfaceOrientationPortrait]
         UIUserInterfaceStyle: Light # the app theme is light-only, so iOS's own pickers must be too
+        # Only standard HTTPS, which is exempt, so App Store Connect needn't ask on every upload.
+        ITSAppUsesNonExemptEncryption: false
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: io.github.mortenfyhn.feltbok
+        # iPhone only: a phone app for the field. iPads run it in iPhone mode, which spares the
+        # every-orientation requirement App Store Connect has for iPad apps.
+        TARGETED_DEVICE_FAMILY: "1"
         MARKETING_VERSION: "1.3"
         CURRENT_PROJECT_VERSION: "17"
         GENERATE_INFOPLIST_FILE: YES
@@ -44,3 +49,21 @@ targets:
         script: |
           cd "$SRCROOT/.."
           ./gradlew -Dorg.gradle.jvmargs="-Xmx4g -Dfile.encoding=UTF-8" :ui:embedAndSignAppleFrameworkForXcode
+  # Launch smoke test (iosApp/ci-test.sh runs it, locally and in CI).
+  FeltbokUITests:
+    type: bundle.ui-testing
+    platform: iOS
+    sources: [FeltbokUITests]
+    dependencies:
+      - target: Feltbok
+    settings:
+      base:
+        GENERATE_INFOPLIST_FILE: YES
+        TARGETED_DEVICE_FAMILY: "1"
+schemes:
+  Feltbok:
+    build:
+      targets:
+        Feltbok: all
+    test:
+      targets: [FeltbokUITests]

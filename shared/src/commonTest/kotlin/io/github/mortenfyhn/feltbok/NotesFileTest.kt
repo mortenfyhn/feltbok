@@ -1,7 +1,7 @@
 package io.github.mortenfyhn.feltbok
 
-import org.junit.Assert.assertEquals
-import org.junit.Test
+import kotlin.test.Test
+import kotlin.test.assertEquals
 
 /** notes.json as the shipped app writes it, so a change to the JSON code can't strand the notes
  *  already on people's phones. The fixture mimics Android's org.json output: keys in insertion

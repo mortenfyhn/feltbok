@@ -1,7 +1,7 @@
 package io.github.mortenfyhn.feltbok
 
-import org.junit.Assert.assertEquals
-import org.junit.Test
+import kotlin.test.Test
+import kotlin.test.assertEquals
 
 /** The archive's JSON Lines format (#153): one note per line, so archiving appends without
  *  parsing the existing file. Round-trip through the same per-field mapping as notes.json,
