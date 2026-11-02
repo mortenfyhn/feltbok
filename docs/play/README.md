@@ -4,7 +4,7 @@ Uploaded by hand in Play Console (#74). These exist **separately from
 `fastlane/metadata/android/`** because Play's asset rules differ from F-Droid's, and
 satisfying Play in the fastlane tree would degrade the F-Droid listing. The store *text*
 is still shared — Play reuses the fastlane `title`/`short_description`/`full_description`
-as-is (they fit Play's 30/80/4000 limits).
+as-is (they fit Play's 30/80/4000 limits), and so does App Store ([app-store.md](../app-store.md)).
 
 Regenerate with the snippet at the bottom if the source assets change.
 
