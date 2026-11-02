@@ -29,8 +29,11 @@ Recipes live in `just --list`. Gotchas not covered there:
 - Fresh worktree: copy `local.properties` from the repo root (gitignored, Gradle needs it), and link
   the Python venv: `ln -s ../../../.venv .venv` from the worktree root.
 - CI runs on Semaphore (`.semaphore/semaphore.yml`); inspect failures with `sem get pipelines` /
-  `sem logs <jobid>`. The iOS build and its launch smoke test (`iosApp/ci-test.sh`, an XCUITest that
-  opens the list and the map) run on GitHub Actions' free macOS runners (`.github/workflows/ios.yml`). Releases are cut locally with `./release.sh` (see `docs/release.md`).
+  `sem logs <jobid>`. Releases are cut locally with `./release.sh` (see `docs/release.md`).
+- iOS CI runs on GitHub Actions' free macOS runners (`.github/workflows/ios.yml` ->
+  `iosApp/ci-test.sh`): `:shared`'s tests on the iOS simulator, then the app's launch smoke test (an
+  XCUITest that opens the list and the map). Put new `:shared` tests in `commonTest` (`kotlin.test`)
+  so they run on both JVM and iOS; only JVM-only ones go in `jvmTest`.
 
 ## Device safety
 Two builds coexist on the device: debug carries the `.debug` applicationId suffix and label

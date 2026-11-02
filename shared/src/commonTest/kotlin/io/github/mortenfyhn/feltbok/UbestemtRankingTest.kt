@@ -1,7 +1,7 @@
 package io.github.mortenfyhn.feltbok
 
-import org.junit.Assert.assertEquals
-import org.junit.Test
+import kotlin.test.Test
+import kotlin.test.assertEquals
 
 /** Regression tests for #162: ub. (ubestemt/unidentified) entries are searchable like any other
  *  species, but shouldn't get the "how likely is this species here and now" boost real species get

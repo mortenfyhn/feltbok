@@ -1,10 +1,10 @@
 package io.github.mortenfyhn.feltbok
 
-import org.junit.Assert.assertEquals
-import org.junit.Assert.assertNotSame
-import org.junit.Assert.assertSame
-import org.junit.Assert.assertTrue
-import org.junit.Test
+import kotlin.test.Test
+import kotlin.test.assertEquals
+import kotlin.test.assertNotSame
+import kotlin.test.assertSame
+import kotlin.test.assertTrue
 
 /** Unit tests for the selection + batch-edit logic (#120) - the logic-heavy core that a regression
  *  would break silently. Pure functions in SelectionLogic.kt; the ViewModel just calls them. */
@@ -53,7 +53,7 @@ class SelectionLogicTest {
         assertEquals("Adult", out[0].age)
         assertEquals("", out[1].age)            // id 2 not targeted
         assertEquals("Adult", out[2].age)
-        assertSame("untargeted note passes through unchanged (same instance)", notes[1], out[1])
+        assertSame(notes[1], out[1], "untargeted note passes through unchanged (same instance)")
     }
 
     @Test

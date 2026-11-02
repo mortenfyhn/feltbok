@@ -70,7 +70,7 @@ fun queriesFor(norsk: String): List<LabeledQuery> {
         }
         if (mid + 1 < name.length) {
             val s = name.toCharArray(); val t = s[mid]; s[mid] = s[mid + 1]; s[mid + 1] = t
-            add(String(s), QueryKind.TYPO_TRANSPOSE)
+            add(s.concatToString(), QueryKind.TYPO_TRANSPOSE)
         }
         add(name.substring(0, mid + 1) + name[mid] + name.substring(mid + 1), QueryKind.TYPO_DOUBLE)
     }

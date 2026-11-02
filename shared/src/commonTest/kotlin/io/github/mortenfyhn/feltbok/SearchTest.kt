@@ -1,8 +1,8 @@
 package io.github.mortenfyhn.feltbok
 
-import org.junit.Assert.assertEquals
-import org.junit.Assert.assertTrue
-import org.junit.Test
+import kotlin.test.Test
+import kotlin.test.assertEquals
+import kotlin.test.assertTrue
 
 /** Search behaviour: names and languages, and the ranking promises the user sees. Moved from
  *  ModelTest with the search code into the shared module. */
@@ -27,7 +27,7 @@ class SearchTest {
         assertEquals(6, prepared.size) // 2 species × (norsk + svensk + latin)
         val scorer = TieredScorer({ 0.0 })
         listOf("kjøttmeis", "talgoxe", "parus").forEach { q ->
-            assertEquals("query '$q' finds Parus major", "Parus major", scorer.search(q, prepared).first().species.latin)
+            assertEquals("Parus major", scorer.search(q, prepared).first().species.latin, "query '$q' finds Parus major")
         }
         // The alias entries resolve to one species, so callers dedupe to one row.
         assertEquals(1, scorer.search("kjøttmeis", prepared).map { it.species }.distinct().count { it.latin == "Parus major" })
@@ -49,7 +49,7 @@ class SearchTest {
         val primaryOnly = prepare(species, setOf(Lang.NORSK))
         assertEquals(1, primaryOnly.size)
         assertTrue(scorer.search("kjøttmeis", primaryOnly).isNotEmpty())
-        assertTrue("Swedish name not searched", scorer.search("talgoxe", primaryOnly).isEmpty())
+        assertTrue(scorer.search("talgoxe", primaryOnly).isEmpty(), "Swedish name not searched")
         // Opting the secondary in makes the Swedish name findable again.
         assertTrue(scorer.search("talgoxe", prepare(species, setOf(Lang.NORSK, Lang.SVENSK))).isNotEmpty())
     }
