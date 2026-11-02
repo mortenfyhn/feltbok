@@ -64,6 +64,11 @@ branch, and merging that back conflicts with `CHANGELOG.md` every time (both sid
 the file), mid-release, after tagging. The branch is cheaper. The script's error says how far off
 you are and gives the command to move the unsoaked commits aside.
 
+When the unsoaked work is already pushed to master, release from a `release/<version>` branch
+instead: the script accepts its tip and pushes that branch instead of master. Merge the branch
+back into master afterwards. The merge conflicts in `CHANGELOG.md` and `versionCode`, so resolve
+by hand: master keeps its newer bullets under "Neste utgivelse" and takes the new `versionCode`.
+
 **F-Droid "what's new":** F-Droid shows `fastlane/metadata/android/<locale>/changelogs/<versionCode>.txt`
 inline per version. The script **generates the Norwegian one** (`nb-NO`) from the `## vX` section, so
 `CHANGELOG.md` stays the single source for it — but skips generation if the file already exists, so a
