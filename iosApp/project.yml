@@ -49,3 +49,21 @@ targets:
         script: |
           cd "$SRCROOT/.."
           ./gradlew -Dorg.gradle.jvmargs="-Xmx4g -Dfile.encoding=UTF-8" :ui:embedAndSignAppleFrameworkForXcode
+  # Launch smoke test (iosApp/ci-test.sh runs it, locally and in CI).
+  FeltbokUITests:
+    type: bundle.ui-testing
+    platform: iOS
+    sources: [FeltbokUITests]
+    dependencies:
+      - target: Feltbok
+    settings:
+      base:
+        GENERATE_INFOPLIST_FILE: YES
+        TARGETED_DEVICE_FAMILY: "1"
+schemes:
+  Feltbok:
+    build:
+      targets:
+        Feltbok: all
+    test:
+      targets: [FeltbokUITests]
