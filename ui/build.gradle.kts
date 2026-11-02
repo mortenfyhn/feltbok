@@ -15,10 +15,15 @@ plugins {
 val composeVersion = "1.11.1"
 
 // The in-app version string on iOS, from `git describe` like the Android build's BuildConfig.
-val gitVersion = providers.exec {
-    commandLine("git", "describe", "--tags", "--always", "--dirty")
-    isIgnoreExitValue = true
-}.standardOutput.asText.map { it.trim().ifEmpty { "dev" } }
+// -Pscreenshots (or ORG_GRADLE_PROJECT_screenshots, through Xcode) shows just the last tag (v1.4),
+// for the store screenshots.
+val gitVersion = run {
+    val screenshots = providers.gradleProperty("screenshots").isPresent // a local: config-cache safe
+    providers.exec {
+        commandLine("git", "describe", "--tags", "--always", "--dirty")
+        isIgnoreExitValue = true
+    }.standardOutput.asText.map { v -> v.trim().ifEmpty { "dev" }.let { if (screenshots) it.substringBefore("-") else it } }
+}
 val generateIosBuildInfo by tasks.registering {
     val out = layout.buildDirectory.dir("generated/iosBuildInfo")
     val version = gitVersion

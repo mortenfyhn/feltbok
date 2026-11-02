@@ -163,6 +163,13 @@ screenshots:
     adb install -r -d app/build/outputs/apk/debug/app-debug.apk
     .venv/bin/python scripts/dev/screenshots.py
 
+# Fresh simulator install with the showcase notes, driven by the ScreenshotTests UI test.
+
+# Capture the App Store screenshots on the iOS simulator into fastlane/screenshots/
+[group('dev')]
+screenshots-ios:
+    python3 scripts/dev/screenshots_ios.py
+
 # Writes to fastlane/.../en-US/images from the hand-drawn SVG in scripts/dev/store-assets/.
 # Needs rsvg-convert + imagemagick.
 
