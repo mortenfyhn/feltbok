@@ -21,16 +21,21 @@ import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.WindowInsetsSides
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.offset
+import androidx.compose.foundation.layout.only
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.safeDrawingPadding
+import androidx.compose.foundation.layout.safeDrawing
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
+import androidx.compose.foundation.layout.windowInsetsPadding
+import androidx.compose.foundation.layout.windowInsetsTopHeight
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.foundation.lazy.LazyListState
@@ -239,7 +244,7 @@ fun ListScreen(vm: MainViewModel, listState: LazyListState) {
             // clean in the gap on release ("v0.7"), spilling over the buttons on a long dev build.
             // Tapping the version opens the About/credits dialog — the conventional home for the
             // #139 attribution, stashed where about-info is expected without new chrome.
-            Box(Modifier.fillMaxWidth().background(cs.surface), Alignment.Center) {
+            Box(Modifier.fillMaxWidth().background(cs.surface).bottomInsetPadding(), Alignment.Center) {
                 Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
                     // First time it's an invitation; once you've synced some, it's a refresh.
                     // Sync isn't available in every country build (Country.syncEnabled).
@@ -833,7 +838,7 @@ fun SearchScreen(vm: MainViewModel) {
     val canAdd = query.isNotBlank() && results.none { s ->
         fold(vm.primaryName(s)) == fold(query) || vm.secondaryName(s)?.let { fold(it) == fold(query) } == true
     }
-    Column(Modifier.fillMaxSize()) {
+    Column(Modifier.fillMaxSize().bottomInsetPadding()) {
         Row(
             Modifier.fillMaxWidth().background(cs.surface).padding(start = 4.dp, end = 12.dp, top = 2.dp, bottom = 2.dp),
             verticalAlignment = Alignment.CenterVertically,
@@ -939,7 +944,7 @@ fun CoObserverScreen(vm: MainViewModel) {
     // just return. Typed text is never added on the way out - that skipped the search (an unlinked
     // name); free text goes in only via the "Legg til" row.
     fun done() = vm.closeCoObs()
-    Column(Modifier.fillMaxSize()) {
+    Column(Modifier.fillMaxSize().bottomInsetPadding()) {
         ScreenHeader(
             Strings.CoObs.title,
             onCancel = { done() },
@@ -1054,6 +1059,20 @@ private fun CoObsRow(name: String, user: AoUser?, selected: Boolean, onToggle: (
 
 // ============================ DETAIL ============================
 
+/** The green behind the status bar (or notch) at the top of the screen, so the headers reach the
+ *  screen's edge like a native app's. Every screen starts with a green header but the species
+ *  search, so one band in [App] serves them all, and slides between screens never change it. */
+@Composable
+internal fun StatusBarBand() {
+    Box(Modifier.fillMaxWidth().windowInsetsTopHeight(WindowInsets.safeDrawing).background(MaterialTheme.colorScheme.primary))
+}
+
+/** Keeps a screen's bottom edge clear of the home indicator or gesture bar. [App] only keeps the
+ *  sides and the keyboard clear, so a bottom bar can paint behind them: put this after its
+ *  background. Zero while the keyboard is up (App's imePadding already covers that). */
+@Composable
+internal fun Modifier.bottomInsetPadding() = windowInsetsPadding(WindowInsets.safeDrawing.only(WindowInsetsSides.Bottom))
+
 /** The screens' shared top bar. The back/dismiss action lives on the LEFT (not the right) so a
  *  thumb reaching the top-right corner - where it lands after typing, once the keyboard hides the
  *  Lagre button - can't leave the screen by accident (#59). Default leading control is "‹ Tilbake"
@@ -1101,7 +1120,7 @@ fun SettingsScreen(vm: MainViewModel) {
     val langs = listOf(Lang.NORSK, Lang.SVENSK, Lang.LATIN)
     val labels = langs.map { Strings.Settings.langLabel(it) }
     fun langFor(label: String) = langs.first { Strings.Settings.langLabel(it) == label }
-    Column(Modifier.fillMaxSize().background(cs.background)) {
+    Column(Modifier.fillMaxSize().background(cs.background).bottomInsetPadding()) {
         ScreenHeader(Strings.Settings.title, onCancel = { vm.closeSettings() })
         Column(Modifier.verticalScroll(rememberScrollState())) {
             DropdownRow(Strings.Settings.primaryHeader, Strings.Settings.langLabel(prefs.primary), labels, clearable = false) {
@@ -1144,7 +1163,7 @@ fun ArchiveScreen(vm: MainViewModel) {
     val haptic = LocalHapticFeedback.current
     // System Back leaves selection mode first (like the list), then the screen.
     BackHandler { if (selecting) vm.clearSelection() else vm.closeArchive() }
-    Column(Modifier.fillMaxSize()) {
+    Column(Modifier.fillMaxSize().bottomInsetPadding()) {
         Box {
             // As tall as the list's status strip, so the rows start where the list's did and the
             // selection bar drawn over it has room for its outlined button (a title-height bar
@@ -1399,7 +1418,7 @@ fun DetailScreen(vm: MainViewModel) {
         // isn't stacked directly under the thumb's path to Lagre, where it was easy to hit by
         // mistake (#96).
         Row(
-            Modifier.fillMaxWidth().background(cs.surface).padding(horizontal = 14.dp, vertical = 11.dp),
+            Modifier.fillMaxWidth().background(cs.surface).bottomInsetPadding().padding(horizontal = 14.dp, vertical = 11.dp),
             horizontalArrangement = Arrangement.spacedBy(10.dp),
         ) {
             if (vm.isEditing) {
@@ -1592,8 +1611,9 @@ private fun CommentField(label: String, value: String, onChange: (String) -> Uni
         Surface(Modifier.fillMaxSize(), color = cs.surface) {
             // Keeps the header's actions clear of the system bars and of the keyboard - the writing
             // area shrinks instead, like any notes app. On the Column, not the Surface, so the
-            // surface colour still paints behind the bars (same as the Scaffold in MainActivity).
-            Column(Modifier.safeDrawingPadding()) {
+            // surface colour still paints behind the bars; the header's green behind the status bar.
+            Column(Modifier.windowInsetsPadding(WindowInsets.safeDrawing.only(WindowInsetsSides.Horizontal + WindowInsetsSides.Bottom))) {
+                StatusBarBand()
                 // Back and Ferdig both just close: typing writes straight to the draft, so there's
                 // nothing to commit here and nothing a stray back press can lose (the draft itself
                 // isn't saved until Lagre on the detail screen). Same as the co-observer picker.
@@ -1765,7 +1785,7 @@ fun ExportScreen(vm: MainViewModel) {
     var copied by remember { mutableStateOf(false) }
     var confirmClear by remember { mutableStateOf(false) }
 
-    Column(Modifier.fillMaxSize().background(cs.background)) {
+    Column(Modifier.fillMaxSize().background(cs.background).bottomInsetPadding()) {
         ScreenHeader(Strings.Export.title, onCancel = { vm.closeExport() })
         Column(Modifier.weight(1f).verticalScroll(rememberScrollState()).padding(horizontal = 16.dp)) {
             Step(1, Strings.Export.step1) {

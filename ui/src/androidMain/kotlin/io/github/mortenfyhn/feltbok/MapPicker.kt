@@ -181,7 +181,8 @@ actual fun LocalityScreen(vm: MainViewModel) {
     val back = { if (newMode) newMode = false else vm.leaveLocalityPicker() }
     BackHandler { back() }
 
-    Column(Modifier.fillMaxSize()) {
+    // Clear of the gesture bar as a whole: osmdroid draws the map's OSM credit at its bottom edge.
+    Column(Modifier.fillMaxSize().bottomInsetPadding()) {
         ScreenHeader(
             title = if (newMode) Strings.Picker.titleNew else Strings.Picker.titlePick,
             onCancel = back,

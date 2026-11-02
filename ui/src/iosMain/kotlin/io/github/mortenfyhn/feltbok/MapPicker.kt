@@ -326,10 +326,10 @@ actual fun LocalityScreen(vm: MainViewModel) {
             }
             // osmdroid's CopyrightOverlay: the OSM tile policy requires the credit.
             Text("© OpenStreetMap-bidragsytere", fontSize = 10.sp, color = Color(0xFF444444),
-                modifier = Modifier.align(Alignment.BottomStart).background(Color(0x99FFFFFF)).padding(horizontal = 4.dp, vertical = 1.dp))
+                modifier = Modifier.align(Alignment.BottomStart).bottomInsetPadding().background(Color(0x99FFFFFF)).padding(horizontal = 4.dp, vertical = 1.dp))
             // One-handed zoom + re-centre: thumb-reachable buttons (the new-spot panel covers them).
             if (!newMode) Column(
-                Modifier.align(Alignment.BottomEnd).padding(16.dp),
+                Modifier.align(Alignment.BottomEnd).bottomInsetPadding().padding(16.dp),
                 verticalArrangement = Arrangement.spacedBy(12.dp),
             ) {
                 if (vm.fix != null && !centered) RecenterButton {
@@ -339,11 +339,13 @@ actual fun LocalityScreen(vm: MainViewModel) {
                 ZoomButton("−") { scope.launch { state.animateCamera(CameraUpdate(zoom = state.cameraPosition.zoom - 1)) } }
             }
             // New-spot panel OVERLAYS the map (so the map doesn't resize/jump); the overlay
-            // draws the crosshair above it, at the centre of the visible map.
+            // draws the crosshair above it, at the centre of the visible map. The map runs down
+            // behind the home indicator, so the panel's white does too, and its height counts all
+            // of it.
             if (newMode) Row(
                 Modifier.align(Alignment.BottomCenter).fillMaxWidth()
-                    .background(Color.White).padding(14.dp)
-                    .onSizeChanged { sheetH = it.height },
+                    .onSizeChanged { sheetH = it.height }
+                    .background(Color.White).bottomInsetPadding().padding(14.dp),
                 horizontalArrangement = Arrangement.spacedBy(14.dp),
                 verticalAlignment = Alignment.CenterVertically,
             ) {

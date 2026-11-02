@@ -1,7 +1,13 @@
 package io.github.mortenfyhn.feltbok
 
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.WindowInsetsSides
+import androidx.compose.foundation.layout.imePadding
+import androidx.compose.foundation.layout.only
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.safeDrawingPadding
+import androidx.compose.foundation.layout.safeDrawing
+import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material3.MaterialTheme
@@ -69,19 +75,23 @@ fun App(vm: MainViewModel, screens: @Composable (LazyListState) -> Unit = { Scre
             // editor and back (#146) - a LazyListState remembered inside ListScreen is discarded when
             // that screen leaves composition.
             val listState = rememberLazyListState()
-            Scaffold(
-                // Keeps the content clear of the system bars, cutout and keyboard now that the
-                // window is edge-to-edge. Sits on the Scaffold, not the Surface, so the Surface's
-                // background colour still paints behind the bars instead of leaving them bare.
-                modifier = Modifier.safeDrawingPadding(),
-                // Lifted above the list's footer bar (Material floats snackbars above persistent
-                // bottom chrome), so the undo toast can't cover the Arkiv/feedback links - which it
-                // otherwise does exactly when you've just archived and might want the archive. The
-                // footer is a single fixed 13sp text row, so a constant clears it.
-                snackbarHost = { SnackbarHost(snackbar, Modifier.padding(bottom = 40.dp)) },
-                containerColor = Color.Transparent,
-            ) { _ ->
-                screens(listState)
+            Column {
+                StatusBarBand()
+                Scaffold(
+                    // The window is edge-to-edge. Only the sides and the keyboard are kept clear here:
+                    // the band above fills the status bar, and each screen pads its own bottom edge
+                    // (bottomInsetPadding) so its bottom bar can paint behind the home indicator.
+                    modifier = Modifier.weight(1f)
+                        .windowInsetsPadding(WindowInsets.safeDrawing.only(WindowInsetsSides.Horizontal)).imePadding(),
+                    // Lifted above the list's footer bar (Material floats snackbars above persistent
+                    // bottom chrome), so the undo toast can't cover the Arkiv/feedback links - which it
+                    // otherwise does exactly when you've just archived and might want the archive. The
+                    // footer is a single fixed 13sp text row, so a constant clears it.
+                    snackbarHost = { SnackbarHost(snackbar, Modifier.padding(bottom = 40.dp)) },
+                    containerColor = Color.Transparent,
+                ) { _ ->
+                    screens(listState)
+                }
             }
         }
     }
