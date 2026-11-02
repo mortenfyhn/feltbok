@@ -31,6 +31,9 @@ targets:
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: io.github.mortenfyhn.feltbok
+        # iPhone only: a phone app for the field. iPads run it in iPhone mode, which spares the
+        # every-orientation requirement App Store Connect has for iPad apps.
+        TARGETED_DEVICE_FAMILY: "1"
         MARKETING_VERSION: "1.3"
         CURRENT_PROJECT_VERSION: "17"
         GENERATE_INFOPLIST_FILE: YES
