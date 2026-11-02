@@ -1,0 +1,3 @@
+• New public sites appear automatically.
+• Co-observers with the same name as someone else won't give an upload error.
+• Several smaller improvements and fixes.
