@@ -1,4 +1,4 @@
-[![Build Status](https://fyhn.semaphoreci.com/badges/feltbok/branches/master.svg?key=ebed8946-d053-4da8-ba73-36874709de64)](https://fyhn.semaphoreci.com/projects/feltbok)
+[![Build Status](https://fyhn.semaphoreci.com/badges/feltbok/branches/master.svg?key=ebed8946-d053-4da8-ba73-36874709de64)](https://fyhn.semaphoreci.com/projects/feltbok) [![iOS](https://github.com/mortenfyhn/feltbok/actions/workflows/ios.yml/badge.svg?branch=master)](https://github.com/mortenfyhn/feltbok/actions/workflows/ios.yml)
 
 # Feltbok
 
