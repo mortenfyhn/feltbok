@@ -1,0 +1,2 @@
+/* The app's one localization, so iOS and App Store see it as Norwegian (see project.yml). */
+"NSLocationWhenInUseUsageDescription" = "Feltbok bruker posisjonen til å foreslå nærmeste lokalitet.";
