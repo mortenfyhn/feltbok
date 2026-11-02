@@ -3,8 +3,8 @@
 name: Feltbok
 options:
   bundleIdPrefix: io.github.mortenfyhn
-  # The app is Norwegian only. Saying so makes iOS's own buttons and prompts in it Norwegian on
-  # any phone, and App Store lists the language as Norwegian rather than English.
+  # The app is Norwegian only; saying so (with CFBundleLocalizations and nb.lproj) makes App Store
+  # list it as Norwegian rather than English.
   developmentLanguage: nb
   deploymentTarget:
     iOS: "15.5" # MapLibre's floor; the oldest iPhone it reaches is the 7 (iOS 15.8)
