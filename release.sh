@@ -35,8 +35,12 @@ dirty=$(git status --porcelain | grep -vE ' CHANGELOG\.md$|fastlane/metadata/and
 
 # Releases are cut from master's tip so that what you soaked is exactly what ships. Work that
 # isn't ready to go out belongs on a feature branch until after the release, not on master.
+# The exception is a release/* branch, for releasing an older commit while master has moved on;
+# merge it back into master afterwards.
+branch=$(git rev-parse --abbrev-ref HEAD)
+case "$branch" in release/*) base=$branch ;; *) base=master ;; esac
 head_sha=$(git rev-parse --short HEAD)
-if [ "$(git rev-parse HEAD)" != "$(git rev-parse master 2>/dev/null || echo none)" ]; then
+if [ "$(git rev-parse HEAD)" != "$(git rev-parse "$base" 2>/dev/null || echo none)" ]; then
     behind=$(git rev-list --count HEAD..master)
     ahead=$(git rev-list --count master..HEAD)
     echo "HEAD ($head_sha) isn't master's tip — $behind behind it, $ahead ahead."
@@ -49,11 +53,11 @@ if [ "$(git rev-parse HEAD)" != "$(git rev-parse master 2>/dev/null || echo none
     fi
     exit 1
 fi
-# Being on master's tip isn't enough if the remote has moved: the push at the end would fail
+# Being on the branch tip isn't enough if the remote has moved: the push at the end would fail
 # after everything is tagged and built.
-if git rev-parse --verify -q origin/master >/dev/null; then
-    behind_remote=$(git rev-list --count master..origin/master)
-    [ "$behind_remote" = 0 ] || { echo "master is $behind_remote behind origin/master — git pull first."; exit 1; }
+if git rev-parse --verify -q "origin/$base" >/dev/null; then
+    behind_remote=$(git rev-list --count "$base..origin/$base")
+    [ "$behind_remote" = 0 ] || { echo "$base is $behind_remote behind origin/$base — git pull first."; exit 1; }
 fi
 
 git rev-parse "$tag" >/dev/null 2>&1 && { echo "Tag $tag already exists."; exit 1; }
@@ -188,7 +192,7 @@ fi
 notes=$(mktemp)
 { printf '## Nytt i %s\n%s\n\n' "$tag" "$notes_body"; cat docs/release-notes-install.md; } > "$notes"
 
-git push origin master "$tag"
+git push origin "$base" "$tag"
 gh release create "$tag" "$apk" \
     --title "Feltbok $tag" \
     --notes-file "$notes"

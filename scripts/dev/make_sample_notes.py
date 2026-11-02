@@ -105,6 +105,8 @@ LONG_SITE = "sjøområdet mellom Brattøra og Munkholmen"
 # failing on unknown/ambiguous names. PARTY is reused across rows for the sticky-følget look (#128);
 # CROWD is a 12-name group that stresses the "+N" badge and the 10+ Medobservatør export columns.
 # (Names that resolve to several users — e.g. "Monica Esbensen" — fail as ambiguous, so aren't used.)
+# A user picked from the co-observer search is stored by brukeralias instead, which links even when
+# the name is shared: Ibe55 is the Inge Berg whose import first failed (the other one is Pingu).
 PARTY = ["Kristin Bøkestad", "Christian Sjødin"]
 CROWD = [
     "Hanna Tomasgård Olstad",
@@ -260,7 +262,7 @@ ROWS = [
         "Stasjonær",
         "Estenstaddammen",
         unc=True,
-        coobs=["Eivind Bering"],
+        coobs=["Eivind Bering", "Ibe55"],
     ),
     note(
         "baseline: no age/sex/activity/co-observers at all",

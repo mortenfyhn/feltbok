@@ -1,0 +1,3 @@
+• Nye allmenne lokaliteter dukker opp automatisk.
+• Medobservatører som deler navn med andre gir ikke opplastingsfeil.
+• En hel del små forbedringer og feilrettinger.
