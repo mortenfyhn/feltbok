@@ -168,12 +168,15 @@ dependencies {
     implementation("androidx.lifecycle:lifecycle-viewmodel-compose:2.9.4")
     // Instrumented R8 smoke tests (src/androidTest, run on a device against the minified
     // releaseTest variant). ext:junit pulls the runner + core transitively.
-    androidTestImplementation("androidx.test.ext:junit:1.2.1")
-    androidTestImplementation("androidx.test:core-ktx:1.6.1")
+    androidTestImplementation("androidx.test.ext:junit:1.3.0")
+    androidTestImplementation("androidx.test:core-ktx:1.7.0")
     // The AndroidJUnitRunner lives here and is NOT pulled transitively by ext:junit/core; without
     // it the test APK has no runner class and instrumentation crashes on launch.
-    androidTestImplementation("androidx.test:runner:1.6.2")
-    androidTestImplementation("androidx.test:rules:1.6.1") // GrantPermissionRule
+    androidTestImplementation("androidx.test:runner:1.7.0")
+    androidTestImplementation("androidx.test:rules:1.7.0") // GrantPermissionRule
+    // Compose UI tests sync through Espresso; ui-test only pulls in 3.5, which calls an
+    // InputManager method Android 17 removed.
+    androidTestImplementation("androidx.test.espresso:espresso-core:3.7.0")
     // MapAndLaunchSmokeTest sets up an osmdroid map inline (osmdroid itself comes in through :ui).
     androidTestImplementation("org.osmdroid:osmdroid-android:6.1.20")
     // Compose UI-flow tests (src/androidTest): drive the real screens and assert on the tree. The
