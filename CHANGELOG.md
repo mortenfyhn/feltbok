@@ -8,6 +8,7 @@
 - Den grønne toppen og bunnlinja går helt ut til kanten av skjermen.
 - Lista reagerer raskere, særlig på eldre telefoner.
 - Kartet henger bedre med når du zoomer.
+- Kartet henger ikke lenger etter når du zoomer raskt med to fingre.
 
 ## v1.4 (2. november 2026)
 

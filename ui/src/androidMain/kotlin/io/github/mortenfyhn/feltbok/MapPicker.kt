@@ -99,9 +99,8 @@ actual fun LocalityScreen(vm: MainViewModel) {
 
     val mapView = remember {
         configureOsmdroid(ctx)
-        MapView(ctx).apply {
+        PickerMapView(ctx).apply {
             setTileSource(TileSourceFactory.MAPNIK)
-            setMultiTouchControls(true)
             // Clamp zoom: 4 still shows all of Norway; 23 zooms in tight enough to place a 1 m
             // spot (tiles upscale past MAPNIK's 19, but the geometry stays exact). Disable map
             // wrapping so zooming out can't tile the world into a grid of Earths, and pin the
