@@ -25,10 +25,13 @@ data class Locality(
     val isSuper: Boolean = false, // a superlocality (has sublocalities) - drawn in a deeper green
     val newLoc: Boolean = false,  // a brand-new spot the user just placed - exported WITH coords to mint it
 ) {
-    /** [latMin, latMax, lonMin, lonMax] of the footprint, computed once (the map needs it
-     *  every frame for culling and fading); null for point localities. */
-    val polyBounds: DoubleArray? by lazy {
-        if (polygon.isEmpty()) return@lazy null
+    // The bounds are computed up front, not `by lazy`: the map reads them for every locality on
+    // every redraw, and on iOS each read of a lazy value takes a lock - that alone was half the time
+    // of rebuilding the map's layers on an iPhone 7. Cheap to compute, and the map needs all of them.
+
+    /** [latMin, latMax, lonMin, lonMax] of the footprint (the map needs it every frame for culling
+     *  and fading); null for point localities. */
+    val polyBounds: DoubleArray? = if (polygon.isEmpty()) null else {
         var laMin = 90.0; var laMax = -90.0; var loMin = 180.0; var loMax = -180.0
         for (v in polygon) {
             laMin = minOf(laMin, v[0]); laMax = maxOf(laMax, v[0])
@@ -44,13 +47,11 @@ data class Locality(
     }
 
     /** [latMin, latMax, lonMin, lonMax] for viewport culling - the polygon extent, or the
-     *  radius circle's box for point localities. Computed once (the trig was per-frame before). */
-    val cullBounds: DoubleArray by lazy {
-        polyBounds ?: run {
-            val dLat = radius / 111_320.0
-            val dLon = radius / (111_320.0 * cos(rad(lat)))
-            doubleArrayOf(lat - dLat, lat + dLat, lon - dLon, lon + dLon)
-        }
+     *  radius circle's box for point localities. */
+    val cullBounds: DoubleArray = polyBounds ?: run {
+        val dLat = radius / 111_320.0
+        val dLon = radius / (111_320.0 * cos(rad(lat)))
+        doubleArrayOf(lat - dLat, lat + dLat, lon - dLon, lon + dLon)
     }
 }
 

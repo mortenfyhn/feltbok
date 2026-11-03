@@ -7,6 +7,7 @@
 - Den svenske betaversjonen (Fältbok) er lagt ned.
 - Den grønne toppen og bunnlinja går helt ut til kanten av skjermen.
 - Lista reagerer raskere, særlig på eldre telefoner.
+- Kartet henger bedre med når du zoomer.
 
 ## v1.4 (2. november 2026)
 
