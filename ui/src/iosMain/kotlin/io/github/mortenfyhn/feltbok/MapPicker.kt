@@ -250,6 +250,18 @@ actual fun LocalityScreen(vm: MainViewModel) {
         var built: DoubleArray? = null
         var builtZoom = 0.0
         var builtKey: Any? = null
+        val pendingZoom = arrayOfNulls<Job>(1)
+        suspend fun rebuild(p: Proj, key: Triple<Locality?, GpsFix?, Int>) {
+            val v = p.bounds()
+            val padLat = (v[2] - v[0]) * 0.75
+            val padLon = (v[3] - v[1]) * 0.75
+            val bb = doubleArrayOf(v[0] - padLat, v[1] - padLon, v[2] + padLat, v[3] + padLon)
+            val locs = overlay.localities
+            layerData = withContext(Dispatchers.Default) {
+                buildLayerData(locs, key.first, key.second, bb, p.zoom, p.ppm)
+            }
+            built = bb; builtZoom = p.zoom; builtKey = key
+        }
         snapshotFlow { proj() to Triple(tapped ?: vm.pickerFocus, vm.fix, vm.localities.size) }
             .conflate()
             .collect { (p, key) ->
@@ -257,15 +269,17 @@ actual fun LocalityScreen(vm: MainViewModel) {
                 val v = p.bounds()
                 val b = built
                 val inside = b != null && v[0] >= b[0] && v[1] >= b[1] && v[2] <= b[2] && v[3] <= b[3]
-                if (inside && abs(p.zoom - builtZoom) < 0.15 && key == builtKey) return@collect
-                val padLat = (v[2] - v[0]) * 0.75
-                val padLon = (v[3] - v[1]) * 0.75
-                val bb = doubleArrayOf(v[0] - padLat, v[1] - padLon, v[2] + padLat, v[3] + padLon)
-                val locs = overlay.localities
-                layerData = withContext(Dispatchers.Default) {
-                    buildLayerData(locs, key.first, key.second, bb, p.zoom, p.ppm)
+                if (inside && key == builtKey) {
+                    if (abs(p.zoom - builtZoom) < 0.15) return@collect
+                    // Only the zoom changed. The drawn shapes scale with the map, so let decluttering
+                    // and the size-based colours catch up once the gesture pauses: rebuilding (and
+                    // MapLibre re-tiling) at every step of a pinch made zooming lag on older iPhones.
+                    pendingZoom[0]?.cancel()
+                    pendingZoom[0] = scope.launch { delay(250); rebuild(p, key) }
+                    return@collect
                 }
-                built = bb; builtZoom = p.zoom; builtKey = key
+                pendingZoom[0]?.cancel()
+                rebuild(p, key)
             }
     }
     DisposableEffect(Unit) {
