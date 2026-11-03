@@ -249,7 +249,7 @@ fun ListScreen(vm: MainViewModel, listState: LazyListState) {
                     // First time it's an invitation; once you've synced some, it's a refresh.
                     // Sync isn't available in every country build (Country.syncEnabled).
                     if (Country.syncEnabled) {
-                        Text(if (vm.localities.any { it.mine }) Strings.Sync.update else Strings.Sync.fetch,
+                        Text(if (vm.hasMyLocalities) Strings.Sync.update else Strings.Sync.fetch,
                             color = cs.primary, fontWeight = FontWeight.Medium, fontSize = 13.sp,
                             maxLines = 1, modifier = Modifier.clickable { vm.openSync() }.padding(horizontal = 14.dp, vertical = 10.dp))
                     }

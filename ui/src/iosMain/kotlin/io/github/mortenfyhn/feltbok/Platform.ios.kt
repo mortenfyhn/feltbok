@@ -15,7 +15,11 @@ actual fun plainTextClip(text: String) = ClipEntry.withPlainText(text)
 
 actual val noFontPadding: PlatformTextStyle? = null
 
-actual fun fullScreenDialogProperties() = DialogProperties(usePlatformDefaultWidth = false)
+/** The dialog covers the whole screen, keyboard and system bars included, and its content keeps
+ *  clear of them itself (like Android's decorFitsSystemWindows = false). Left to inset itself, the
+ *  dialog stops at the keyboard and the dimmed app shows in the keyboard's rounded top corners. */
+actual fun fullScreenDialogProperties() =
+    DialogProperties(usePlatformDefaultWidth = false, usePlatformInsets = false, useSoftwareKeyboardInset = false)
 
 /** On iOS 15, Compose's default-font fallback draws ♂/♀ cut (the ♀ loses the top of its circle;
  *  likely Skia cropping to bounds that font under-reports). The serif fallback draws them whole. It
