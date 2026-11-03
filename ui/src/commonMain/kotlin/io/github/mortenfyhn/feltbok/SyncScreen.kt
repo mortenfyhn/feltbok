@@ -124,7 +124,7 @@ fun SyncScreen(vm: MainViewModel) {
         ScreenHeader(
             when {
                 stage == Stage.LOGIN -> Strings.Sync.login
-                vm.localities.any { it.mine } -> Strings.Sync.update
+                vm.hasMyLocalities -> Strings.Sync.update
                 else -> Strings.Sync.fetch
             },
             onCancel = { vm.closeSync() },

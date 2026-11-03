@@ -30,6 +30,11 @@ class MainViewModel(private val platform: Platform) : ViewModel() {
     // Nothing on the first screen needs localities; nearest()/the picker just see an empty list
     // until it populates (a beat later), then recompose.
     val localities = mutableStateListOf<Locality>()
+
+    /** Whether you've fetched your own localities (the footer then offers to update them). Derived,
+     *  so the ~80k scan runs only when [localities] changes, not on every recomposition of the
+     *  list screen - that scan was most of the list's lag on an iPhone 7. */
+    val hasMyLocalities by derivedStateOf { localities.toList().any { it.mine } }
     val species: List<Species> = loadSpecies(storage) + loadUbestemt(storage)
 
     /** Species normalized (folded forms, token splits) for the search scorer - never per keystroke.
@@ -467,9 +472,12 @@ class MainViewModel(private val platform: Platform) : ViewModel() {
         val f = fix ?: return null
         if (f !== nearestFix) {
             nearestFix = f
-            val inside = localities.filter { localityContains(it, f.lat, f.lon) }
+            // toList() is the state list's current immutable snapshot, without a copy: iterating
+            // that is several times faster than the state list itself, which tracks every read.
+            val all = localities.toList()
+            val inside = all.filter { localityContains(it, f.lat, f.lon) }
             nearestLoc = if (inside.isNotEmpty()) inside.minByOrNull { footprintArea(it) }
-            else localities.minByOrNull { distanceToFootprint(it, f.lat, f.lon) }
+            else all.minByOrNull { distanceToFootprint(it, f.lat, f.lon) }
         }
         return nearestLoc
     }
