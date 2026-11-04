@@ -7,9 +7,10 @@ folder: unlike a phone, the simulator's app data is a plain folder on this Mac. 
 reinstalled first, so every run starts from the default settings. iOS can't be driven from
 outside, so the UI test ScreenshotTests taps through the screens and saves each one.
 
-The simulator is an iPhone Pro Max, whose 1320x2868 screen is the 6.9" size App Store Connect
-requires (it scales them down for smaller iPhones). The status bar and the location are fixed;
-the location is in Trondheim, where the showcase localities are.
+App Store Connect sorts iPhones into large and medium displays and requires the medium one, so
+there's a set from each: an iPhone Pro Max (1320x2868) and an iPhone Pro (1206x2622). Capturing
+both, rather than scaling one, keeps the layout each size really gets. The status bar and the
+location are fixed; the location is in Trondheim, where the showcase localities are.
 """
 
 import json
@@ -27,7 +28,8 @@ IOS = ROOT / "iosApp"
 DERIVED = ROOT / "build/ios-screenshots"
 OUT = ROOT / "fastlane/screenshots/no"
 BUNDLE = "io.github.mortenfyhn.feltbok"
-DEVICE = "iPhone 17 Pro Max"
+# Simulator -> App Store Connect's display size, which names the output folder.
+DEVICES = {"iPhone 17 Pro Max": "large", "iPhone 17 Pro": "medium"}
 GAMLE_BYBRO = "63.4283,10.4013"
 
 
@@ -39,14 +41,14 @@ def simctl(*args):
     return run("xcrun", "simctl", *args, capture_output=True, text=True).stdout
 
 
-def device_id():
+def device_id(name):
     devices = json.loads(simctl("list", "devices", "available", "-j"))["devices"]
     # The newest runtime that has the device.
     for runtime in sorted(devices, reverse=True):
         for d in devices[runtime]:
-            if d["name"] == DEVICE:
+            if d["name"] == name:
                 return d["udid"]
-    raise SystemExit(f"No {DEVICE} simulator; add one in Xcode")
+    raise SystemExit(f"No {name} simulator; add one in Xcode")
 
 
 def xcodebuild(action, sim, env=None):
@@ -70,17 +72,16 @@ def seed(sim):
     (docs / "notes.json").write_text(json.dumps(notes, ensure_ascii=False))
 
 
-def main():
-    sim = device_id()
+def capture(name, out):
+    sim = device_id(name)
     # Fails harmlessly when it's already booted.
     subprocess.run(["xcrun", "simctl", "boot", sim], check=False, capture_output=True)
     simctl("bootstatus", sim, "-b")
-    run("xcodegen", "--quiet", cwd=IOS)
     # The footer shows just the release tag, like the Android set (ui/build.gradle.kts).
     xcodebuild("build-for-testing", sim, {"ORG_GRADLE_PROJECT_screenshots": "1"})
     seed(sim)
     simctl("location", sim, "set", GAMLE_BYBRO)
-    OUT.mkdir(parents=True, exist_ok=True)
+    out.mkdir(parents=True, exist_ok=True)
     noon = datetime.now().replace(hour=12, minute=0, second=0).astimezone()
     try:
         simctl(
@@ -90,12 +91,18 @@ def main():
         )  # fmt: skip
         # TEST_RUNNER_ variables reach the UI test without the prefix.
         xcodebuild(
-            "test-without-building", sim, {"TEST_RUNNER_SCREENSHOT_DIR": str(OUT)}
+            "test-without-building", sim, {"TEST_RUNNER_SCREENSHOT_DIR": str(out)}
         )
     finally:
         simctl("status_bar", sim, "clear")
-    for p in sorted(OUT.glob("*.png")):
+    for p in sorted(out.glob("*.png")):
         print(f"wrote {p.relative_to(ROOT)}")
+
+
+def main():
+    run("xcodegen", "--quiet", cwd=IOS)
+    for name, size in DEVICES.items():
+        capture(name, OUT / size)
 
 
 if __name__ == "__main__":

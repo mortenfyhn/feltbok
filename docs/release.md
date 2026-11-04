@@ -73,8 +73,8 @@ review the first time. Export compliance is answered once in the app's Info.plis
 (`ITSAppUsesNonExemptEncryption`: standard HTTPS only).
 
 Store screenshots come from `just screenshots-ios`, the twin of Android's `just screenshots`: the
-same showcase notes on an iPhone Pro Max simulator, into `fastlane/screenshots/no/` at the 6.9"
-size App Store Connect asks for. Upload them there by hand. The rest of the listing, and what to
+same showcase notes on an iPhone Pro and a Pro Max simulator, into `fastlane/screenshots/no/medium/`
+and `large/`, App Store Connect's two iPhone display sizes. Upload them there by hand. The rest of the listing, and what to
 answer in App Store Connect, is in [app-store.md](app-store.md).
 
 Xcode 26 because App Store builds need the iOS 26 SDK, and it's the last Xcode that still targets
