@@ -22,8 +22,12 @@ Keywords skip the words already in the name, which App Store indexes anyway.
 
 ## Screenshots
 
-`fastlane/screenshots/no/`, from `just screenshots-ios` (see `docs/release.md`). They're the 6.9"
-size; App Store Connect scales them down for smaller iPhones.
+From `just screenshots-ios` (see `docs/release.md`), one set per display size App Store Connect
+lists: `fastlane/screenshots/no/medium/` (iPhone Pro, 1206x2622) goes in "iPhone with Dynamic
+Island (medium display)", which is required; `large/` (Pro Max, 1320x2868) is for the optional
+large display slot, so the biggest iPhones get shots made for them. The app is iPhone-only, so no iPad set; iPhone Duo is optional until
+apps build with the iOS 27.1 SDK. The header and search results artwork is optional too: search
+results show the screenshots without it.
 
 ## Questionnaires
 
