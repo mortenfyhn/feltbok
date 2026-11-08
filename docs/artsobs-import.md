@@ -145,7 +145,7 @@ Rather than maintain a hand-written TSV (which drifts from real output — an in
 string once slipped in that way and failed import), the integration test goes through the app:
 
 1. `just seed` — pushes a clean batch of observations to the debug app (from
-   `scripts/dev/make_sample_notes.py`; it imports them on next launch, **overwriting** its notes).
+   `scripts/dev/seed_notes.py`; it imports them on next launch, **overwriting** its notes).
 2. Export from the app (the normal Eksporter flow) and paste into "Importer observasjoner".
 3. Check the live site accepts it end-to-end — validation **and** that rows reach "Kontroller
    funn", not just the green success message.
@@ -163,7 +163,7 @@ locality even without kommune-scoping the form — no "matchet flere allmenne lo
 co-observers are **real registered users** (made-up or ambiguous names like a common "Ola Nordmann"
 fail to resolve), and the one "I par" row uses an even count (the site requires partall). So a clean
 seed should import with **no errors** — any error is then a real signal.
-`python scripts/dev/make_sample_notes.py --why` prints a legend of what each row is for.
+`python scripts/dev/seed_notes.py --why` prints a legend of what each row is for.
 
 The `Medobservatør` columns repeat one header per co-observer; paste-import matches by header name,
 so extra columns beyond the template's 10 are expected to work (the template hjelp says "10 felt

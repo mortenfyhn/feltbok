@@ -20,8 +20,8 @@ import time
 from datetime import datetime
 from pathlib import Path
 
-from make_sample_notes import build
 from screenshots import SHOWCASE
+from seed_notes import build
 
 ROOT = Path(__file__).resolve().parents[2]
 IOS = ROOT / "iosApp"

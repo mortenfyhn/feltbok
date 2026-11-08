@@ -149,7 +149,7 @@ push-data:
 # Seed the dev app with varied sample observations (overwrites its notes!)
 [group('dev')]
 seed:
-    .venv/bin/python scripts/dev/make_sample_notes.py > /tmp/feltbok-seed-notes.json
+    .venv/bin/python scripts/dev/seed_notes.py > /tmp/feltbok-seed-notes.json
     adb push /tmp/feltbok-seed-notes.json {{data_dir}}/seed-notes.json
     adb shell am force-stop {{app_id}}
 

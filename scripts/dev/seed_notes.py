@@ -30,7 +30,7 @@ files dir, and the app imports it on next launch. Timestamps are relative to now
 shows "I dag"/"I går").
 
 Activities/ages/sexes must be exact values from the app's Norwegian Country vocabularies, or the
-import rejects the row. Run via `just seed`, or `python scripts/dev/make_sample_notes.py` to inspect
+import rejects the row. Run via `just seed`, or `python scripts/dev/seed_notes.py` to inspect
 the JSON (add `--why` to instead print each row's purpose).
 """
 

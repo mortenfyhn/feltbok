@@ -22,7 +22,7 @@ import time
 import xml.etree.ElementTree as ET
 from pathlib import Path
 
-from make_sample_notes import DAY, MINUTE, build, note
+from seed_notes import DAY, MINUTE, build, note
 
 # Never the release app: this clears its data.
 APP = "io.github.mortenfyhn.feltbok.debug"
