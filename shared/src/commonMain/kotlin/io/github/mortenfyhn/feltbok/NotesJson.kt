@@ -42,6 +42,7 @@ internal fun noteToJson(n: Note): JsonObject = buildJsonObject {
     put("newLoc", n.newLoc); put("locRadius", n.locRadius); put("uncertain", n.uncertain)
     if (n.coObservers.isNotEmpty()) put("coObservers", JsonArray(n.coObservers.map(::JsonPrimitive)))
     if (n.kommune.isNotBlank()) put("kommune", n.kommune)
+    if (n.locId.isNotBlank()) put("locId", n.locId)
     n.hideUntil?.let { put("hideUntil", it) }
 }
 
@@ -67,6 +68,7 @@ internal fun noteFromJson(o: JsonObject): Note = Note(
     uncertain = o.optBoolean("uncertain"),
     coObservers = o.optArray("coObservers")?.map { it.jsonPrimitive.content } ?: emptyList(),
     kommune = o.optString("kommune"),
+    locId = o.optString("locId"),
     hideUntil = if (o.has("hideUntil")) o.getLong("hideUntil") else null,
 )
 

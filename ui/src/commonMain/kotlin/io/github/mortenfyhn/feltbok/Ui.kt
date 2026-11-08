@@ -1780,8 +1780,6 @@ fun ExportScreen(vm: MainViewModel) {
     // The preview field shows only the first rows: laying out the FULL string in a text field is
     // what made this screen slow to open on a big batch. The copy button copies everything.
     val preview = remember(text) { text.lineSequence().take(20).joinToString("\n") }
-    // A single (non-blank) kommune across all notes can be named on the form; otherwise leave it blank.
-    val singleKommune = remember(exported) { vm.exportKommuner().singleOrNull()?.takeIf { it.isNotBlank() } }
     var copied by remember { mutableStateOf(false) }
     var confirmClear by remember { mutableStateOf(false) }
 
@@ -1816,18 +1814,8 @@ fun ExportScreen(vm: MainViewModel) {
                     append(Strings.Export.pasteBody)
                     withStyle(SpanStyle(fontStyle = FontStyle.Italic)) { append(Strings.Export.pasteEmphasis) }
                 }, fontSize = 13.sp, color = cs.onSurfaceVariant, modifier = Modifier.padding(top = 4.dp))
-                // Only when all notes share one kommune: a soft suggestion to prioritise its
-                // localities on the form. The whole sentence lives in Strings; only the kommune (the
-                // interpolated value) is bolded, located by its position in the rendered string.
-                if (singleKommune != null) {
-                    val tip = Strings.Export.tip(singleKommune)
-                    val at = tip.indexOf(singleKommune)
-                    Text(buildAnnotatedString {
-                        append(tip.substring(0, at))
-                        withStyle(SpanStyle(fontWeight = FontWeight.Bold)) { append(singleKommune) }
-                        append(tip.substring(at + singleKommune.length))
-                    }, fontSize = 13.sp, color = cs.onSurfaceVariant, modifier = Modifier.padding(top = 6.dp))
-                }
+                Text(Strings.Export.areaTip,
+                    fontSize = 13.sp, color = cs.onSurfaceVariant, modifier = Modifier.padding(top = 6.dp))
             }
             Step(4, Strings.Export.step4) {
                 Text(Strings.Export.step4Body,

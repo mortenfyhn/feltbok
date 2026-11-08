@@ -64,10 +64,38 @@ Key nuances learned the hard way:
    ", Uttian".) The mobile API settles it: its `name` field *is* the exact registered
    locality name, so `build_sites.py` stores it verbatim — no splitting guesswork.
 
-**Consequence:** export the registered name, append nothing, no coordinates. The user
-scopes the import form to the kommune; truly-public names link, the user's own/unknown
-ones still need a manual pick. `localities.csv` keeps the qualified `fullname` for display
+**Consequence:** export the registered name, append nothing, no coordinates. (Since
+2026-11 the app exports the site id instead where it has one; see below.) `localities.csv` keeps the qualified `fullname` for display
 only; coordinates stay for GPS-nearest picking, never exported (they only mint duplicates).
+
+### A site id in `Lokalitetsnavn` links exactly (2026-11-08)
+
+Paste-tested on the old site with no area set on the form:
+
+| What you paste in `Lokalitetsnavn` | Result |
+|---|---|
+| `352401` (Uttian's site id) | ✅ links to Uttian, Frøya |
+| `354419` (Austrått, Ørland; the name also exists in Sandnes) | ✅ links to Austrått, Ørland |
+| `#352401` | ❌ `Kunne ikke validere lokalitet` |
+
+The user's own private sites link by id too (`3283110` and `3150724`, both with "Prioriter
+private lokaliteter og favoritter" on and off).
+
+The area set on the form is a hard restriction, also for ids. Pasting public and private ids
+from Trondheim, Frøya and Ørland (2026-11-08):
+
+| Area on the form | "Prioriter private" | Result |
+|---|---|---|
+| none | on or off | ✅ every id links to its site |
+| Trondheim | on or off | ✅ Trondheim ids link; ❌ every id outside Trondheim fails with `[[ConversionError_SiteNotInRestrictedArea]]` |
+
+A bare name inside the area (Theisendammen, Trondheim) linked in all four cases.
+
+So the bare numeric site id is an unambiguous match key, and it sidesteps name collisions, as
+long as the form has no area set. "Prioriter private" makes no difference to ids. An id
+outside the area fails loudly instead of linking to the wrong site.
+The app exports `Note.locId` this way; notes without one (saved before it existed) and
+brand-new spots still export the name.
 
 > Open question: how does **iGoTerra** export to this same old site and land on public
 > localities? If it genuinely does, a working format exists that name/coords paste does
@@ -123,7 +151,8 @@ string once slipped in that way and failed import), the integration test goes th
    funn", not just the green success message.
 
 The seed deliberately spans every path `exportTsv` takes so one paste exercises the whole format:
-a name-only registry locality, a brand-new spot (coordinates + radius, mints a private locality —
+registry localities exported by **site id** (one, Austrått, shares its name with a site in
+another kommune), a **name-only** row (a note saved before notes kept the id), a brand-new spot (coordinates + radius, mints a private locality —
 each import mints a fresh **duplicate**, so expect to clean those up), a **blank `Antall`** (unknown
 count, see #90), the `Usikker artsbestemming` flag, both comment fields, a **hidden** row (`Skjul funn til dato`, #181), same-day and multi-day time
 ranges, the two **blank `klokkeslett`** no-time cases (single day and multi-day, #155), and

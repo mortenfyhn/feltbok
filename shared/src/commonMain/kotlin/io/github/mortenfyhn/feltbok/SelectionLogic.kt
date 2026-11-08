@@ -72,7 +72,7 @@ fun applyBatchEdit(notes: List<Note>, ids: Set<Long>, change: BatchChange): List
             m = m.copy(
                 locName = loc.lokalitet, locFull = "", lat = loc.lat, lon = loc.lon,
                 newLoc = loc.newLoc, locRadius = if (loc.newLoc) loc.radius.toInt() else 0,
-                kommune = loc.kommune,
+                kommune = loc.kommune, locId = loc.id,
             )
         }
         // Setting a time in bulk means the time-of-day is now known, so clear any no-time flag.

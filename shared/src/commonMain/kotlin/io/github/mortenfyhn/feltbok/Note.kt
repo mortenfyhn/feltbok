@@ -23,10 +23,13 @@ data class Note(
     val locRadius: Int = 0, // chosen radius in metres for a new spot (-> Nøyaktighet)
     val uncertain: Boolean = false, // uncertain species determination (-> "Usikker artsbestemming")
     val coObservers: List<String> = emptyList(), // who you observed with (-> Medobservatør columns)
-    // Kommune the obs belongs to, stamped at save for the per-kommune export grouping. A new spot
-    // resolves it from the nearest registry locality at creation; blank on notes saved before this
-    // existed (grouping then falls back to the locFull / nearest-locality lookup).
+    // Kommune the obs belongs to, stamped at save. A new spot resolves it from the nearest registry
+    // locality at creation; blank on notes saved before this existed.
     val kommune: String = "",
+    // Artsobservasjoner site id of the picked locality. Exported in place of the name, since the
+    // import links an id exactly where a name can match several sites. Blank for a brand-new spot
+    // and for notes saved before this existed (those export the name).
+    val locId: String = "",
     // Hide the observation from everyone else until after this date (-> "Skjul funn til dato").
     // For vulnerable birds you don't want a crowd turning up to search for. null = not hidden.
     val hideUntil: Long? = null,

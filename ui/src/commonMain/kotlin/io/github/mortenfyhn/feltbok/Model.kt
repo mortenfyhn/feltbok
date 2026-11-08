@@ -34,13 +34,9 @@ fun exportTime(ms: Long): String = formatDateTime(ms, Country.exportTimeFmt)
 // ---- export (paste format; columns/headers per Country) ----
 
 fun exportTsv(notes: List<Note>): String {
-    // Emit the *bare* Lokalitetsnavn with no coordinates. Paste-import behaviour
-    // (tested against the live v2.20 site, see docs/artsobs-import.md):
-    //  - a comma-qualified name ("Lok, Hovedlok, Kommune, Fylke") HARD-FAILS validation.
-    //  - name / name+coords each validate but MINT a private duplicate - paste never
-    //    links to a public locality. Only manual selection on the site links to public.
-    // So we emit the bare name and let the user scope the import form to the kommune to
-    // disambiguate, fixing the rest by hand. Nord/Øst/Nøyaktighet are left blank.
+    // Lokalitetsnavn carries the site id when the note has one: the import links a bare id to
+    // exactly that site, public or the user's own, while a name can match several sites
+    // (docs/artsobs-import.md). Older notes without an id fall back to the bare registered name.
     // As many trailing "Medobservatør" columns as the busiest row needs; 0 when nobody logged a
     // co-observer, so the format is byte-for-byte unchanged when the feature is unused (#128).
     val maxCoObs = notes.maxOfOrNull { it.coObservers.size } ?: 0
@@ -53,10 +49,10 @@ fun exportTsv(notes: List<Note>): String {
         // accepts a date-only observation, like a blank Antall means "unknown").
         val t = if (n.timeUnknown) "" else exportTime(n.time)
         val tEnd = if (n.timeUnknown) "" else exportTime(end)
-        val loc = n.locName.ifBlank { n.locFull }
+        val loc = if (n.newLoc || n.locId.isBlank()) n.locName.ifBlank { n.locFull } else n.locId
         // A brand-new spot is exported WITH coordinates (+ its radius as Nøyaktighet), which
-        // mints a new custom locality on import; registry localities stay name-only so the import
-        // links them to the public site (verified on both Artsobservasjoner and Artportalen).
+        // mints a new custom locality on import; registry localities carry no coordinates, which
+        // would also mint a duplicate.
         // Coordinates use the display locale (comma decimal) - the paste-import parses numbers with
         // the account's number format (Norwegian), so a period reads as "not a decimal
         // number". The TSV is tab-delimited, so a comma in the value is safe.
@@ -83,40 +79,9 @@ fun exportTsv(notes: List<Note>): String {
     return (listOf(header) + rows).joinToString("\n")
 }
 
-/** A kommune's worth of notes, for a self-contained per-kommune paste block. */
-data class ExportGroup(val kommune: String, val notes: List<Note>)
-
-/** The registered fullname is "Lok[, Hovedlok…], Kommune, Fylke", so the kommune is the
- *  second-to-last comma field. Blank for an unqualified or empty name (e.g. a brand-new spot). */
-private fun kommuneFromFullname(locFull: String): String {
-    val parts = locFull.split(",")
-    return if (parts.size >= 3) parts[parts.size - 2].trim() else ""
-}
-
 /** Kommune of the registry locality nearest [lat]/[lon], for stamping a brand-new spot with the
  *  kommune around it. Only localities that carry a kommune count (a new spot is itself a
  *  kommune-less private locality, so it can't be its own answer). Blank until localities load. */
 fun nearestKommune(lat: Double, lon: Double, localities: List<Locality>): String =
     localities.filter { it.kommune.isNotBlank() }
         .minByOrNull { haversine(it.lat, it.lon, lat, lon) }?.kommune ?: ""
-
-/**
- * Group notes by kommune so each block can be pasted with the import form scoped to that
- * kommune. The form takes one kommune scope per paste, so a multi-kommune batch must be
- * split (see docs/artsobs-import.md).
- *
- * The kommune is stamped on each note at save time, so grouping is instant and needs no
- * registry. Notes saved before that field existed fall back to their registered fullname, then
- * (only for an unqualified brand-new spot) to the nearest registry locality. A spot whose
- * kommune still can't be resolved falls into a trailing blank group.
- */
-fun groupNotesByKommune(notes: List<Note>, localities: List<Locality>): List<ExportGroup> {
-    fun kommuneFor(n: Note): String =
-        n.kommune
-            .ifBlank { kommuneFromFullname(n.locFull) }
-            .ifBlank { nearestKommune(n.lat, n.lon, localities) }
-    return notes.groupBy { kommuneFor(it) }
-        .map { (kommune, ns) -> ExportGroup(kommune, ns) }
-        // Sort by kommune name, but keep the unresolved (blank) group last.
-        .sortedWith(compareBy({ it.kommune.isBlank() }, { it.kommune }))
-}

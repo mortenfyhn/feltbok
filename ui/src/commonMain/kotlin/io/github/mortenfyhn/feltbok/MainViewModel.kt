@@ -567,7 +567,7 @@ class MainViewModel(private val platform: Platform) : ViewModel() {
         dCoObs.clear(); dCoObs.addAll(n.coObservers)
         dHideUntil = n.hideUntil
         dLoc = localities.firstOrNull { it.lokalitet == n.locName && it.lat == n.lat && it.lon == n.lon }
-            ?: Locality("", n.locName, "", "", n.lat, n.lon, 0, 0.0)
+            ?: Locality(n.locId, n.locName, "", "", n.lat, n.lon, 0, 0.0)
         screen = Screen.DETAIL
     }
 
@@ -796,7 +796,7 @@ class MainViewModel(private val platform: Platform) : ViewModel() {
         val locKey = shared { it.locKey() }
         dLoc = if (locKey != null) sel.first().let { n ->
             localities.firstOrNull { it.lokalitet == n.locName && it.lat == n.lat && it.lon == n.lon }
-                ?: Locality("", n.locName, "", n.kommune, n.lat, n.lon, 0, 0.0)
+                ?: Locality(n.locId, n.locName, "", n.kommune, n.lat, n.lon, 0, 0.0)
         } else null
         dTime = shared { it.time } ?: 0L
         dEndTime = shared { it.endTime }
@@ -863,6 +863,7 @@ class MainViewModel(private val platform: Platform) : ViewModel() {
             lat = loc?.lat ?: 0.0, lon = loc?.lon ?: 0.0,
             newLoc = loc?.newLoc == true, locRadius = if (loc?.newLoc == true) loc.radius.toInt() else 0,
             uncertain = dUncertain, coObservers = dCoObs.toList(), kommune = loc?.kommune ?: "",
+            locId = loc?.id ?: "",
             hideUntil = dHideUntil,
         )
         if (isEditing) {
@@ -910,10 +911,6 @@ class MainViewModel(private val platform: Platform) : ViewModel() {
     /** True when the open export is scoped to a selection (vs the whole list) - drives the clear
      *  step's wording so it never claims to wipe "alle observasjoner" when it only clears a subset. */
     fun exportIsSelection(): Boolean = exportScope != null
-
-    /** Kommuner present across the exported notes, for the import hint: a single (non-blank) one can
-     *  be named on the form for safer matching. */
-    fun exportKommuner(): List<String> = groupNotesByKommune(exportNotes(), localities).map { it.kommune }
 
     /** Clear the exported notes - after they've been imported and published. Only the export's scope
      *  (a selection, or all), so a subset export never deletes notes it didn't cover. Undoable like
