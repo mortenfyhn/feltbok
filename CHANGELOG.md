@@ -10,6 +10,7 @@
 - Kartet henger bedre med når du zoomer.
 - Kartet henger ikke lenger etter når du zoomer raskt med to fingre.
 - Lokaliteter med samme navn som andre blir ikke forveksla ved import.
+- Ymse småforbedringer på eksportsida.
 
 ## v1.4 (2. november 2026)
 

@@ -13,6 +13,7 @@ import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.gestures.detectDragGesturesAfterLongPress
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.gestures.scrollBy
+import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -58,7 +59,6 @@ import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.LocalTextStyle
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -1761,9 +1761,7 @@ private fun Step(n: Int, title: String, body: @Composable () -> Unit) {
 /**
  * Full-page export walkthrough. Defaults to all-at-once: copy every note, paste once. Field testing
  * showed people reaching for the share sheet, so copy → open → paste is spelled out as numbered
- * steps. The paste step adapts to scope - one kommune can be named on the import form (free
- * disambiguation), several means leaving it blank. Shown as an overlay over the list (via
- * showExport), so it needs its own opaque background.
+ * steps. Shown as an overlay over the list (via showExport), so it needs its own opaque background.
  */
 @Composable
 fun ExportScreen(vm: MainViewModel) {
@@ -1774,8 +1772,8 @@ fun ExportScreen(vm: MainViewModel) {
     // Scope: whatever the export covers - the marked notes when opened from selection, else all.
     val exported = vm.exportNotes()
     val isSelection = vm.exportIsSelection()
-    // remember'd: with a big batch the TSV runs to hundreds of KB, so don't rebuild it (or rescan
-    // the kommuner) on every recomposition.
+    // remember'd: with a big batch the TSV runs to hundreds of KB, so don't rebuild it on every
+    // recomposition.
     val text = remember(exported) { exportTsv(exported) }
     // The preview field shows only the first rows: laying out the FULL string in a text field is
     // what made this screen slow to open on a big batch. The copy button copies everything.
@@ -1787,9 +1785,13 @@ fun ExportScreen(vm: MainViewModel) {
         ScreenHeader(Strings.Export.title, onCancel = { vm.closeExport() })
         Column(Modifier.weight(1f).verticalScroll(rememberScrollState()).padding(horizontal = 16.dp)) {
             Step(1, Strings.Export.step1) {
-                OutlinedTextField(preview, {},
-                    Modifier.fillMaxWidth().height(120.dp).padding(top = 6.dp), readOnly = true,
-                    textStyle = androidx.compose.ui.text.TextStyle(fontSize = 11.sp))
+                // Unwrapped, so each line reads as one row of the paste.
+                Text(preview,
+                    Modifier.padding(top = 6.dp).fillMaxWidth().height(120.dp)
+                        .border(1.dp, cs.outline, MaterialTheme.shapes.extraSmall)
+                        .verticalScroll(rememberScrollState()).horizontalScroll(rememberScrollState())
+                        .padding(horizontal = 8.dp, vertical = 6.dp),
+                    fontSize = 11.sp, lineHeight = 14.sp, softWrap = false)
                 Button(
                     onClick = {
                         // Setting the clipboard is suspending since Compose 1.9.
@@ -1812,10 +1814,8 @@ fun ExportScreen(vm: MainViewModel) {
             Step(3, Strings.Export.step3) {
                 Text(buildAnnotatedString {
                     append(Strings.Export.pasteBody)
-                    withStyle(SpanStyle(fontStyle = FontStyle.Italic)) { append(Strings.Export.pasteEmphasis) }
+                    withStyle(SpanStyle(fontWeight = FontWeight.SemiBold)) { append(Strings.Export.pasteEmphasis) }
                 }, fontSize = 13.sp, color = cs.onSurfaceVariant, modifier = Modifier.padding(top = 4.dp))
-                Text(Strings.Export.areaTip,
-                    fontSize = 13.sp, color = cs.onSurfaceVariant, modifier = Modifier.padding(top = 6.dp))
             }
             Step(4, Strings.Export.step4) {
                 Text(Strings.Export.step4Body,

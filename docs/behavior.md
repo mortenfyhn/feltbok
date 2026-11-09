@@ -277,15 +277,14 @@ One **Eksporter** button (top right of the status strip) opens a step-by-step
 walkthrough: copy *all* your observations as a single block, paste it into
 Artsobservasjoner's "Importer observasjoner", then clear them from the app once
 they're safely in. (Exporting from a marking selection scopes the whole walkthrough
-to just the marked notes — the copied block, the kommune hint, and the final clear
-step all cover only those, so it never touches the rest of the list.) The clear step
+to just the marked notes — the copied block and the final clear
+step cover only those, so it never touches the rest of the list.) The clear step
 follows the same rule as the list's `Arkiver`: clearing more than one note asks to
 confirm first, a single one clears straight away — both undoable, and the cleared
 notes land in the archive like any other archiving.
 
-Everything pastes in one go. The paste step asks you to leave "Prioriter lokaliteter i
-området" empty on the import form, since an area there rejects every site outside it. Each observation
-carries the Artsobservasjoner site id of its locality in the `Lokalitetsnavn` column, and
+Everything pastes in one go. The copy step previews the first rows of the block unwrapped,
+exactly as they paste. Each observation carries the Artsobservasjoner site id of its locality in the `Lokalitetsnavn` column, and
 the import links an id to exactly that site, public or your own, even when other sites
 share its name. Observations saved before the app kept the id, and brand-new spots,
 export the name as before. (The deep why — what links vs. what mints a private

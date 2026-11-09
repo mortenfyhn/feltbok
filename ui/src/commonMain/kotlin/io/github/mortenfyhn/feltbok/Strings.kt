@@ -164,18 +164,15 @@ object Strings {
     object Export {
         const val title = "Eksporter"
         const val step1 = "Kopier observasjoner"
-        const val copy = "Kopiér"
+        const val copy = "Kopier"
         const val copied = "Kopiert ✓"
         const val step2 = "Åpne Artsobservasjoner"
-        const val open = "Kjør"
+        const val open = "Åpne"
         const val step3 = "Lim inn og importer"
 
-        // The paste step itself is unconditional, ending in <pasteEmphasis, italic>.
+        // Ends in <pasteEmphasis, semibold>, the label of the site's button.
         const val pasteBody = "Lim inn observasjonene og trykk "
         const val pasteEmphasis = "Importer"
-
-        // The export carries site ids, and an area set on the form rejects every id outside it.
-        const val areaTip = "La «Prioriter lokaliteter i området» stå tomt"
 
         const val step4 = "Kontroller funn"
         const val step4Body = "Sjekk at observasjonene vises i Artsobservasjoner"
