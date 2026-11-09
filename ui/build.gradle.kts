@@ -41,7 +41,14 @@ kotlin {
         namespace = "io.github.mortenfyhn.feltbok.ui"
         compileSdk = 36
         minSdk = 26
-        compilerOptions { jvmTarget.set(org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_17) }
+        compilerOptions {
+            jvmTarget.set(org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_17)
+            // Compile lambdas to classes, not invokedynamic. The R8 pinned in the root build file
+            // desugars those into MainViewModel$1, $2, ... When AGP 8.13 re-dexes one changed class,
+            // those names collide with the Kotlin compiler's own anonymous classes, and the
+            // incremental build fails ("defined multiple times"). Drop this with the move to AGP 9.
+            freeCompilerArgs.addAll("-Xlambdas=class", "-Xsam-conversions=class")
+        }
         withHostTestBuilder {}
     }
     if (System.getProperty("os.name").startsWith("Mac")) {
