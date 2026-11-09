@@ -43,9 +43,18 @@ The new mobile site is an Angular SPA backed by a **Duende BFF**:
   cookies `__Host-bff`, `__Host-bffC1`, `__Host-bffC2`. API calls go **same-origin** to a
   `/core/...` prefix (the SPA's `coreApiUrl` is literally `"core"`), with the header
   **`X-CSRF: 1`** (Duende's anti-forgery); the BFF proxies to the core API with the access token.
-  Because the cookies are HttpOnly, you can't read them from `CookieManager.getCookie` — so the
-  in-app flow must **fetch from inside the WebView via JS** (same-origin `fetch`, cookies ride
-  along automatically), not extract a cookie for a separate HTTP client.
+  The cookies are HttpOnly, which hides them from `document.cookie` only. The WebView's native
+  cookie store does return them: Android's `CookieManager.getCookie(url)` builds its cookie line
+  with `CookieOptions::MakeAllInclusive()` (Chromium `android_webview/browser/cookie_manager.cc`),
+  and iOS's `WKHTTPCookieStore.getAllCookies` lists them too. So a separate HTTP client can send
+  them as a `Cookie` header. The "Hent mine lokaliteter" sync fetches from inside the WebView via
+  JS anyway (same-origin `fetch`, cookies ride along); an earlier version of this note wrongly
+  said that was the only option.
+  **Logged in, `Sites/ByBoundingBox` returns the public registry plus only your own private
+  sites** (verified 2026-11-09): the anonymous flood of everyone's privates below is the "no
+  user" case. The BFF session lasts 30 days from login (`bff:session_expires_in` on
+  `GET /bff/user`, which answers 401 when logged out). An expired or garbage cookie does not
+  give 401 on `ByBoundingBox`; it falls back to the anonymous response.
 
 - **`GET /core/Sites/ByUser?pageSize=100&pageNumber=N`** → the user's own localities, paginated
   (`pageSize` caps at 100; response has `totalPages`/`totalCount`). **Session-scoped — no userId.**
