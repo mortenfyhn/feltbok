@@ -9,6 +9,7 @@
 - Lista reagerer raskere, særlig på eldre telefoner.
 - Kartet henger bedre med når du zoomer.
 - Kartet henger ikke lenger etter når du zoomer raskt med to fingre.
+- Kartet hopper ikke lenger av og til når du slipper det etter et sveip.
 - Lokaliteter med samme navn som andre blir ikke forveksla ved import.
 - Ymse småforbedringer på eksportsida.
 

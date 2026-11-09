@@ -32,7 +32,12 @@ class PickerMapView(ctx: Context) : MapView(ctx) {
         }
         // Super's own gesture detector still sees every event: single-finger pan, fling and taps.
         // Its scroll during the pinch is overridden by the focus-point pin above.
-        return super.dispatchTouchEvent(event)
+        val handled = super.dispatchTouchEvent(event)
+        // osmdroid starts a fling without asking for a redraw, and its computeScroll only steps the
+        // fling when something else redraws. Until then the map stood still, and the first step then
+        // jumped most of the fling at once.
+        if (event.actionMasked == MotionEvent.ACTION_UP && mIsFlinging) postInvalidateOnAnimation()
+        return handled
     }
 
     private fun begin(e: MotionEvent) {
