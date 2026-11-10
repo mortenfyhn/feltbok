@@ -246,6 +246,16 @@ class ModelTest {
         assertEquals("1.5 km", formatDistance(1500.0))
     }
 
+    @Test
+    fun distanceLabelMeasuresToPolygonNotBoundingRadius() {
+        // Polygon localities also carry a bounding radius. 80 m outside the polygon is well
+        // inside that radius, but you're not there.
+        val poly = Locality("p", "Area", "", "", 63.0005, 8.001, 0, 500.0,
+            polygon = square(63.0, 63.001, 8.0, 8.002))
+        assertEquals("80 m unna", distanceLabel(poly, 63.0 - 80 / 111_320.0, 8.001))
+        assertEquals(Strings.Notes.youAreHere, distanceLabel(poly, 63.0005, 8.001))
+    }
+
     // ---- locality tap hit-testing (#63: a tap inside a polygon must pick that polygon) ----
 
     private fun square(latLo: Double, latHi: Double, lonLo: Double, lonHi: Double) = listOf(

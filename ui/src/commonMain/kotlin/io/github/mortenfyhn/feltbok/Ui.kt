@@ -539,12 +539,11 @@ private fun StatusStrip(vm: MainViewModel) {
             .padding(start = if (SHOW_MINIMAP) 104.dp else 14.dp, end = 14.dp, top = 11.dp, bottom = 11.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        val edge = cur?.let { l -> vm.distanceTo(l)?.let { (it - l.radius).coerceAtLeast(0.0) } }
         // Distance to the locality edge and GPS accuracy share one line so neither crowds the
         // export button. The accuracy tells you whether to trust the fix / wait for a better one.
         val fix = vm.fix
         val subtitle = listOfNotNull(
-            edge?.let { if (it < 10) Strings.Notes.youAreHere else Strings.Notes.distanceAway(formatDistance(it)) },
+            if (cur != null && fix != null) distanceLabel(cur, fix.lat, fix.lon) else null,
             when {
                 fix == null -> Strings.Notes.searchingGps
                 fix.accuracyM.isNaN() -> Strings.Notes.gps

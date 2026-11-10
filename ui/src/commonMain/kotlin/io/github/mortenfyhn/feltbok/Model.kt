@@ -5,6 +5,13 @@ package io.github.mortenfyhn.feltbok
 fun formatDistance(m: Double): String =
     if (m < 1000) "${m.toInt()} m" else "${formatDecimal(m / 1000, 1)} km"
 
+/** The status strip's distance to the current locality's edge. Polygons are measured to the
+ *  polygon, not their bounding radius, which would claim "du er her" well outside them. */
+fun distanceLabel(loc: Locality, lat: Double, lon: Double): String {
+    val edge = distanceToFootprint(loc, lat, lon).coerceAtLeast(0.0)
+    return if (edge < 10) Strings.Notes.youAreHere else Strings.Notes.distanceAway(formatDistance(edge))
+}
+
 // ---- date/time formatting (the rest is in Dates.kt) ----
 
 // Compact forms of age/sex for the list-row preview, so two near-identical observations are

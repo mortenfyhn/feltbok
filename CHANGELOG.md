@@ -12,6 +12,7 @@
 - Kartet henger ikke lenger etter når du zoomer raskt med to fingre.
 - Kartet hopper ikke lenger av og til når du slipper det etter et sveip.
 - Lokaliteter med samme navn som andre blir ikke forveksla ved import.
+- Toppen sier ikke lenger «du er her» når du står like utenfor en lokalitet.
 - Ymse småforbedringer på eksportsida.
 
 ## v1.4 (2. november 2026)
