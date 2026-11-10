@@ -812,8 +812,7 @@ class MainViewModel(private val platform: Platform) : ViewModel() {
         val loc = Locality("", finalName, "", nearestKommune(lat, lon, localities), lat, lon, 0,
             radiusM.toDouble(), public = false, newLoc = true)
         addNewLocality(loc)        // make it immediately selectable for further observations
-        dLoc = loc
-        screen = Screen.DETAIL
+        pickLocality(loc)
     }
 
     /** Add a brand-new spot to the pickable list (deduped by name + position). */
