@@ -17,6 +17,8 @@
 - Et trykk like utenfor kanten av en lokalitet på kartet velger den.
 - Ymse småforbedringer på eksportsida.
 - Tidsvalget er ryddigere og brekker ikke lenger linjene med stor tekst.
+- Velg medobservatører med brytere, og slett navn med langt trykk, som i observasjonslista. Sletting kan angres.
+- Medobservatørene står alfabetisk etter etternavn, og brukeraliaset vises bare når det trengs for å skille folk med samme navn.
 
 ## v1.4 (2. november 2026)
 
