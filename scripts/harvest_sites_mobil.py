@@ -11,9 +11,11 @@ municipalityName, countyName, parentSiteId, isPolygon and polygonCoordinates.
 The data is already WGS84 (no Web-Mercator reprojection), carries the fylke per row, and a
 single call returns every tier. Process the output into localities.csv with build_sites.py.
 
-No auth needed: the endpoint serves the public allmenn registry over a plain GET (it also
-returns private sites - other people's included - but build_sites.py keeps only the public
-ones for the bundled localities.csv; your own privates come from the in-app ByUser sync).
+Log in first. Logged out, the endpoint also returns everyone's private sites (~39 for every
+public one), so dense tiles truncate and the run takes hours and writes ~1 GB. Logged in, it
+returns the public sites plus only the private ones you can see, and a 40 km tile rarely
+truncates. Pass --cookie-file: a Firefox "Copy as cURL" of any mobil.artsobservasjoner.no
+request, or a bare "Cookie:" line. build_sites.py keeps only the public rows either way.
 
 Two server limits drive the tiling. A bbox may span at most 50 km in Web Mercator per side;
 51 km gives "BoundingBox too large" (errorCode G8), so we cannot start from one big box and
@@ -23,7 +25,7 @@ for, so the 1000-row check below spots truncation well before the real cut-off. 
 Web Mercator at a safe size and recursively quarter any tile that comes back truncated.
 Output: a JSON array of rows saved to OUT, gentle and resumable.
 
-    .venv/bin/python scripts/harvest_sites_mobil.py [--bbox minlon,minlat,maxlon,maxlat]
+    .venv/bin/python scripts/harvest_sites_mobil.py --cookie-file ~/ao-curl.txt [--bbox ...]
 """
 
 import argparse
@@ -31,12 +33,15 @@ import json
 import math
 import os
 import pathlib
+import re
 import sys
 import time
 
 import requests
 
-URL = "https://mobil.artsobservasjoner.no/core/Sites/ByBoundingBox"
+HOST = "mobil.artsobservasjoner.no"
+URL = f"https://{HOST}/core/Sites/ByBoundingBox"
+USER_URL = f"https://{HOST}/bff/user"  # 200 when logged in, else 401
 # Where the raw rows are written (kept out of the repo - it's large). Override with
 # FELTBOK_DATA_DIR; pass --out to point at a specific file.
 DATA_DIR = os.environ.get(
@@ -57,7 +62,7 @@ TILE_M = 40_000
 MAX_SITES = 1000  # the largest MaxSites the server accepts (400 outside 1-1000); hitting it => subdivide
 MIN_TILE_M = 400  # stop subdividing below this (accept truncation; ~never reached)
 DELAY = 0.8
-# save() rewrites the whole rows file, which is ~1 GB by the end of a run (~7s to serialize
+# save() rewrites the whole rows file (~1 GB by the end of a logged-out run, ~7s to serialize
 # and write). Pacing it by tile count made bookkeeping cost more than the requests once the
 # run reached empty grid; pace it by time instead, so it stays a few percent of wall clock.
 # A clean Ctrl-C still saves, so this only bounds what a crash or power loss can cost.
@@ -93,6 +98,28 @@ def make_session():
         }
     )
     return s
+
+
+def load_cookies(session, path):
+    """Put the cookies from a "Copy as cURL" paste or a "Cookie:" line into the session's jar."""
+    text = pathlib.Path(path).expanduser().read_text()
+    m = re.search(r"(?im)^(?:.*-H\s+['\"])?cookie:\s*([^'\"\n]+)", text) or re.search(
+        r"-b\s+['\"]([^'\"]+)", text
+    )
+    if not m:
+        sys.exit(f"No Cookie header found in {path}")
+    for part in m.group(1).split(";"):
+        name, _, value = part.strip().partition("=")
+        if name:
+            session.cookies.set(name, value, domain=HOST)
+
+
+def logged_in(session):
+    # An expired or missing cookie doesn't fail ByBoundingBox, it just answers as logged out.
+    try:
+        return session.get(USER_URL, timeout=30).status_code == 200
+    except requests.RequestException:
+        return False
 
 
 def fetch(session, mx0, my0, mx1, my1, tries=4):
@@ -139,6 +166,10 @@ def main() -> int:
         help="minlon,minlat,maxlon,maxlat (default: mainland + Svalbard + Jan Mayen)",
     )
     ap.add_argument("--out", default=f"{DATA_DIR}/artsobs-sites-mobil.json")
+    ap.add_argument(
+        "--cookie-file",
+        help='a Firefox "Copy as cURL" or a "Cookie:" line from a logged-in session',
+    )
     args = ap.parse_args()
     regions = (
         [tuple(float(x) for x in args.bbox.split(","))]
@@ -146,6 +177,17 @@ def main() -> int:
         else DEFAULT_REGIONS
     )
     session = make_session()
+    if args.cookie_file:
+        load_cookies(session, args.cookie_file)
+        if not logged_in(session):
+            sys.exit(
+                "The session in --cookie-file has expired. Log in again and re-copy it."
+            )
+    else:
+        print(
+            "No --cookie-file: harvesting logged out, which takes hours and ~1 GB.",
+            file=sys.stderr,
+        )
 
     def grid(bbox):
         """Web-Mercator tile grid over a bbox: (mx0, my0, mx1, my1, nx, ny)."""
@@ -260,6 +302,12 @@ def main() -> int:
         )
         return 0
     save()
+    if args.cookie_file and not logged_in(session):
+        print(
+            "\nThe session ended during the run, so later tiles may be truncated. "
+            "Log in again and rerun into a fresh --out.",
+            file=sys.stderr,
+        )
     pub = sum(1 for r in rows.values() if not r["isPrivate"])
     print(
         f"\nHarvested {len(rows)} sites ({pub} public) in {hms(time.time() - start)} "

@@ -24,6 +24,10 @@ interface Platform {
     /** The body of a successful GET of [url], or null on any failure (offline, timeout, HTTP error). */
     suspend fun httpGet(url: String, headers: Map<String, String>, timeoutMs: Int): String?
 
+    /** The `Cookie` header value for [Country.sitesHost] from the login WebView's cookie store, or
+     *  null when there is none. Logged in, ByBoundingBox leaves out other users' private sites. */
+    suspend fun siteCookie(): String? = null
+
     /** Dev builds: import a pushed seed into notes.json, before it's loaded. */
     fun importSeedNotes() {}
 }

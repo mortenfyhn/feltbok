@@ -95,12 +95,13 @@ object Country {
 
     val adjustHint = "Du kan justere lokaliteten seinere på artsobservasjoner.no"
 
-    // ---- private-locality sync: a WebView logs in, then a same-origin fetch pulls the user's own
-    // sites (the session cookie rides along). syncEnabled gates the footer entry point. ----
+    // ---- logging in: a WebView logs in, and the app sends its session cookie with its own requests
+    // (Platform.siteCookie). syncEnabled gates the picker footer. ----
     val syncEnabled = true
     val sitesHost = "https://mobil.artsobservasjoner.no"
-    val syncProbeUrl = "$sitesHost/my-sites"
     val syncLoginUrl = "$sitesHost/bff/login?returnUrl=/my-page"
+    val mySitesUrl = "$sitesHost/core/Sites/ByUser"
+    val sessionUrl = "$sitesHost/bff/user"  // 200 with the session's claims when logged in, else 401
     val loginPathMarker = "/bff/" // while the URL still contains this we're mid-login; don't fetch yet
 
     // Co-observer lookup by name (the mobile site's own, undocumented; no login needed). Returns each
@@ -108,22 +109,4 @@ object Country {
     // Live public-locality lookup in the picker's visible box (#173); null disables it.
     val publicSitesUrl: String? = "$sitesHost/core/Sites/ByBoundingBox"
     val userSearchUrl: String? = "$sitesHost/core/Users/Search"
-    val mySitesParse: (String) -> List<Locality> = ::parseMySites
-    val mySitesFetchJs = """
-        (async () => {
-          try {
-            let all = [], page = 1, total = 1;
-            do {
-              const r = await fetch('/core/Sites/ByUser?pageSize=100&pageNumber=' + page,
-                                    { headers: { 'X-CSRF': '1' }, credentials: 'same-origin' });
-              if (r.status === 401 || r.status === 403) { FeltbokSync.deliver('{"error":"auth"}'); return; }
-              if (!r.ok) { FeltbokSync.deliver('{"error":"http"}'); return; }
-              const d = await r.json();
-              (d.data || []).forEach(function(x) { all.push(x); });
-              total = d.totalPages || 1; page++;
-            } while (page <= total);
-            FeltbokSync.deliver(JSON.stringify({ data: all }));
-          } catch (e) { FeltbokSync.deliver('{"error":"js"}'); }
-        })();
-    """.trimIndent()
 }

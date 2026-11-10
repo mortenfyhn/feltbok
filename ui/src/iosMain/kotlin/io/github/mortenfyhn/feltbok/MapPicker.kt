@@ -293,6 +293,9 @@ actual fun LocalityScreen(vm: MainViewModel) {
     val back = { if (newMode) newMode = false else vm.leaveLocalityPicker() }
     BackHandler { back() }
 
+    // While the footer shows, it keeps clear of the home indicator, so the map's own bits needn't.
+    val footer = !newMode && Country.syncEnabled
+    val mapInset = if (footer) Modifier else Modifier.bottomInsetPadding()
     Column(Modifier.fillMaxSize()) {
         ScreenHeader(
             title = if (newMode) Strings.Picker.titleNew else Strings.Picker.titlePick,
@@ -340,10 +343,10 @@ actual fun LocalityScreen(vm: MainViewModel) {
             }
             // osmdroid's CopyrightOverlay: the OSM tile policy requires the credit.
             Text("© OpenStreetMap-bidragsytere", fontSize = 10.sp, color = Color(0xFF444444),
-                modifier = Modifier.align(Alignment.BottomStart).bottomInsetPadding().background(Color(0x99FFFFFF)).padding(horizontal = 4.dp, vertical = 1.dp))
+                modifier = Modifier.align(Alignment.BottomStart).then(mapInset).background(Color(0x99FFFFFF)).padding(horizontal = 4.dp, vertical = 1.dp))
             // One-handed zoom + re-centre: thumb-reachable buttons (the new-spot panel covers them).
             if (!newMode) Column(
-                Modifier.align(Alignment.BottomEnd).bottomInsetPadding().padding(16.dp),
+                Modifier.align(Alignment.BottomEnd).then(mapInset).padding(16.dp),
                 verticalArrangement = Arrangement.spacedBy(12.dp),
             ) {
                 if (vm.fix != null && !centered) RecenterButton {
@@ -383,6 +386,7 @@ actual fun LocalityScreen(vm: MainViewModel) {
                 RadiusWheel(newRadius) { newRadius = it }
             }
         }
+        if (footer) PickerFooter(vm, Modifier.bottomInsetPadding())
     }
 }
 

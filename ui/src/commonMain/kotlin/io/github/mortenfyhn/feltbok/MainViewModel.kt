@@ -8,6 +8,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.IO
 import kotlinx.coroutines.delay
@@ -34,7 +35,6 @@ class MainViewModel(private val platform: Platform) : ViewModel() {
     /** Whether you've fetched your own localities (the footer then offers to update them). Derived,
      *  so the ~80k scan runs only when [localities] changes, not on every recomposition of the
      *  list screen - that scan was most of the list's lag on an iPhone 7. */
-    val hasMyLocalities by derivedStateOf { localities.toList().any { it.mine } }
     val species: List<Species> = loadSpecies(storage) + loadUbestemt(storage)
 
     /** Species normalized (folded forms, token splits) for the search scorer - never per keystroke.
@@ -631,6 +631,7 @@ class MainViewModel(private val platform: Platform) : ViewModel() {
      *  unless something new turns up; cells left over (budget spent, or a failed request) are tried
      *  again on the next settle. */
     fun fetchLiveSites(s: Double, w: Double, n: Double, e: Double) {
+        lastView = doubleArrayOf(s, w, n, e)
         // Until the bundle has loaded every site in view would look new, and be saved as such. Keep the
         // view and look it up once loading is done.
         if (!localitiesLoaded) { deferredLiveView = doubleArrayOf(s, w, n, e); return }
@@ -638,23 +639,36 @@ class MainViewModel(private val platform: Platform) : ViewModel() {
     }
     private var localitiesLoaded = false
     private var deferredLiveView: DoubleArray? = null
+    private var lastView: DoubleArray? = null   // the picker's last settled view, for "Oppdater lokaliteter"
 
     // Bumped on every map settle, so a continuation for a view the map has left stops.
     private var liveGen = 0
 
-    /** [resume]: the groups a previous round for this same view didn't get to, if continuing. */
-    private fun fetchLive(s: Double, w: Double, n: Double, e: Double, gen: Int, resume: List<List<Long>>?) {
+    /** [resume]: the groups a previous round for this same view didn't get to, if continuing.
+     *  [onDone]: gets the number of new localities instead of a toast. */
+    private fun fetchLive(
+        s: Double, w: Double, n: Double, e: Double, gen: Int, resume: List<List<Long>>?,
+        onDone: ((Int) -> Unit)? = null,
+    ) {
         val now = nowMs()
         val groups = (resume ?: fetchGroups(s, w, n, e))
             .map { g -> g.filter { now - (checkedCells[it] ?: 0L) > 24 * 3600_000L } }.filter { it.isNotEmpty() }
         val cells = groups.flatten()
-        if (cells.isEmpty()) return
+        if (cells.isEmpty()) { onDone?.invoke(0); return }
         for (c in cells) checkedCells[c] = now
         viewModelScope.launch {
             val budget = RequestBudget(LIVE_FETCH_BUDGET)
             val results = groups.map { fetchCells(it, budget) { s, w, n, e -> fetchSites(platform, s, w, n, e) } }
             val done = results.flatMap { it.done }
             val rows = results.flatMap { it.rows }
+            // Logged in, private rows are the sites you can see, not only your own: also other
+            // people's that you've reported on. Rows don't say whose, so one we don't know is a cue
+            // to fetch your own (ByUser), which may include it. Those left out go in notMine.
+            if (loggedIn && rows.any { it.isPrivate }) {
+                val known = localities.mapTo(HashSet()) { it.id }
+                val unknown = rows.filter { it.isPrivate && it.id !in known && it.id !in notMine }.map { it.id }
+                if (unknown.isNotEmpty()) refreshMySitesQuietly(unknown)
+            }
             checkedCells.keys.removeAll(cells.toSet() - done.toSet())
             // Parse and diff off the main thread: ~80k localities to compare against would drop frames.
             val known = localities.toList()
@@ -666,8 +680,9 @@ class MainViewModel(private val platform: Platform) : ViewModel() {
             if (fresh.isNotEmpty()) {
                 localities.addAll(fresh)
                 withContext(Dispatchers.IO) { appendLiveLocalities(storage, AppInfo.versionCode, fresh) }
-                if (screen == Screen.LOCALITY) platform.toast(Strings.Picker.liveFetched(fresh.size), long = true)
+                if (onDone == null && screen == Screen.LOCALITY) platform.toast(Strings.Picker.liveFetched(fresh.size), long = true)
             }
+            onDone?.invoke(fresh.size)
             // A dense view can need more than one budget. Carry on while the map stays put, so you
             // don't have to nudge it; only for zoomed-in views, as completing a wide city view would
             // cost many MB. Not after a failure (budget left over), so it doesn't spin while offline.
@@ -713,8 +728,66 @@ class MainViewModel(private val platform: Platform) : ViewModel() {
     fun closeSettings() { screen = Screen.LIST }
 
     // ---- "Synk mine lokaliteter" (pull the user's own privates from Artsobservasjoner) ----
+    // The login screen, opened from the picker; back there, with the draft intact.
     fun openSync() { screen = Screen.SYNC }
-    fun closeSync() { screen = Screen.LIST }
+    fun closeSync(loggedIn: Boolean = false) {
+        screen = Screen.LOCALITY
+        checkSession()
+        if (loggedIn) {
+            checkedCells.clear()   // fetched logged out, so possibly truncated
+            updateLocalities()
+        }
+    }
+
+    /** When the Artsobservasjoner session ends (epoch ms), or null when logged out or not yet known. */
+    private var sessionEnd by mutableStateOf<Long?>(null)
+    val loggedIn get() = (sessionEnd ?: 0L) > nowMs()
+
+    fun checkSession() { viewModelScope.launch { sessionEnd = fetchSessionEnd(platform) } }
+
+    /** Whether your own localities are being fetched (the picker footer's spinner). */
+    var mySitesBusy by mutableStateOf(false)
+        private set
+
+    // Private ids seen on the map that ByUser didn't list: other people's sites. Kept for the
+    // process, so they don't set off a fetch on every settle.
+    private val notMine = HashSet<String>()
+
+    /** "Oppdater lokaliteter": your own localities (everywhere), and the public ones in the picker's
+     *  view again, even if checked recently. One toast for both. */
+    fun updateLocalities() {
+        if (mySitesBusy) return
+        mySitesBusy = true
+        val view = lastView
+        viewModelScope.launch {
+            val newPublic = CompletableDeferred<Int>()
+            if (view != null && localitiesLoaded) {
+                val (s, w, n, e) = view
+                checkedCells.keys.removeAll(cellsIn(s, w, n, e).toSet())
+                fetchLive(s, w, n, e, ++liveGen, null) { newPublic.complete(it) }
+            } else newPublic.complete(0)
+            val diff = fetchMySites(platform)?.let { runCatching { applyMySites(it) }.getOrNull() }
+            val fresh = newPublic.await()
+            mySitesBusy = false
+            platform.toast(if (diff == null) Strings.Sync.error else Strings.Sync.updated(fresh, diff), long = true)
+        }
+    }
+
+    /** Fetch your own localities when the map saw private ones we don't know ([seen]); a toast only
+     *  if something changed. */
+    private fun refreshMySitesQuietly(seen: List<String>) {
+        if (mySitesBusy) return
+        mySitesBusy = true
+        viewModelScope.launch {
+            val sites = fetchMySites(platform)
+            mySitesBusy = false
+            if (sites == null) return@launch
+            val ids = sites.mapTo(HashSet()) { it.id }
+            notMine += seen.filter { it !in ids }
+            val diff = runCatching { applyMySites(sites) }.getOrNull() ?: return@launch
+            if (diff.changed > 0) platform.toast(Strings.Sync.done(diff), long = true)
+        }
+    }
 
     /** Replace the user's own (mine) localities with a freshly synced set, persist, and re-pick
      *  the nearest. Public localities and in-progress new spots are left untouched. Returns what

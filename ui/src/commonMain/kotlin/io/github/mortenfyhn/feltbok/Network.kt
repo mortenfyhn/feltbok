@@ -18,6 +18,34 @@ suspend fun searchAoUsers(platform: Platform, query: String): List<AoUser> {
 suspend fun fetchSites(platform: Platform, s: Double, w: Double, n: Double, e: Double): List<SiteRow>? {
     val base = Country.publicSitesUrl ?: return null
     val q = "MinX=$w&MinY=$s&MaxX=$e&MaxY=$n&MaxSites=$MAX_SITES&IncludePublicSites=true"
-    val json = platform.httpGet("$base?$q", headers("Accept" to "application/json"), timeoutMs = 10000)
+    val cookie = platform.siteCookie()
+    val h = headers("Accept" to "application/json") + listOfNotNull(cookie?.let { "Cookie" to it })
+    val json = platform.httpGet("$base?$q", h, timeoutMs = 10000)
     return json?.let { runCatching { siteRows(it) }.getOrNull() }
+}
+
+/** When the Artsobservasjoner session ends (epoch ms), or null when logged out or offline. An
+ *  expired cookie doesn't fail ByBoundingBox (you just get the anonymous answer), so this is how
+ *  to tell. */
+suspend fun fetchSessionEnd(platform: Platform): Long? {
+    val cookie = platform.siteCookie() ?: return null
+    val json = platform.httpGet(Country.sessionUrl, headers("Accept" to "application/json", "Cookie" to cookie), timeoutMs = 5000)
+    val left = json?.let { runCatching { parseSessionExpiresIn(it) }.getOrNull() } ?: return null
+    return nowMs() + left * 1000
+}
+
+/** The user's own private localities (ByUser, all pages), or null on any failure: logged out,
+ *  offline, or the endpoint changed. */
+suspend fun fetchMySites(platform: Platform): List<Locality>? {
+    val cookie = platform.siteCookie() ?: return null
+    val h = headers("Accept" to "application/json", "Cookie" to cookie)
+    val out = ArrayList<Locality>()
+    var page = 1
+    var total = 1
+    while (page <= total) {
+        val json = platform.httpGet("${Country.mySitesUrl}?pageSize=100&pageNumber=$page", h, timeoutMs = 10000) ?: return null
+        runCatching { out += parseMySites(json); total = parseTotalPages(json) }.getOrElse { return null }
+        page++
+    }
+    return out
 }

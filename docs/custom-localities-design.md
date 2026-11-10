@@ -47,12 +47,12 @@ The new mobile site is an Angular SPA backed by a **Duende BFF**:
   cookie store does return them: Android's `CookieManager.getCookie(url)` builds its cookie line
   with `CookieOptions::MakeAllInclusive()` (Chromium `android_webview/browser/cookie_manager.cc`),
   and iOS's `WKHTTPCookieStore.getAllCookies` lists them too. So a separate HTTP client can send
-  them as a `Cookie` header. The "Hent mine lokaliteter" sync fetches from inside the WebView via
-  JS anyway (same-origin `fetch`, cookies ride along); an earlier version of this note wrongly
-  said that was the only option.
-  **Logged in, `Sites/ByBoundingBox` returns the public registry plus only your own private
-  sites** (verified 2026-11-09): the anonymous flood of everyone's privates below is the "no
-  user" case. The BFF session lasts 30 days from login (`bff:session_expires_in` on
+  them as a `Cookie` header, which is what the app does (`Platform.siteCookie`).
+  **Logged in, `Sites/ByBoundingBox` returns the public registry plus the private sites you can
+  see** (verified 2026-11-09): your own, and other people's that you have reported on (12 such
+  in the maintainer's areas, all older than any of their own). Rows don't say whose a site is,
+  so the app takes private sites from `ByUser` only. The anonymous flood of everyone's privates
+  below is the "no user" case. The BFF session lasts 30 days from login (`bff:session_expires_in` on
   `GET /bff/user`, which answers 401 when logged out). An expired or garbage cookie does not
   give 401 on `ByBoundingBox`; it falls back to the anonymous response.
 
@@ -75,12 +75,15 @@ The new mobile site is an Angular SPA backed by a **Duende BFF**:
 flag is now ground truth). The reverse-engineered contract:
 
     GET /core/Sites/ByBoundingBox?MinX=&MinY=&MaxX=&MaxY=&MaxSites=&IncludePublicSites=true
-    Header: X-CSRF: 1   (no auth — see below)
+    Header: X-CSRF: 1, Cookie: <BFF session>   (see below)
 
-- **No auth needed** (verified 2026-06-14): the endpoint answers an unauthenticated GET,
-  returning the public allmenn registry — and, in fact, everyone's private sites too.
-  `build_sites.py` keeps only the public ones for the bundled CSV, so the harvest needs no
-  BFF cookie. (Your own privates come from the in-app `ByUser` sync below, not this harvest.)
+- **Harvest logged in** (`just harvest --cookie-file ~/ao-curl.txt`, verified 2026-11-09).
+  Unauthenticated, the endpoint returns the public registry plus *everyone's* private sites
+  (~39 private per public), so dense tiles truncate and a run takes hours. Logged in, it
+  returns the public registry plus only the private sites you can see; a 40 km tile then
+  truncates in only ~2 of ~2060 non-empty tiles. An expired cookie gives no error, only the
+  anonymous answer, so the harvester checks `/bff/user` before and after the run.
+  `build_sites.py` keeps only the public rows either way.
 - **`Min/Max X/Y` are WGS84 lon/lat** (X=lon, Y=lat) — no reprojection.
 - **`IncludePublicSites=true` is essential**: without it the endpoint returns only private
   sites; with it you also get the public allmenn registry, like the old Report map.
@@ -98,15 +101,14 @@ Why this beats the legacy harvest: native WGS84 (drops the reprojection), a real
 `countyName` (the old build assumed one fylke per run), and one call returns every tier
 (no multi-zoom union hack).
 
-### In-app "Synk mine lokaliteter" plan (when we build it)
-1. A menu action opens a WebView to `https://mobil.artsobservasjoner.no/`; the user logs in
-   (the site does OIDC; the app never sees a password). App stays usable/public-only without it.
-2. After login, page through `/core/Sites/ByUser` via `evaluateJavascript` running
-   `fetch('/core/Sites/ByUser?pageSize=100&pageNumber=N',{headers:{'X-CSRF':'1'}})` until
-   `pageNumber > totalPages`. No Kotlin HTTP client, no cookie handling — the WebView carries auth.
-3. Map rows → our Locality (mine=1, public=0, WGS84 coords, `accuracy`→radius,
-   `polygonCoordinates`→WKT), persist to the device's mine-file, merge into the picker (yellow).
-   Online is the source of truth; re-sync replaces the local set. Cookie expiry → just re-login.
+### ✅ DONE (2026-11): logging in from the picker
+The picker map's footer opens a WebView on the BFF login (`/bff/login?returnUrl=/my-page`);
+landing back on the site closes it. The app then reads the session cookie from the WebView's
+cookie store and sends it with its own requests: `/bff/user` (logged in or not, which picks the
+footer's label), `ByBoundingBox` (complete in dense areas) and `ByUser` (all pages, replaces the
+stored `mine` set). A logged-in `ByBoundingBox` row that is private and unknown sets off a
+`ByUser` fetch; ids `ByUser` doesn't return are remembered as other people's for the process.
+User-facing behaviour is in `docs/behavior.md` ("Logging in").
 
 ## ✅ SOLVED (2026-06-02): the authoritative allmenn flag — `FindSitesByName`
 

@@ -8,6 +8,3 @@
 -keep class org.osmdroid.** { *; }
 -keep interface org.osmdroid.** { *; }
 -dontwarn org.osmdroid.**
-
-# @JavascriptInterface methods (SyncScreen's WebView bridge) are kept by the default
-# proguard-android-optimize.txt rule; no extra rule needed here.

@@ -2,6 +2,7 @@ package io.github.mortenfyhn.feltbok
 
 import android.app.Application
 import android.content.Context
+import android.webkit.CookieManager
 import android.widget.Toast
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -27,6 +28,10 @@ class AndroidPlatform(private val app: Application) : Platform {
                 try { c.inputStream.bufferedReader().readText() } finally { c.disconnect() }
             }.getOrNull()
         }
+
+    // Includes the HttpOnly session cookies: the WebView's CookieManager returns all of them.
+    override suspend fun siteCookie(): String? =
+        CookieManager.getInstance().getCookie(Country.sitesHost)?.takeIf { it.isNotBlank() }
 
     override fun importSeedNotes() = importSeedNotes(app)
 }

@@ -1,5 +1,6 @@
 package io.github.mortenfyhn.feltbok
 
+import kotlinx.serialization.json.jsonArray
 import kotlinx.serialization.json.jsonObject
 
 // ---- "my localities" sync (from the mobile API's /core/Sites/ByUser) ----
@@ -29,3 +30,12 @@ fun parseMySites(json: String): List<Locality> {
     }
     return out
 }
+
+/** Seconds left of the Artsobservasjoner session, from the `/bff/user` claims list (only there when
+ *  logged in), or null if it's missing. */
+fun parseSessionExpiresIn(json: String): Long? =
+    parseJson(json).jsonArray.map { it.jsonObject }
+        .firstOrNull { it.optString("type") == "bff:session_expires_in" }?.optString("value")?.toLongOrNull()
+
+/** How many pages a ByUser listing has, from any of its pages. */
+fun parseTotalPages(json: String): Int = parseJson(json).jsonObject.optInt("totalPages", 1)

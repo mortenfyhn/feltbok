@@ -95,23 +95,13 @@ class NavigationFlowTest {
 
     /**
      * The remaining screens the app-level Back handler (or the map picker's own) must catch:
-     * Synk and settings from the list, then the editor's two subscreens, the locality picker and
-     * the co-observer picker. A back that falls through finishes the activity, so every assertIsDisplayed
+     * settings from the list, then the editor's two subscreens, the locality picker (and Synk from
+     * its footer) and the co-observer picker. A back that falls through finishes the activity, so every assertIsDisplayed
      * below doubles as "the app is still alive".
      */
     @Test
     fun backReturnsFromSyncSettingsAndTheEditorsSubscreens() {
         val vm = start()
-
-        // Synk: the footer link opens the WebView screen; Back must close it, not the app.
-        // The screen starts on a CHECKING spinner; INTRO appears only once the probe round-trips,
-        // so wait for it rather than asserting immediately.
-        rule.onNodeWithText(Strings.Sync.fetch).performClick()
-        rule.waitUntil(timeoutMillis = 10_000) {
-            rule.onAllNodesWithText(Strings.Sync.intro).fetchSemanticsNodes().isNotEmpty()
-        }
-        pressBack()
-        rule.onNodeWithText(Strings.Sync.fetch).assertIsDisplayed()
 
         // Settings: the version text opens the About dialog, whose button opens settings.
         rule.onNodeWithText(BuildConfig.GIT_VERSION).performClick()
@@ -129,6 +119,12 @@ class NavigationFlowTest {
 
         // The map picker owns its own BackHandler (shadows the app-level one) -> back to the editor.
         rule.onNodeWithText(Strings.Detail.locality).performClick()
+        rule.onNodeWithText(Strings.Picker.titlePick).assertIsDisplayed()
+
+        // Synk: logged out, the picker's footer link opens the login WebView; Back returns to the picker.
+        rule.onNodeWithText(Strings.Sync.loginForPrivate).performClick()
+        rule.onNodeWithText(Strings.Sync.login).assertIsDisplayed()
+        pressBack()
         rule.onNodeWithText(Strings.Picker.titlePick).assertIsDisplayed()
         pressBack()
         rule.onNodeWithText(Strings.Detail.save).assertIsDisplayed()

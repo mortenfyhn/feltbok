@@ -87,6 +87,8 @@ kotlin {
         }
         getByName("androidHostTest").dependencies {
             implementation("junit:junit:4.13.2")
+            // Dispatchers.setMain, so a MainViewModel runs on the JVM.
+            implementation("org.jetbrains.kotlinx:kotlinx-coroutines-test:1.9.0")
         }
     }
 }

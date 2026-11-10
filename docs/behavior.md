@@ -243,17 +243,18 @@ The picker also looks up public localities created after the bundled list was ha
 has been still for a second, and the view is under 40 km across in Web Mercator (about 18 km on the
 ground at 63°N), the app asks Artsobservasjoner's `ByBoundingBox` endpoint for the public localities
 in view, plus a margin of half a view on each side, so a short pan shows localities that are already
-loaded. Any it doesn't already have appear on the map, with a toast saying how many. Nothing shows when
-there is nothing new or the request fails (offline). Other people's private localities in the response
-are dropped.
+loaded. Any it doesn't already have appear on the map, with a toast ("Henta 3 allmenne lokaliteter").
+Nothing shows when there is nothing new or the request fails (offline). Private localities in the
+response are dropped; your own come from a separate request (see "Logging in" below).
 
-The endpoint also returns everyone's private localities and cuts a long response off without saying
-so. In dense areas the app therefore splits a cut-off request into quarters until each answer is
-complete. One map settle makes at most 8 requests, view first, then margin. If cells in view are left
+Logged out, the endpoint also returns everyone's private localities and cuts a long response off
+without saying so. In dense areas the app therefore splits a cut-off request into quarters until each
+answer is complete. One map settle makes at most 8 requests, view first, then margin. If cells in view are left
 when they're used up, and the view is under 10 km across, it carries on in further rounds while the
 map stays still and the picker is open. So rural areas load whole from far out, and a city centre
 completes at about zoom 15-16. Responses are gzipped; a complete zoom-15 view of central Trondheim is
-about 0.75 MB, nearly all of it other people's private localities.
+about 0.75 MB, nearly all of it other people's private localities. Logged in, the same view is a few
+tens of KB and is never cut off, so none of this splitting happens.
 
 To avoid repeat requests, the map is split into fixed 2 × 2 km cells (Web Mercator), and a cell is
 checked at most once per 24 hours while the app is running; restarting the app checks again, for
@@ -263,6 +264,35 @@ one already in the bundle is skipped. An app update starts a new file and delete
 the new bundle is re-harvested: that drops localities since deleted, renamed or made private, and
 still-new ones are fetched again when viewed. Lookups wait until the bundled list has loaded, so a
 picker opened right after launch doesn't count every locality in view as new.
+
+### Logging in
+
+The footer under the map says **"Logg inn for å vise private lokaliteter"** while you're logged out.
+Tapping it opens the Artsobservasjoner login page in the app ("Logg inn"). When the login lands back on
+the site, the screen closes by itself and you're back in the picker with your observation as it was;
+"‹ Tilbake" also returns to the picker. If Artsobservasjoner's login server still remembers you, the
+page goes straight through without asking for a password. The session is kept in the login page's
+cookie store and lasts 30 days from the login; there is no "Logg ut".
+
+Logged in, the footer says **"Oppdater lokaliteter"**. The app checks this each time the picker opens
+(`/bff/user`). The app sends the session cookie with its own requests, which gives two things:
+
+- **Your private localities.** They come from `ByUser`, all of them, and replace the stored set, so
+  renames and deletions on the website come through. They're kept in `my-localities.csv`.
+- **Complete public localities in dense areas**, as above.
+
+Tapping "Oppdater lokaliteter" (with a spinner in the footer) fetches your private localities and
+fetches the public ones in view again, even if they were checked recently, then shows one toast:
+"Henta 2 allmenne lokaliteter og 1 endra privat lokalitet", "Henta 99 private lokaliteter" the first
+time, "Allerede oppdatert", or "Klarte ikke å hente lokalitetene dine." Coming back
+from the login does the same.
+
+You rarely need to tap it. Logged in, the map's response also lists private localities you can see,
+without saying whose: your own, and other people's that you have reported on. When it has one the app
+doesn't know, for example one you just made on the website, the app fetches your own localities in the
+background, with a toast only if something changed ("Henta 99 private lokaliteter (1 endra)"). The
+ones that turn out to be other people's are remembered until the app is closed, so they don't set off
+another fetch, and are never shown.
 
 The locality suggested by default (before you pick one) is based on your GPS fix's position relative
 to each **footprint**, not just the nearest centre. If you're standing inside one or more localities,

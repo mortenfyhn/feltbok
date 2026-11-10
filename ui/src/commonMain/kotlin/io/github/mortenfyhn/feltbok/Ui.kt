@@ -236,7 +236,7 @@ fun ListScreen(vm: MainViewModel, listState: LazyListState) {
                     ) { Text("+", fontSize = 30.sp) }
                 }
             }
-            // Footer bar: Synk / Tilbakemelding, with the version tucked at the right.
+            // Footer bar: Arkiv / Tilbakemelding, with the version tucked in the centre.
             HorizontalDivider(color = cs.outline.copy(alpha = 0.4f))
             // The two buttons sit at the edges; the version is overlaid dead-centre on the screen
             // (a weighted slot would centre it between the buttons, which is off-centre since the
@@ -246,18 +246,11 @@ fun ListScreen(vm: MainViewModel, listState: LazyListState) {
             // #139 attribution, stashed where about-info is expected without new chrome.
             Box(Modifier.fillMaxWidth().background(cs.surface).bottomInsetPadding(), Alignment.Center) {
                 Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
-                    // First time it's an invitation; once you've synced some, it's a refresh.
-                    // Sync isn't available in every country build (Country.syncEnabled).
-                    if (Country.syncEnabled) {
-                        Text(if (vm.hasMyLocalities) Strings.Sync.update else Strings.Sync.fetch,
-                            color = cs.primary, fontWeight = FontWeight.Medium, fontSize = 13.sp,
-                            maxLines = 1, modifier = Modifier.clickable { vm.openSync() }.padding(horizontal = 14.dp, vertical = 10.dp))
-                    }
-                    Spacer(Modifier.weight(1f))
                     // Always visible, even with nothing archived (#153) - so the archive is
                     // discoverable before you first need it.
                     Text(Strings.Archive.title, color = cs.primary, fontWeight = FontWeight.Medium, fontSize = 13.sp,
                         maxLines = 1, modifier = Modifier.clickable { vm.openArchive() }.padding(horizontal = 14.dp, vertical = 10.dp))
+                    Spacer(Modifier.weight(1f))
                     Text(Strings.Notes.feedback, color = cs.primary, fontWeight = FontWeight.Medium, fontSize = 13.sp,
                         maxLines = 1, modifier = Modifier.clickable { showFeedback = true }.padding(horizontal = 14.dp, vertical = 10.dp))
                 }

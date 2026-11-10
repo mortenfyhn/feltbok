@@ -13,6 +13,7 @@ import platform.Foundation.NSData
 import platform.Foundation.NSDocumentDirectory
 import platform.Foundation.NSFileHandle
 import platform.Foundation.NSFileManager
+import platform.Foundation.NSHTTPCookie
 import platform.Foundation.NSHTTPURLResponse
 import platform.Foundation.NSMutableURLRequest
 import platform.Foundation.NSString
@@ -30,6 +31,9 @@ import platform.Foundation.setValue
 import platform.Foundation.stringWithContentsOfFile
 import platform.Foundation.writeData
 import platform.Foundation.writeToFile
+import platform.WebKit.WKWebsiteDataStore
+import platform.darwin.dispatch_async
+import platform.darwin.dispatch_get_main_queue
 import kotlin.coroutines.resume
 
 /** [Storage] on iOS: private files in the app's Documents folder, bundled data in the app bundle. */
@@ -103,6 +107,8 @@ class IosPlatform : Platform {
         val request = NSMutableURLRequest.requestWithURL(nsUrl).apply {
             setTimeoutInterval(timeoutMs / 1000.0)
             headers.forEach { (k, v) -> setValue(v, forHTTPHeaderField = k) }
+            // Otherwise NSHTTPCookieStorage (a different store from the WebView's) may replace it.
+            if ("Cookie" in headers) setHTTPShouldHandleCookies(false)
         }
         return suspendCancellableCoroutine { cont ->
             val task = NSURLSession.sharedSession.dataTaskWithRequest(request) { data: NSData?, response, error ->
@@ -112,5 +118,19 @@ class IosPlatform : Platform {
             cont.invokeOnCancellation { task.cancel() }
             task.resume()
         }
+    }
+
+    // NSURLSession doesn't see WKWebView's cookies, so read the WebView's store (main thread only).
+    override suspend fun siteCookie(): String? {
+        val host = NSURL.URLWithString(Country.sitesHost)?.host ?: return null
+        val cookies = suspendCancellableCoroutine { cont ->
+            dispatch_async(dispatch_get_main_queue()) {
+                WKWebsiteDataStore.defaultDataStore().httpCookieStore.getAllCookies { all ->
+                    cont.resume(all.orEmpty().filterIsInstance<NSHTTPCookie>())
+                }
+            }
+        }
+        return cookies.filter { it.domain.removePrefix(".").let { d -> host == d || host.endsWith(".$d") } }
+            .joinToString("; ") { "${it.name}=${it.value}" }.ifEmpty { null }
     }
 }

@@ -271,6 +271,7 @@ actual fun LocalityScreen(vm: MainViewModel) {
                 }, update = { it.value = RADII.indexOf(newRadius) })
             }
         }
+        if (!newMode && Country.syncEnabled) PickerFooter(vm)
     }
 }
 

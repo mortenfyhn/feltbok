@@ -4,7 +4,6 @@ import android.annotation.SuppressLint
 import android.content.Context
 import android.graphics.Color
 import android.webkit.CookieManager
-import android.webkit.JavascriptInterface
 import android.webkit.WebView
 import android.webkit.WebViewClient
 import androidx.compose.runtime.Composable
@@ -18,7 +17,6 @@ import androidx.compose.ui.viewinterop.AndroidView
 private class AndroidSyncWeb(
     ctx: Context,
     onPageFinished: (SyncWeb, String) -> Unit,
-    onDelivered: (SyncWeb, String) -> Unit,
 ) : SyncWeb {
     val view: WebView = WebView(ctx).apply {
         // Default WebView background is white; on first attach it flashes full-bleed for a frame
@@ -31,15 +29,6 @@ private class AndroidSyncWeb(
         settings.domStorageEnabled = true
         // Identify ourselves to the site operator; the stock WebView UA stays intact in front.
         settings.userAgentString = "${settings.userAgentString} Feltbok/${AppInfo.versionName}"
-        addJavascriptInterface(
-            object {
-                @JavascriptInterface
-                fun deliver(json: String) {
-                    post { onDelivered(this@AndroidSyncWeb, json) } // bridge runs off-thread; hop to the UI thread
-                }
-            },
-            "FeltbokSync",
-        )
         webViewClient = object : WebViewClient() {
             override fun onPageFinished(view: WebView, url: String?) {
                 if (url != null) onPageFinished(this@AndroidSyncWeb, url)
@@ -49,8 +38,6 @@ private class AndroidSyncWeb(
 
     override fun load(url: String) = view.loadUrl(url)
 
-    override fun runFetch() = view.evaluateJavascript(Country.mySitesFetchJs, null)
-
     override fun persistSession() = CookieManager.getInstance().flush()
 
     @Composable
@@ -58,9 +45,9 @@ private class AndroidSyncWeb(
 }
 
 @Composable
-actual fun rememberSyncWeb(onPageFinished: (SyncWeb, String) -> Unit, onDelivered: (SyncWeb, String) -> Unit): SyncWeb {
+actual fun rememberSyncWeb(onPageFinished: (SyncWeb, String) -> Unit): SyncWeb {
     val ctx = LocalContext.current
-    val web = remember { AndroidSyncWeb(ctx, onPageFinished, onDelivered) }
+    val web = remember { AndroidSyncWeb(ctx, onPageFinished) }
     DisposableEffect(Unit) { onDispose { web.view.destroy() } }
     return web
 }
