@@ -108,7 +108,7 @@ class IosPlatform : Platform {
             setTimeoutInterval(timeoutMs / 1000.0)
             headers.forEach { (k, v) -> setValue(v, forHTTPHeaderField = k) }
             // Otherwise NSHTTPCookieStorage (a different store from the WebView's) may replace it.
-            if ("Cookie" in headers) setHTTPShouldHandleCookies(false)
+            if ("Cookie" in headers) HTTPShouldHandleCookies = false
         }
         return suspendCancellableCoroutine { cont ->
             val task = NSURLSession.sharedSession.dataTaskWithRequest(request) { data: NSData?, response, error ->
