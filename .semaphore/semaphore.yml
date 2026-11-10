@@ -47,7 +47,9 @@ blocks:
           # module (:ui holds nearly all the code). The releaseTest APKs are built, not run (no
           # emulator here), so R8 and the instrumented tests' sources are still checked.
           commands:
-            - cache restore gradle-$(checksum app/build.gradle.kts)-$(checksum shared/build.gradle.kts)-$(checksum ui/build.gradle.kts)
+            # Falls back to the newest older cache (prefix match), so a build-file change doesn't
+            # start cold: a cold run takes about 4 minutes longer.
+            - cache restore gradle-$(checksum app/build.gradle.kts)-$(checksum shared/build.gradle.kts)-$(checksum ui/build.gradle.kts),gradle-
             - ./gradlew ktlintCheck :ui:testAndroidHostTest :shared:jvmTest assembleDebug :app:lintDebug :ui:lintAndroidMain assembleReleaseTest assembleReleaseTestAndroidTest --console=plain --no-daemon
             - cache store gradle-$(checksum app/build.gradle.kts)-$(checksum shared/build.gradle.kts)-$(checksum ui/build.gradle.kts) ~/.gradle
       # Publish the debug APK as a workflow artifact so the Claude issue→PR loop (and
