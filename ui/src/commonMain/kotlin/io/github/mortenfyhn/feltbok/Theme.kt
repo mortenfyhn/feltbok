@@ -28,6 +28,13 @@ private val BrandColors = lightColorScheme(
     onSurfaceVariant = Color(0xFF6B7A76),
     outline = Color(0xFFCBD3D0),
     error = Color(0xFFB3261E),
+    // Material's baseline for these is lavender, which showed through in dialogs, pickers and an off
+    // switch's track. Neutral greys in the same green-grey family as background/surfaceVariant.
+    surfaceContainerLowest = Color.White,
+    surfaceContainerLow = Color(0xFFF7F9F8),
+    surfaceContainer = Color(0xFFF2F5F3),
+    surfaceContainerHigh = Color(0xFFECEFEE),
+    surfaceContainerHighest = Color(0xFFE3E8E6),
 )
 
 /** Wraps the app in its colour scheme. */
