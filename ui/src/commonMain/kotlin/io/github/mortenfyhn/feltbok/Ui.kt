@@ -1078,9 +1078,8 @@ internal fun Modifier.bottomInsetPadding() = windowInsetsPadding(WindowInsets.sa
 internal fun ScreenHeader(
     title: String,
     onCancel: () -> Unit,
-    cancelContent: @Composable () -> Unit = { Text("‹ ${Strings.back}", color = Color.White) },
-    // Before [trailing] so a trailing-lambda call site still binds to that, not to this.
     modifier: Modifier = Modifier,
+    cancelContent: @Composable () -> Unit = { Text("‹ ${Strings.back}", color = Color.White) },
     trailing: @Composable RowScope.() -> Unit = {},
 ) {
     Box(

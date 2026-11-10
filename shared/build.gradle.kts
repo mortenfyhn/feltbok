@@ -16,7 +16,11 @@ kotlin {
         iosArm64()
         iosSimulatorArm64()
     }
-    compilerOptions { allWarningsAsErrors.set(true) }
+    compilerOptions {
+        allWarningsAsErrors.set(true)
+        // Opt-in checks such as redundant modifiers and a var that could be a val.
+        extraWarnings.set(true)
+    }
     sourceSets {
         commonMain.dependencies {
             implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.8.0")

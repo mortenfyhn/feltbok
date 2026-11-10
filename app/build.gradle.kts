@@ -133,6 +133,13 @@ android {
     }
     // connectedAndroidTest targets this variant, not the default debug (which isn't minified).
     testBuildType = "releaseTest"
+    lint {
+        warningsAsErrors = true
+        // Dependency updates are picked deliberately, not on lint's nudge.
+        disable += setOf("GradleDependency", "NewerVersionAvailable", "AndroidGradlePluginVersion")
+        // A themed (monochrome) launcher icon needs its own artwork.
+        disable += "MonochromeLauncherIcon"
+    }
 
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_17
@@ -198,5 +205,7 @@ kotlin {
     compilerOptions {
         jvmTarget.set(org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_17)
         allWarningsAsErrors.set(true)
+        // Opt-in checks such as redundant modifiers and a var that could be a val.
+        extraWarnings.set(true)
     }
 }

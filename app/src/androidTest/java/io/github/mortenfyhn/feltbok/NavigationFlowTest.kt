@@ -101,7 +101,7 @@ class NavigationFlowTest {
      */
     @Test
     fun backReturnsFromSyncSettingsAndTheEditorsSubscreens() {
-        val vm = start()
+        start()
 
         // Settings: the version text opens the About dialog, whose button opens settings.
         rule.onNodeWithText(BuildConfig.GIT_VERSION).performClick()

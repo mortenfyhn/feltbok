@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
-<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools">
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
     <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
     <!-- Map tiles for the locality picker (cached on device for offline reuse). -->
@@ -15,7 +16,7 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:theme="@android:style/Theme.Material.Light.NoActionBar">
         <!-- Let the shell profile even non-debuggable builds (simpleperf/Perfetto). No user-facing effect. -->
-        <profileable android:shell="true" />
+        <profileable android:shell="true" tools:targetApi="29" />
         <activity
             android:name=".MainActivity"
             android:exported="true"

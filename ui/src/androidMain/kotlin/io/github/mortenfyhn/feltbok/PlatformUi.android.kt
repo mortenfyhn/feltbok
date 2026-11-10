@@ -6,7 +6,6 @@ import android.content.ClipData
 import android.content.Context
 import android.content.DialogInterface
 import android.content.Intent
-import android.net.Uri
 import android.os.Build
 import android.widget.Toast
 import androidx.compose.runtime.Composable
@@ -19,6 +18,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.DialogProperties
+import androidx.core.net.toUri
 import java.util.Calendar
 import androidx.activity.compose.BackHandler as ActivityBackHandler
 
@@ -27,11 +27,11 @@ private class AndroidPlatformUi(private val ctx: Context) : PlatformUi {
         "${Build.MANUFACTURER} ${Build.MODEL}\nAndroid ${Build.VERSION.RELEASE} (API ${Build.VERSION.SDK_INT})"
 
     override fun openUrl(url: String) {
-        runCatching { ctx.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(url))) }
+        runCatching { ctx.startActivity(Intent(Intent.ACTION_VIEW, url.toUri())) }
     }
 
     override fun sendMail(uri: String) {
-        runCatching { ctx.startActivity(Intent(Intent.ACTION_SENDTO, Uri.parse(uri))) }
+        runCatching { ctx.startActivity(Intent(Intent.ACTION_SENDTO, uri.toUri())) }
     }
 
     override fun toast(message: String) = Toast.makeText(ctx, message, Toast.LENGTH_SHORT).show()

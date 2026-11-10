@@ -4,6 +4,8 @@
 plugins {
     id("org.jetbrains.kotlin.multiplatform")
     id("com.android.kotlin.multiplatform.library")
+    // Android Lint, which the KMP library plugin alone doesn't set up for androidMain.
+    id("com.android.lint")
     id("org.jetbrains.kotlin.plugin.compose")
     // Copies libraries' Compose resources (MapLibre's attribution strings) into the iOS app bundle.
     id("org.jetbrains.compose")
@@ -41,6 +43,11 @@ kotlin {
         namespace = "io.github.mortenfyhn.feltbok.ui"
         compileSdk = 36
         minSdk = 26
+        lint {
+            warningsAsErrors = true
+            // Dependency updates are picked deliberately, not on lint's nudge.
+            disable += setOf("GradleDependency", "NewerVersionAvailable", "AndroidGradlePluginVersion")
+        }
         compilerOptions {
             jvmTarget.set(org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_17)
             // Compile lambdas to classes, not invokedynamic. The R8 pinned in the root build file
@@ -67,7 +74,11 @@ kotlin {
             }
         }
     }
-    compilerOptions { allWarningsAsErrors.set(true) }
+    compilerOptions {
+        allWarningsAsErrors.set(true)
+        // Opt-in checks such as redundant modifiers and a var that could be a val.
+        extraWarnings.set(true)
+    }
     sourceSets {
         commonMain.dependencies {
             api(project(":shared"))

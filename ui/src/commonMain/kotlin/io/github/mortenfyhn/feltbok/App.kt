@@ -26,6 +26,8 @@ import androidx.compose.ui.unit.dp
 
 /** The app: theme, undo snackbar and back handling around [screens], which lays the screens out
  *  (by default one at a time; iOS supplies its own with page transitions and an edge swipe). */
+// Lint: the Scaffold's content padding is unused on purpose; see the insets comment inside.
+@Suppress("UnusedMaterial3ScaffoldPaddingParameter")
 @Composable
 fun App(vm: MainViewModel, screens: @Composable (LazyListState) -> Unit = { Screens(vm, it) }) {
     AppTheme {
