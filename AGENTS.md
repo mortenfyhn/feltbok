@@ -14,7 +14,11 @@ Recipes live in `just --list`. Gotchas not covered there:
   `./gradlew test` and `assembleRelease` do NOT compile `src/androidTest`, so after bumping
   Compose/AndroidX, also compile that source set (`just itest` or
   `assembleReleaseTestAndroidTest`, no device needed).
-- Always run `./gradlew test` before opening a PR; `just test` also runs the Python tests.
+- Before every commit, run the local CI checks: `just test` (Gradle + Python tests), `just lint`, and
+  `just format` (CI-gated). Don't commit on red.
+- iOS code (`iosMain`, `iosApp/`) can't compile on Linux; only GitHub's macOS runner builds it. After
+  touching it, push to a branch and wait for the iOS workflow to pass before merging to `master`
+  (pushing still needs consent).
 - **Release runs through R8** (`isMinifyEnabled`, keep rules in `app/proguard-rules.pro`). R8
   tree-shakes by static reachability, so reflective code (reflective mappers, `Class.forName`,
   WebView JS bridges) can be stripped and break the release build at runtime only. When adding such
