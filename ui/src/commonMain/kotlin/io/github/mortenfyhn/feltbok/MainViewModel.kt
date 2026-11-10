@@ -230,6 +230,11 @@ class MainViewModel(private val platform: Platform) : ViewModel() {
             }
             is Undoable.Discarded -> screen = Screen.DETAIL              // draft is still in the editor
             is Undoable.Edited -> { u.before.forEach { b -> notes.indexOfFirst { it.id == b.id }.takeIf { it >= 0 }?.let { notes[it] = b } }; persist() }
+            is Undoable.ForgotCoObs -> {
+                coObsUses.putAll(u.uses)
+                saveCoObsUses(storage, coObsUses)
+                dCoObs.addAll(u.onDraft.filter { it !in dCoObs })
+            }
             null -> {}
         }
         undoOffer.clear()
@@ -336,8 +341,8 @@ class MainViewModel(private val platform: Platform) : ViewModel() {
         addCoObs(u.alias)
     }
 
-    /** Known co-observer names for the picker (pure ranking in [coObserverOptions]). */
-    fun coObserverOptions(): List<String> = coObserverOptions(coObsUses, dCoObs)
+    /** Known co-observer names for the picker (pure ordering in [coObserverOptions]). */
+    fun coObserverOptions(): List<String> = coObserverOptions(coObsUses, dCoObs, ::coObsName)
 
     /** Toggle a name on/off the draft's co-observers. */
     fun toggleCoObs(name: String) { if (!dCoObs.remove(name)) dCoObs.add(name) }
@@ -353,16 +358,17 @@ class MainViewModel(private val platform: Platform) : ViewModel() {
         if (n !in coObsUses) { coObsUses[n] = 0; saveCoObsUses(storage, coObsUses) }
     }
 
-    /** Clear the draft's co-observers ("tøm følget"); the party syncs to this on save. */
+    /** Switch everyone off the draft; the party syncs to this on save. */
     fun clearCoObs() = dCoObs.clear()
 
-    /** Forget a name entirely - drop it from the autocomplete register (so a mistyped or one-off
-     *  name doesn't linger), and from the draft if it's there. Past notes keep their own copies,
-     *  so this only prunes what you'll be *offered* going forward. */
-    fun forgetCoObs(name: String) {
-        coObsUses.remove(name)
+    /** Forget names entirely - drop them from the autocomplete register (so a mistyped or one-off
+     *  name doesn't linger), and from the draft if there. Past notes keep their own copies, so this
+     *  only prunes what you'll be *offered* going forward. Undoable, so it needs no confirm (#191). */
+    fun forgetCoObs(names: Set<String>) {
+        setUndo(Undoable.ForgotCoObs(names.associateWith { coObsUses[it] ?: 0 }, dCoObs.filter { it in names }))
+        names.forEach { coObsUses.remove(it) }
         saveCoObsUses(storage, coObsUses)
-        dCoObs.remove(name)
+        dCoObs.removeAll(names)
     }
 
     /** Aktivitet options with your most-used first, then the rest in the default order. */

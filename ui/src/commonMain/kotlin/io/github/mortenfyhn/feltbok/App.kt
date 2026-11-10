@@ -43,6 +43,7 @@ fun App(vm: MainViewModel, screens: @Composable (LazyListState) -> Unit = { Scre
                 is Undoable.Deleted -> Strings.Notes.deleted(action.notes.size) to SnackbarDuration.Short
                 is Undoable.Discarded -> Strings.Detail.discarded(action.wasEdit) to SnackbarDuration.Short
                 is Undoable.Edited -> Strings.Notes.edited(action.before.size) to SnackbarDuration.Long
+                is Undoable.ForgotCoObs -> Strings.CoObs.forgot(action.uses.size) to SnackbarDuration.Short
                 null -> return@LaunchedEffect
             }
             val result = snackbar.showSnackbar(
@@ -52,10 +53,12 @@ fun App(vm: MainViewModel, screens: @Composable (LazyListState) -> Unit = { Scre
             )
             if (result == SnackbarResult.ActionPerformed) vm.undo() else vm.dismissUndo()
         }
-        // The undo only makes sense on the list; dismiss it once you act (start/edit an observation,
-        // sync, or open export) so it doesn't linger forever.
+        // The undo only makes sense on the screen it was offered on: the list, or the co-observer
+        // picker for deleted names (#191). Dismiss it once you act (start/edit an observation, sync,
+        // open export, leave the picker) so it doesn't linger forever.
         LaunchedEffect(vm.screen, vm.showExport) {
-            if (vm.screen != Screen.LIST || vm.showExport) snackbar.currentSnackbarData?.dismiss()
+            val home = if (vm.undoable is Undoable.ForgotCoObs) Screen.COOBS else Screen.LIST
+            if (vm.screen != home || vm.showExport) snackbar.currentSnackbarData?.dismiss()
         }
         Surface(color = MaterialTheme.colorScheme.background) {
             // System back navigates within the app instead of exiting (except on the list).

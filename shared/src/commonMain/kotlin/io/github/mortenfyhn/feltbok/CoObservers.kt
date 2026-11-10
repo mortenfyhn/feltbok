@@ -20,11 +20,25 @@ fun parseAoUsers(json: String): List<AoUser> {
         .filter { it.name.isNotEmpty() && it.alias.isNotEmpty() }
 }
 
-/** The picker's name list: the names you've used before, most-used first, unioned with whoever's on
- *  the draft right now (so a just-added free-text name shows up too). Deduped, keeping first (highest)
- *  occurrence. */
-fun coObserverOptions(uses: Map<String, Int>, onDraft: List<String>): List<String> =
-    (uses.entries.sortedByDescending { it.value }.map { it.key } + onDraft).distinct()
+/** The picker's name list: the names you've used before, unioned with whoever's on the draft right
+ *  now (so a just-added free-text name shows up too), deduped. Alphabetical by surname, taken as the
+ *  last word of the name shown ([name] turns a stored alias into the user's name), then by the whole
+ *  name - so a long list is easy to scan and doesn't reorder as use counts change (#191). */
+fun coObserverOptions(uses: Map<String, Int>, onDraft: List<String>, name: (String) -> String): List<String> =
+    (uses.keys + onDraft).distinct().sortedWith(
+        compareBy({ norwegianSortKey(name(it).trim().substringAfterLast(' ')) }, { norwegianSortKey(name(it)) }),
+    )
+
+/** A sort key for Norwegian alphabetical order, ignoring case: æ, ø, å after z, in that order (plain
+ *  string order puts å first). ä and ö sort as æ and ø, as in Norwegian dictionaries. */
+fun norwegianSortKey(s: String): String = s.lowercase().map {
+    when (it) {
+        'æ', 'ä' -> 'z' + 1
+        'ø', 'ö' -> 'z' + 2
+        'å' -> 'z' + 3
+        else -> it
+    }
+}.joinToString("")
 
 /** Whether the picker offers "Legg til «[query]»" as free text. It's the fallback: hidden while the
  *  user search runs (it would flash, then vanish), and when a saved name or a user from the search

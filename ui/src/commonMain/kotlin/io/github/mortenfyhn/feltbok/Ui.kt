@@ -29,6 +29,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.layout.ime
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.only
 import androidx.compose.foundation.layout.padding
@@ -59,10 +60,14 @@ import androidx.compose.material3.ColorScheme
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.Icon
 import androidx.compose.material3.LocalMinimumInteractiveComponentSize
 import androidx.compose.material3.LocalTextStyle
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Surface
+import androidx.compose.material3.Switch
+import androidx.compose.material3.SwitchDefaults
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -70,6 +75,7 @@ import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
+import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
@@ -88,6 +94,8 @@ import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.StrokeJoin
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.graphics.vector.addPathNodes
 import androidx.compose.ui.hapticfeedback.HapticFeedback
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.input.pointer.pointerInput
@@ -96,6 +104,10 @@ import androidx.compose.ui.platform.LocalClipboard
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.LocalHapticFeedback
+import androidx.compose.ui.semantics.selected
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.toggleableState
+import androidx.compose.ui.state.ToggleableState
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.TextRange
@@ -178,10 +190,10 @@ fun ListScreen(vm: MainViewModel, listState: LazyListState) {
                         }
                         vm.clearScrollTarget()
                     }
-                    val ds = remember { DragSelect() }
-                    SelectDragAutoScroll(listState, orderedIds, orderedIndex, vm, ds)
+                    val ds = remember { DragSelect<Long>({ vm.selected.toSet() }, vm::setSelection) }
+                    SelectDragAutoScroll(listState, orderedIds, orderedIndex, ds)
                     LazyColumn(
-                        Modifier.fillMaxSize().dragToSelect(listState, orderedIds, orderedIndex, vm, haptic, ds)
+                        Modifier.fillMaxSize().dragToSelect(listState, orderedIds, orderedIndex, haptic, ds)
                             .scrollIndicator(listState),
                         state = listState, userScrollEnabled = !ds.active,
                         contentPadding = PaddingValues(bottom = 84.dp),
@@ -272,11 +284,13 @@ fun ListScreen(vm: MainViewModel, listState: LazyListState) {
 
 /** Transient state of a long-press-drag range selection, shared between the gesture detector and the
  *  edge auto-scroll loop. [active] drives scroll-freeze + the loop (observable); the rest is plain
- *  scratch the detector writes and the loop reads. [anchor] is an index into the ordered id list. */
-private class DragSelect {
+ *  scratch the detector writes and the loop reads. [anchor] is an index into the ordered id list.
+ *  [selected] and [select] read and write the marks it sweeps: the notes' (ids) or the co-observer
+ *  picker's (names). */
+private class DragSelect<K>(val selected: () -> Set<K>, val select: (Set<K>) -> Unit) {
     var active by mutableStateOf(false)
     var anchor = -1
-    var base: Set<Long> = emptySet()
+    var base: Set<K> = emptySet()
     var pointerY by mutableFloatStateOf(-1f)
 
     // The row index [applyDragRange] last swept to. Auto-scroll re-checks every frame even when the
@@ -289,17 +303,16 @@ private class DragSelect {
     var suppressTap = false
 }
 
-/** Edge auto-scroll while a select-drag is live (shared by the notes list and the archive).
- *  While a select-drag is live the list must not scroll on its own: its scroll gesture would race
- *  the drag detector and swallow the first moves ("didn't register") - the caller freezes user
- *  scroll via [DragSelect.active], and this drives scrolling instead. */
+/** Edge auto-scroll while a select-drag is live (shared by the notes list, the archive and the
+ *  co-observer picker). While a select-drag is live the list must not scroll on its own: its scroll
+ *  gesture would race the drag detector and swallow the first moves ("didn't register") - the caller
+ *  freezes user scroll via [DragSelect.active], and this drives scrolling instead. */
 @Composable
-private fun SelectDragAutoScroll(
+private fun <K> SelectDragAutoScroll(
     listState: LazyListState,
-    orderedIds: List<Long>,
-    orderedIndex: Map<Long, Int>,
-    vm: MainViewModel,
-    ds: DragSelect,
+    orderedIds: List<K>,
+    orderedIndex: Map<K, Int>,
+    ds: DragSelect<K>,
 ) {
     val density = LocalDensity.current
     LaunchedEffect(ds.active) {
@@ -325,61 +338,62 @@ private fun SelectDragAutoScroll(
                 listState.scrollBy(frac * maxStep)
                 // The finger is past the list edge, so it's over no row - sweep to the
                 // edge-most visible row instead, so rows scrolling into view get marked.
-                applyDragRange(listState, orderedIds, orderedIndex, vm, ds, y.coerceIn(top, bottom - 1f))
+                applyDragRange(listState, orderedIds, orderedIndex, ds, y.coerceIn(top, bottom - 1f))
             }
         }
     }
 }
 
-/** The note id under a Y coordinate (list-viewport space), or null if that row is a day header or
- *  empty space. Keys are the note ids (Long) for note rows and "day:…" (String) for headers. */
-private fun noteIdAt(listState: LazyListState, y: Float): Long? =
+/** The position (in the ordered id list) of the row under a Y coordinate (list-viewport space), or
+ *  null if that item isn't a selectable row (a day header, a search hit, empty space). */
+private fun <K> rowIndexAt(listState: LazyListState, orderedIndex: Map<K, Int>, y: Float): Int? =
     listState.layoutInfo.visibleItemsInfo
         .firstOrNull { y >= it.offset && y < it.offset + it.size }
-        ?.key as? Long
+        // Item keys are untyped (Any); a key of another type (e.g. a "day:…" header) just isn't found.
+        ?.let {
+            @Suppress("UNCHECKED_CAST")
+            (orderedIndex as Map<Any, Int>)[it.key]
+        }
 
-/** Mark every note between the drag anchor and the row currently under [y], painted onto the marks
+/** Mark every row between the drag anchor and the row currently under [y], painted onto the marks
  *  that existed when the drag began (so shrinking the drag un-marks, without clobbering earlier ones).
  *  [orderedIndex] is [orderedIds] inverted (id -> position), so this stays O(1) per call instead of an
  *  O(n) scan - this runs on every drag move AND every auto-scroll frame while a drag is live. */
-private fun applyDragRange(
+private fun <K> applyDragRange(
     listState: LazyListState,
-    orderedIds: List<Long>,
-    orderedIndex: Map<Long, Int>,
-    vm: MainViewModel,
-    ds: DragSelect,
+    orderedIds: List<K>,
+    orderedIndex: Map<K, Int>,
+    ds: DragSelect<K>,
     y: Float,
 ) {
     if (ds.anchor < 0) return
-    val cur = noteIdAt(listState, y)?.let { orderedIndex[it] } ?: return
+    val cur = rowIndexAt(listState, orderedIndex, y) ?: return
     if (cur == ds.lastCursor) return  // still over the same row - nothing changed since last sweep
     ds.lastCursor = cur
-    vm.setSelection(ds.base + sweepRange(orderedIds, ds.anchor, cur))
+    ds.select(ds.base + sweepRange(orderedIds, ds.anchor, cur))
 }
 
-/** Long-press-and-drag range selection (Material's multi-select drag), on the notes list. Long-press
- *  a row to anchor + enter marking, then drag to sweep a range; edge auto-scroll (see the caller's
- *  LaunchedEffect) extends it past the visible rows. The row-level long-press lives here, not on the
- *  rows, so the two don't fight over the gesture. */
-private fun Modifier.dragToSelect(
+/** Long-press-and-drag range selection (Material's multi-select drag), on the notes list, the archive
+ *  and the co-observer picker. Long-press a row to anchor + enter marking, then drag to sweep a range;
+ *  edge auto-scroll (see [SelectDragAutoScroll]) extends it past the visible rows. The row-level
+ *  long-press lives here, not on the rows, so the two don't fight over the gesture. */
+private fun <K> Modifier.dragToSelect(
     listState: LazyListState,
-    orderedIds: List<Long>,
-    orderedIndex: Map<Long, Int>,
-    vm: MainViewModel,
+    orderedIds: List<K>,
+    orderedIndex: Map<K, Int>,
     haptic: HapticFeedback,
-    ds: DragSelect,
+    ds: DragSelect<K>,
 ): Modifier = pointerInput(orderedIds) {
     detectDragGesturesAfterLongPress(
         onDragStart = { offset ->
-            val id = noteIdAt(listState, offset.y)
-            ds.anchor = if (id != null) orderedIndex[id] ?: -1 else -1
+            ds.anchor = rowIndexAt(listState, orderedIndex, offset.y) ?: -1
             if (ds.anchor >= 0) {
-                ds.base = vm.selected.toSet()
+                ds.base = ds.selected()
                 ds.pointerY = offset.y
                 ds.lastCursor = ds.anchor
                 ds.suppressTap = true  // eat the trailing tap if this long-press doesn't turn into a drag
                 haptic.performHapticFeedback(HapticFeedbackType.LongPress)
-                vm.setSelection(ds.base + orderedIds[ds.anchor])
+                ds.select(ds.base + orderedIds[ds.anchor])
                 ds.active = true  // freeze list scroll + start edge auto-scroll
             }
         },
@@ -388,7 +402,7 @@ private fun Modifier.dragToSelect(
             if (ds.anchor < 0) return@detectDragGesturesAfterLongPress
             ds.suppressTap = false  // a real drag: movement already cancels the row's tap
             ds.pointerY = change.position.y
-            applyDragRange(listState, orderedIds, orderedIndex, vm, ds, change.position.y)
+            applyDragRange(listState, orderedIds, orderedIndex, ds, change.position.y)
         },
         onDragEnd = { ds.anchor = -1; ds.active = false },
         onDragCancel = { ds.anchor = -1; ds.active = false },
@@ -583,25 +597,37 @@ private fun StatusStrip(vm: MainViewModel) {
 }
 
 /** The current party ("følget mitt") at the top of the notes list (#176): who your next observation will
- *  credit, and a tap to change it. Always shown - "Ingen medobservatører" is the reminder that makes
+ *  credit, and a tap to change it. Always shown - "Ingen medobservatører valgt" is the reminder that makes
  *  you notice a party you forgot to set. It rides in the list as its first row, so it scrolls away
  *  rather than eating a permanent line of chrome. The count leads ("2 medobs.: Kari, Ola") so it
  *  survives the ellipsis on a big party. First names only (full ones are one tap away in the picker);
- *  the same muted pink as the list rows' +N badge, so the two read as the same thing. */
+ *  the same muted pink as the list rows' co-observer badge, so the two read as the same thing. */
 @Composable
 private fun PartyStrip(vm: MainViewModel) {
     val cs = MaterialTheme.colorScheme
     val party = vm.party
-    Text(
-        if (party.isEmpty()) Strings.CoObs.clearAll
-        else Strings.CoObs.party(party.size, party.joinToString(", ") { shortCoObsName(vm.coObsName(it)) }),
-        color = cs.onSecondaryContainer, fontSize = 13.sp, maxLines = 1, overflow = TextOverflow.Ellipsis,
-        // Centred when you're alone: with no names to read left-to-right the line is just a status,
-        // and centring keeps it from looking like a truncated list.
-        textAlign = if (party.isEmpty()) TextAlign.Center else TextAlign.Start,
-        modifier = Modifier.fillMaxWidth().background(cs.secondaryContainer)
+    Row(
+        Modifier.fillMaxWidth().background(cs.secondaryContainer)
             .clickable { vm.editParty() }.padding(horizontal = 14.dp, vertical = 6.dp),
-    )
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        // Count and icon as on the list rows' badge, so the strip teaches what the badge means (#191).
+        if (party.isNotEmpty()) {
+            Text("${party.size}", color = cs.onSecondaryContainer, fontSize = 13.sp)
+            Spacer(Modifier.width(3.dp))
+            Icon(GroupIcon, contentDescription = null, tint = cs.onSecondaryContainer, modifier = Modifier.size(15.dp))
+            Spacer(Modifier.width(8.dp))
+        }
+        Text(
+            if (party.isEmpty()) Strings.CoObs.none
+            else party.joinToString(", ") { shortCoObsName(vm.coObsName(it)) },
+            color = cs.onSecondaryContainer, fontSize = 13.sp, maxLines = 1, overflow = TextOverflow.Ellipsis,
+            // Centred when nobody is set: with no names to read left-to-right the line is just a
+            // status, and centring keeps it from looking like a truncated list.
+            textAlign = if (party.isEmpty()) TextAlign.Center else TextAlign.Start,
+            modifier = Modifier.weight(1f),
+        )
+    }
 }
 
 /** Credits / attribution (#139). Artsdatabanken's data is CC BY 4.0 (attribution required). OSM is
@@ -670,22 +696,36 @@ private fun CommentBadge(n: Note) {
     }
 }
 
-// A "+N" pill on rows with co-observers (#128): tells at a glance that an obs wasn't just you, and
-// how many joined. No pill = solo. Muted Material container colour, no bespoke tuning.
+// A people icon + count pill on rows with co-observers (#128): tells at a glance that an obs wasn't
+// just you, and how many joined. No pill = solo. The icon says what the number counts (#191); a bare
+// "+2" was unclear. Muted Material container colour, no bespoke tuning.
 @Composable
 private fun CoObserverBadge(n: Note) {
     if (n.coObservers.isEmpty()) return
     val cs = MaterialTheme.colorScheme
-    Box(
+    Row(
         Modifier.padding(start = 6.dp).clip(RoundedCornerShape(50)).background(cs.secondaryContainer)
             .padding(horizontal = 5.dp, vertical = 1.dp),
-        contentAlignment = Alignment.Center,
+        verticalAlignment = Alignment.CenterVertically,
     ) {
-        Text("+${n.coObservers.size}", color = cs.onSecondaryContainer, fontWeight = FontWeight.Bold,
+        Text("${n.coObservers.size}", color = cs.onSecondaryContainer, fontWeight = FontWeight.Bold,
             fontSize = 10.sp, lineHeight = 10.sp,
             style = LocalTextStyle.current.copy(platformStyle = noFontPadding))
+        Spacer(Modifier.width(2.dp))
+        Icon(GroupIcon, contentDescription = null, tint = cs.onSecondaryContainer, modifier = Modifier.size(11.dp))
     }
 }
+
+// Material's "group" icon, inlined: the icon libraries are a big dependency for one glyph.
+private val GroupIcon = ImageVector.Builder("Group", 24.dp, 24.dp, 24f, 24f).addPath(
+    addPathNodes(
+        "M16,11c1.66,0 2.99,-1.34 2.99,-3S17.66,5 16,5c-1.66,0 -3,1.34 -3,3s1.34,3 3,3zM8,11c1.66,0 " +
+            "2.99,-1.34 2.99,-3S9.66,5 8,5C6.34,5 5,6.34 5,8s1.34,3 3,3zM8,13c-2.33,0 -7,1.17 -7,3.5L1,19h14v-2.5" +
+            "c0,-2.33 -4.67,-3.5 -7,-3.5zM16,13c-0.29,0 -0.62,0.02 -0.97,0.05 1.16,0.84 1.97,1.97 1.97,3.45L17,19" +
+            "h6v-2.5c0,-2.33 -4.67,-3.5 -7,-3.5z",
+    ),
+    fill = SolidColor(Color.Black),
+).build()
 
 /** Append [text] bolding only the ♂/♀ glyphs (with their trailing VS15), so a "(♀)" form keeps its
  *  parens at regular weight — bold parens would dwarf the thin symbol, which barely thickens itself. */
@@ -907,10 +947,10 @@ fun SearchScreen(vm: MainViewModel) {
 // ============================ CO-OBSERVERS ============================
 
 /** The co-observer name picker (#128): mirrors the species search - one list of the names you've used
- *  before (most-used first, a checkmark on the ones on this observation), then Artsobservasjoner users
- *  matching what you type, then a free-text "Legg til …" row as the fallback for offline or a name not
- *  found. Toggles apply live to the draft, so leaving is just a back press. "Tøm følget" clears the set
- *  (and, on save, the sticky party with it). */
+ *  before (alphabetical, a switch showing the ones on this observation), then Artsobservasjoner
+ *  users matching what you type, then a free-text "Legg til …" row as the fallback for offline or a
+ *  name not found. Toggles apply live to the draft, so leaving is just a back press. Long-press a name
+ *  to mark names for deletion, as in the notes list (#191). */
 @Composable
 fun CoObserverScreen(vm: MainViewModel) {
     val cs = MaterialTheme.colorScheme
@@ -920,17 +960,30 @@ fun CoObserverScreen(vm: MainViewModel) {
     // No auto-focus: the picker usually opens on names you already have, and a keyboard covering
     // half the list just to be dismissed is a chore. Tap the field when you do need to type.
     val query = q.trim()
-    val matches = vm.coObserverOptions().filter { query.isBlank() || fold(vm.coObsName(it)).contains(fold(query)) }
-    // A name pending a delete-confirm, so a mis-tap on the always-visible "Slett" can't silently
-    // forget someone (and the dialog spells out that it's a list delete, not un-ticking this obs).
-    var confirmForget by remember { mutableStateOf<String?>(null) }
+    // Your names filter from the same length as the online search starts (it needs 3 letters: it
+    // returns at most 15 substring hits), so typing updates both lists together, rather than your
+    // names emptying out at 1-2 letters while the search hasn't begun. Without a search, from 1.
+    val minQuery = if (Country.userSearchUrl != null) 3 else 1
+    val filtering = query.length >= minQuery
+    val matches = vm.coObserverOptions().filter { !filtering || fold(vm.coObsName(it)).contains(fold(query)) }
+    // Names marked for deletion; non-empty means delete mode. A separate mode from the switches, so
+    // deleting a name can't be mistaken for taking it off this observation (#191). Entered like
+    // marking notes: long-press a name, optionally dragging to sweep a range.
+    val marked = remember { mutableStateListOf<String>() }
+    val marking = marked.isNotEmpty()
+    BackHandler(enabled = marking) { marked.clear() }
+    val haptic = LocalHapticFeedback.current
+    val listState = rememberLazyListState()
+    val orderedIndex = remember(matches) { matches.withIndex().associate { (i, n) -> n to i } }
+    val ds = remember { DragSelect<String>({ marked.toSet() }, { marked.clear(); marked.addAll(it) }) }
+    SelectDragAutoScroll(listState, matches, orderedIndex, ds)
     // Online name-search hits, debounced so typing a name doesn't fire a request per letter. People
     // already in your list are left out - they show among your own names above.
     var aoHits by remember { mutableStateOf(emptyList<AoUser>()) }
     var searching by remember { mutableStateOf(false) }
     LaunchedEffect(query) {
         aoHits = emptyList()
-        searching = query.length >= 3 && Country.userSearchUrl != null
+        searching = filtering && Country.userSearchUrl != null
         if (searching) { delay(400); aoHits = vm.searchUsers(query); searching = false }
     }
     val hits = aoHits.filter { it.alias !in vm.coObserverOptions() }
@@ -941,8 +994,18 @@ fun CoObserverScreen(vm: MainViewModel) {
     // name); free text goes in only via the "Legg til" row.
     fun done() = vm.closeCoObs()
     Column(Modifier.fillMaxSize().bottomInsetPadding()) {
-        ScreenHeader(
-            Strings.CoObs.title,
+        if (marking) ScreenHeader(
+            Strings.Notes.selected(marked.size),
+            onCancel = { marked.clear() },
+            cancelContent = { Text("✕", color = Color.White, fontWeight = FontWeight.SemiBold, fontSize = 20.sp) },
+            // No confirm: the undo snackbar is the safety net, as when deleting notes.
+            trailing = {
+                TextButton(onClick = { vm.forgetCoObs(marked.toSet()); marked.clear() }) {
+                    Text(Strings.CoObs.remove, color = Color.White)
+                }
+            },
+        ) else ScreenHeader(
+            if (vm.dCoObs.isEmpty()) Strings.CoObs.title else Strings.CoObs.titleCount(vm.dCoObs.size),
             onCancel = { done() },
             trailing = { TextButton(onClick = { done() }) { Text(Strings.CoObs.done, color = Color.White) } },
         )
@@ -970,45 +1033,45 @@ fun CoObserverScreen(vm: MainViewModel) {
                     }
                 })
         }
-        LazyColumn(Modifier.weight(1f)) {
+        LazyColumn(
+            Modifier.weight(1f).dragToSelect(listState, matches, orderedIndex, haptic, ds),
+            state = listState, userScrollEnabled = !ds.active,
+        ) {
             items(matches, key = { it }) { name ->
-                CoObsRow(name, vm.coObsUsers[name], selected = name in vm.dCoObs,
-                    onToggle = { vm.toggleCoObs(name) }, onForget = { confirmForget = name })
+                CoObsRow(name, vm.coObsUsers[name], on = name in vm.dCoObs, marked = if (marking) name in marked else null) {
+                    // A no-drag long-press leaves a trailing tap; swallow it, as in the notes list.
+                    if (ds.suppressTap) ds.suppressTap = false
+                    else if (marking) { if (!marked.remove(name)) marked.add(name) } else vm.toggleCoObs(name)
+                }
             }
-            // AO users look like unticked saved names; picking one saves and ticks them.
-            items(hits, key = { "ao:${it.alias}" }) { u ->
-                CoObsRow(u.name, u, selected = false, onToggle = { vm.addAoUser(u); q = "" }, onForget = null)
+            // AO users aren't in your list yet, so no switch: tapping one adds them, and the switch shows
+            // up on their row above. Hidden while marking, with the search rows: nothing there can be deleted.
+            if (!marking) items(hits, key = { "ao:${it.alias}" }) { u ->
+                CoObsRow(u.name, u, on = null, marked = null) { vm.addAoUser(u); q = "" }
             }
-            if (searching) item(key = "searching") {
+            if (searching && !marking) item(key = "searching") {
                 Text(Strings.CoObs.searching, color = cs.onSurfaceVariant,
                     modifier = Modifier.padding(horizontal = 16.dp, vertical = 9.dp))
             }
-            if (canAdd) item(key = "add") {
+            if (canAdd && !marking) item(key = "add") {
                 OptionItem(Strings.CoObs.add(query), selected = false, fullScreen = true) { vm.addCoObs(query); q = "" }
             }
         }
-        // Clearing the party is a rare housekeeping action, not the screen's confirm - so it sits at
-        // the bottom (out of the top-right "confirm" spot) and stays muted rather than alarming.
-        if (vm.dCoObs.isNotEmpty()) {
+        // Switching everyone off ("I'm alone now") is a rare housekeeping action, not the screen's
+        // confirm - so it sits at the bottom, out of the top-right "confirm" spot. An outlined button
+        // so it reads as one (#191); "Slå av" so it reads as acting on the switches, not deleting.
+        // Hidden while the keyboard is up: you're typing a name then, and it'd ride up above the keys.
+        // Greyed out rather than hidden with nobody on, so the list doesn't jump when you switch off
+        // the last one.
+        val keyboardOpen = WindowInsets.ime.getBottom(LocalDensity.current) > 0
+        if (!marking && !keyboardOpen && vm.coObserverOptions().isNotEmpty()) {
             HorizontalDivider(color = cs.outline.copy(alpha = 0.4f))
-            TextButton(onClick = { vm.clearCoObs() }, modifier = Modifier.fillMaxWidth().background(cs.surface)) {
-                Text(Strings.CoObs.clearAll, color = cs.onSurfaceVariant)
+            Box(Modifier.fillMaxWidth().background(cs.surface).padding(horizontal = 16.dp, vertical = 8.dp)) {
+                OutlinedButton(onClick = { vm.clearCoObs() }, enabled = vm.dCoObs.isNotEmpty(), modifier = Modifier.fillMaxWidth()) {
+                    Text(Strings.CoObs.allOff)
+                }
             }
         }
-    }
-    confirmForget?.let { name ->
-        AlertDialog(
-            onDismissRequest = { confirmForget = null },
-            title = { Text(Strings.CoObs.forgetTitle(vm.coObsName(name))) },
-            text = { Text(Strings.CoObs.forgetBody) },
-            confirmButton = {
-                Button(
-                    onClick = { vm.forgetCoObs(name); confirmForget = null },
-                    colors = ButtonDefaults.buttonColors(containerColor = cs.error),
-                ) { Text(Strings.CoObs.remove) }
-            },
-            dismissButton = { TextButton(onClick = { confirmForget = null }) { Text(Strings.cancel) } },
-        )
     }
 }
 
@@ -1018,26 +1081,28 @@ private fun coObsDetail(user: AoUser): AnnotatedString = buildAnnotatedString {
     append("(${user.alias})")
 }
 
-/** One known-name row in the co-observer picker. Mirrors the notes-list marking idiom: a leading
- *  [SelectCircle] that fills with a check when the name is on the observation (tap the row to toggle),
- *  and a matching selected-row tint. A trailing **Fjern** forgets the name from the autocomplete list
- *  (mistype / one-off) - its own tap target. Every element is fixed-size so the row never reflows as
- *  you select/deselect. */
+/** One row in the co-observer picker. A trailing switch shows whether the name is on the observation;
+ *  tapping the row flips it. [on] is null for a search hit not yet in your list: no switch, a tap adds
+ *  them. While marking names for deletion ([marked] non-null) the row looks like a marked note: a
+ *  leading [SelectCircle], the marked tint, and no switch. */
 @Composable
-private fun CoObsRow(name: String, user: AoUser?, selected: Boolean, onToggle: () -> Unit, onForget: (() -> Unit)?) {
+private fun CoObsRow(name: String, user: AoUser?, on: Boolean?, marked: Boolean?, onClick: () -> Unit) {
     val cs = MaterialTheme.colorScheme
     Row(
-        Modifier.fillMaxWidth().clickable(onClick = onToggle)
-            .background(if (selected) cs.primaryContainer else cs.surface)
-            .padding(start = 16.dp, top = 9.dp, bottom = 9.dp, end = 4.dp),
+        Modifier.fillMaxWidth().clickable(onClick = onClick)
+            .semantics { if (marked != null) selected = marked else if (on != null) toggleableState = ToggleableState(on) }
+            .background(if (marked == true) cs.primaryContainer else cs.surface)
+            .padding(start = 16.dp, top = 4.dp, bottom = 4.dp, end = 12.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        SelectCircle(selected)
-        Spacer(Modifier.width(12.dp))
+        if (marked != null) {
+            SelectCircle(marked)
+            Spacer(Modifier.width(12.dp))
+        }
         // A user shows their name (the stored text is their alias), with place and alias on a line of
         // their own: namesakes differ only there, so a long name mustn't cut it.
         // The theme's 24sp line height is sized for single lines; tighter here so two-line rows stay
-        // compact. Single-line rows keep it, so they match the notes list's rows.
+        // compact.
         Column(Modifier.weight(1f)) {
             Text(user?.name ?: name, color = cs.onSurface, fontWeight = FontWeight.Medium,
                 lineHeight = if (user != null) 20.sp else TextUnit.Unspecified,
@@ -1045,12 +1110,23 @@ private fun CoObsRow(name: String, user: AoUser?, selected: Boolean, onToggle: (
             if (user != null) Text(coObsDetail(user), color = cs.onSurfaceVariant, fontSize = 13.sp,
                 lineHeight = 16.sp, maxLines = 1, overflow = TextOverflow.Ellipsis)
         }
-        // Horizontal-only padding: the row height stays governed by the select circle (like the
-        // notes list's marking rows), so co-observer rows line up with observation rows.
-        if (onForget != null) Text(Strings.CoObs.remove, color = cs.error,
-            modifier = Modifier.clickable(onClick = onForget).padding(horizontal = 12.dp))
+        Spacer(Modifier.width(12.dp))
+        // The slot stays while marking (empty), so rows keep their height.
+        Box(Modifier.size(52.dp, 32.dp), Alignment.Center) { if (marked == null && on != null) CoObsSwitch(on) }
     }
     HorizontalDivider(color = cs.outline.copy(alpha = 0.4f))
+}
+
+/** Display only (null onCheckedChange): the whole row is the tap target. The theme's outline is a
+ *  pale divider grey, too faint for an off switch's thumb and border, so those take the secondary
+ *  text grey. */
+@Composable
+private fun CoObsSwitch(on: Boolean, enabled: Boolean = true) {
+    val cs = MaterialTheme.colorScheme
+    Switch(
+        checked = on, onCheckedChange = null, enabled = enabled,
+        colors = SwitchDefaults.colors(uncheckedThumbColor = cs.onSurfaceVariant, uncheckedBorderColor = cs.onSurfaceVariant),
+    )
 }
 
 // ============================ DETAIL ============================
@@ -1176,10 +1252,10 @@ fun ArchiveScreen(vm: MainViewModel) {
             val groups = groupNotesByDay(vm.archived, Strings.dateNames)
             val orderedIds = groups.flatMap { g -> g.notes.map { it.id } }
             val orderedIndex = remember(orderedIds) { orderedIds.withIndex().associate { (i, id) -> id to i } }
-            val ds = remember { DragSelect() }
-            SelectDragAutoScroll(listState, orderedIds, orderedIndex, vm, ds)
+            val ds = remember { DragSelect<Long>({ vm.selected.toSet() }, vm::setSelection) }
+            SelectDragAutoScroll(listState, orderedIds, orderedIndex, ds)
             LazyColumn(
-                Modifier.fillMaxSize().dragToSelect(listState, orderedIds, orderedIndex, vm, haptic, ds)
+                Modifier.fillMaxSize().dragToSelect(listState, orderedIds, orderedIndex, haptic, ds)
                     .scrollIndicator(listState),
                 state = listState, userScrollEnabled = !ds.active,
             ) {

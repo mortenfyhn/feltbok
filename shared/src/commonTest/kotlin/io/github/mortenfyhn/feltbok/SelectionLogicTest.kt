@@ -248,22 +248,22 @@ class SelectionLogicTest {
 
     @Test
     fun sweepInclusiveDownward() {
-        assertEquals(listOf(10L, 11L, 12L), sweepRange(listOf(10, 11, 12, 13), 0, 2))
+        assertEquals(listOf(10L, 11L, 12L), sweepRange(listOf(10L, 11L, 12L, 13L), 0, 2))
     }
 
     @Test
     fun sweepInclusiveUpwardSameRange() {
-        assertEquals(listOf(10L, 11L, 12L), sweepRange(listOf(10, 11, 12, 13), 2, 0))
+        assertEquals(listOf(10L, 11L, 12L), sweepRange(listOf(10L, 11L, 12L, 13L), 2, 0))
     }
 
     @Test
     fun sweepSingleRow() {
-        assertEquals(listOf(11L), sweepRange(listOf(10, 11, 12), 1, 1))
+        assertEquals(listOf(11L), sweepRange(listOf(10L, 11L, 12L), 1, 1))
     }
 
     @Test
     fun sweepOffListIsEmpty() {
-        assertEquals(emptyList<Long>(), sweepRange(listOf(10, 11), -1, 1))
-        assertEquals(emptyList<Long>(), sweepRange(listOf(10, 11), 0, 5))
+        assertEquals(emptyList<Long>(), sweepRange(listOf(10L, 11L), -1, 1))
+        assertEquals(emptyList<Long>(), sweepRange(listOf(10L, 11L), 0, 5))
     }
 }

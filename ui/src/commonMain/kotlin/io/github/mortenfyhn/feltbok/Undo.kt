@@ -12,6 +12,10 @@ sealed interface Undoable {
 
     /** A batch field edit (#120): [before] is the affected notes as they were, so undo restores them. */
     data class Edited(val before: List<Note>) : Undoable
+
+    /** Names forgotten from the co-observer picker (#191): their use counts, and those that were on
+     *  the draft, so undo puts both back. */
+    data class ForgotCoObs(val uses: Map<String, Int>, val onDraft: List<String>) : Undoable
 }
 
 /** The single pending undo offer. [token] bumps each time a new offer replaces the last, so the UI

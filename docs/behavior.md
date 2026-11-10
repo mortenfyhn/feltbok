@@ -108,8 +108,8 @@ header ("I dag", "I går", else an abbreviated date like "Søn 8. jun"). Within 
 newest first. Each row carries species + count on the left, its locality, and the
 time on the right (the day lives in the section header, so the row shows bare HH:mm;
 an observation left without a time shows `--:--` there instead).
-A row with co-observers also shows a small **`+N`** pill (N = how many joined) beside
-the species — no pill means it was just you.
+A row with co-observers also shows a small pill with N (how many joined) and a people
+icon beside the species — no pill means it was just you.
 
 Saving a new observation scrolls the list up to its day section, so you see the note
 you just added even when it starts a fresh day above where the list was scrolled.
@@ -171,13 +171,19 @@ both klokkeslett columns blank.
 
 Each observation can record who you observed with. The editor has a **Medobs** row
 showing first names; tapping it opens a picker. It works like the species search: one list
-with the names you've used before that match what you type (most-used first; tap to add or
-remove), then matching **Artsobservasjoner users**, then **Legg til «…»** at the bottom to
-add the typed name as free text. The keyboard's Done key only hides the keyboard, and
-leaving the picker never adds what's in the field.
+with the names you've used before that match what you type (alphabetical by surname, the
+last word of the name; each has a
+switch showing whether it's on this observation, and tapping the row flips it), then
+matching **Artsobservasjoner users**, then **Legg til «…»** at the bottom to add the typed
+name as free text. The keyboard's Done key only hides the keyboard, and leaving the picker
+never adds what's in the field.
+
+A **Slå av alle** button at the bottom switches everyone off in one tap (greyed out while
+nobody is on, and hidden while the keyboard is open).
 
 The user search runs when you've typed 3 or more letters and you're online;
-**Søker…** shows while it runs. Users show like on Artsobservasjoner: name, place in grey
+**Søker…** shows while it runs. Your own names filter from the same 3 letters, so both
+lists update together. Users show like on Artsobservasjoner: name, place in grey
 italics, and their brukeralias in brackets. Tapping one adds them and saves them to your
 list, with place and alias, so they show up offline next time. **Legg til «…»** is the
 fallback for when you're offline, the name isn't found, or the person isn't a user: it's
@@ -185,12 +191,14 @@ hidden while the search runs and when a saved name or a user matches exactly, so
 namesakes you pick the right one by place and alias. An observation stores a picked user
 as their brukeralias, so namesakes never mix and what it exports is fixed when you pick.
 
-A name you type joins the list right away, so un-ticking it doesn't make it disappear. The
-names are remembered locally; only the search text is sent to Artsobservasjoner. Each name
-has a **Slett** action to remove it from the list (for a mistype or a one-off), behind a
-short confirm so it's never mistaken for un-ticking the name from this observation — past
-observations keep whatever they were saved with, so this only prunes what you'll be
-offered next time.
+A name you type joins the list right away, so switching it off doesn't make it disappear.
+The names are remembered locally; only the search text is sent to Artsobservasjoner. To
+remove names from the list (a mistype or a one-off), mark them as you mark observations:
+long-press a name (and drag to sweep a range), and the switches give way to leading select
+circles; tapping marks more names, and the header shows the count with **Slett**. Slett
+removes the marked names at once and offers an undo; ✕ or system Back leaves without
+deleting. Past observations keep whatever they were saved with, so this only prunes what
+you'll be offered next time.
 
 The current field party ("følget mitt") follows **your most recent observation's
 co-observers**: every new observation is pre-filled with them, so once you note down who
@@ -199,13 +207,13 @@ party changes. Fixing the newest observation's co-observers (alone or in a batch
 the default for the next one, and editing or backdating *older* observations can't hijack
 today's party.
 
-The party is also shown on its own line under the green strip on the list screen, first
-names only ("Med: Kari, Ola"), or **Ingen medobservatører** when you're alone — so you can
-see at a glance who the next observation will credit, and notice a party you forgot to
-set. Tapping that line opens the same picker and sets the party directly, without going
-through an observation.
-**Ingen medobservatører** (in the picker) clears the set; save an observation with it
-empty and the party is cleared going forward too. The party never resets on its own — it
+The party is also shown on its own line under the green strip on the list screen: the
+count, the list rows' people icon and first names ("2 👥 Kari, Ola"), or **Ingen
+medobservatører valgt** when nobody is set — so you can see at a glance who the next
+observation will credit, and notice a party you forgot to set. Tapping that line opens the
+same picker and sets the party directly, without going through an observation.
+Switch everyone off and save an observation, and the party is cleared going forward too.
+The party never resets on its own — it
 tracks exactly what you last saved, since wrongly crediting someone who wasn't there (in a
 public database) is worse than the small chore of clearing it.
 

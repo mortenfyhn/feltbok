@@ -134,20 +134,20 @@ object Strings {
         fun discarded(wasEdit: Boolean) = if (wasEdit) "Endringer forkasta" else "Observasjon forkasta"
     }
 
-    // The co-observer picker (#128): search/add names, most-used first, tap to toggle onto the obs.
+    // The co-observer picker (#128): search/add names, alphabetical, tap to toggle onto the obs,
+    // long-press to mark names for deletion (#191).
     object CoObs {
         const val title = "Medobservatører"
+        fun titleCount(n: Int) = "$title ($n)"   // with anyone switched on: how many, for a big party
         const val placeholder = "Søk eller skriv navn…"
         const val done = "Ferdig"
-        const val clearAll = "Ingen medobservatører"   // reset: clears everyone (and the sticky party on save)
+        const val allOff = "Slå av alle"   // the picker's footer: switches everyone off
 
-        // The list-screen party header (#176). Empty reads as [clearAll] - the same "you're alone" text.
-        fun party(count: Int, names: String) = "$count medobs: $names"
-        const val remove = "Slett"   // delete a name from the autocomplete list entirely
-
-        // Confirm the delete so it's never mistaken for un-ticking the name from this observation.
-        fun forgetTitle(name: String) = "Slett «$name»?"
-        const val forgetBody = "Navnet fjernes fra lista over medobservatører. Tidligere observasjoner beholder det."
+        // The list-screen party header (#176) when nobody is set. "valgt" (#191): you may just not
+        // have picked anyone yet, which "Ingen medobservatører" read as being alone.
+        const val none = "Ingen medobservatører valgt"
+        const val remove = "Slett"   // delete the marked names from the autocomplete list entirely
+        fun forgot(n: Int) = "Sletta $n ${if (n == 1) "medobservatør" else "medobservatører"}"
         fun add(name: String) = "Legg til «$name»"
         const val searching = "Søker…"   // while the Artsobservasjoner user search runs
     }

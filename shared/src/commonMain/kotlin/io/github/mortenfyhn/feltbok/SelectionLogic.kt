@@ -14,7 +14,7 @@ fun toggledDay(selected: Set<Long>, dayIds: List<Long>): Set<Long> =
 
 /** The inclusive run of ids swept between two rows in a long-press-drag, given their positions in
  *  the display-ordered id list. Order-independent (drag up or down); empty if either index is off-list. */
-fun sweepRange(orderedIds: List<Long>, anchor: Int, cursor: Int): List<Long> =
+fun <K> sweepRange(orderedIds: List<K>, anchor: Int, cursor: Int): List<K> =
     if (anchor !in orderedIds.indices || cursor !in orderedIds.indices) emptyList()
     else orderedIds.subList(minOf(anchor, cursor), maxOf(anchor, cursor) + 1)
 

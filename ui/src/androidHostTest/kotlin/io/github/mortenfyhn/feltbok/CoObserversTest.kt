@@ -10,17 +10,29 @@ import org.junit.Test
 class CoObserversTest {
 
     @Test
-    fun pickerListsKnownNamesMostUsedFirst() {
-        val uses = mapOf("Kari" to 2, "Ola" to 5, "Per" to 1)
-        assertEquals(listOf("Ola", "Kari", "Per"), coObserverOptions(uses, onDraft = emptyList()))
+    fun pickerListsNamesBySurnameWhateverTheUseCounts() {
+        // "ingeb" is a user's alias, shown (and so sorted) as Inge Berg. The surname is the last word;
+        // a single name sorts as it is, and the whole name breaks a tie.
+        val uses = mapOf("Ola Aas" to 5, "Kari Nordmann" to 2, "ingeb" to 9, "Hanna Tomasgård Olstad" to 1, "Mona" to 1, "Anne Berg" to 3)
+        val shown = mapOf("ingeb" to "Inge Berg")
+        assertEquals(
+            listOf("Ola Aas", "Anne Berg", "ingeb", "Mona", "Kari Nordmann", "Hanna Tomasgård Olstad"),
+            coObserverOptions(uses, onDraft = emptyList()) { shown[it] ?: it },
+        )
     }
 
     @Test
     fun pickerIncludesDraftNamesNotYetInTheRegisterWithoutDuplicating() {
         // A just-added free-text name is on the draft but not yet in the register - it must still show,
-        // and a name in both must appear once (kept at its register rank).
+        // and a name in both must appear once.
         val uses = mapOf("Ola" to 5, "Kari" to 2)
-        assertEquals(listOf("Ola", "Kari", "Nina"), coObserverOptions(uses, onDraft = listOf("Kari", "Nina")))
+        assertEquals(listOf("Kari", "Nina", "Ola"), coObserverOptions(uses, onDraft = listOf("Kari", "Nina")) { it })
+    }
+
+    @Test
+    fun norwegianOrderPutsAeOeAaAfterZ() {
+        val names = listOf("Åse", "Øyvind", "Zara", "Ærlend", "Ödegaard", "anna")
+        assertEquals(listOf("anna", "Zara", "Ærlend", "Ödegaard", "Øyvind", "Åse"), names.sortedBy(::norwegianSortKey))
     }
 
     @Test
