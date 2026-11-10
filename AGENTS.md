@@ -55,6 +55,10 @@ a `MainViewModel` must start with `ClearAppDataRule` — otherwise the suite bec
 - **Minimal diffs.** Implement only what's asked; prefer the smallest change and removing code over
   adding it. Prefer pure functions; small focused classes. Match surrounding style and comment
   density (comments explain WHY).
+- **Bug fixes come with a regression test by default.** Add a test that fails on the old behaviour
+  and passes with the fix, and check that it does fail without the fix. Prefer a pure-JVM test
+  (`androidHostTest`, or `commonTest` in `:shared`). If no test can reach the bug at a reasonable
+  cost, say so instead of skipping it silently.
 - **Keep new logic platform-free.** Put new non-UI logic in the `:shared` module
   (`shared/src/commonMain`, plain Kotlin, no Android or JVM imports; like `Search.kt`), not in
   `Model.kt` or `MainViewModel.kt`, so the coming iOS app (#115) gets it too. It builds for JVM
