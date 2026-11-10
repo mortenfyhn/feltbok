@@ -157,13 +157,15 @@ and tapping
 
 ## Tidspunkt (start/slutt)
 
-The editor's time row opens a small editor with a **Start-tid** and a **Sluttid** row,
-each with a separately-tappable date and time-of-day (so you can change just the day, or
-just the clock). Sluttid mirrors Start-tid until you edit it, then it becomes a real range
-that may span midnight (the end can never fall before the start). Each row has its own
-**Nå** button that sets just that end to the current moment. **Uten klokkeslett** keeps the date but leaves the time unspecified —
-for observations logged after the fact, when you don't remember the time; it exports with
-the date filled in and both klokkeslett columns blank.
+The editor's time row opens a small editor with a **Start** and a **Slutt** row, each with a
+separately-tappable date and time-of-day (so you can change just the day, or just the clock).
+Slutt mirrors Start, greyed out, until you edit it; then it becomes a real range that may span
+midnight. The end can never fall before the start, and an end in the same minute as the start
+is dropped, so Slutt mirrors Start again. That is how you go back to a single point in time.
+Each row has its own **Nå** button, pinned to the right, that sets just that end to the current
+moment. **Ukjent klokkeslett** keeps the date but leaves the time unspecified, for observations
+logged after the fact, when you don't remember the time; it exports with the date filled in and
+both klokkeslett columns blank.
 
 ## Medobservatører (co-observers)
 

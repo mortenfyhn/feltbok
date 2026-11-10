@@ -5,6 +5,7 @@ import kotlinx.datetime.TimeZone
 import kotlinx.datetime.toInstant
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertNull
 
 class DatesTest {
     private val names = DateNames(
@@ -33,5 +34,15 @@ class DatesTest {
         assertEquals("8. jun 09:05 – 9. jun 00:30", displayTimeRange(start, end, false, names, utc))
         assertEquals("8. jun – 9. jun", displayTimeRange(start, end, true, names, utc))
         assertEquals("8. jun 2026", displayDate(start, names, utc))
+    }
+
+    @Test
+    fun clampEndKeepsARealRangeAndDropsAnEmptyOne() {
+        val start = at(2026, 6, 8, 9, 5)
+        val nextDay = at(2026, 6, 9, 0, 30)
+        assertEquals(nextDay, clampEnd(start, nextDay))
+        assertEquals(start + 60_000, clampEnd(start, start + 60_000))
+        assertNull(clampEnd(start, start + 59_000)) // same minute
+        assertNull(clampEnd(start, start - 3_600_000)) // before the start: pulled up to it
     }
 }

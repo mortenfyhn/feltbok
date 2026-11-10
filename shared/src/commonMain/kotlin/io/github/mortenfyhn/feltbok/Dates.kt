@@ -90,3 +90,9 @@ fun nowMs(): Long = Clock.System.now().toEpochMilliseconds()
 
 /** This month, 1-12, in the device's time zone. */
 fun currentMonth(): Int = Clock.System.todayIn(TimeZone.currentSystemDefault()).month.number
+
+// ---- the time editor's range rule ----
+
+/** An observation's end once [end] is set against [start]: it can't fall before the start, and an
+ *  end in the start's minute is no range, so it's dropped (null = a single point in time). */
+fun clampEnd(start: Long, end: Long): Long? = maxOf(end, start).takeIf { it / 60_000 != start / 60_000 }

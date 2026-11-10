@@ -16,6 +16,7 @@
 - En ny lokalitet du lager fra statuslinja blir gjeldende lokalitet, i stedet for å åpne en tom observasjon.
 - Et trykk like utenfor kanten av en lokalitet på kartet velger den.
 - Ymse småforbedringer på eksportsida.
+- Tidsvalget er ryddigere og brekker ikke lenger linjene med stor tekst.
 
 ## v1.4 (2. november 2026)
 

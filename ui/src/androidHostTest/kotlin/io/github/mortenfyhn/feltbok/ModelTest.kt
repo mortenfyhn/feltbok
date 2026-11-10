@@ -103,7 +103,7 @@ class ModelTest {
 
     @Test
     fun timeUnknownExportsBlankKlokkeslettButKeepsDates() {
-        // "Uten klokkeslett": the date is still emitted (from and til), only the two time
+        // "Ukjent klokkeslett": the date is still emitted (from and til), only the two time
         // columns go blank - the site accepts a date-only observation.
         val c = exportTsv(listOf(noteAt(noonMs).copy(endTime = noonMs, timeUnknown = true))).split("\n")[1].split("\t")
         assertEquals("01.06.2026", c[9]); assertEquals("", c[10])

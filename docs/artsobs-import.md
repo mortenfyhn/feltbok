@@ -138,7 +138,7 @@ authoritative `isPrivate` flag per site, so `build_sites.py` simply keeps the pu
 
 `Nord`/`Øst`/`Nøyaktighet` are left blank unless "Ta med koordinater" is on. Dates are
 `dd.MM.yyyy`, times `HH:mm`; from/til default to the same instant (one moment of
-observation). The time-of-day is optional: an obs saved with "Uten klokkeslett" keeps
+observation). The time-of-day is optional: an obs saved with "Ukjent klokkeslett" keeps
 its date(s) but emits both `klokkeslett` columns **blank** — the same "unknown" idiom as
 a blank `Antall`. (Whether the site imports a date-only row cleanly is what the no-time
 sample rows below exist to verify.)
