@@ -173,7 +173,7 @@ another kommune), a **name-only** row (a note saved before notes kept the id), a
 each import mints a fresh **duplicate**, so expect to clean those up), a **blank `Antall`** (unknown
 count, see #90), the `Usikker artsbestemming` flag, both comment fields, a **hidden** row (`Skjul funn til dato`, #181), same-day and multi-day time
 ranges, the two **blank `klokkeslett`** no-time cases (single day and multi-day, #155), and
-**`Medobservatør` columns** with 0/1/12 co-observers. To keep the import errors meaningful (rather
+**`Medobservatør` columns** with 0/1/12/100 co-observers (the 100 are real brukeraliases looked up at seed time). To keep the import errors meaningful (rather
 than drowned in avoidable ones), the seed uses inputs the site actually accepts: localities are
 **real, globally-unique public localities** (unique across the country, so they resolve to the public
 locality even without kommune-scoping the form — no "matchet flere allmenne lokaliteter"),

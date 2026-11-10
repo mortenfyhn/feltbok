@@ -6,7 +6,8 @@
    comments, each red-list colour, an uncertain determination, long species/locality names, a
    near-duplicate pair (same species+place, different age/sex — the "which is chicks, which parents"
    case the age/sex preview exists for), and the co-observer variations (#128): none, one, a few,
-   and a 12-name crowd (stresses the "+N" badge and 10+ Medobservatør columns).
+   a 12-name crowd (stresses the "+N" badge and 10+ Medobservatør columns), and a 100-user crowd
+   (proves the import takes far more Medobservatør columns than the template's 10).
 2. **A live paste-import test** — seed clean, then export FROM THE APP and paste into
    Artsobservasjoner "Importer observasjoner". So the rows also cover every path `exportTsv` takes:
    a registry locality exported by site id (including Austrått, whose name also exists in another
@@ -32,11 +33,16 @@ shows "I dag"/"I går").
 Activities/ages/sexes must be exact values from the app's Norwegian Country vocabularies, or the
 import rejects the row. Run via `just seed`, or `python scripts/dev/seed_notes.py` to inspect
 the JSON (add `--why` to instead print each row's purpose).
+
+The 100-user crowd needs network: its brukeraliases are looked up on Artsobservasjoner at seed
+time rather than committed, so the repo doesn't carry a scraped user directory.
 """
 
 import json
 import sys
 import time
+import urllib.parse
+import urllib.request
 
 # (species, latin, status) — status drives the badge colour; latin must match species.csv.
 GRAAMAAKE = ("gråmåke", "Larus argentatus", "VU")  # red
@@ -533,6 +539,59 @@ ROWS = [
     ),
 ]
 
+# Common surnames to search for the 100-user crowd. Users/Search returns at most 15 hits per query.
+SURNAMES = [
+    "Hansen",
+    "Johansen",
+    "Olsen",
+    "Larsen",
+    "Andersen",
+    "Pedersen",
+    "Nilsen",
+    "Kristiansen",
+    "Jensen",
+    "Karlsen",
+    "Berg",
+    "Haugen",
+    "Hagen",
+    "Bakken",
+    "Lie",
+]
+
+
+def fetch_aliases(n):
+    """`n` distinct real brukeraliases. The import links a Medobservatør cell on alias, which works
+    even when the user's name is shared, so these resolve without hand-picking."""
+    aliases = []
+    for name in SURNAMES:
+        url = (
+            "https://mobil.artsobservasjoner.no/core/Users/Search?"
+            + urllib.parse.urlencode({"searchRequest": name})
+        )
+        req = urllib.request.Request(url, headers={"X-CSRF": "1"})
+        with urllib.request.urlopen(req, timeout=10) as r:
+            for u in json.load(r):
+                alias = (u.get("userAlias") or "").strip()
+                if alias and alias not in aliases:
+                    aliases.append(alias)
+        if len(aliases) >= n:
+            return aliases[:n]
+    sys.exit(f"Only found {len(aliases)} of {n} co-observer aliases")
+
+
+def big_crowd_row():
+    return note(
+        "100 co-observers by brukeralias (-> '+100' badge, 100 Medobs cols, far past the template's 10)",
+        200,
+        STORSKARV,
+        4,
+        "Adult",
+        "",
+        "Rastende",
+        "Leangenbukta",
+        coobs=fetch_aliases(100),
+    )
+
 
 def build(now_ms, rows=ROWS):
     notes = []
@@ -588,4 +647,5 @@ if __name__ == "__main__":
             print(f"{i:2}. {r['species'][0]} — {r['why']}")
     else:
         # Single-line JSON: `adb shell`'s PTY would translate embedded newlines, so keep it newline-free.
-        print(json.dumps(build(int(time.time() * 1000)), ensure_ascii=False))
+        rows = ROWS + [big_crowd_row()]
+        print(json.dumps(build(int(time.time() * 1000), rows), ensure_ascii=False))
