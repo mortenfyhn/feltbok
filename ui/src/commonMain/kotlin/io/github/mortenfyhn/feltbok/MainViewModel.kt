@@ -637,7 +637,8 @@ class MainViewModel(private val platform: Platform) : ViewModel() {
         if (!localitiesLoaded) { deferredLiveView = doubleArrayOf(s, w, n, e); return }
         fetchLive(s, w, n, e, ++liveGen, null)
     }
-    private var localitiesLoaded = false
+    var localitiesLoaded = false
+        private set
     private var deferredLiveView: DoubleArray? = null
     private var lastView: DoubleArray? = null   // the picker's last settled view, for "Oppdater lokaliteter"
 
