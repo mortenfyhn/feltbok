@@ -34,8 +34,9 @@ Activities/ages/sexes must be exact values from the app's Norwegian Country voca
 import rejects the row. Run via `just seed`, or `python scripts/dev/seed_notes.py` to inspect
 the JSON (add `--why` to instead print each row's purpose).
 
-The 100-user crowd needs network: its brukeraliases are looked up on Artsobservasjoner at seed
-time rather than committed, so the repo doesn't carry a scraped user directory.
+The 100-user crowd's brukeraliases are looked up on Artsobservasjoner on the first run and cached
+in the gitignored `coobs-cache.json` next to this script, so the repo doesn't carry a scraped user
+directory. Delete the cache to look them up again.
 """
 
 import json
@@ -43,6 +44,7 @@ import sys
 import time
 import urllib.parse
 import urllib.request
+from pathlib import Path
 
 # (species, latin, status) — status drives the badge colour; latin must match species.csv.
 GRAAMAAKE = ("gråmåke", "Larus argentatus", "VU")  # red
@@ -559,6 +561,19 @@ SURNAMES = [
 ]
 
 
+ALIAS_CACHE = Path(__file__).with_name("coobs-cache.json")
+
+
+def cached_aliases(n):
+    if ALIAS_CACHE.exists():
+        aliases = json.loads(ALIAS_CACHE.read_text())
+        if len(aliases) >= n:
+            return aliases[:n]
+    aliases = fetch_aliases(n)
+    ALIAS_CACHE.write_text(json.dumps(aliases, ensure_ascii=False))
+    return aliases
+
+
 def fetch_aliases(n):
     """`n` distinct real brukeraliases. The import links a Medobservatør cell on alias, which works
     even when the user's name is shared, so these resolve without hand-picking."""
@@ -589,7 +604,7 @@ def big_crowd_row():
         "",
         "Rastende",
         "Leangenbukta",
-        coobs=fetch_aliases(100),
+        coobs=cached_aliases(100),
     )
 
 

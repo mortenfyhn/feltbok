@@ -58,6 +58,7 @@ __pycache__/
 /paste-test*.tsv
 /verify.tsv
 /scripts/localities-public-cache.json
+/scripts/dev/coobs-cache.json
 
 *.sublime-workspace
 
