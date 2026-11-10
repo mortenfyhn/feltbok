@@ -56,6 +56,8 @@ Key nuances learned the hard way:
    narrows the search so the exact name resolves to the public locality. *"Prioriter
    private lokaliteter og favoritter"* makes the import prefer your own localities first —
    with it on, names tend to match/create **private** copies instead of the public one.
+   A private locality of your own wins a name match even with the box off (see "Name
+   collisions with your own private localities" below).
    (iGoTerra reportedly uploads cleanly with no kommune scope and that box left on — so it
    must encode the locality some other way: own established localities, coordinates, or an
    id. Getting a real iGoTerra export is the open lead; see `custom-localities-design.md`.)
@@ -96,6 +98,21 @@ long as the form has no area set. "Prioriter private" makes no difference to ids
 outside the area fails loudly instead of linking to the wrong site.
 The app exports `Note.locId` this way; notes without one (saved before it existed) and
 brand-new spots still export the name.
+
+### Name collisions with your own private localities (2026-11-10)
+
+A v1.4 user reported that "Ånegga sør" imported to the wrong locality. That name exists as a
+public locality and as private localities of the user's own. Reproduced on v1.4 (which exports
+the name) with the maintainer's own private localities of the same name, one observation on each:
+
+| Localities named "Ånegga sør" | "Prioriter private" | Result |
+|---|---|---|
+| public, private and a second private ("superprivat") | on or off | ❌ every row fails |
+| public and private | on or off | ❌ both rows link to the private one |
+
+So a name that matches one of your own private localities links there, whatever the setting.
+The same test on master, which exports the site id, linked each observation to its own
+locality, with the box on and off.
 
 > Open question: how does **iGoTerra** export to this same old site and land on public
 > localities? If it genuinely does, a working format exists that name/coords paste does
