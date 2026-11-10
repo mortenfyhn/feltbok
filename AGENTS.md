@@ -14,8 +14,8 @@ Recipes live in `just --list`. Gotchas not covered there:
   `./gradlew test` and `assembleRelease` do NOT compile `src/androidTest`, so after bumping
   Compose/AndroidX, also compile that source set (`just itest` or
   `assembleReleaseTestAndroidTest`, no device needed).
-- Before every commit, run the local CI checks: `just test` (Gradle + Python tests), `just lint`, and
-  `just format` (CI-gated). Don't commit on red.
+- Before every commit, run `just ci`: the same checks as Semaphore (lint, tests, builds). Don't
+  commit on red.
 - iOS code (`iosMain`, `iosApp/`) can't compile on Linux; only GitHub's macOS runner builds it. After
   touching it, push to a branch and wait for the iOS workflow to pass before merging to `master`
   (pushing still needs consent).

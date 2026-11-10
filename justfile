@@ -59,13 +59,16 @@ format:
 lint:
     ./gradlew ktlintCheck
     .venv/bin/ruff check scripts/
+    .venv/bin/ruff format --check scripts/
 
 # CI fails late on style slips (e.g. blank-line-before-declaration) that `just test` alone
 # never checks; run this before pushing, or `just format` first to auto-fix the mechanical stuff.
 
-# Run the full CI gate locally: ktlint + ruff, unit tests, dev APK
+# Run the full CI gate locally: ktlint + ruff, unit tests, dev APK, Android Lint, and the minified
+# releaseTest APK + its instrumented tests (built, not run: that needs a device, see itest)
 [group('check')]
 ci: lint test build
+    ./gradlew :app:lintDebug :ui:lintAndroidMain assembleReleaseTest assembleReleaseTestAndroidTest
 
 # Install the dev APK on a connected device (-d allows downgrading over a newer build)
 [group('app')]

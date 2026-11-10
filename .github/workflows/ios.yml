@@ -5,6 +5,11 @@ name: iOS
 
 on:
   push:
+    # Docs-only pushes can't break the build.
+    paths-ignore:
+      - '**.md'
+      - 'docs/**'
+      - 'fastlane/**'
   workflow_dispatch:
 
 concurrency:

@@ -43,10 +43,12 @@ blocks:
         - name: unit tests + debug APK
           # The unit tests live in :shared (JVM) and :ui (Android host tests); the app module
           # has none left.
-          # ktlintCheck gates formatting (run `just fmt` locally to fix).
+          # ktlintCheck gates formatting (run `just format` locally to fix). Android Lint runs per
+          # module (:ui holds nearly all the code). The releaseTest APKs are built, not run (no
+          # emulator here), so R8 and the instrumented tests' sources are still checked.
           commands:
             - cache restore gradle-$(checksum app/build.gradle.kts)-$(checksum shared/build.gradle.kts)-$(checksum ui/build.gradle.kts)
-            - ./gradlew ktlintCheck :ui:testAndroidHostTest :shared:jvmTest assembleDebug --console=plain --no-daemon
+            - ./gradlew ktlintCheck :ui:testAndroidHostTest :shared:jvmTest assembleDebug :app:lintDebug :ui:lintAndroidMain assembleReleaseTest assembleReleaseTestAndroidTest --console=plain --no-daemon
             - cache store gradle-$(checksum app/build.gradle.kts)-$(checksum shared/build.gradle.kts)-$(checksum ui/build.gradle.kts) ~/.gradle
       # Publish the debug APK as a workflow artifact so the Claude issue→PR loop (and
       # any branch build) gives a downloadable APK to test, without pulling the branch locally.
@@ -77,6 +79,7 @@ blocks:
             - curl -fsSL https://releases.astral.sh/github/ruff/releases/download/0.16.1/ruff-x86_64-unknown-linux-gnu.tar.gz | tar -xz -C /tmp
             - /tmp/ruff-x86_64-unknown-linux-gnu/ruff --version
             - /tmp/ruff-x86_64-unknown-linux-gnu/ruff check scripts/
+            - /tmp/ruff-x86_64-unknown-linux-gnu/ruff format --check scripts/
             - pip install --quiet --break-system-packages requests
             - python3 -m unittest discover -s scripts -p 'test_*.py'
 
