@@ -40,6 +40,13 @@ fun norwegianSortKey(s: String): String = s.lowercase().map {
     }
 }.joinToString("")
 
+/** The aliases among [users] that the picker must show to tell namesakes apart: those sharing both
+ *  name and place with another listed user (case-insensitive). Where the place differs, it does the
+ *  job, and a brukeralias isn't shown needlessly - it can look odd, and isn't obviously public. */
+fun needsAlias(users: List<AoUser>): Set<String> =
+    users.distinctBy { it.alias }.groupBy { fold(it.name.trim()) to fold(it.city.trim()) }
+        .values.filter { it.size > 1 }.flatten().map { it.alias }.toSet()
+
 /** Whether the picker offers "Legg til «[query]»" as free text. It's the fallback: hidden while the
  *  user search runs (it would flash, then vanish), and when a saved name or a user from the search
  *  matches exactly, so a namesake gets picked by place and alias instead of typed in unlinked. */

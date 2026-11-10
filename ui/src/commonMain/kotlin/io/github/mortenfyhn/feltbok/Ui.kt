@@ -1037,8 +1037,12 @@ fun CoObserverScreen(vm: MainViewModel) {
             Modifier.weight(1f).dragToSelect(listState, matches, orderedIndex, haptic, ds),
             state = listState, userScrollEnabled = !ds.active,
         ) {
+            // Brukeraliases can look odd and people may not know they're public, so show one only
+            // where a namesake from the same place is on screen too.
+            val aliased = needsAlias(matches.mapNotNull { vm.coObsUsers[it] } + hits)
             items(matches, key = { it }) { name ->
-                CoObsRow(name, vm.coObsUsers[name], on = name in vm.dCoObs, marked = if (marking) name in marked else null) {
+                CoObsRow(name, vm.coObsUsers[name], on = name in vm.dCoObs, marked = if (marking) name in marked else null,
+                    showAlias = name in aliased) {
                     // A no-drag long-press leaves a trailing tap; swallow it, as in the notes list.
                     if (ds.suppressTap) ds.suppressTap = false
                     else if (marking) { if (!marked.remove(name)) marked.add(name) } else vm.toggleCoObs(name)
@@ -1047,7 +1051,7 @@ fun CoObserverScreen(vm: MainViewModel) {
             // AO users aren't in your list yet, so no switch: tapping one adds them, and the switch shows
             // up on their row above. Hidden while marking, with the search rows: nothing there can be deleted.
             if (!marking) items(hits, key = { "ao:${it.alias}" }) { u ->
-                CoObsRow(u.name, u, on = null, marked = null) { vm.addAoUser(u); q = "" }
+                CoObsRow(u.name, u, on = null, marked = null, showAlias = u.alias in aliased) { vm.addAoUser(u); q = "" }
             }
             if (searching && !marking) item(key = "searching") {
                 Text(Strings.CoObs.searching, color = cs.onSurfaceVariant,
@@ -1075,10 +1079,12 @@ fun CoObserverScreen(vm: MainViewModel) {
     }
 }
 
-/** A user's second line, styled as on Artsobservasjoner: place in italics, then (brukeralias). */
-private fun coObsDetail(user: AoUser): AnnotatedString = buildAnnotatedString {
-    if (user.city.isNotBlank()) withStyle(SpanStyle(fontStyle = FontStyle.Italic)) { append("${user.city}  ") }
-    append("(${user.alias})")
+/** A user's second line, styled as on Artsobservasjoner: place in italics, then (brukeralias) - but
+ *  the alias only with [showAlias], when it's needed to tell namesakes apart (see [needsAlias]).
+ *  Empty when there's neither. */
+private fun coObsDetail(user: AoUser, showAlias: Boolean): AnnotatedString = buildAnnotatedString {
+    if (user.city.isNotBlank()) withStyle(SpanStyle(fontStyle = FontStyle.Italic)) { append(user.city) }
+    if (showAlias) append(if (user.city.isNotBlank()) "  (${user.alias})" else "(${user.alias})")
 }
 
 /** One row in the co-observer picker. A trailing switch shows whether the name is on the observation;
@@ -1086,8 +1092,9 @@ private fun coObsDetail(user: AoUser): AnnotatedString = buildAnnotatedString {
  *  them. While marking names for deletion ([marked] non-null) the row looks like a marked note: a
  *  leading [SelectCircle], the marked tint, and no switch. */
 @Composable
-private fun CoObsRow(name: String, user: AoUser?, on: Boolean?, marked: Boolean?, onClick: () -> Unit) {
+private fun CoObsRow(name: String, user: AoUser?, on: Boolean?, marked: Boolean?, showAlias: Boolean, onClick: () -> Unit) {
     val cs = MaterialTheme.colorScheme
+    val detail = user?.let { coObsDetail(it, showAlias) }?.takeIf { it.isNotEmpty() }
     Row(
         Modifier.fillMaxWidth().clickable(onClick = onClick)
             .semantics { if (marked != null) selected = marked else if (on != null) toggleableState = ToggleableState(on) }
@@ -1105,9 +1112,9 @@ private fun CoObsRow(name: String, user: AoUser?, on: Boolean?, marked: Boolean?
         // compact.
         Column(Modifier.weight(1f)) {
             Text(user?.name ?: name, color = cs.onSurface, fontWeight = FontWeight.Medium,
-                lineHeight = if (user != null) 20.sp else TextUnit.Unspecified,
+                lineHeight = if (detail != null) 20.sp else TextUnit.Unspecified,
                 maxLines = 1, overflow = TextOverflow.Ellipsis)
-            if (user != null) Text(coObsDetail(user), color = cs.onSurfaceVariant, fontSize = 13.sp,
+            if (detail != null) Text(detail, color = cs.onSurfaceVariant, fontSize = 13.sp,
                 lineHeight = 16.sp, maxLines = 1, overflow = TextOverflow.Ellipsis)
         }
         Spacer(Modifier.width(12.dp))

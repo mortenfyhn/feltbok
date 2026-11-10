@@ -183,8 +183,10 @@ nobody is on, and hidden while the keyboard is open).
 
 The user search runs when you've typed 3 or more letters and you're online;
 **Søker…** shows while it runs. Your own names filter from the same 3 letters, so both
-lists update together. Users show like on Artsobservasjoner: name, place in grey
-italics, and their brukeralias in brackets. Tapping one adds them and saves them to your
+lists update together. Users show like on Artsobservasjoner: name and place in grey
+italics. Their brukeralias shows in brackets only when another user on screen has the same
+name and place, since aliases can look odd and people may not know they're public.
+Tapping one adds them and saves them to your
 list, with place and alias, so they show up offline next time. **Legg til «…»** is the
 fallback for when you're offline, the name isn't found, or the person isn't a user: it's
 hidden while the search runs and when a saved name or a user matches exactly, so with

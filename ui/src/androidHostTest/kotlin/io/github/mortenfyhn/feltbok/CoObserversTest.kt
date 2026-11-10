@@ -36,6 +36,18 @@ class CoObserversTest {
     }
 
     @Test
+    fun aliasIsNeededOnlyForNamesakesFromTheSamePlace() {
+        val users = listOf(
+            AoUser("Inge Berg", "ingeb", "Bergen"),
+            AoUser("inge berg", "Pingu", "bergen"),   // same name and place: only the alias tells them apart
+            AoUser("Inge Berg", "ib2", "Oslo"),        // the place tells this one apart
+            AoUser("Kari Nordmann", "kari", ""),       // unique name
+            AoUser("Inge Berg", "ingeb", "Bergen"),    // the same user listed twice is no namesake
+        )
+        assertEquals(setOf("ingeb", "Pingu"), needsAlias(users))
+    }
+
+    @Test
     fun freeTextIsOfferedOnlyWhenNothingMatchesExactly() {
         val inge = AoUser("Inge Berg", "ingeb", "Bergen")
         assertTrue(canAddFreeText("Inge Berg", searching = false, saved = emptyList(), hits = emptyList()))  // offline / not found
