@@ -133,4 +133,14 @@ class MapPickerTest {
         assertEquals(near.loc, resolveTap(listOf(far, near)))
         assertNull(resolveTap(emptyList()))
     }
+
+    // #196: a tap just outside a big circle's edge used to miss, because the near-miss reach was
+    // max(radius, slop) from the centre, so it only helped circles smaller than the slop.
+    @Test
+    fun nearMissOutsideACircleEdgeStillHits() {
+        val density = 2f                 // px per dp
+        val r = 200f                     // circle radius in px, well over the 24 dp point reach
+        assertTrue(tapHitsDisc(centreDistPx = r + 20 * density, radiusPx = r, density = density))
+        assertFalse(tapHitsDisc(centreDistPx = r + 30 * density, radiusPx = r, density = density))
+    }
 }

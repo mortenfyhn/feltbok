@@ -80,10 +80,16 @@ internal fun screenSpanPx(loc: Locality, ppm: Double): Float {
 internal fun selectedFillIsFaint(loc: Locality, ppm: Double): Boolean =
     loc.polygon.isNotEmpty() || screenSpanPx(loc, ppm) > LARGE_FOOTPRINT_PX
 
-/** How close (dp) a tap must land to a footprint-less point's dot to count as hitting it, and the
- *  reach of the near-miss fallback. In dp (scaled by display density at tap time) so the touch
- *  target is the same physical size on any screen; ~Material's minimum touch target as a radius. */
+/** How far (dp) past a circle's or point's edge a tap still selects it, so a near miss counts. In
+ *  dp (scaled by display density at tap time) so the touch target is the same physical size on
+ *  any screen; ~Material's minimum touch target as a radius. */
 internal const val TAP_SLOP_DP = 24f
+
+/** Does a tap [centreDistPx] from a circle's or point's centre hit it? [density] is device px per
+ *  dp. Polygons don't use this: their traced shape is the hitbox, so a margin would register taps
+ *  outside the drawn outline. */
+internal fun tapHitsDisc(centreDistPx: Float, radiusPx: Float, density: Float): Boolean =
+    centreDistPx <= radiusPx + TAP_SLOP_DP * density
 
 /** A locality whose on-screen footprint (bounding box) exceeds this fraction of the viewport along
  *  *either* axis is too big to tap: zoomed in tight it overflows the screen with no visible edge

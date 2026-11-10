@@ -508,29 +508,16 @@ private class LocalityOverlay {
         val ppm = p.ppm
         val (tapLat, tapLon) = p.fromPixels(x, y)
         val zoom = p.zoom
-        val slop = TAP_SLOP_DP * density
         val hits = ArrayList<TapCandidate>()
         for (loc in localities) {
             val span = screenSpanPx(loc, ppm)
             if (loc !== picked && (declutteredAtZoom(zoom, span) || tooBigToTap(loc, ppm, p.widthA, p.heightA))) continue
             val o = p.toPixels(loc.lat, loc.lon)
             val d = hypot(o.x - x, o.y - y)
-            val hit = if (loc.polygon.isNotEmpty() || loc.radius > 0.0) localityContains(loc, tapLat, tapLon)
-            else d <= slop
+            val hit = if (loc.polygon.isNotEmpty()) localityContains(loc, tapLat, tapLon)
+            else tapHitsDisc(d, radiusPx(loc, ppm) * p.s, density)
             if (hit) hits.add(TapCandidate(loc, span, d))
         }
-        var best = resolveTap(hits)
-        if (best == null) {
-            var bestD = Float.MAX_VALUE
-            for (loc in localities) {
-                if (loc.polygon.isNotEmpty()) continue
-                val span = screenSpanPx(loc, ppm)
-                if (loc !== picked && (declutteredAtZoom(zoom, span) || tooBigToTap(loc, ppm, p.widthA, p.heightA))) continue
-                val o = p.toPixels(loc.lat, loc.lon)
-                val d = hypot(o.x - x, o.y - y)
-                if (d < bestD && d <= maxOf(radiusPx(loc, ppm) * p.s, slop)) { bestD = d; best = loc }
-            }
-        }
-        return best
+        return resolveTap(hits)
     }
 }
