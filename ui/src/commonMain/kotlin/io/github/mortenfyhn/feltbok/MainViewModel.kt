@@ -415,8 +415,9 @@ class MainViewModel(private val platform: Platform) : ViewModel() {
 
     /** Whether leaving the editor would actually lose work, so Back/✕ can skip the discard confirm
      *  when there's nothing to discard. A new observation is always unsaved work; an edit only
-     *  counts if a field changed from the saved note. */
+     *  counts if a field changed from the saved note, a batch edit if it would write anything. */
     fun draftHasChanges(): Boolean {
+        if (batchEditing) return !batchChange().isNoOp
         val orig = editingId?.let { id -> notes.firstOrNull { it.id == id } } ?: return true
         val loc = dLoc
         return dSpecies != orig.species || dLatin != orig.latin || dCount != orig.count ||
@@ -890,9 +891,10 @@ class MainViewModel(private val platform: Platform) : ViewModel() {
     /** Apply only the fields the user actually changed (draft vs the seeded baseline) to every marked
      *  note, then return to the list with the marks dropped (#177) - the edit is done, and leaving
      *  them marked invited a second edit of the same notes by accident. */
-    private fun commitBatchEdit() {
+    /** The fields the batch draft changed from its seed; the rest stay null (untouched). */
+    private fun batchChange(): BatchChange {
         val b = batchBaseline
-        val change = BatchChange(
+        return BatchChange(
             species = if (dLatin.isNotBlank() && (dLatin != b?.latin || dSpecies != b.species)) SpeciesPick(dSpecies, dLatin) else null,
             count = if (dCount != b?.count) dCount else null,
             age = if (dAge != b?.age) dAge else null,
@@ -906,6 +908,10 @@ class MainViewModel(private val platform: Platform) : ViewModel() {
             // expressed; setting a date works either way.
             hideUntil = if (dHideUntil != b?.hideUntil) BatchHide(dHideUntil) else null,
         )
+    }
+
+    private fun commitBatchEdit() {
+        val change = batchChange()
         batchApply(change)
         // Bump the name register like a single-note save would, so a name typed here feeds the
         // autocomplete next time, and re-point the party if the batch covered the newest note.

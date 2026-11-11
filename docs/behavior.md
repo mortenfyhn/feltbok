@@ -115,6 +115,7 @@ Saving a new observation scrolls the list up to its day section, so you see the 
 you just added even when it starts a fresh day above where the list was scrolled.
 Saving an *edit* that changed something offers an undo ("Endra 1 observasjon"), on the
 same longer timeout as a batch edit — the old values are gone otherwise.
+**Lagre** is greyed out on an edit or batch edit until a field changes.
 
 While you scroll, a thin indicator along the right edge shows where you are in the
 list (it fades away at rest) — with a long history the day headers alone give no

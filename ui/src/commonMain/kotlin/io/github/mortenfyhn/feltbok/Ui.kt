@@ -1338,7 +1338,7 @@ fun DetailScreen(vm: MainViewModel) {
     // Batch mode (#120): the editor is changing the whole selection at once, not one note.
     val batch = vm.batchEditing
     // Same precondition for saving and for copying (copy commits the draft first). Batch edit acts on
-    // existing notes, so Lagre is always allowed (an untouched batch just changes nothing).
+    // existing notes, so it needs no species or locality.
     val canSave = batch || (vm.dSpecies.isNotBlank() && (vm.dLoc != null || vm.nearest() != null))
     // Leaving with unsaved work discards it but offers an undo (#122); an untouched edit just goes
     // back with nothing to undo. A batch edit touches nothing until Lagre, so leaving just returns.
@@ -1503,8 +1503,9 @@ fun DetailScreen(vm: MainViewModel) {
                 TextButton(onClick = { vm.delete() },
                     modifier = Modifier.weight(1f)) { Text(Strings.Detail.delete, color = cs.error) }
             }
+            // Greyed out on an untouched edit or batch edit: saving would change nothing.
             Button(onClick = { vm.save() },
-                enabled = canSave,
+                enabled = canSave && vm.draftHasChanges(),
                 modifier = Modifier.weight(1f)) { Text(Strings.Detail.save) }
         }
     }

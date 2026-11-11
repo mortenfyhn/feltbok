@@ -13,6 +13,7 @@
 - Kartet hopper ikke lenger av og til når du slipper det etter et sveip.
 - Lokaliteter med samme navn som andre blir ikke forveksla ved import.
 - Toppen sier ikke lenger «du er her» når du står like utenfor en lokalitet.
+- «Lagre» er grått når du endrer observasjoner, helt til du faktisk har endra noe.
 - En ny lokalitet du lager fra statuslinja blir gjeldende lokalitet, i stedet for å åpne en tom observasjon.
 - Et trykk like utenfor kanten av en lokalitet på kartet velger den.
 - Ymse småforbedringer på eksportsida.
