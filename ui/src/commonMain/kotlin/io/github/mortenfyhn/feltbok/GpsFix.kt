@@ -29,3 +29,14 @@ fun preferNewFix(candAccuracyM: Float, candNanos: Long, curAccuracyM: Float, cur
     if (candAccuracyM <= curAccuracyM + 20f) return true     // comparable-or-better: track it
     return veryStale                                         // much worse: only to recover a dead fix
 }
+
+/** Each published fix makes the view model rescan all ~80k localities for the nearest one (tens of
+ *  ms on an old phone), and both platforms report about once a second even when you stand still -
+ *  a steady stutter. So publish a fix only when it says something new: you moved a few metres, the
+ *  accuracy got clearly better, or the last one is getting old. */
+fun worthPublishing(f: GpsFix, cur: GpsFix): Boolean {
+    val moved = haversine(f.lat, f.lon, cur.lat, cur.lon) >= 5.0
+    val sharper = !f.accuracyM.isNaN() && (cur.accuracyM.isNaN() || f.accuracyM < cur.accuracyM - 3f)
+    val old = f.elapsedRealtimeNanos - cur.elapsedRealtimeNanos > 15_000_000_000L
+    return moved || sharper || old
+}

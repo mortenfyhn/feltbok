@@ -22,12 +22,14 @@ class LocationTracker(context: Context) : LocationSource {
     private val _fix = MutableStateFlow<GpsFix?>(null)
     override val fix: StateFlow<GpsFix?> = _fix
 
-    private var best: Location? = null
+    private var best: GpsFix? = null
 
     private val listener = LocationListener { loc ->
-        if (isBetter(loc, best)) {
-            best = loc
-            _fix.value = loc.toFix()
+        val f = loc.toFix()
+        val cur = best
+        if (cur == null || preferNewFix(f.accuracyM, f.elapsedRealtimeNanos, cur.accuracyM, cur.elapsedRealtimeNanos) && worthPublishing(f, cur)) {
+            best = f
+            _fix.value = f
         }
     }
 
@@ -45,16 +47,6 @@ class LocationTracker(context: Context) : LocationSource {
 
     override fun stop() {
         manager.removeUpdates(listener)
-    }
-
-    private fun isBetter(candidate: Location, current: Location?): Boolean {
-        if (current == null) return true
-        return preferNewFix(
-            candAccuracyM = if (candidate.hasAccuracy()) candidate.accuracy else Float.NaN,
-            candNanos = candidate.elapsedRealtimeNanos,
-            curAccuracyM = if (current.hasAccuracy()) current.accuracy else Float.NaN,
-            curNanos = current.elapsedRealtimeNanos,
-        )
     }
 
     private fun Location.toFix() = GpsFix(

@@ -34,4 +34,19 @@ class LocationTrackerTest {
         assertFalse(preferNewFix(candAccuracyM = Float.NaN, candNanos = 3 * SEC, curAccuracyM = 8f, curNanos = SEC))
         assertTrue(preferNewFix(candAccuracyM = Float.NaN, candNanos = 100 * SEC, curAccuracyM = 8f, curNanos = SEC))
     }
+
+    // ~1 m of latitude, so jitter and moves can be written in metres.
+    private val m = 1.0 / 111_195
+    private val here = GpsFix(lat = 63.4, lon = 10.4, accuracyM = 8f, elapsedRealtimeNanos = SEC)
+
+    @Test fun standingStillIsNotWorthPublishing() {
+        // the once-a-second stream while you stand still must not trigger a rescan every second
+        assertFalse(worthPublishing(here.copy(lat = here.lat + 2 * m, accuracyM = 7f, elapsedRealtimeNanos = 2 * SEC), here))
+    }
+
+    @Test fun movingSharperOrStaleIsWorthPublishing() {
+        assertTrue(worthPublishing(here.copy(lat = here.lat + 6 * m, elapsedRealtimeNanos = 2 * SEC), here))
+        assertTrue(worthPublishing(here.copy(accuracyM = 4f, elapsedRealtimeNanos = 2 * SEC), here))
+        assertTrue(worthPublishing(here.copy(elapsedRealtimeNanos = 17 * SEC), here))
+    }
 }

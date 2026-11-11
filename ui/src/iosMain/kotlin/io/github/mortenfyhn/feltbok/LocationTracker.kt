@@ -12,9 +12,6 @@ import platform.CoreLocation.CLLocationManagerDelegateProtocol
 import platform.CoreLocation.kCLLocationAccuracyBest
 import platform.Foundation.timeIntervalSince1970
 import platform.darwin.NSObject
-import kotlin.math.PI
-import kotlin.math.cos
-import kotlin.math.sqrt
 
 /** Live GPS fixes from CoreLocation while [start]ed (the Android version uses LocationManager). */
 class LocationTracker : LocationSource {
@@ -59,21 +56,4 @@ class LocationTracker : LocationSource {
             elapsedRealtimeNanos = (timestamp.timeIntervalSince1970 * 1e9).toLong(),
         )
     }
-}
-
-/** Each published fix makes the view model rescan all ~80k localities for the nearest one (tens of
- *  ms on an old iPhone), and CoreLocation reports about once a second even when you stand still - a
- *  steady stutter. So publish a fix only when it says something new: you moved a few metres, the
- *  accuracy got clearly better, or the last one is getting old. */
-private fun worthPublishing(f: GpsFix, cur: GpsFix): Boolean {
-    val moved = metresApart(f.lat, f.lon, cur.lat, cur.lon) >= 5.0
-    val sharper = !f.accuracyM.isNaN() && (cur.accuracyM.isNaN() || f.accuracyM < cur.accuracyM - 3f)
-    val old = f.elapsedRealtimeNanos - cur.elapsedRealtimeNanos > 15_000_000_000L
-    return moved || sharper || old
-}
-
-private fun metresApart(lat1: Double, lon1: Double, lat2: Double, lon2: Double): Double {
-    val x = (lon2 - lon1) * PI / 180 * cos((lat1 + lat2) / 2 * PI / 180)
-    val y = (lat2 - lat1) * PI / 180
-    return sqrt(x * x + y * y) * 6_371_000.0
 }
