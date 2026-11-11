@@ -225,7 +225,7 @@ object Strings {
         const val newButton = "＋ Ny lokalitet"
         const val radiusLabel = "Radius"
         fun meters(m: Int) = "$m m"
-        const val nameLabel = "Navn (valgfritt)"
+        const val nameLabel = "Navn"
         const val namePlaceholder = "Ny lokalitet"
         const val save = "Lagre"
     }

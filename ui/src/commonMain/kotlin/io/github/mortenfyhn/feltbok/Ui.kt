@@ -428,7 +428,9 @@ private fun FeedbackDialog(onDismiss: () -> Unit) {
     AlertDialog(
         onDismissRequest = onDismiss,
         title = { Text(Strings.Feedback.title) },
-        text = { Text(Strings.Feedback.body) },
+        // A paragraph would stretch the dialog to the screen's edges; capped at Material's narrowest
+        // dialog, it only grows as far as the buttons need (#198).
+        text = { Text(Strings.Feedback.body, Modifier.widthIn(max = 232.dp)) },
         confirmButton = {
             TextButton(onClick = {
                 // Issue forms accept query params keyed by field id, so we prefill "teknisk".
