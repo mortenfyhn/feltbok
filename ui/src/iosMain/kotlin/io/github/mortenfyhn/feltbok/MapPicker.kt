@@ -383,7 +383,10 @@ actual fun LocalityScreen(vm: MainViewModel) {
                         modifier = Modifier.fillMaxWidth(),
                     ) { Text(Strings.Picker.save) }
                 }
-                RadiusWheel(newRadius) { newRadius = it }
+                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                    Text(Strings.Picker.radiusLabel, color = cs.onSurfaceVariant, fontSize = 12.sp)
+                    RadiusWheel(newRadius) { newRadius = it }
+                }
             }
         }
         if (footer) PickerFooter(vm, Modifier.bottomInsetPadding())

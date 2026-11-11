@@ -257,18 +257,21 @@ actual fun LocalityScreen(vm: MainViewModel) {
                         modifier = Modifier.fillMaxWidth(),
                     ) { Text(Strings.Picker.save) }
                 }
-                AndroidView(factory = { c ->
-                    NumberPicker(c).apply {
-                        minValue = 0
-                        maxValue = RADII.lastIndex
-                        displayedValues = RADII.map { Strings.Picker.meters(it) }.toTypedArray()
-                        wrapSelectorWheel = false
-                        // Block the inner EditText so long-pressing a value can't pop the keyboard.
-                        descendantFocusability = ViewGroup.FOCUS_BLOCK_DESCENDANTS
-                        value = RADII.indexOf(newRadius)
-                        setOnValueChangedListener { _, _, i -> newRadius = RADII[i] }
-                    }
-                }, update = { it.value = RADII.indexOf(newRadius) })
+                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                    Text(Strings.Picker.radiusLabel, color = cs.onSurfaceVariant, fontSize = 12.sp)
+                    AndroidView(factory = { c ->
+                        NumberPicker(c).apply {
+                            minValue = 0
+                            maxValue = RADII.lastIndex
+                            displayedValues = RADII.map { Strings.Picker.meters(it) }.toTypedArray()
+                            wrapSelectorWheel = false
+                            // Block the inner EditText so long-pressing a value can't pop the keyboard.
+                            descendantFocusability = ViewGroup.FOCUS_BLOCK_DESCENDANTS
+                            value = RADII.indexOf(newRadius)
+                            setOnValueChangedListener { _, _, i -> newRadius = RADII[i] }
+                        }
+                    }, update = { it.value = RADII.indexOf(newRadius) })
+                }
             }
         }
         if (!newMode && Country.syncEnabled) PickerFooter(vm)
