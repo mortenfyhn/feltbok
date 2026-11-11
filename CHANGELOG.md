@@ -11,7 +11,6 @@
 - Kartet henger bedre med når du zoomer.
 - Kartet henger ikke lenger etter når du zoomer raskt med to fingre.
 - Kartet hopper ikke lenger av og til når du slipper det etter et sveip.
-- Lokaliteter med samme navn som andre blir ikke forveksla ved import.
 - Toppen sier ikke lenger «du er her» når du står like utenfor en lokalitet.
 - «Lagre» er grått når du endrer observasjoner, helt til du faktisk har endra noe.
 - En ny lokalitet du lager fra statuslinja blir gjeldende lokalitet, i stedet for å åpne en tom observasjon.
@@ -25,6 +24,10 @@
 - «Arkiver» heter nå «Slett», og arkivet heter «Papirkurv». Sletta observasjoner kan fortsatt gjenopprettes derfra.
 - Bunnlinja er skjult mens du markerer, så du ikke åpner papirkurven ved et uhell.
 - Medobservatørene står alfabetisk etter etternavn, og brukeraliaset vises bare når det trengs for å skille folk med samme navn.
+
+## v1.4.1 (11. november 2026)
+
+- Lokaliteter som deler navn blir ikke forveksla ved import.
 
 ## v1.4 (2. november 2026)
 

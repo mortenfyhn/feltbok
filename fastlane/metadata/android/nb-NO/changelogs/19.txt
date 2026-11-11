@@ -1,0 +1,1 @@
+• Lokaliteter som deler navn blir ikke forveksla ved import.
