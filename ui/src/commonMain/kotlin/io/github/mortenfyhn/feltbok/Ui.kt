@@ -252,27 +252,33 @@ fun ListScreen(vm: MainViewModel, listState: LazyListState) {
                     ) { Text("+", fontSize = 30.sp) }
                 }
             }
-            // Footer bar: Arkiv / Tilbakemelding, with the version tucked in the centre.
-            HorizontalDivider(color = cs.outline.copy(alpha = 0.4f))
-            // The two buttons sit at the edges; the version is overlaid dead-centre on the screen
-            // (a weighted slot would centre it between the buttons, which is off-centre since the
-            // labels differ in width). It overflows visibly, so the full string stays readable:
-            // clean in the gap on release ("v0.7"), spilling over the buttons on a long dev build.
-            // Tapping the version opens the About/credits dialog — the conventional home for the
-            // #139 attribution, stashed where about-info is expected without new chrome.
-            Box(Modifier.fillMaxWidth().background(cs.surface).bottomInsetPadding(), Alignment.Center) {
-                Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
-                    // Always visible, even with nothing archived (#153) - so the archive is
-                    // discoverable before you first need it.
-                    Text(Strings.Archive.title, color = cs.primary, fontWeight = FontWeight.Medium, fontSize = 13.sp,
-                        maxLines = 1, modifier = Modifier.clickable { vm.openArchive() }.padding(horizontal = 14.dp, vertical = 10.dp))
-                    Spacer(Modifier.weight(1f))
-                    Text(Strings.Notes.feedback, color = cs.primary, fontWeight = FontWeight.Medium, fontSize = 13.sp,
-                        maxLines = 1, modifier = Modifier.clickable { showFeedback = true }.padding(horizontal = 14.dp, vertical = 10.dp))
+            // Footer bar: Papirkurv / Tilbakemelding, with the version tucked in the centre.
+            // Hidden while marking (#192): after a long drag-select the thumb is down here, and a tap
+            // meant for the bar's Slett opened the papirkurv instead.
+            // The spacer keeps the list clear of the system navigation bar, which the footer did.
+            if (selecting) Spacer(Modifier.bottomInsetPadding())
+            else Column {
+                HorizontalDivider(color = cs.outline.copy(alpha = 0.4f))
+                // The two buttons sit at the edges; the version is overlaid dead-centre on the screen
+                // (a weighted slot would centre it between the buttons, which is off-centre since the
+                // labels differ in width). It overflows visibly, so the full string stays readable:
+                // clean in the gap on release ("v0.7"), spilling over the buttons on a long dev build.
+                // Tapping the version opens the About/credits dialog — the conventional home for the
+                // #139 attribution, stashed where about-info is expected without new chrome.
+                Box(Modifier.fillMaxWidth().background(cs.surface).bottomInsetPadding(), Alignment.Center) {
+                    Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+                        // Always visible, even with nothing deleted (#153) - so the papirkurv is
+                        // discoverable before you first need it.
+                        Text(Strings.Archive.title, color = cs.primary, fontWeight = FontWeight.Medium, fontSize = 13.sp,
+                            maxLines = 1, modifier = Modifier.clickable { vm.openArchive() }.padding(horizontal = 14.dp, vertical = 10.dp))
+                        Spacer(Modifier.weight(1f))
+                        Text(Strings.Notes.feedback, color = cs.primary, fontWeight = FontWeight.Medium, fontSize = 13.sp,
+                            maxLines = 1, modifier = Modifier.clickable { showFeedback = true }.padding(horizontal = 14.dp, vertical = 10.dp))
+                    }
+                    Text(AppInfo.gitVersion, color = cs.onSurfaceVariant.copy(alpha = 0.6f),
+                        fontSize = 11.sp, maxLines = 1, softWrap = false, overflow = TextOverflow.Visible,
+                        modifier = Modifier.align(Alignment.BottomCenter).clickable { showAbout = true }.offset(y = 5.dp))
                 }
-                Text(AppInfo.gitVersion, color = cs.onSurfaceVariant.copy(alpha = 0.6f),
-                    fontSize = 11.sp, maxLines = 1, softWrap = false, overflow = TextOverflow.Visible,
-                    modifier = Modifier.align(Alignment.BottomCenter).clickable { showAbout = true }.offset(y = 5.dp))
             }
         }
         // Round minimap on the left of the top bar, clipping the top and left edges equally.
@@ -1142,8 +1148,8 @@ private fun CoObsSwitch(on: Boolean, enabled: Boolean = true) {
  *  screen's edge like a native app's. Every screen starts with a green header but the species
  *  search, so one band in [App] serves them all, and slides between screens never change it. */
 @Composable
-internal fun StatusBarBand() {
-    Box(Modifier.fillMaxWidth().windowInsetsTopHeight(WindowInsets.safeDrawing).background(MaterialTheme.colorScheme.primary))
+internal fun StatusBarBand(color: Color = MaterialTheme.colorScheme.primary) {
+    Box(Modifier.fillMaxWidth().windowInsetsTopHeight(WindowInsets.safeDrawing).background(color))
 }
 
 /** Keeps a screen's bottom edge clear of the home indicator or gesture bar. [App] only keeps the
@@ -1235,7 +1241,10 @@ fun SettingsScreen(vm: MainViewModel) {
  *  difference is that a plain tap outside marking does nothing, since an archived note can't be
  *  opened. Restore is the single action; true deletion is deliberately absent. */
 @Composable
-fun ArchiveScreen(vm: MainViewModel) {
+fun ArchiveScreen(vm: MainViewModel) = TrashTheme { ArchiveScreenContent(vm) }
+
+@Composable
+private fun ArchiveScreenContent(vm: MainViewModel) {
     val cs = MaterialTheme.colorScheme
     val selecting = vm.selectionMode
     val haptic = LocalHapticFeedback.current

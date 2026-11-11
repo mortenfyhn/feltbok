@@ -17,7 +17,7 @@ final class LaunchTests: XCTestCase {
             return false
         }
         app.launch()
-        XCTAssertTrue(element(app, "Arkiv").waitForExistence(timeout: 60), "the list's footer")
+        XCTAssertTrue(element(app, "Papirkurv").waitForExistence(timeout: 60), "the list's footer")
 
         app.swipeUp() // harmless on the list; clears the location prompt if it's up
 

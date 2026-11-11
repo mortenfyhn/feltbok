@@ -81,7 +81,7 @@ fun App(vm: MainViewModel, screens: @Composable (LazyListState) -> Unit = { Scre
             // that screen leaves composition.
             val listState = rememberLazyListState()
             Column {
-                StatusBarBand()
+                StatusBarBand(if (vm.screen == Screen.ARCHIVE) TrashBrown else MaterialTheme.colorScheme.primary)
                 Scaffold(
                     // The window is edge-to-edge. Only the sides and the keyboard are kept clear here:
                     // the band above fills the status bar, and each screen pads its own bottom edge
@@ -89,8 +89,8 @@ fun App(vm: MainViewModel, screens: @Composable (LazyListState) -> Unit = { Scre
                     modifier = Modifier.weight(1f)
                         .windowInsetsPadding(WindowInsets.safeDrawing.only(WindowInsetsSides.Horizontal)).imePadding(),
                     // Lifted above the list's footer bar (Material floats snackbars above persistent
-                    // bottom chrome), so the undo toast can't cover the Arkiv/feedback links - which it
-                    // otherwise does exactly when you've just archived and might want the archive. The
+                    // bottom chrome), so the undo toast can't cover the Papirkurv/feedback links - which it
+                    // otherwise does exactly when you've just deleted and might want the papirkurv. The
                     // footer is a single fixed 13sp text row, so a constant clears it.
                     snackbarHost = { SnackbarHost(snackbar, Modifier.padding(bottom = 40.dp)) },
                     containerColor = Color.Transparent,
