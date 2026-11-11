@@ -47,6 +47,21 @@ class NewLocalityTest {
         assertNull(vm.dLoc)
     }
 
+    // A spot only outlives a restart through a live note that uses it, so restoring that note
+    // from the archive must make the spot pickable again without another restart.
+    @Test
+    fun restoringANoteBringsBackItsNewSpot() {
+        val platform = FakePlatform()
+        appendToArchive(platform.storage, listOf(Note(id = 1L, species = "kjøttmeis", latin = "", count = 1,
+            age = "", activity = "", sex = "", publicComment = "", privateComment = "",
+            locName = "Brygga", locFull = "Brygga", lat = 59.9, lon = 10.7, newLoc = true, locRadius = 50)))
+        vm = MainViewModel(platform)
+        vm.openArchive()
+        vm.toggleSelect(1L)
+        vm.restoreSelected()
+        assertTrue(vm.localities.any { it.newLoc && it.lokalitet == "Brygga" && it.radius == 50.0 })
+    }
+
     @Test
     fun newSpotFromEditorGoesToTheDraft() {
         vm.openLocalityPicker()

@@ -190,6 +190,7 @@ class MainViewModel(private val platform: Platform) : ViewModel() {
         archived.removeAll { it.id in selected }
         saveArchive(storage, archived.toList())
         notes.addAll(sel)
+        addNewLocalitiesOf(sel)   // a restored note's brand-new spot is pickable again at once
         clearSelection()
         persist()
     }
@@ -452,9 +453,7 @@ class MainViewModel(private val platform: Platform) : ViewModel() {
     private fun onLocalitiesLoaded() {
         // Re-add brand-new spots from saved notes, so a custom locality stays selectable
         // across restarts (until it's been uploaded and adjusted on the website).
-        for (n in notes) if (n.newLoc && n.locName.isNotBlank())
-            addNewLocality(Locality("", n.locName, "", n.kommune, n.lat, n.lon, 0,
-                n.locRadius.toDouble(), public = false, newLoc = true))
+        addNewLocalitiesOf(notes)
         nearestFix = null   // invalidate the fix-keyed memo so nearest() rescans now that we have data
         deferredLiveView?.let { (s, w, n, e) -> deferredLiveView = null; if (screen == Screen.LOCALITY) fetchLiveSites(s, w, n, e) }
     }
@@ -821,6 +820,13 @@ class MainViewModel(private val platform: Platform) : ViewModel() {
             radiusM.toDouble(), public = false, newLoc = true)
         addNewLocality(loc)        // make it immediately selectable for further observations
         return loc
+    }
+
+    /** Add the brand-new spots [ns] were saved at to the pickable list. */
+    private fun addNewLocalitiesOf(ns: List<Note>) {
+        for (n in ns) if (n.newLoc && n.locName.isNotBlank())
+            addNewLocality(Locality("", n.locName, "", n.kommune, n.lat, n.lon, 0,
+                n.locRadius.toDouble(), public = false, newLoc = true))
     }
 
     /** Add a brand-new spot to the pickable list (deduped by name + position). */
