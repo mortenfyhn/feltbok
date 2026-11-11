@@ -7,6 +7,8 @@ import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
+import org.junit.Assert.assertEquals
+import org.junit.Assert.assertNull
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -73,5 +75,34 @@ class EditFlowTest {
 
         marked.forEach { rule.onNodeWithText("5 $it", substring = true).assertIsDisplayed() }
         rule.onNodeWithText("5 $untouched", substring = true).assertDoesNotExist()
+    }
+
+    /**
+     * Unticking "Ulik sluttid" must drop the end, not just hide its row: a hidden end would still
+     * export as a range. Ticking it again in the same dialog brings the end back. `clampEnd` and the
+     * save path are unit-tested; this covers the checkbox wiring inside the dialog.
+     */
+    @Test
+    fun untickingUlikSluttidDropsTheEnd() {
+        val vm = start()
+        val end = rule.runOnIdle {
+            vm.seedNote("kjøttmeis")
+            vm.notes[0] = vm.notes[0].copy(endTime = vm.notes[0].time + 2 * 3_600_000)
+            vm.notes[0].endTime
+        }
+
+        rule.onNodeWithText("kjøttmeis", substring = true).performClick()
+        rule.onNodeWithText(Strings.Detail.time).performClick()
+        rule.onNodeWithText(Strings.Time.to).assertIsDisplayed()
+
+        rule.onNodeWithText(Strings.Time.endTime).performClick()
+        rule.onNodeWithText(Strings.Time.to).assertDoesNotExist()
+        rule.onNodeWithText(Strings.Time.endTime).performClick()
+        assertEquals(end, rule.runOnIdle { vm.dEndTime })
+
+        rule.onNodeWithText(Strings.Time.endTime).performClick()
+        rule.onNodeWithText(Strings.Time.done).performClick()
+        rule.onNodeWithText(Strings.Detail.save).performClick()
+        assertNull(rule.runOnIdle { vm.notes[0].endTime })
     }
 }
