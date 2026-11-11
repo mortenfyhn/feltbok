@@ -9,6 +9,7 @@ import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNull
+import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
 
@@ -25,12 +26,21 @@ class NewLocalityTest {
     @After
     fun tearDown() = Dispatchers.resetMain()
 
+    // Placing a spot stays on the map, so you see it and tap it to pick it.
+    @Test
+    fun newSpotStaysOnTheMap() {
+        vm.openLocalityPicker()
+        val loc = vm.createNewLocality(59.9, 10.7, 50, "Brygga")
+        assertEquals(Screen.LOCALITY, vm.screen)
+        assertTrue(loc in vm.localities)
+    }
+
     // #196: a spot placed from the status strip's picker becomes the current locality and returns to
     // the list, instead of opening a blank observation and leaving pickingCurrent set.
     @Test
     fun newSpotFromStatusStripBecomesCurrent() {
         vm.openCurrentLocalityPicker()
-        vm.createNewLocality(59.9, 10.7, 50, "Brygga")
+        vm.pickLocality(vm.createNewLocality(59.9, 10.7, 50, "Brygga"))
         assertEquals(Screen.LIST, vm.screen)
         assertFalse(vm.pickingCurrent)
         assertEquals("Brygga", vm.currentLocality()?.lokalitet)
@@ -40,7 +50,7 @@ class NewLocalityTest {
     @Test
     fun newSpotFromEditorGoesToTheDraft() {
         vm.openLocalityPicker()
-        vm.createNewLocality(59.9, 10.7, 50, "Brygga")
+        vm.pickLocality(vm.createNewLocality(59.9, 10.7, 50, "Brygga"))
         assertEquals(Screen.DETAIL, vm.screen)
         assertEquals("Brygga", vm.dLoc?.lokalitet)
     }

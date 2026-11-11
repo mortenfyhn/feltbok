@@ -38,7 +38,7 @@ class ExportFlowTest {
         rule.runOnUiThread {
             vm.startAdd()
             vm.pickSpecies(vm.species.first { it.norsk == "kjøttmeis" })
-            vm.createNewLocality(63.43, 10.39, 100, "Testlokalitet")
+            vm.pickLocality(vm.createNewLocality(63.43, 10.39, 100, "Testlokalitet"))
             vm.save()
         }
 

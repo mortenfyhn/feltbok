@@ -809,17 +809,18 @@ class MainViewModel(private val platform: Platform) : ViewModel() {
         return diff
     }
 
-    /** Place a brand-new spot (panned-to map centre + chosen radius + name). It exports
-     *  with coordinates, which mints the locality on Artsobservasjoner. The name is optional:
-     *  blank gets a placeholder you can rename later on the website. */
-    fun createNewLocality(lat: Double, lon: Double, radiusM: Int, name: String) {
+    /** Place a brand-new spot (panned-to map centre + chosen radius + name) on the picker map, where
+     *  you then tap it to pick it. It exports with coordinates, which mints the locality on
+     *  Artsobservasjoner. The name is optional: blank gets a placeholder you can rename later on
+     *  the website. */
+    fun createNewLocality(lat: Double, lon: Double, radiusM: Int, name: String): Locality {
         val finalName = name.trim().ifBlank { "Ny lokalitet" }
         // Stamp the surrounding kommune now (localities are loaded - you just placed it on the map),
         // so its observations export under the right kommune without a later lookup.
         val loc = Locality("", finalName, "", nearestKommune(lat, lon, localities), lat, lon, 0,
             radiusM.toDouble(), public = false, newLoc = true)
         addNewLocality(loc)        // make it immediately selectable for further observations
-        pickLocality(loc)
+        return loc
     }
 
     /** Add a brand-new spot to the pickable list (deduped by name + position). */

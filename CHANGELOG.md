@@ -15,6 +15,7 @@
 - Toppen sier ikke lenger «du er her» når du står like utenfor en lokalitet.
 - «Lagre» er grått når du endrer observasjoner, helt til du faktisk har endra noe.
 - En ny lokalitet du lager fra statuslinja blir gjeldende lokalitet, i stedet for å åpne en tom observasjon.
+- Når du lager en ny lokalitet blir du på kartet, så du ser den før du velger den.
 - Et trykk like utenfor kanten av en lokalitet på kartet velger den.
 - Ymse småforbedringer på eksportsida.
 - Tidsvalget er ryddigere og brekker ikke lenger linjene med stor tekst.

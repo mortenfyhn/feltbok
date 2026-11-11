@@ -196,6 +196,7 @@ actual fun LocalityScreen(vm: MainViewModel) {
     val density = LocalDensity.current.density
     var tapped by remember { mutableStateOf<Locality?>(null) }
     var newMode by remember { mutableStateOf(false) }      // placing a brand-new spot
+    var created by remember { mutableStateOf<Locality?>(null) }  // the spot just placed, highlighted until tapped
     var newRadius by remember { mutableStateOf(100) }
     var newName by remember { mutableStateOf("") }
     var sheetH by remember { mutableStateOf(0) }           // bottom-panel height (px), to centre the crosshair
@@ -262,7 +263,7 @@ actual fun LocalityScreen(vm: MainViewModel) {
             }
             built = bb; builtZoom = p.zoom; builtKey = key
         }
-        snapshotFlow { proj() to Triple(tapped ?: vm.pickerFocus, vm.fix, vm.localities.size) }
+        snapshotFlow { proj() to Triple(tapped ?: created ?: vm.pickerFocus, vm.fix, vm.localities.size) }
             .conflate()
             .collect { (p, key) ->
                 if (p == null) return@collect
@@ -334,7 +335,7 @@ actual fun LocalityScreen(vm: MainViewModel) {
                 uiOptions = MapUiOptions { bindings { doubleTap { enabled = false } } },
                 overlay = {},
             )
-            overlay.picked = tapped ?: vm.pickerFocus
+            overlay.picked = tapped ?: created ?: vm.pickerFocus
             if (newMode) {
                 Canvas(Modifier.fillMaxSize()) {
                     val p = proj() ?: return@Canvas
@@ -378,7 +379,8 @@ actual fun LocalityScreen(vm: MainViewModel) {
                         onClick = {
                             val p = proj() ?: return@Button
                             val (lat, lon) = p.fromPixels(p.widthPx / 2, (p.heightPx - sheetH) / 2)
-                            vm.createNewLocality(lat, lon, newRadius, newName)
+                            created = vm.createNewLocality(lat, lon, newRadius, newName)
+                            newMode = false; newName = ""
                         },
                         modifier = Modifier.fillMaxWidth(),
                     ) { Text(Strings.Picker.save) }

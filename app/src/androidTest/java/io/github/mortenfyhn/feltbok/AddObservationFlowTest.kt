@@ -22,7 +22,7 @@ import org.junit.runner.RunWith
  *
  * Saving needs a locality, which normally comes from GPS or the locality-picker map. Neither drives
  * reliably in a test (no fix; the map is pixel/projection-bound), so we seed one through the
- * picker's own public entry point [MainViewModel.createNewLocality] - the single non-UI step.
+ * picker's own public entry point [MainViewModel.createNewLocality] and [MainViewModel.pickLocality] - the only non-UI steps.
  */
 @RunWith(AndroidJUnit4::class)
 class AddObservationFlowTest {
@@ -52,7 +52,7 @@ class AddObservationFlowTest {
         rule.onNodeWithText("kjøttmeis").performClick()
 
         // Detail screen: Save is disabled without a locality. Seed one (see class note).
-        rule.runOnUiThread { vm.createNewLocality(63.43, 10.39, 100, "Testlokalitet") }
+        rule.runOnUiThread { vm.pickLocality(vm.createNewLocality(63.43, 10.39, 100, "Testlokalitet")) }
 
         // Save returns to the list, where NoteRow renders "<count> <species>".
         rule.onNodeWithText(Strings.Detail.save).performClick()

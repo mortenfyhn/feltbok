@@ -29,7 +29,7 @@ class ClearAppDataRule : ExternalResource() {
 fun MainViewModel.seedNote(s: Species) {
     startAdd()
     pickSpecies(s)
-    createNewLocality(63.43, 10.39, 100, SEED_LOCALITY)
+    pickLocality(createNewLocality(63.43, 10.39, 100, SEED_LOCALITY))
     save()
 }
 

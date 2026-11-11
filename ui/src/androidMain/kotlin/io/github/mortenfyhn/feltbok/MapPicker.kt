@@ -93,6 +93,7 @@ actual fun LocalityScreen(vm: MainViewModel) {
     val ctx = LocalContext.current
     var tapped by remember { mutableStateOf<Locality?>(null) }
     var newMode by remember { mutableStateOf(false) }      // placing a brand-new spot
+    var created by remember { mutableStateOf<Locality?>(null) }  // the spot just placed, highlighted until tapped
     var newRadius by remember { mutableStateOf(100) }
     var newName by remember { mutableStateOf("") }
     var sheetH by remember { mutableStateOf(0) }           // bottom-panel height (px), to centre the crosshair
@@ -195,7 +196,7 @@ actual fun LocalityScreen(vm: MainViewModel) {
                 update = { m ->
                     // Only touch the overlay when something actually changed, so a GPS tick
                     // mid-gesture doesn't force a redraw (which flickers the view).
-                    val sel = tapped ?: vm.pickerFocus  // highlight the just-tapped one, else the current pick
+                    val sel = tapped ?: created ?: vm.pickerFocus  // highlight the just-tapped one, else the current pick
                     val newFix = vm.fix?.let { GeoPoint(it.lat, it.lon) }
                     val newAcc = vm.fix?.accuracyM ?: Float.NaN
                     val nr = if (newMode) newRadius.toDouble() else -1.0
@@ -252,7 +253,8 @@ actual fun LocalityScreen(vm: MainViewModel) {
                     Button(
                         onClick = {
                             val gp = mapView.projection.fromPixels(mapView.width / 2, (mapView.height - sheetH) / 2)
-                            vm.createNewLocality(gp.latitude, gp.longitude, newRadius, newName)
+                            created = vm.createNewLocality(gp.latitude, gp.longitude, newRadius, newName)
+                            newMode = false; newName = ""
                         },
                         modifier = Modifier.fillMaxWidth(),
                     ) { Text(Strings.Picker.save) }

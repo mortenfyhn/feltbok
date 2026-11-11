@@ -17,8 +17,8 @@ not a one-off tap-through.
   returns to the intact editor, and undo after a **saved single edit** restores the original values,
   **Back** out of species search, the export overlay, Synk, settings, the map picker and the
   co-observer picker, the **list keeping its scroll position** across a trip into the editor,
-  **batch edit** writing only to the marked notes, and **Kopier** carrying the original's locality
-  into the new draft.
+  **batch edit** writing only to the marked notes, **Kopier** carrying the original's locality
+  into the new draft, and saving a **new spot** keeping you on the picker.
 
 ## Hand-test these — automation can't (or doesn't yet)
 
@@ -28,7 +28,7 @@ not a one-off tap-through.
 - **Polygon** localities: a tap inside selects it; a tap well outside its footprint does **not**.
 - A large locality stays selectable when it (nearly) fills the screen, but a zoomed-in tap doesn't
   grab a huge one you're only skimming the edge of.
-- **Create a new spot** (＋), drop it, confirm it's selectable for the next observation.
+- **Create a new spot** (＋): after Lagre it's highlighted on the map, and tapping it picks it.
 
 **GPS-dependent behaviour** (no fix in the test harness, so unverified there)
 - Status strip shows the nearest locality + distance once GPS settles; "du er her" within range.
