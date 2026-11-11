@@ -19,6 +19,7 @@
 - Et trykk like utenfor kanten av en lokalitet på kartet velger den.
 - Ymse småforbedringer på eksportsida.
 - Tidsvalget er ryddigere og brekker ikke lenger linjene med stor tekst.
+- Bedre plass med stor tekst og på små skjermer: valgvinduene er ikke lenger like breie som skjermen, og tekst overlapper ikke eller brekker midt i ord.
 - Velg medobservatører med brytere, og slett navn med langt trykk, som i observasjonslista. Sletting kan angres.
 - Hjulet for radius på en ny lokalitet er merka «Radius».
 - «Arkiver» heter nå «Slett», og arkivet heter «Papirkurv». Sletta observasjoner kan fortsatt gjenopprettes derfra.

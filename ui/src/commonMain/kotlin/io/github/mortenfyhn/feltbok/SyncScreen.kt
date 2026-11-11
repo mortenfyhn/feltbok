@@ -41,8 +41,10 @@ fun PickerFooter(vm: MainViewModel, modifier: Modifier = Modifier) {
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(8.dp),
         ) {
+            // Wraps rather than clip its last word with large text (#198); the spinner keeps its room.
             Text(if (loggedIn) Strings.Sync.update else Strings.Sync.loginForPrivate,
-                color = cs.primary, fontWeight = FontWeight.Medium, fontSize = 13.sp, maxLines = 1)
+                color = cs.primary, fontWeight = FontWeight.Medium, fontSize = 13.sp,
+                modifier = Modifier.weight(1f, fill = false))
             if (vm.mySitesBusy) CircularProgressIndicator(Modifier.size(14.dp), color = cs.primary, strokeWidth = 2.dp)
         }
     }

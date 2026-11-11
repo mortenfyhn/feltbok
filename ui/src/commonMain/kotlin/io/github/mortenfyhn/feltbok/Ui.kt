@@ -17,8 +17,10 @@ import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.FlowRow
+import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.RowScope
@@ -40,7 +42,6 @@ import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.layout.windowInsetsTopHeight
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
@@ -75,6 +76,7 @@ import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -122,6 +124,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.Constraints
+import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -426,7 +429,9 @@ private fun FeedbackDialog(onDismiss: () -> Unit) {
     AlertDialog(
         onDismissRequest = onDismiss,
         title = { Text(Strings.Feedback.title) },
-        text = { Text(Strings.Feedback.body) },
+        // A paragraph would stretch the dialog to the screen's edges; capped at Material's narrowest
+        // dialog, it only grows as far as the buttons need (#198).
+        text = { Text(Strings.Feedback.body, Modifier.widthIn(max = 232.dp)) },
         confirmButton = {
             TextButton(onClick = {
                 // Issue forms accept query params keyed by field id, so we prefill "teknisk".
@@ -457,7 +462,10 @@ private fun SelectionBar(vm: MainViewModel, onEdit: () -> Unit, modifier: Modifi
     // Deleting several notes at once is surprising, so confirm it (#156). A single mark deletes
     // straight away - the undo snackbar is enough of a safety net there.
     var confirmDelete by remember { mutableStateOf(false) }
-    Row(
+    // The labels stop growing past 1.2x text size, as iOS's own bar buttons do: any larger and four
+    // actions can't share a narrow phone's width without breaking mid-word ("Eksport/er", #198).
+    val d = LocalDensity.current
+    CompositionLocalProvider(LocalDensity provides Density(d.density, d.fontScale.coerceAtMost(1.2f))) { Row(
         modifier.background(MaterialTheme.colorScheme.primary)
             // The bar overlays the status strip, whose locality area is clickable - swallow taps that
             // miss an action (e.g. on the count) so they don't fall through and open the map picker.
@@ -468,8 +476,7 @@ private fun SelectionBar(vm: MainViewModel, onEdit: () -> Unit, modifier: Modifi
         Text("✕", color = Color.White, fontWeight = FontWeight.SemiBold, fontSize = 20.sp,
             modifier = Modifier.clip(CircleShape).clickable { vm.clearSelection() }.padding(6.dp))
         Spacer(Modifier.width(8.dp))
-        Text(Strings.Notes.selected(vm.selected.size), color = Color.White,
-            fontWeight = FontWeight.SemiBold, modifier = Modifier.weight(1f))
+        SelectedCount(vm.selected.size, Modifier.weight(1f))
         Text(Strings.Notes.edit, color = Color.White, fontWeight = FontWeight.Medium, fontSize = 14.sp,
             modifier = Modifier.clip(RoundedCornerShape(8.dp)).clickable { onEdit() }
                 .padding(horizontal = 10.dp, vertical = 8.dp))
@@ -485,7 +492,7 @@ private fun SelectionBar(vm: MainViewModel, onEdit: () -> Unit, modifier: Modifi
         ) {
             Text(Strings.Notes.export, color = Color.White, fontWeight = FontWeight.Medium, fontSize = 14.sp)
         }
-    }
+    } }
     if (confirmDelete) {
         val cs = MaterialTheme.colorScheme
         AlertDialog(
@@ -500,6 +507,17 @@ private fun SelectionBar(vm: MainViewModel, onEdit: () -> Unit, modifier: Modifi
             dismissButton = { TextButton(onClick = { confirmDelete = false }) { Text(Strings.cancel) } },
         )
     }
+}
+
+/** A selection bar's "N markert". Large text on a narrow phone leaves it too little room beside the
+ *  actions, and it broke mid-word ("mar/ker", #198); then it drops the word and keeps the number, or
+ *  at the very largest sizes drops out (the marked rows still show), for as long as the bar is up. */
+@Composable
+private fun SelectedCount(n: Int, modifier: Modifier) {
+    var shrink by remember { mutableIntStateOf(0) }
+    Text(when (shrink) { 0 -> Strings.Notes.selected(n); 1 -> "$n"; else -> "" }, color = Color.White,
+        fontWeight = FontWeight.SemiBold, maxLines = 1, softWrap = false,
+        onTextLayout = { if (it.hasVisualOverflow && shrink < 2) shrink++ }, modifier = modifier)
 }
 
 /** The leading select-hint circle on rows and day headers while marking (#120): a hollow ring that
@@ -1164,8 +1182,8 @@ internal fun Modifier.bottomInsetPadding() = windowInsetsPadding(WindowInsets.sa
  *  for screens that discard nothing; a screen that throws away a draft passes a bare "✕" (the
  *  conventional dismiss - honest, since unlike a back chevron it doesn't imply the draft is kept)
  *  and routes [onCancel] through a confirm. Title is centred (Apple/Material modal convention),
- *  padded so a long one ellipsizes instead of sliding under the side controls. [trailing] is the
- *  optional right-side action. */
+ *  kept clear of the side controls so a long one ellipsizes instead of sliding under them.
+ *  [trailing] is the optional right-side action. */
 @Composable
 internal fun ScreenHeader(
     title: String,
@@ -1174,20 +1192,29 @@ internal fun ScreenHeader(
     cancelContent: @Composable () -> Unit = { Text("‹ ${Strings.back}", color = Color.White) },
     trailing: @Composable RowScope.() -> Unit = {},
 ) {
-    Box(
-        modifier.fillMaxWidth().background(MaterialTheme.colorScheme.primary),
-        contentAlignment = Alignment.Center,
-    ) {
-        Text(title, color = Color.White, fontWeight = FontWeight.SemiBold, fontSize = 16.sp,
-            textAlign = TextAlign.Center, maxLines = 1, overflow = TextOverflow.Ellipsis,
-            modifier = Modifier.fillMaxWidth().padding(horizontal = 96.dp))
-        Row(
-            Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically,
-        ) {
+    Layout(
+        content = {
             TextButton(onClick = onCancel, modifier = Modifier.padding(start = headerLeadingInset)) { cancelContent() }
             Row(verticalAlignment = Alignment.CenterVertically) { trailing() }
+            Text(title, color = Color.White, fontWeight = FontWeight.SemiBold, fontSize = 16.sp,
+                maxLines = 1, overflow = TextOverflow.Ellipsis)
+        },
+        modifier = modifier.fillMaxWidth().background(MaterialTheme.colorScheme.primary),
+    ) { measurables, constraints ->
+        // The title gets the measured gap between the side controls, not a fixed inset: they grow
+        // with large text, and on a narrow phone "+ Ny lokalitet" ran under "Velg lokalitet"
+        // (#198). Centred on the screen while it fits, else shifted toward the narrower control.
+        val w = constraints.maxWidth
+        val loose = constraints.copy(minWidth = 0, minHeight = 0)
+        val lead = measurables[0].measure(loose)
+        val trail = measurables[1].measure(loose)
+        val title = measurables[2].measure(loose.copy(maxWidth = (w - lead.width - trail.width).coerceAtLeast(0)))
+        val h = maxOf(lead.height, trail.height, title.height, constraints.minHeight)
+        layout(w, h) {
+            lead.placeRelative(0, (h - lead.height) / 2)
+            trail.placeRelative(w - trail.width, (h - trail.height) / 2)
+            val x = ((w - title.width) / 2).coerceIn(lead.width, maxOf(lead.width, w - trail.width - title.width))
+            title.placeRelative(x, (h - title.height) / 2)
         }
     }
 }
@@ -1316,8 +1343,7 @@ private fun ArchiveSelectionBar(vm: MainViewModel, modifier: Modifier = Modifier
         Text("✕", color = Color.White, fontWeight = FontWeight.SemiBold, fontSize = 20.sp,
             modifier = Modifier.clip(CircleShape).clickable { vm.clearSelection() }.padding(6.dp))
         Spacer(Modifier.width(8.dp))
-        Text(Strings.Notes.selected(vm.selected.size), color = Color.White,
-            fontWeight = FontWeight.SemiBold, modifier = Modifier.weight(1f))
+        SelectedCount(vm.selected.size, Modifier.weight(1f))
         Box(
             Modifier.clip(RoundedCornerShape(8.dp))
                 .border(1.dp, Color.White.copy(alpha = 0.7f), RoundedCornerShape(8.dp))
@@ -1624,17 +1650,22 @@ private fun DropdownRow(
     var open by remember { mutableStateOf(false) }
     FieldRow(label, onClick = { open = true }) {
         // A set value wins; otherwise, in batch mode, preview the marked notes' current values.
-        if (value.isNotBlank()) Text(value, fontWeight = FontWeight.Medium) else BatchHint(batchHint)
+        // A multi-word value wraps at its spaces; a single word that can't fit ellipsizes instead of
+        // breaking mid-word ("Vitenskapeli/g" with the largest text on a narrow phone, #198).
+        if (value.isNotBlank()) Text(value, fontWeight = FontWeight.Medium, overflow = TextOverflow.Ellipsis,
+            maxLines = if (' ' in value) Int.MAX_VALUE else 1)
+        else BatchHint(batchHint)
     }
     if (!open) return
 
     // A leading clear row (unless the field is always-set, e.g. the language settings). A muted dash
     // (rather than the website's truly-blank option or a worded "Ingen"): it reads as "no value" at a
     // glance without looking like dead space or like just another option in the list.
-    val rows: LazyListScope.() -> Unit = {
-        if (clearable) item { OptionItem("—", value.isBlank(), fullScreen, none = true) { onSelect(""); open = false } }
-        items(options) { opt -> OptionItem(opt, opt == value, fullScreen) { onSelect(opt); open = false } }
-    }
+    @Composable
+    fun Option(opt: String) =
+        if (opt.isEmpty()) OptionItem("—", value.isBlank(), fullScreen, none = true) { onSelect(""); open = false }
+        else OptionItem(opt, opt == value, fullScreen) { onSelect(opt); open = false }
+    val all = (if (clearable) listOf("") else emptyList()) + options
     if (fullScreen) {
         // Aktivitet's list is long; a full-screen selector styled like the species/locality
         // pickers beats scrolling inside a cramped dialog (#123). The short lists (alder, kjønn)
@@ -1643,7 +1674,7 @@ private fun DropdownRow(
             Surface(Modifier.fillMaxSize(), color = MaterialTheme.colorScheme.background) {
                 Column {
                     ScreenHeader(label, onCancel = { open = false })
-                    LazyColumn(Modifier.weight(1f), content = rows)
+                    LazyColumn(Modifier.weight(1f)) { items(all) { Option(it) } }
                 }
             }
         }
@@ -1651,7 +1682,16 @@ private fun DropdownRow(
         AlertDialog(
             onDismissRequest = { open = false },
             title = { Text(label) },
-            text = { LazyColumn(Modifier.heightIn(max = 400.dp), content = rows) },
+            // A plain scrolling Column (the lists are short), sized to its widest option: rows that
+            // fill the width would stretch the dialog to its maximum, nearly edge to edge on a
+            // narrow phone (#198). At least the dialog's minimum inner width (280dp less its 24dp
+            // padding each side), so the ✓ still sits at the dialog's edge.
+            text = {
+                Column(Modifier.widthIn(min = 232.dp).width(IntrinsicSize.Max).heightIn(max = 400.dp)
+                    .verticalScroll(rememberScrollState())) {
+                    all.forEach { Option(it) }
+                }
+            },
             confirmButton = {},
             dismissButton = { TextButton(onClick = { open = false }) { Text(Strings.cancel) } },
         )
@@ -1758,7 +1798,8 @@ private fun TimeDialog(vm: MainViewModel, onDismiss: () -> Unit) {
             Text(Strings.Time.title)
         },
         text = {
-            Column {
+            // As wide as one row needs, not the dialog's maximum: like the option dialogs (#198).
+            Column(Modifier.width(IntrinsicSize.Max)) {
                 // Each row gets its own "Nå" so a single endpoint can be bumped to the current
                 // moment (e.g. just the end time while still observing). It re-enables a
                 // time-of-day that had been left unspecified.
@@ -1828,18 +1869,23 @@ private fun FieldRow(
         .let { if (onClick != null) it.clickable(onClick = onClick) else it }
         .let { if (surface) it.background(cs.surface) else it }
         .padding(horizontal = 16.dp, vertical = 10.dp)
-    Row(base, verticalAlignment = Alignment.CenterVertically) {
-        if (label != null) {
-            // widthIn(min) not a fixed width: short labels still align at 84dp, but a long one (e.g.
-            // "Medobservatører") takes the width it needs on one line instead of wrapping to two.
-            Text(label, color = cs.onSurfaceVariant, fontSize = 14.sp, maxLines = 1,
-                modifier = Modifier.widthIn(min = 84.dp))
-            Spacer(Modifier.width(12.dp))
+    BoxWithConstraints(base) {
+        val labelMax = maxWidth * 0.4f
+        Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+            if (label != null) {
+                // widthIn(min) not a fixed width: short labels still align at 84dp, but a long one (e.g.
+                // "Medobservatører") takes the width it needs on one line instead of wrapping to two.
+                // Up to 40% of the row, though: past that it wraps rather than squeeze the value
+                // into breaking mid-word (large text on a narrow phone, "Vitenska/pelig", #198).
+                Text(label, color = cs.onSurfaceVariant, fontSize = 14.sp, maxLines = 2,
+                    modifier = Modifier.widthIn(min = 84.dp, max = labelMax))
+                Spacer(Modifier.width(12.dp))
+            }
+            // Labelless rows left-align their value (the value alone is self-explanatory).
+            Row(Modifier.weight(1f), horizontalArrangement = if (label != null) Arrangement.End else Arrangement.Start,
+                verticalAlignment = Alignment.CenterVertically) { content() }
+            if (onClick != null) Text("  ›", color = cs.outline, fontSize = 18.sp)
         }
-        // Labelless rows left-align their value (the value alone is self-explanatory).
-        Row(Modifier.weight(1f), horizontalArrangement = if (label != null) Arrangement.End else Arrangement.Start,
-            verticalAlignment = Alignment.CenterVertically) { content() }
-        if (onClick != null) Text("  ›", color = cs.outline, fontSize = 18.sp)
     }
     if (divider) HorizontalDivider(color = cs.outline.copy(alpha = 0.4f))
 }
