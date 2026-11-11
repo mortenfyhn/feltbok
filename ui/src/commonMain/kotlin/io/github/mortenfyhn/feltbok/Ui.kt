@@ -124,6 +124,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.Constraints
+import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -455,7 +456,10 @@ private fun SelectionBar(vm: MainViewModel, onEdit: () -> Unit, modifier: Modifi
     // Deleting several notes at once is surprising, so confirm it (#156). A single mark deletes
     // straight away - the undo snackbar is enough of a safety net there.
     var confirmDelete by remember { mutableStateOf(false) }
-    Row(
+    // The labels stop growing past 1.2x text size, as iOS's own bar buttons do: any larger and four
+    // actions can't share a narrow phone's width without breaking mid-word ("Eksport/er", #198).
+    val d = LocalDensity.current
+    CompositionLocalProvider(LocalDensity provides Density(d.density, d.fontScale.coerceAtMost(1.2f))) { Row(
         modifier.background(MaterialTheme.colorScheme.primary)
             // The bar overlays the status strip, whose locality area is clickable - swallow taps that
             // miss an action (e.g. on the count) so they don't fall through and open the map picker.
@@ -482,7 +486,7 @@ private fun SelectionBar(vm: MainViewModel, onEdit: () -> Unit, modifier: Modifi
         ) {
             Text(Strings.Notes.export, color = Color.White, fontWeight = FontWeight.Medium, fontSize = 14.sp)
         }
-    }
+    } }
     if (confirmDelete) {
         val cs = MaterialTheme.colorScheme
         AlertDialog(
