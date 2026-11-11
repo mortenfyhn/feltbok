@@ -11,6 +11,7 @@
 - Kartet henger bedre med når du zoomer.
 - Kartet henger ikke lenger etter når du zoomer raskt med to fingre.
 - Kartet hopper ikke lenger av og til når du slipper det etter et sveip.
+- Pluss og minus på knappene og tallene på eksportsida står midt i rundingene sine, også med stor tekst.
 - Lokaliteter med samme navn som andre blir ikke forveksla ved import.
 - Toppen sier ikke lenger «du er her» når du står like utenfor en lokalitet.
 - En ny lokalitet du lager fra statuslinja blir gjeldende lokalitet, i stedet for å åpne en tom observasjon.

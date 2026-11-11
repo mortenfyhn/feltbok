@@ -39,6 +39,7 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.layout.windowInsetsTopHeight
+import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.foundation.lazy.LazyListState
@@ -118,6 +119,7 @@ import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.TextFieldValue
+import androidx.compose.ui.text.style.LineHeightStyle
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.text.withStyle
@@ -249,7 +251,7 @@ fun ListScreen(vm: MainViewModel, listState: LazyListState) {
                         onClick = { vm.startAdd() },
                         containerColor = cs.primary, contentColor = Color.White,
                         modifier = Modifier.size(64.dp),
-                    ) { Text("+", fontSize = 30.sp) }
+                    ) { Icon(AddIcon, contentDescription = Strings.Detail.titleNew) }
                 }
             }
             // Footer bar: Arkiv / Tilbakemelding, with the version tucked in the centre.
@@ -1846,7 +1848,12 @@ private fun Step(n: Int, title: String, body: @Composable () -> Unit) {
             Modifier.size(26.dp).clip(RoundedCornerShape(50)).background(MaterialTheme.colorScheme.primary),
             contentAlignment = Alignment.Center,
         ) {
-            Text("$n", color = Color.White, fontWeight = FontWeight.Bold, fontSize = 14.sp)
+            // A line box trimmed to the font and centred, so the digit sits in the circle's middle; unbounded
+            // so large text isn't clamped to the circle's height, which would push the digit down.
+            Text("$n", color = Color.White, fontWeight = FontWeight.Bold, fontSize = 14.sp, lineHeight = 14.sp,
+                style = LocalTextStyle.current.copy(platformStyle = noFontPadding, lineHeightStyle =
+                    LineHeightStyle(LineHeightStyle.Alignment.Center, LineHeightStyle.Trim.Both)),
+                modifier = Modifier.wrapContentSize(unbounded = true))
         }
         Spacer(Modifier.width(12.dp))
         Column(Modifier.weight(1f)) {

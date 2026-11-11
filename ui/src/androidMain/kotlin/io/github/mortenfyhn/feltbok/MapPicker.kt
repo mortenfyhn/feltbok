@@ -26,6 +26,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.Button
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
@@ -44,9 +45,9 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -225,8 +226,8 @@ actual fun LocalityScreen(vm: MainViewModel) {
                         mapView.controller.animateTo(GeoPoint(it.lat, it.lon))
                     }
                 }
-                ZoomButton("+") { mapView.controller.zoomIn() }
-                ZoomButton("−") { mapView.controller.zoomOut() }
+                ZoomButton(AddIcon, Strings.Picker.zoomIn) { mapView.controller.zoomIn() }
+                ZoomButton(RemoveIcon, Strings.Picker.zoomOut) { mapView.controller.zoomOut() }
             }
             // New-spot panel OVERLAYS the map (so the map doesn't resize/jump); the overlay
             // draws the crosshair above it, at the centre of the visible map.
@@ -291,13 +292,13 @@ private fun fitRadius(map: MapView): Int {
 }
 
 @Composable
-private fun ZoomButton(label: String, onClick: () -> Unit) {
+private fun ZoomButton(icon: ImageVector, description: String, onClick: () -> Unit) {
     val cs = MaterialTheme.colorScheme
     Box(
         Modifier.size(52.dp).clip(CircleShape).background(Color.White)
             .border(1.dp, cs.outline, CircleShape).clickable(onClick = onClick),
         contentAlignment = Alignment.Center,
-    ) { Text(label, color = cs.primary, fontSize = 28.sp, fontWeight = FontWeight.Bold) }
+    ) { Icon(icon, contentDescription = description, tint = cs.primary, modifier = Modifier.size(28.dp)) }
 }
 
 /** Re-centre control: the same round white button as the zoom ones, but drawing the map's

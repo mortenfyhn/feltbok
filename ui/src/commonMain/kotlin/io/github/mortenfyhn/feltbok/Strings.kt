@@ -228,5 +228,7 @@ object Strings {
         const val nameLabel = "Lokalitetsnavn (valgfritt)"
         const val namePlaceholder = "Ny lokalitet"
         const val save = "Lagre"
+        const val zoomIn = "Zoom inn"
+        const val zoomOut = "Zoom ut"
     }
 }
