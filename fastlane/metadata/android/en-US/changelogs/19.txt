@@ -1,0 +1,1 @@
+• Site with the same name won't be mixed up when importing.

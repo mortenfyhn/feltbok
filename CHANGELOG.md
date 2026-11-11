@@ -4,7 +4,9 @@
 
 ## Neste utgivelse
 
-- Lokaliteter med samme navn som andre blir ikke forveksla ved import.
+## v1.4.1 (11. november 2026)
+
+- Lokaliteter som deler navn blir ikke forveksla ved import.
 
 ## v1.4 (2. november 2026)
 
