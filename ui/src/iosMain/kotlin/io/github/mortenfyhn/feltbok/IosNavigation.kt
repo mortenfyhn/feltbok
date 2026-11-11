@@ -166,7 +166,7 @@ internal fun IosNavigation(vm: MainViewModel, listState: LazyListState) {
             if (!onList) Box(Modifier.fillMaxSize().then(BlockInput))
         }
         rememberTransition(pages, label = "pages").AnimatedContent(
-            // With the Ferdig bar up, the page ends above it, so its bottom buttons (Arkiver/Lagre)
+            // With the Ferdig bar up, the page ends above it, so its bottom buttons (Slett/Lagre)
             // float over the keyboard and stay tappable, as Android's do.
             modifier = Modifier.padding(bottom = if (NumberPadDone.visible) NumberPadBarHeight else 0.dp),
             transitionSpec = {

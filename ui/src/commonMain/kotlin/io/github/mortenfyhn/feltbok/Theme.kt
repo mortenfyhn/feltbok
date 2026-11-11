@@ -42,6 +42,20 @@ private val BrandColors = lightColorScheme(
 fun AppTheme(content: @Composable () -> Unit) =
     MaterialTheme(colorScheme = BrandColors, content = content)
 
+/** The papirkurv's chrome is brown instead of green, so it can't pass for the main list (#192).
+ *  Each brown has the same OKLCH lightness as its green counterpart, at hue 60 and lower chroma
+ *  (the green's chroma at a brown hue is orange). */
+val TrashBrown = Color(0xFF8E6340)
+private val TrashColors = BrandColors.copy(
+    primary = TrashBrown,
+    primaryContainer = Color(0xFFF2DECF),
+    onPrimaryContainer = Color(0xFF68482D),
+)
+
+@Composable
+fun TrashTheme(content: @Composable () -> Unit) =
+    MaterialTheme(colorScheme = TrashColors, content = content)
+
 /** The map overlays' semantic colours (ARGB), in one place so the palette stays coherent:
  *  public localities are green, your own ones yellow, the GPS fix blue, a new spot magenta. */
 object MapPalette {

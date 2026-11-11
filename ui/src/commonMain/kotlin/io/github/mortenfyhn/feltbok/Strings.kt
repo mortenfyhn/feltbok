@@ -36,29 +36,28 @@ object Strings {
         const val gps = "GPS"
         fun gpsAccuracy(m: Int) = "(GPS ±$m m)"
 
-        // Selection mode: long-press a note to mark it, then tap more, then archive the marked ones.
-        // "Arkiver", not "Slett": nothing is deleted any more, it moves to the archive (#153).
+        // Selection mode: long-press a note to mark it, then tap more, then delete the marked ones.
         fun selected(n: Int) = "$n markert"
-        const val deleteSelected = "Arkiver"
+        const val deleteSelected = "Slett"
 
-        // Confirm before a multi-note archive (#156): dropping several at once is surprising, so ask
-        // (a single one just archives - the undo snackbar catches a misfire).
-        fun confirmDeleteTitle(n: Int) = "Arkiver $n observasjoner?"
+        // Confirm before a multi-note delete (#156): dropping several at once is surprising, so ask
+        // (a single one just deletes - the undo snackbar catches a misfire).
+        fun confirmDeleteTitle(n: Int) = "Slett $n observasjoner?"
         const val edit = "Endre"
         fun editTitle(n: Int) = "Endre $n ${if (n == 1) "observasjon" else "observasjoner"}"
 
-        // Undo snackbar shown after a delete (issue #122) or a batch edit (#120). "Slett" actually
-        // archives (#153), and the snackbar is what teaches that: it says where the notes went.
-        fun deleted(n: Int) = "Arkiverte $n ${if (n == 1) "observasjon" else "observasjoner"}"
+        // Undo snackbar shown after a delete (issue #122) or a batch edit (#120).
+        fun deleted(n: Int) = "Sletta $n ${if (n == 1) "observasjon" else "observasjoner"}"
         fun edited(n: Int) = "Endra $n ${if (n == 1) "observasjon" else "observasjoner"}"
         const val undo = "Angre"
     }
 
-    // The archive (#153): "deleted" observations end up here and can be restored. The footer entry
-    // point shares the title.
+    // The trash bin. Deleting never destroys a note: it moves to the bin and can be restored (#153).
+    // Users see "Slett" and "Papirkurv" (#192), but the code still says "archive" (`archived`,
+    // `openArchive`, archive.jsonl) from when the bin was called Arkiv. The footer link shares the title.
     object Archive {
-        const val title = "Arkiv"
-        const val empty = "Ingen arkiverte observasjoner"
+        const val title = "Papirkurv"
+        const val empty = "Papirkurven er tom"
         const val restore = "Gjenopprett"
     }
 
@@ -120,7 +119,7 @@ object Strings {
         const val time = "Tid"
         const val hideUntil = "Skjul t.o.m."   // wording from the website's own field
         const val hideUntilNone = "Ikke skjul"   // the date picker's neutral button
-        const val delete = "Arkiver"
+        const val delete = "Slett"
         const val copy = "Kopier"
         const val save = "Lagre"
 
@@ -176,17 +175,17 @@ object Strings {
 
         const val step4 = "Kontroller funn"
         const val step4Body = "Sjekk at observasjonene vises i Artsobservasjoner"
-        const val step5 = "Arkiver i appen"
-        const val step5Body = "Når alt er på plass, kan du arkivere observasjonene i appen"
-        fun clearAll(n: Int) = "Arkiver alle observasjoner ($n)"
-        const val clearTitle = "Arkiver alle observasjoner?"
+        const val step5 = "Slett i appen"
+        const val step5Body = "Når alt er på plass, kan du slette observasjonene i appen"
+        fun clearAll(n: Int) = "Slett alle observasjoner ($n)"
+        const val clearTitle = "Slett alle observasjoner?"
 
         // Shown instead when the export covered only marked notes (#120): names the count so it's
         // clear the rest of the list is untouched.
-        fun clearSelected(n: Int) = "Arkiver $n ${if (n == 1) "observasjon" else "observasjoner"}"
-        fun clearSelectedTitle(n: Int) = "Arkiver de $n eksporterte observasjonene?"
+        fun clearSelected(n: Int) = "Slett $n ${if (n == 1) "observasjon" else "observasjoner"}"
+        fun clearSelectedTitle(n: Int) = "Slett de $n eksporterte observasjonene?"
         const val clearBody = "Sørg for alt er på plass i Artsobservasjoner!"
-        const val clearConfirm = "Arkiver"
+        const val clearConfirm = "Slett"
     }
 
     object Sync {

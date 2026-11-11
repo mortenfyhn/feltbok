@@ -997,7 +997,7 @@ class MainViewModel(private val platform: Platform) : ViewModel() {
 
     /** The notes the current export covers - the marked ones when exporting a selection, else all.
      *  Copied, not the live list: [clearExported] hands the result to [archive], which then removes
-     *  those notes - aliasing would empty the undo payload, so the snackbar claimed "0 arkiverte". */
+     *  those notes - aliasing would empty the undo payload, so the snackbar claimed "Sletta 0". */
     fun exportNotes(): List<Note> = exportScope?.let { ids -> notes.filter { it.id in ids } } ?: notes.toList()
 
     /** True when the open export is scoped to a selection (vs the whole list) - drives the clear

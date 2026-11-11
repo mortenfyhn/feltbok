@@ -119,7 +119,7 @@ same longer timeout as a batch edit — the old values are gone otherwise.
 
 While you scroll, a thin indicator along the right edge shows where you are in the
 list (it fades away at rest) — with a long history the day headers alone give no
-sense of position. The archive list has it too.
+sense of position. The papirkurv list has it too.
 
 ### Marking (masse-handlinger)
 
@@ -130,13 +130,15 @@ also **long-press and drag** across rows to sweep a range in one gesture (drag b
 to un-sweep); dragging to the top or bottom edge auto-scrolls the list so the range
 can run past what's on screen. The
 status strip turns into a selection bar in place — a ✕ to leave, the count, and the
-bulk actions **Endre**, **Arkiver** and **Eksporter** — so entering marking never shifts
-the list. `Arkiver` moves the marked notes to the archive (undoable, and restorable
-from the archive later — see Arkiv below); archiving more than one asks to
-confirm first, since several vanishing at once is surprising (a single mark archives
+bulk actions **Endre**, **Slett** and **Eksporter** — so entering marking never shifts
+the list. `Slett` moves the marked notes to the papirkurv (undoable, and restorable
+from the papirkurv later — see Papirkurv below); deleting more than one asks to
+confirm first, since several vanishing at once is surprising (a single mark deletes
 straight away). `Eksporter` opens the export
 walkthrough scoped to just them (see below). You leave marking via the ✕, system
 Back, finishing an action, or by clearing the last mark — the bar disappears with it.
+The footer (Papirkurv, Tilbakemelding, version) is hidden while marking, so a tap
+at the bottom after a long drag-select can't open the papirkurv by mistake.
 While *not* marking, a plain tap on a row opens it for editing.
 
 ### Endre (batch edit)
@@ -145,7 +147,7 @@ While *not* marking, a plain tap on a row opens it for editing.
 marked notes agree on are pre-filled; fields they differ on show a pale preview of the
 current mix ("Skjære, Gråmåke, …") and stay blank. Saving applies only the fields you
 actually changed to every marked note (one undoable step), drops the marks and returns
-you to the list. The undo snackbar stays up a bit longer than an archive one, since the
+you to the list. The undo snackbar stays up a bit longer than a delete one, since the
 old values can't be recovered any other way once it's gone. Comments aren't batch-editable (they're
 rarely the same across notes), so they're hidden here; everything else — species,
 locality, count, age, sex, activity, time, co-observers — is. Batch-editing
@@ -322,9 +324,9 @@ Artsobservasjoner's "Importer observasjoner", then clear them from the app once
 they're safely in. (Exporting from a marking selection scopes the whole walkthrough
 to just the marked notes — the copied block and the final clear
 step cover only those, so it never touches the rest of the list.) The clear step
-follows the same rule as the list's `Arkiver`: clearing more than one note asks to
+follows the same rule as the list's `Slett`: clearing more than one note asks to
 confirm first, a single one clears straight away — both undoable, and the cleared
-notes land in the archive like any other archiving.
+notes land in the papirkurv like any other delete.
 
 Everything pastes in one go. The copy step previews the first rows of the block unwrapped,
 exactly as they paste. Each observation carries the Artsobservasjoner site id of its locality in the `Lokalitetsnavn` column, and
@@ -333,22 +335,25 @@ share its name. Observations saved before the app kept the id, and brand-new spo
 export the name as before. (The deep why — what links vs. what mints a private
 duplicate — lives in `docs/artsobs-import.md`.)
 
-## Arkiv
+## Papirkurv
 
-`Arkiver` never destroys anything: "deleted" observations move to an archive
-instead, and the undo snackbar says so ("Arkiverte …"). An **Arkiv** link in the
-list footer opens it — always visible, even when empty, so it's discoverable
-before you first need it. The archive screen is the same day-grouped list, and
+`Slett` never destroys anything: deleted observations move to the papirkurv
+(trash bin) instead, and the undo snackbar says "Sletta …". It never empties itself.
+The code still calls it the archive (`archived`, `openArchive`, `archive.jsonl`),
+its name until #192. A **Papirkurv** link in the
+list footer opens it. It shows even when the papirkurv is empty, so it's discoverable
+before you first need it. The papirkurv screen is the same day-grouped list, with
+brown chrome instead of green so it can't pass for the main list, and
 marking behaves exactly like the main list (long-press to start, drag to sweep a
 range with edge auto-scroll, circles, day-header toggles, the header turning into
 a selection bar) — the one difference is that a plain tap marks the note instead
-of opening it, since an archived note can't be opened; the first tap is enough to
+of opening it, since a deleted note can't be opened; the first tap is enough to
 start marking, so getting one note back needs no long-press. The single action is
 **Gjenopprett**, which moves the marked notes back into the live list. There is no
 true delete in the app — clearing the app's data is the escape hatch if someone
-really wants everything gone. The archive lives in its own file (`archive.jsonl`,
-append-only on archiving), so launch and saving stay
-proportional to the *live* notes however big the archive grows.
+really wants everything gone. The papirkurv lives in its own file (`archive.jsonl`,
+append-only on delete), so launch and saving stay
+proportional to the *live* notes however big the papirkurv grows.
 
 ## About / credits
 
