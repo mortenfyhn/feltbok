@@ -128,7 +128,8 @@ toggle it, and a day header's circle marks or clears that whole day at once. You
 also **long-press and drag** across rows to sweep a range in one gesture (drag back
 to un-sweep); dragging to the top or bottom edge auto-scrolls the list so the range
 can run past what's on screen. The
-status strip turns into a selection bar in place — a ✕ to leave, the count, and the
+status strip turns into a selection bar in place — a ✕ to leave, the count (cut to just the
+number, or left out, when large text leaves no room), and the
 bulk actions **Endre**, **Arkiver** and **Eksporter** — so entering marking never shifts
 the list. `Arkiver` moves the marked notes to the archive (undoable, and restorable
 from the archive later — see Arkiv below); archiving more than one asks to
