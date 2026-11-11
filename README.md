@@ -9,7 +9,7 @@
 [<img src="./docs/badges/appstore.svg" alt="Last ned fra App Store" height="60">](https://apps.apple.com/no/app/feltbok-for-artsobservasjoner/id6829644268)
 
 <!-- Source of truth for app description is at fastlane/metadata/android/ – this and the GitHub repo "About" field are based on that. Keep them in sync. -->
-Feltbok er en Android-app for å kjapt notere fugleobservasjoner i felt og seinere eksportere til Artsobservasjoner. Krever ikke innlogging eller internett.
+Feltbok er en Android- og iPhone-app for å kjapt notere fugleobservasjoner i felt og seinere eksportere til Artsobservasjoner. Krever ikke innlogging eller internett.
 
 https://github.com/user-attachments/assets/0a44913d-b87a-47dd-a254-30bc7e5fab57
 
