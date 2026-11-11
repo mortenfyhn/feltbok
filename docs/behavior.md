@@ -161,11 +161,12 @@ and tapping
 
 ## Tidspunkt (start/slutt)
 
-The editor's time row opens a small editor with a **Start** and a **Slutt** row, each with a
-separately-tappable date and time-of-day (so you can change just the day, or just the clock).
-Slutt mirrors Start, greyed out, until you edit it; then it becomes a real range that may span
-midnight. The end can never fall before the start, and an end in the same minute as the start
-is dropped, so Slutt mirrors Start again. That is how you go back to a single point in time.
+The editor's time row opens a small editor with one date and time-of-day, each tapped
+separately (so you can change just the day, or just the clock). Ticking **Ulik sluttid** adds a
+**Start** and a **Slutt** row for a real range that may span midnight. Slutt starts equal to Start.
+The end can never fall before the start, and an end in the same minute as the start is dropped.
+Unticking Ulik sluttid drops the end, back to a single point in time; ticking it again in the same
+dialog brings the end back. A note that already has an end opens with the box ticked.
 Each row has its own **Nå** button, pinned to the right, that sets just that end to the current
 moment. **Ukjent klokkeslett** keeps the date but leaves the time unspecified, for observations
 logged after the fact, when you don't remember the time; it exports with the date filled in and

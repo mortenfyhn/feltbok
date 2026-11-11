@@ -158,6 +158,7 @@ object Strings {
         const val now = "Nå"
         const val done = "OK"
         const val noTime = "Ukjent klokkeslett"
+        const val endTime = "Ulik sluttid"
     }
 
     object Export {
