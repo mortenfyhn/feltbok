@@ -30,8 +30,9 @@ Recipes live in `just --list`. Gotchas not covered there:
   add to it only where a pure-JVM test genuinely can't reach, and only once the UI has settled.
 - `just format` / `just lint` are CI-gated (ktlint / ruff). ktlint only fixes whitespace/imports —
   it won't churn line structure or naming.
-- Fresh worktree: copy `local.properties` from the repo root (gitignored, Gradle needs it), and link
-  the Python venv: `ln -s ../../../.venv .venv` from the worktree root.
+- Fresh worktree: copy `local.properties` from the main checkout (gitignored, Gradle needs it), and
+  link its Python venv. Worktrees don't all live at the same depth, so use the main checkout's path:
+  `main=$(git worktree list | head -1 | cut -d' ' -f1); cp $main/local.properties .; ln -s $main/.venv .venv`.
 - CI runs on Semaphore (`.semaphore/semaphore.yml`); inspect failures with `sem get pipelines` /
   `sem logs <jobid>`. Releases are cut locally with `./release.sh` (see `docs/release.md`).
 - iOS CI runs on GitHub Actions' free macOS runners (`.github/workflows/ios.yml` ->
