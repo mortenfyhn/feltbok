@@ -9,7 +9,9 @@
    and a 12-name crowd (stresses the "+N" badge and 10+ Medobservatør columns).
 2. **A live paste-import test** — seed clean, then export FROM THE APP and paste into
    Artsobservasjoner "Importer observasjoner". So the rows also cover every path `exportTsv` takes:
-   a name-only registry locality, a brand-new spot (coordinates + radius, mints a private locality —
+   a registry locality exported by site id (including Austrått, whose name also exists in another
+   kommune, so only the id links it correctly), a name-only one (a note saved before notes kept the
+   id), a brand-new spot (coordinates + radius, mints a private locality —
    each import mints a fresh dupe), a blank Antall (unknown count), the uncertain flag, a hide-until date
    (#181), a same-day and a multi-day time range, and the two no-time cases (#155: date kept, klokkeslett blank — single
    day and multi-day). To keep import errors meaningful, real inputs the site validates are used:
@@ -101,6 +103,27 @@ NEW_LAT, NEW_LON = 63.4485, 10.4380
 # common names (Munkholmen, Bymarka, …) hit; #-marked ones below are all globally-unique + public.
 LONG_SITE = "sjøområdet mellom Brattøra og Munkholmen"
 
+# Artsobservasjoner site ids of the public localities used below, as the app stores them on a note
+# picked from the list (exported in place of the name). Austrått also exists in Sandnes, so a bare
+# name would be ambiguous; the id links the Ørland one.
+SITE_IDS = {
+    "Ladehammeren": "354139",
+    "Ilsvika": "352771",
+    "Ilabekken": "352936",
+    LONG_SITE: "882001",
+    "Leangenbukta": "349975",
+    "Estenstaddammen": "645239",
+    "Baklidammen": "725711",
+    "Haukvatnet": "477750",
+    "Kyvatnet": "477748",
+    "Være": "368841",
+    "Jonsvatnet": "354430",
+    "Theisendammen": "349763",
+    "Lianvatnet": "351372",
+    "Devlebukta": "350985",
+    "Austrått": "354419",
+}
+
 # Real registered Artsobservasjoner users, so the paste-import links co-observers instead of
 # failing on unknown/ambiguous names. PARTY is reused across rows for the sticky-følget look (#128);
 # CROWD is a 12-name group that stresses the "+N" badge and the 10+ Medobservatør export columns.
@@ -143,6 +166,7 @@ def note(
     radius=0,
     private_loc=False,
     hide_days=None,
+    legacy=False,
 ):
     """One row. `why` = what it exercises (dev doc, not exported). `mins` = minutes before now
     (drives the day header). `dur_min`, if set, adds an end time that many minutes after the start
@@ -150,7 +174,8 @@ def note(
     `no_time` marks the time-of-day unspecified. `new_loc` exports coordinates + `radius`.
     `private_loc` marks `loc` as one of the user's own private localities (links by bare name, so no
     qualified fullname), matching how the app stores a note picked on a private site. `hide_days`
-    sets "Skjul funn til dato" that many days from now (#181)."""
+    sets "Skjul funn til dato" that many days from now (#181). `legacy` leaves out the site id, like a
+    note saved before notes kept it, so it exports the name."""
     return {
         "why": why,
         "mins": mins,
@@ -170,6 +195,7 @@ def note(
         "radius": radius,
         "private_loc": private_loc,
         "hide_days": hide_days,
+        "legacy": legacy,
     }
 
 
@@ -465,6 +491,27 @@ ROWS = [
         "Ladehammeren",
     ),
     note(
+        "name shared with another kommune (Austrått: Ørland and Sandnes): only the site id links it",
+        DAY // MINUTE + 700,
+        KRAAKE,
+        3,
+        "",
+        "",
+        "Næringssøkende",
+        "Austrått",
+    ),
+    note(
+        "saved before notes kept the site id: exports the bare name instead",
+        DAY // MINUTE + 720,
+        KJOTTMEIS,
+        2,
+        "",
+        "",
+        "",
+        "Theisendammen",
+        legacy=True,
+    ),
+    note(
         "ub. species-complex entry (#162): normal bird-group fields still apply",
         DAY // MINUTE + 740,
         UB_TERNE,
@@ -518,6 +565,9 @@ def build(now_ms, rows=ROWS):
             "coObservers": r["coobs"],
             "kommune": "Trondheim",
         }
+        site_id = "" if new_loc or r["legacy"] else SITE_IDS.get(r["loc"], "")
+        if site_id:
+            n["locId"] = site_id
         # Optional fields mirror noteToJson: present only when meaningful (endTime omitted when null,
         # timeUnknown omitted when false) so the seed round-trips exactly like real saved notes.
         if r["dur_min"]:

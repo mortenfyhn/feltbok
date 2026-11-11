@@ -146,7 +146,7 @@ object Strings {
         const val pasteBody = "Klistra in observationerna och tryck "
         const val pasteEmphasis = "Importera"
 
-        fun tip(kommune: String) = "(Prioritera fyndplatser i $kommune för att undvika krockar)"
+        const val areaTip = "Lämna området på importformuläret tomt"
         const val step4 = "Granska fynd"
         const val step4Body = "Kontrollera att observationerna syns i Artportalen"
         const val step5 = "Arkivera i appen"

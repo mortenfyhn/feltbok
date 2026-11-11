@@ -65,6 +65,14 @@ class ModelTest {
     }
 
     @Test
+    fun siteIdReplacesTheNameExceptForANewSpot() {
+        fun loc(n: Note) = exportTsv(listOf(n)).split("\n")[1].split("\t")[5]
+        assertEquals("352401", loc(noteAt(noonMs).copy(locId = "352401")))
+        assertEquals("Titran", loc(noteAt(noonMs)))   // saved before notes kept the id
+        assertEquals("Testdammen", loc(noteAt(noonMs).copy(locName = "Testdammen", locId = "9", newLoc = true)))
+    }
+
+    @Test
     fun hideUntilExportsAsADateAndIsBlankWhenNotHidden() {
         // #181: the hide date rides the same dd.MM.yyyy format as Fra/Til dato, under the v2.20
         // template's own header (paste-import matches by name).
@@ -285,7 +293,7 @@ class ModelTest {
         // next launch. Every field is a distinct non-default value, so dropping any one fails
         // equality (id and time differ, so a swap is caught too).
         val n = noteAt(1717).copy(time = 1800, endTime = 1900, timeUnknown = true, newLoc = true, locRadius = 50, uncertain = true,
-            coObservers = listOf("Kari Nordmann", "Ola Hansen"), hideUntil = 2000)
+            coObservers = listOf("Kari Nordmann", "Ola Hansen"), hideUntil = 2000, locId = "352401")
         assertEquals(n, noteFromJson(noteToJson(n)))
         // endTime is the only optional field (omitted from JSON when null); confirm null survives.
         assertEquals(null, noteFromJson(noteToJson(n.copy(endTime = null))).endTime)

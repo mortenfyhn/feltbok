@@ -42,7 +42,8 @@ class SelectionLogicTest {
         kommune: String = "Oslo",
         newLoc: Boolean = false,
         radius: Double = 0.0,
-    ) = Locality("", name, "", kommune, lat, lon, 0, radius, newLoc = newLoc)
+        id: String = "",
+    ) = Locality(id, name, "", kommune, lat, lon, 0, radius, newLoc = newLoc)
 
     // ---- applyBatchEdit ----
 
@@ -87,12 +88,13 @@ class SelectionLogicTest {
     @Test
     fun localityMapsAllFieldsAndClearsLocFull() {
         val n = note(1, locName = "Titran", locFull = "Titran, Frøya", lat = 63.0, lon = 8.0, kommune = "Frøya")
-        val out = applyBatchEdit(listOf(n), setOf(1L), BatchChange(locality = loc("Fornebu", lat = 59.9, lon = 10.6, kommune = "Bærum"))).single()
+        val out = applyBatchEdit(listOf(n), setOf(1L), BatchChange(locality = loc("Fornebu", lat = 59.9, lon = 10.6, kommune = "Bærum", id = "7"))).single()
         assertEquals("Fornebu", out.locName)
         assertEquals("", out.locFull)          // qualified name cleared, as commitDraft does
         assertEquals(59.9, out.lat, 0.0)
         assertEquals(10.6, out.lon, 0.0)
         assertEquals("Bærum", out.kommune)
+        assertEquals("7", out.locId)
         assertTrue(!out.newLoc)
         assertEquals(0, out.locRadius)
     }

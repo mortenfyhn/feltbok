@@ -116,6 +116,10 @@ data class Note(
     // resolves it from the nearest registry locality at creation; blank on notes saved before this
     // existed (grouping then falls back to the locFull / nearest-locality lookup).
     val kommune: String = "",
+    // Artsobservasjoner site id of the picked locality. Exported in place of the name, since the
+    // import links an id exactly where a name can match several sites. Blank for a brand-new spot
+    // and for notes saved before this existed (those export the name).
+    val locId: String = "",
     // Hide the observation from everyone else until after this date (-> "Skjul funn til dato").
     // For vulnerable birds you don't want a crowd turning up to search for. null = not hidden.
     val hideUntil: Long? = null,
@@ -721,6 +725,7 @@ fun noteToJson(n: Note): JSONObject = JSONObject().apply {
     put("newLoc", n.newLoc); put("locRadius", n.locRadius); put("uncertain", n.uncertain)
     if (n.coObservers.isNotEmpty()) put("coObservers", JSONArray(n.coObservers))
     if (n.kommune.isNotBlank()) put("kommune", n.kommune)
+    if (n.locId.isNotBlank()) put("locId", n.locId)
     n.hideUntil?.let { put("hideUntil", it) }
 }
 
@@ -746,6 +751,7 @@ fun noteFromJson(o: JSONObject): Note = Note(
     uncertain = o.optBoolean("uncertain"),
     coObservers = o.optJSONArray("coObservers")?.let { a -> (0 until a.length()).map { a.getString(it) } } ?: emptyList(),
     kommune = o.optString("kommune"),
+    locId = o.optString("locId"),
     hideUntil = if (o.has("hideUntil")) o.getLong("hideUntil") else null,
 )
 
@@ -952,13 +958,9 @@ fun saveLangPrefs(ctx: Context, prefs: LangPrefs) {
 // ---- export (paste format; columns/headers per Country) ----
 
 fun exportTsv(notes: List<Note>): String {
-    // Emit the *bare* Lokalitetsnavn with no coordinates. Paste-import behaviour
-    // (tested against the live v2.20 site, see docs/artsobs-import.md):
-    //  - a comma-qualified name ("Lok, Hovedlok, Kommune, Fylke") HARD-FAILS validation.
-    //  - name / name+coords each validate but MINT a private duplicate - paste never
-    //    links to a public locality. Only manual selection on the site links to public.
-    // So we emit the bare name and let the user scope the import form to the kommune to
-    // disambiguate, fixing the rest by hand. Nord/Øst/Nøyaktighet are left blank.
+    // Lokalitetsnavn carries the site id when the note has one: the import links a bare id to
+    // exactly that site, public or the user's own, while a name can match several sites
+    // (docs/artsobs-import.md). Older notes without an id fall back to the bare registered name.
     // As many trailing "Medobservatør" columns as the busiest row needs; 0 when nobody logged a
     // co-observer, so the format is byte-for-byte unchanged when the feature is unused (#128).
     val maxCoObs = notes.maxOfOrNull { it.coObservers.size } ?: 0
@@ -971,10 +973,10 @@ fun exportTsv(notes: List<Note>): String {
         // accepts a date-only observation, like a blank Antall means "unknown").
         val t = if (n.timeUnknown) "" else exportTime(n.time)
         val tEnd = if (n.timeUnknown) "" else exportTime(end)
-        val loc = n.locName.ifBlank { n.locFull }
+        val loc = if (n.newLoc || n.locId.isBlank()) n.locName.ifBlank { n.locFull } else n.locId
         // A brand-new spot is exported WITH coordinates (+ its radius as Nøyaktighet), which
-        // mints a new custom locality on import; registry localities stay name-only so the import
-        // links them to the public site (verified on both Artsobservasjoner and Artportalen).
+        // mints a new custom locality on import; registry localities carry no coordinates, which
+        // would also mint a duplicate.
         // Coordinates use the flavor's locale (comma decimal) - the paste-import parses numbers with
         // the account's number format (Norwegian/Swedish), so a period reads as "not a decimal
         // number". The TSV is tab-delimited, so a comma in the value is safe.

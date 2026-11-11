@@ -166,10 +166,8 @@ object Strings {
         const val pasteBody = "Lim inn observasjonene og trykk "
         const val pasteEmphasis = "Importer"
 
-        // A suggestion (not an instruction) shown when every note shares one kommune: prioritising
-        // its localities on the form resolves a name even if the same one exists elsewhere. The
-        // kommune is bolded at render (see ExportScreen); the rest is plain.
-        fun tip(kommune: String) = "(Prioriter lokaliteter i $kommune for å unngå kollisjoner)"
+        // The export carries site ids, and an area set on the form rejects every id outside it.
+        const val areaTip = "La «Prioriter lokaliteter i området» stå tomt"
         const val step4 = "Kontroller funn"
         const val step4Body = "Sjekk at observasjonene vises i Artsobservasjoner"
         const val step5 = "Arkiver i appen"

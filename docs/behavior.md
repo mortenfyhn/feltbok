@@ -296,14 +296,13 @@ follows the same rule as the list's `Arkiver`: clearing more than one note asks 
 confirm first, a single one clears straight away — both undoable, and the cleared
 notes land in the archive like any other archiving.
 
-Everything pastes in one go, regardless of kommune. A bare locality name links to
-the public locality as long as the name is unambiguous; scoping the import form to a
-kommune only buys you disambiguation of a name that exists in *more than one*
-kommune. So the flow leans on all-at-once: when every observation happens to be in
-one kommune, the walkthrough suggests prioritising that kommune's localities on the
-form (a free safety net); across several kommuner it just pastes everything and lets
-unambiguous names resolve themselves. (The deep why — what links vs. what mints a
-private duplicate — lives in `docs/artsobs-import.md`.)
+Everything pastes in one go. The paste step asks you to leave "Prioriter lokaliteter i
+området" empty on the import form, since an area there rejects every site outside it. Each observation
+carries the Artsobservasjoner site id of its locality in the `Lokalitetsnavn` column, and
+the import links an id to exactly that site, public or your own, even when other sites
+share its name. Observations saved before the app kept the id, and brand-new spots,
+export the name as before. (The deep why — what links vs. what mints a private
+duplicate — lives in `docs/artsobs-import.md`.)
 
 ## Arkiv
 

@@ -4,6 +4,8 @@
 
 ## Neste utgivelse
 
+- Lokaliteter med samme navn som andre blir ikke forveksla ved import.
+
 ## v1.4 (2. november 2026)
 
 - Nye allmenne lokaliteter dukker opp automatisk.
