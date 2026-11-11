@@ -249,7 +249,7 @@ actual fun LocalityScreen(vm: MainViewModel) {
                         label = { Text(Strings.Picker.nameLabel) },
                         placeholder = { Text(Strings.Picker.namePlaceholder) }, modifier = Modifier.fillMaxWidth(),
                     )
-                    Text(Country.adjustHint, color = cs.onSurfaceVariant, fontSize = 12.sp)
+                    Text(Country.adjustHint, color = cs.onSurfaceVariant, style = MaterialTheme.typography.bodySmall)
                     Button(
                         onClick = {
                             val gp = mapView.projection.fromPixels(mapView.width / 2, (mapView.height - sheetH) / 2)

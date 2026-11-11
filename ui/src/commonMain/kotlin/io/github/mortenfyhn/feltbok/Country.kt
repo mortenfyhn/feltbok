@@ -93,7 +93,7 @@ object Country {
     val mapCenterLon = 8.7
     val importUrl = "https://www.artsobservasjoner.no/ImportSighting"
 
-    val adjustHint = "Du kan justere lokaliteten seinere på artsobservasjoner.no"
+    val adjustHint = "Kan justeres seinere på artsobservasjoner.no"
 
     // ---- logging in: a WebView logs in, and the app sends its session cookie with its own requests
     // (Platform.siteCookie). syncEnabled gates the picker footer. ----
