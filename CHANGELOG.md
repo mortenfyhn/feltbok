@@ -4,7 +4,7 @@
 
 ## Neste utgivelse
 
-- Logg inn fra kartet for å hente dine private lokaliteter og alle nye lokaliteter i tette områder.
+- Logg inn fra kartet for å hente dine private lokaliteter og alle nye lokaliteter i tette områder. Logg ut ved sida av «Oppdater lokaliteter».
 - Den svenske betaversjonen (Fältbok) er lagt ned.
 - Den grønne toppen og bunnlinja går helt ut til kanten av skjermen.
 - Lista reagerer raskere, særlig på eldre telefoner.

@@ -11,6 +11,7 @@ import kotlinx.coroutines.suspendCancellableCoroutine
 import platform.Foundation.HTTPShouldHandleCookies
 import platform.Foundation.NSBundle
 import platform.Foundation.NSData
+import platform.Foundation.NSDate
 import platform.Foundation.NSDocumentDirectory
 import platform.Foundation.NSFileHandle
 import platform.Foundation.NSFileManager
@@ -103,7 +104,7 @@ class IosPlatform : Platform {
 
     override fun toast(message: String, long: Boolean) = IosToast.show(message, long)
 
-    override suspend fun httpGet(url: String, headers: Map<String, String>, timeoutMs: Int): String? {
+    override suspend fun httpGet(url: String, headers: Map<String, String>, timeoutMs: Int): HttpResponse? {
         val nsUrl = NSURL.URLWithString(url) ?: return null
         val request = NSMutableURLRequest.requestWithURL(nsUrl).apply {
             setTimeoutInterval(timeoutMs / 1000.0)
@@ -113,8 +114,9 @@ class IosPlatform : Platform {
         }
         return suspendCancellableCoroutine { cont ->
             val task = NSURLSession.sharedSession.dataTaskWithRequest(request) { data: NSData?, response, error ->
-                val ok = error == null && (response as? NSHTTPURLResponse)?.statusCode?.toInt() in 200..299
-                cont.resume(if (ok && data != null) NSString.create(data, NSUTF8StringEncoding)?.toString() else null)
+                val status = (response as? NSHTTPURLResponse)?.statusCode?.toInt()
+                val body = data?.let { NSString.create(it, NSUTF8StringEncoding)?.toString() }.orEmpty()
+                cont.resume(if (error == null && status != null) HttpResponse(status, body) else null)
             }
             cont.invokeOnCancellation { task.cancel() }
             task.resume()
@@ -133,5 +135,10 @@ class IosPlatform : Platform {
         }
         return cookies.filter { it.domain.removePrefix(".").let { d -> host == d || host.endsWith(".$d") } }
             .joinToString("; ") { "${it.name}=${it.value}" }.ifEmpty { null }
+    }
+
+    override fun clearCookies() = dispatch_async(dispatch_get_main_queue()) {
+        WKWebsiteDataStore.defaultDataStore().removeDataOfTypes(
+            WKWebsiteDataStore.allWebsiteDataTypes(), NSDate(timeIntervalSince1970 = 0.0)) {}
     }
 }

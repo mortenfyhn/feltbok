@@ -289,9 +289,11 @@ Tapping it opens the Artsobservasjoner login page in the app ("Logg inn"). When 
 the site, the screen closes by itself and you're back in the picker with your observation as it was;
 "‹ Tilbake" also returns to the picker. If Artsobservasjoner's login server still remembers you, the
 page goes straight through without asking for a password. The session is kept in the login page's
-cookie store and lasts 30 days from the login; there is no "Logg ut".
+cookie store and lasts 30 days from the login.
 
-Logged in, the footer says **"Oppdater lokaliteter"**. The app checks this each time the picker opens
+Logged in, the footer says **"Oppdater lokaliteter"**, with **"Logg ut"** to the right. "Logg ut"
+shows the toast "Logga ut" and clears the login page's cookies, the login server's too, so the next login asks for the password.
+Your private localities stay on the phone. The app checks this each time the picker opens
 (`/bff/user`). The app sends the session cookie with its own requests, which gives two things:
 
 - **Your private localities.** They come from `ByUser`, all of them, and replace the stored set, so
@@ -303,6 +305,9 @@ fetches the public ones in view again, even if they were checked recently, then 
 "Henta 2 allmenne lokaliteter og 1 endra privat lokalitet", "Henta 99 private lokaliteter" the first
 time, "Allerede oppdatert", or "Klarte ikke å hente lokalitetene dine." Coming back
 from the login does the same.
+A session can stop working for your own localities while the site still counts you as logged in
+(seen a month after a login). The app then logs you out as "Logg ut" does: the toast says
+"Innlogginga har gått ut. Logg inn på nytt.", and the footer offers "Logg inn" again.
 
 You rarely need to tap it. Logged in, the map's response also lists private localities you can see,
 without saying whose: your own, and other people's that you have reported on. When it has one the app

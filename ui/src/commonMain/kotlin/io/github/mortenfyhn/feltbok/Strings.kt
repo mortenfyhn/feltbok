@@ -194,6 +194,9 @@ object Strings {
         const val update = "Oppdater lokaliteter"            // the picker-map footer, logged in
         const val loginForPrivate = "Logg inn for å vise private lokaliteter"  // the picker-map footer, logged out
         const val error = "Klarte ikke å hente lokaliteter"
+        const val loginAgain = "Innlogginga har gått ut. Logg inn på nytt."
+        const val logOut = "Logg ut"                         // the picker-map footer, logged in
+        const val loggedOut = "Logga ut"
 
         /** "Oppdater lokaliteter": [newPublic] new public ones in view, and what changed in your own. */
         fun updated(newPublic: Int, d: SyncDiff): String {

@@ -10,6 +10,7 @@ import kotlinx.coroutines.test.setMain
 import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
+import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
@@ -114,6 +115,27 @@ class LoginFlowTest {
         await("toast") { p.toasts.isNotEmpty() }
         assertEquals(Strings.Sync.error, lastToast())
         assertFalse(vm.mySitesBusy)
+    }
+
+    @Test
+    fun aSessionByUserRefusesLogsYouOutSoYouCanLogInAgain() {
+        // /bff/user still accepts the session, ByUser answers 403: seen on a month-old login.
+        logIn()
+        p.errors["ByUser"] = 403
+        vm.updateLocalities()
+        await("toast") { p.toasts.isNotEmpty() }
+        assertEquals(Strings.Sync.loginAgain, lastToast())
+        assertFalse("the footer offers Logg inn again", vm.loggedIn)
+        assertNull("the next login starts a new session", p.cookie)
+    }
+
+    @Test
+    fun logOutForgetsTheSession() {
+        logIn()
+        vm.logOut()
+        assertFalse(vm.loggedIn)
+        assertNull(p.cookie)
+        assertEquals(Strings.Sync.loggedOut, lastToast())
     }
 
     @Test

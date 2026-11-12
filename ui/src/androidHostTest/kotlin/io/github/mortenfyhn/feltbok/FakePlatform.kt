@@ -35,12 +35,17 @@ class FakePlatform : Platform {
 
     override fun toast(message: String, long: Boolean) { toasts += message }
 
-    override suspend fun httpGet(url: String, headers: Map<String, String>, timeoutMs: Int): String? {
+    /** URL fragment -> HTTP error status, checked before [answers]. */
+    val errors = LinkedHashMap<String, Int>()
+
+    override suspend fun httpGet(url: String, headers: Map<String, String>, timeoutMs: Int): HttpResponse? {
         requests += url to headers
-        return answers.entries.firstOrNull { it.key in url }?.value?.invoke(url)
+        errors.entries.firstOrNull { it.key in url }?.let { return HttpResponse(it.value, "") }
+        return answers.entries.firstOrNull { it.key in url }?.value?.invoke(url)?.let { HttpResponse(200, it) }
     }
 
     override suspend fun siteCookie() = cookie
+    override fun clearCookies() { cookie = null }
 
     companion object {
         fun site(id: Int, name: String, private: Boolean, lat: Double = 59.905, lon: Double = 10.71) =

@@ -18,20 +18,25 @@ class AndroidPlatform(private val app: Application) : Platform {
     override fun toast(message: String, long: Boolean) =
         Toast.makeText(app, message, if (long) Toast.LENGTH_LONG else Toast.LENGTH_SHORT).show()
 
-    override suspend fun httpGet(url: String, headers: Map<String, String>, timeoutMs: Int): String? =
+    override suspend fun httpGet(url: String, headers: Map<String, String>, timeoutMs: Int): HttpResponse? =
         withContext(Dispatchers.IO) {
             runCatching {
                 val c = URL(url).openConnection() as HttpURLConnection
                 c.connectTimeout = 5000
                 c.readTimeout = timeoutMs
                 headers.forEach { (k, v) -> c.setRequestProperty(k, v) }
-                try { c.inputStream.bufferedReader().readText() } finally { c.disconnect() }
+                try {
+                    val stream = if (c.responseCode in 200..299) c.inputStream else c.errorStream
+                    HttpResponse(c.responseCode, stream?.bufferedReader()?.readText().orEmpty())
+                } finally { c.disconnect() }
             }.getOrNull()
         }
 
     // Includes the HttpOnly session cookies: the WebView's CookieManager returns all of them.
     override suspend fun siteCookie(): String? =
         CookieManager.getInstance().getCookie(Country.sitesHost)?.takeIf { it.isNotBlank() }
+
+    override fun clearCookies() = CookieManager.getInstance().run { removeAllCookies { flush() } }
 
     override fun importSeedNotes() = importSeedNotes(app)
 }

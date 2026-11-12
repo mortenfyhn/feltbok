@@ -752,6 +752,17 @@ class MainViewModel(private val platform: Platform) : ViewModel() {
 
     fun checkSession() { viewModelScope.launch { sessionEnd = fetchSessionEnd(platform) } }
 
+    fun logOut() {
+        endSession()
+        platform.toast(Strings.Sync.loggedOut)
+    }
+
+    /** "Logg ut", and the way out of a session the site no longer accepts. */
+    private fun endSession() {
+        platform.clearCookies()
+        sessionEnd = null
+    }
+
     /** Whether your own localities are being fetched (the picker footer's spinner). */
     var mySitesBusy by mutableStateOf(false)
         private set
@@ -773,10 +784,16 @@ class MainViewModel(private val platform: Platform) : ViewModel() {
                 checkedCells.keys.removeAll(cellsIn(s, w, n, e).toSet())
                 fetchLive(s, w, n, e, ++liveGen, null) { newPublic.complete(it) }
             } else newPublic.complete(0)
-            val diff = fetchMySites(platform)?.let { runCatching { applyMySites(it) }.getOrNull() }
+            var rejected = false
+            val diff = fetchMySites(platform) { rejected = true }?.let { runCatching { applyMySites(it) }.getOrNull() }
             val fresh = newPublic.await()
             mySitesBusy = false
-            platform.toast(if (diff == null) Strings.Sync.error else Strings.Sync.updated(fresh, diff), long = true)
+            if (rejected) endSession()
+            platform.toast(when {
+                rejected -> Strings.Sync.loginAgain
+                diff == null -> Strings.Sync.error
+                else -> Strings.Sync.updated(fresh, diff)
+            }, long = true)
         }
     }
 
@@ -786,7 +803,7 @@ class MainViewModel(private val platform: Platform) : ViewModel() {
         if (mySitesBusy) return
         mySitesBusy = true
         viewModelScope.launch {
-            val sites = fetchMySites(platform)
+            val sites = fetchMySites(platform) { endSession() }
             mySitesBusy = false
             if (sites == null) return@launch
             val ids = sites.mapTo(HashSet()) { it.id }

@@ -26,7 +26,8 @@ import androidx.compose.ui.unit.sp
 // the user's own sites from ByUser (MainViewModel.refreshMySites).
 
 /** The picker map's footer. Logged in, it updates your own localities in place; logged out, it opens
- *  the login. Logged in, the map also gets all new public localities in dense areas. Styled like
+ *  the login. Logged in, "Logg ut" sits to the right, and the map also gets all new public
+ *  localities in dense areas. Styled like
  *  the list's footer links. */
 @Composable
 fun PickerFooter(vm: MainViewModel, modifier: Modifier = Modifier) {
@@ -35,17 +36,25 @@ fun PickerFooter(vm: MainViewModel, modifier: Modifier = Modifier) {
     val loggedIn = vm.loggedIn
     Column(modifier.fillMaxWidth().background(cs.surface)) {
         HorizontalDivider(color = cs.outline.copy(alpha = 0.4f))
-        Row(
-            Modifier.clickable(enabled = !vm.mySitesBusy) { if (loggedIn) vm.updateLocalities() else vm.openSync() }
-                .padding(horizontal = 14.dp, vertical = 10.dp),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(8.dp),
-        ) {
-            // Wraps rather than clip its last word with large text (#198); the spinner keeps its room.
-            Text(if (loggedIn) Strings.Sync.update else Strings.Sync.loginForPrivate,
-                color = cs.primary, fontWeight = FontWeight.Medium, fontSize = 13.sp,
-                modifier = Modifier.weight(1f, fill = false))
-            if (vm.mySitesBusy) CircularProgressIndicator(Modifier.size(14.dp), color = cs.primary, strokeWidth = 2.dp)
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Row(
+                Modifier.weight(1f)
+                    .clickable(enabled = !vm.mySitesBusy) { if (loggedIn) vm.updateLocalities() else vm.openSync() }
+                    .padding(horizontal = 14.dp, vertical = 10.dp),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+            ) {
+                // Wraps rather than clip its last word with large text (#198); the spinner keeps its room.
+                Text(if (loggedIn) Strings.Sync.update else Strings.Sync.loginForPrivate,
+                    color = cs.primary, fontWeight = FontWeight.Medium, fontSize = 13.sp,
+                    modifier = Modifier.weight(1f, fill = false))
+                if (vm.mySitesBusy) CircularProgressIndicator(Modifier.size(14.dp), color = cs.primary, strokeWidth = 2.dp)
+            }
+            if (loggedIn) {
+                Text(Strings.Sync.logOut, color = cs.onSurfaceVariant, fontSize = 13.sp,
+                    modifier = Modifier.clickable(enabled = !vm.mySitesBusy) { vm.logOut() }
+                        .padding(horizontal = 14.dp, vertical = 10.dp))
+            }
         }
     }
 }
