@@ -85,6 +85,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.runtime.withFrameNanos
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
@@ -1768,10 +1769,11 @@ private fun CommentField(label: String, value: String, onChange: (String) -> Uni
     }
 }
 
-/** Time editor. Usually just one date and time; the "Ulik sluttid" checkbox adds a Slutt row for a real
- *  range (possibly across midnight). Date and time-of-day are tapped separately (opening the
- *  platform date/time dialog), so you can change only the date or only the time. Each row's "Nå"
- *  sets just that endpoint to this moment; "Ukjent klokkeslett" keeps the date but exports no time. */
+/** Start/end time editor. Each row's date and time-of-day are tapped separately (opening the
+ *  platform date/time dialog), so you can change only the date or only the time. Slutt mirrors
+ *  Start (dEndTime == null) until you set a Slutt field, making a real range (possibly
+ *  across midnight). Each row's "Nå" sets just that endpoint to this moment; "Uten klokkeslett"
+ *  keeps the date but exports no time. */
 @Composable
 private fun TimeDialog(vm: MainViewModel, onDismiss: () -> Unit) {
     val platform = rememberPlatformUi()
@@ -1803,27 +1805,27 @@ private fun TimeDialog(vm: MainViewModel, onDismiss: () -> Unit) {
                 // moment (e.g. just the end time while still observing). It re-enables a
                 // time-of-day that had been left unspecified.
                 fun now() = nowMs().also { vm.dTimeUnknown = false }
-                // Unchecking "Ulik sluttid" drops the end but keeps it aside, so checking it again in
-                // the same dialog brings it back (clamped, in case the start moved past it).
-                var showEnd by remember { mutableStateOf(vm.dEndTime != null) }
-                var keptEnd by remember { mutableStateOf<Long?>(null) }
-                fun toggleEnd() {
-                    if (showEnd) keptEnd = vm.dEndTime
-                    vm.dEndTime = if (showEnd) null else keptEnd?.let { clampEnd(start, it) }
-                    showEnd = !showEnd
-                }
-                if (showEnd) TimeHeader(Strings.Time.from)
+                TimeHeader(Strings.Time.from)
                 TimeRow(start, vm.dTimeUnknown,
                     onDate = { pickDate(start, ::setStart) }, onTime = { pickTime(start, ::setStart) },
                     onNow = { setStart(now()) })
-                if (showEnd) {
-                    TimeHeader(Strings.Time.to)
-                    TimeRow(end, vm.dTimeUnknown,
-                        onDate = { pickDate(end, ::setEnd) }, onTime = { pickTime(end, ::setEnd) },
-                        onNow = { setEnd(now()) })
+                TimeHeader(Strings.Time.to)
+                TimeRow(end, vm.dTimeUnknown,
+                    onDate = { pickDate(end, ::setEnd) }, onTime = { pickTime(end, ::setEnd) },
+                    onNow = { setEnd(now()) })
+                // The checkbox drops its own 48dp touch padding so it lines up with the Start/Slutt
+                // headers; the whole row is the touch target instead.
+                Row(
+                    Modifier.fillMaxWidth().clickable { vm.dTimeUnknown = !vm.dTimeUnknown }
+                        .padding(vertical = 12.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    CompositionLocalProvider(LocalMinimumInteractiveComponentSize provides 0.dp) {
+                        Checkbox(checked = vm.dTimeUnknown, onCheckedChange = { vm.dTimeUnknown = it })
+                    }
+                    Spacer(Modifier.width(12.dp))
+                    Text(Strings.Time.noTime)
                 }
-                TimeCheckbox(Strings.Time.endTime, showEnd, ::toggleEnd)
-                TimeCheckbox(Strings.Time.noTime, vm.dTimeUnknown) { vm.dTimeUnknown = !vm.dTimeUnknown }
             }
         },
         confirmButton = { TextButton(onClick = onDismiss) { Text(Strings.Time.done) } },
@@ -1838,22 +1840,6 @@ private fun TimeHeader(label: String) {
         modifier = Modifier.padding(vertical = 8.dp))
 }
 
-/** A checkbox row in the time editor. The checkbox drops its own 48dp touch padding so it lines up
- *  with the Start/Slutt headers; the whole row is the touch target instead. */
-@Composable
-private fun TimeCheckbox(label: String, checked: Boolean, onToggle: () -> Unit) {
-    Row(
-        Modifier.fillMaxWidth().clickable(onClick = onToggle).padding(vertical = 12.dp),
-        verticalAlignment = Alignment.CenterVertically,
-    ) {
-        CompositionLocalProvider(LocalMinimumInteractiveComponentSize provides 0.dp) {
-            Checkbox(checked = checked, onCheckedChange = { onToggle() })
-        }
-        Spacer(Modifier.width(12.dp))
-        Text(label)
-    }
-}
-
 /** A separately-tappable date and (unless the time is left unspecified) time-of-day, plus "Nå"
  *  pinned to the right so it doesn't shift with the date's width. Date and time flow, so large
  *  text wraps whole buttons instead of breaking text inside them. */
@@ -1862,7 +1848,11 @@ private fun TimeRow(ms: Long, timeUnknown: Boolean, onDate: () -> Unit, onTime: 
     Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
         FlowRow(Modifier.weight(1f)) {
             TextButton(onClick = onDate) { Text(displayDate(ms, Strings.dateNames), maxLines = 1) }
-            if (!timeUnknown) TextButton(onClick = onTime) { Text(exportTime(ms), maxLines = 1) }
+            // Hidden, not removed, when the time is unspecified: the dialog sizes to its content, so
+            // removing it would narrow the dialog and move "Nå".
+            TextButton(onClick = onTime, enabled = !timeUnknown, modifier = Modifier.alpha(if (timeUnknown) 0f else 1f)) {
+                Text(exportTime(ms), maxLines = 1)
+            }
         }
         AssistChip(onClick = onNow, label = { Text(Strings.Time.now, maxLines = 1) })
     }
