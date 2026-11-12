@@ -68,7 +68,10 @@ host tests use a fake server)*
 - Logged out, the picker footer says "Logg inn for å vise private lokaliteter". Logging in closes
   the page by itself and returns to the picker with the draft intact. Your private localities
   appear with one toast, and the footer turns into "Oppdater lokaliteter".
-- "Oppdater lokaliteter" shows the spinner and one toast. Offline, it says it couldn't fetch.
+- "Oppdater lokaliteter" shows the spinner and one toast. In flight mode it says "Ingen
+  internettilkobling".
+- "Logg ut" shows "Logga ut" and turns the footer back into "Logg inn for å vise private
+  lokaliteter". The next login asks for the password.
 - "‹ Tilbake" from the login page returns to the picker.
 - Kill and restart the app: still logged in (the session cookie was saved).
 - Logged out in a dense area (central Trondheim, zoom 15-16), localities fill in over a few
