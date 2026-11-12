@@ -20,6 +20,9 @@ import platform.Foundation.NSHTTPURLResponse
 import platform.Foundation.NSMutableURLRequest
 import platform.Foundation.NSString
 import platform.Foundation.NSURL
+import platform.Foundation.NSURLErrorDataNotAllowed
+import platform.Foundation.NSURLErrorInternationalRoamingOff
+import platform.Foundation.NSURLErrorNotConnectedToInternet
 import platform.Foundation.NSURLSession
 import platform.Foundation.NSUTF8StringEncoding
 import platform.Foundation.NSUserDomainMask
@@ -105,8 +108,8 @@ class IosPlatform : Platform {
 
     override fun toast(message: String, long: Boolean) = IosToast.show(message, long)
 
-    override suspend fun httpGet(url: String, headers: Map<String, String>, timeoutMs: Int): HttpResponse? {
-        val nsUrl = NSURL.URLWithString(url) ?: return null
+    override suspend fun httpGet(url: String, headers: Map<String, String>, timeoutMs: Int): HttpResult {
+        val nsUrl = NSURL.URLWithString(url) ?: return NoAnswer(offline = false)
         val request = NSMutableURLRequest.requestWithURL(nsUrl).apply {
             setTimeoutInterval(timeoutMs / 1000.0)
             headers.forEach { (k, v) -> setValue(v, forHTTPHeaderField = k) }
@@ -117,7 +120,9 @@ class IosPlatform : Platform {
             val task = NSURLSession.sharedSession.dataTaskWithRequest(request) { data: NSData?, response, error ->
                 val status = (response as? NSHTTPURLResponse)?.statusCode?.toInt()
                 val body = data?.let { NSString.create(it, NSUTF8StringEncoding)?.toString() }.orEmpty()
-                cont.resume(if (error == null && status != null) HttpResponse(status, body) else null)
+                val offline = error?.code in listOf(
+                    NSURLErrorNotConnectedToInternet, NSURLErrorDataNotAllowed, NSURLErrorInternationalRoamingOff)
+                cont.resume(if (error == null && status != null) HttpResponse(status, body) else NoAnswer(offline))
             }
             cont.invokeOnCancellation { task.cancel() }
             task.resume()

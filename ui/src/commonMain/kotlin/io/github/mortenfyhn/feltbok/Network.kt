@@ -3,7 +3,10 @@ package io.github.mortenfyhn.feltbok
 // The two web lookups: the co-observer user search (#128) and the live locality fetch (#173).
 // URLs and parsing live here; the HTTP GET itself is per platform ([Platform.httpGet]).
 
-private fun HttpResponse?.okBody() = this?.takeIf { it.status in 200..299 }?.body
+private fun HttpResult.okBody() = (this as? HttpResponse)?.takeIf { it.status in 200..299 }?.body
+
+/** The site refused the session: only a new login helps. */
+val HttpResult.rejected get() = this is HttpResponse && (status == 401 || status == 403)
 
 private fun headers(vararg extra: Pair<String, String>) =
     mapOf("X-CSRF" to "1", "User-Agent" to "Feltbok/${AppInfo.versionName}") + extra
@@ -37,9 +40,9 @@ suspend fun fetchSessionEnd(platform: Platform): Long? {
 }
 
 /** The user's own private localities (ByUser, all pages), or null on any failure: logged out,
- *  offline, or the endpoint changed. A session that /bff/user still accepts can be refused here
- *  (401/403, seen on a month-old login); then [onRejected] runs, since only a new login helps. */
-suspend fun fetchMySites(platform: Platform, onRejected: () -> Unit = {}): List<Locality>? {
+ *  offline, or the endpoint changed. [onFailed] gets a failed request; a session that /bff/user
+ *  still accepts can be [rejected] here (seen on a month-old login). */
+suspend fun fetchMySites(platform: Platform, onFailed: (HttpResult) -> Unit = {}): List<Locality>? {
     val cookie = platform.siteCookie() ?: return null
     val h = headers("Accept" to "application/json", "Cookie" to cookie)
     val out = ArrayList<Locality>()
@@ -47,8 +50,7 @@ suspend fun fetchMySites(platform: Platform, onRejected: () -> Unit = {}): List<
     var total = 1
     while (page <= total) {
         val res = platform.httpGet("${Country.mySitesUrl}?pageSize=100&pageNumber=$page", h, timeoutMs = 10000)
-        if (res?.status == 401 || res?.status == 403) onRejected()
-        val json = res.okBody() ?: return null
+        val json = res.okBody() ?: return null.also { onFailed(res) }
         runCatching { out += parseMySites(json); total = parseTotalPages(json) }.getOrElse { return null }
         page++
     }

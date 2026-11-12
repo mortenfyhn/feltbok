@@ -303,11 +303,15 @@ Your private localities stay on the phone. The app checks this each time the pic
 Tapping "Oppdater lokaliteter" (with a spinner in the footer) fetches your private localities and
 fetches the public ones in view again, even if they were checked recently, then shows one toast:
 "Henta 2 allmenne lokaliteter og 1 endra privat lokalitet", "Henta 99 private lokaliteter" the first
-time, "Allerede oppdatert", or "Klarte ikke å hente lokalitetene dine." Coming back
-from the login does the same.
+time, or "Allerede oppdatert". When it fails, the toast says why: "Ingen internettilkobling" when the phone
+has no working network, "Artsobservasjoner.no svarer ikke, prøv igjen seinere" when the site
+didn't answer, "Artsobservasjoner.no utilgjengelig, prøv igjen seinere (kode 503)" with the HTTP
+status it answered with, or "Klarte ikke å hente lokaliteter" when the answer couldn't be read or saved.
+Coming back from the login does the same.
 A session can stop working for your own localities while the site still counts you as logged in
 (seen a month after a login). The app then logs you out as "Logg ut" does: the toast says
-"Innlogginga har gått ut. Logg inn på nytt.", and the footer offers "Logg inn" again.
+"Innlogging utløpt, logg inn igjen", and the footer offers "Logg inn for å vise private lokaliteter"
+again.
 
 You rarely need to tap it. Logged in, the map's response also lists private localities you can see,
 without saying whose: your own, and other people's that you have reported on. When it has one the app

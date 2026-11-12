@@ -2,6 +2,8 @@ package io.github.mortenfyhn.feltbok
 
 import android.app.Application
 import android.content.Context
+import android.net.ConnectivityManager
+import android.net.NetworkCapabilities
 import android.webkit.CookieManager
 import android.widget.Toast
 import kotlinx.coroutines.Dispatchers
@@ -18,7 +20,7 @@ class AndroidPlatform(private val app: Application) : Platform {
     override fun toast(message: String, long: Boolean) =
         Toast.makeText(app, message, if (long) Toast.LENGTH_LONG else Toast.LENGTH_SHORT).show()
 
-    override suspend fun httpGet(url: String, headers: Map<String, String>, timeoutMs: Int): HttpResponse? =
+    override suspend fun httpGet(url: String, headers: Map<String, String>, timeoutMs: Int): HttpResult =
         withContext(Dispatchers.IO) {
             runCatching {
                 val c = URL(url).openConnection() as HttpURLConnection
@@ -29,8 +31,12 @@ class AndroidPlatform(private val app: Application) : Platform {
                     val stream = if (c.responseCode in 200..299) c.inputStream else c.errorStream
                     HttpResponse(c.responseCode, stream?.bufferedReader()?.readText().orEmpty())
                 } finally { c.disconnect() }
-            }.getOrNull()
+            }.getOrElse { NoAnswer(offline = !online()) }
         }
+
+    private fun online() = app.getSystemService(ConnectivityManager::class.java).run {
+        getNetworkCapabilities(activeNetwork)?.hasCapability(NetworkCapabilities.NET_CAPABILITY_VALIDATED) == true
+    }
 
     // Includes the HttpOnly session cookies: the WebView's CookieManager returns all of them.
     override suspend fun siteCookie(): String? =

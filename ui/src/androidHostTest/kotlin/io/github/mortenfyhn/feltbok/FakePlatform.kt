@@ -38,10 +38,14 @@ class FakePlatform : Platform {
     /** URL fragment -> HTTP error status, checked before [answers]. */
     val errors = LinkedHashMap<String, Int>()
 
-    override suspend fun httpGet(url: String, headers: Map<String, String>, timeoutMs: Int): HttpResponse? {
+    /** Failed requests (null answers) say the device is offline. */
+    var offline = false
+
+    override suspend fun httpGet(url: String, headers: Map<String, String>, timeoutMs: Int): HttpResult {
         requests += url to headers
         errors.entries.firstOrNull { it.key in url }?.let { return HttpResponse(it.value, "") }
         return answers.entries.firstOrNull { it.key in url }?.value?.invoke(url)?.let { HttpResponse(200, it) }
+            ?: NoAnswer(offline)
     }
 
     override suspend fun siteCookie() = cookie

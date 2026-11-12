@@ -108,23 +108,13 @@ class LoginFlowTest {
     }
 
     @Test
-    fun updateSaysSoWhenYourLocalitiesCantBeFetched() {
-        logIn()
-        mine = null
-        vm.updateLocalities()
-        await("toast") { p.toasts.isNotEmpty() }
-        assertEquals(Strings.Sync.error, lastToast())
-        assertFalse(vm.mySitesBusy)
-    }
-
-    @Test
     fun aSessionByUserRefusesLogsYouOutSoYouCanLogInAgain() {
         // /bff/user still accepts the session, ByUser answers 403: seen on a month-old login.
         logIn()
         p.errors["ByUser"] = 403
         vm.updateLocalities()
         await("toast") { p.toasts.isNotEmpty() }
-        assertEquals(Strings.Sync.loginAgain, lastToast())
+        assertEquals("Innlogging utløpt, logg inn igjen", lastToast())
         assertFalse("the footer offers Logg inn again", vm.loggedIn)
         assertNull("the next login starts a new session", p.cookie)
     }
@@ -136,6 +126,26 @@ class LoginFlowTest {
         assertFalse(vm.loggedIn)
         assertNull(p.cookie)
         assertEquals(Strings.Sync.loggedOut, lastToast())
+    }
+
+    @Test
+    fun updateSaysWhyArtsobservasjonerDidntAnswer() {
+        logIn()
+        fun update(): String? {
+            p.toasts.clear()
+            vm.updateLocalities()
+            await("toast") { p.toasts.isNotEmpty() }
+            return lastToast()
+        }
+        p.errors["ByUser"] = 503
+        assertEquals("Artsobservasjoner.no utilgjengelig, prøv igjen seinere (kode 503)", update())
+        p.errors.clear()
+        mine = null
+        assertEquals("Artsobservasjoner.no svarer ikke, prøv igjen seinere", update())
+        p.offline = true
+        assertEquals("Ingen internettilkobling", update())
+        assertTrue("only a refused session logs you out", vm.loggedIn)
+        assertFalse(vm.mySitesBusy)
     }
 
     @Test

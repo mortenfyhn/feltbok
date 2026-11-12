@@ -13,7 +13,14 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.window.DialogProperties
 import kotlinx.coroutines.flow.StateFlow
 
-data class HttpResponse(val status: Int, val body: String)
+/** What a GET got back: an HTTP answer, or none. */
+sealed interface HttpResult
+
+data class HttpResponse(val status: Int, val body: String) : HttpResult
+
+/** No answer: [offline] when the device has no working network, else the server didn't answer
+ *  (timeout, refused). */
+data class NoAnswer(val offline: Boolean) : HttpResult
 
 /** What the view model needs from the platform, so the same view model runs on Android and iOS. */
 interface Platform {
@@ -23,8 +30,8 @@ interface Platform {
     /** A short message over whatever screen is showing; [long] for one worth reading twice. */
     fun toast(message: String, long: Boolean = false)
 
-    /** The answer to a GET of [url], or null when there was none (offline, timeout). */
-    suspend fun httpGet(url: String, headers: Map<String, String>, timeoutMs: Int): HttpResponse?
+    /** A GET of [url]. */
+    suspend fun httpGet(url: String, headers: Map<String, String>, timeoutMs: Int): HttpResult
 
     /** The `Cookie` header value for [Country.sitesHost] from the login WebView's cookie store, or
      *  null when there is none. Logged in, ByBoundingBox leaves out other users' private sites. */

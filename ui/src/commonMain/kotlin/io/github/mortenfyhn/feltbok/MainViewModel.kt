@@ -784,16 +784,13 @@ class MainViewModel(private val platform: Platform) : ViewModel() {
                 checkedCells.keys.removeAll(cellsIn(s, w, n, e).toSet())
                 fetchLive(s, w, n, e, ++liveGen, null) { newPublic.complete(it) }
             } else newPublic.complete(0)
-            var rejected = false
-            val diff = fetchMySites(platform) { rejected = true }?.let { runCatching { applyMySites(it) }.getOrNull() }
+            var failed: HttpResult? = null
+            val diff = fetchMySites(platform) { failed = it }?.let { runCatching { applyMySites(it) }.getOrNull() }
             val fresh = newPublic.await()
             mySitesBusy = false
-            if (rejected) endSession()
-            platform.toast(when {
-                rejected -> Strings.Sync.loginAgain
-                diff == null -> Strings.Sync.error
-                else -> Strings.Sync.updated(fresh, diff)
-            }, long = true)
+            if (failed?.rejected == true) endSession()
+            platform.toast(failed?.let(Strings.Sync::failed)
+                ?: diff?.let { Strings.Sync.updated(fresh, it) } ?: Strings.Sync.error, long = true)
         }
     }
 
@@ -803,7 +800,7 @@ class MainViewModel(private val platform: Platform) : ViewModel() {
         if (mySitesBusy) return
         mySitesBusy = true
         viewModelScope.launch {
-            val sites = fetchMySites(platform) { endSession() }
+            val sites = fetchMySites(platform) { if (it.rejected) endSession() }
             mySitesBusy = false
             if (sites == null) return@launch
             val ids = sites.mapTo(HashSet()) { it.id }
