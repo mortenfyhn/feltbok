@@ -27,6 +27,7 @@ import platform.Foundation.closeFile
 import platform.Foundation.create
 import platform.Foundation.dataTaskWithRequest
 import platform.Foundation.dataUsingEncoding
+import platform.Foundation.dateWithTimeIntervalSince1970
 import platform.Foundation.fileHandleForWritingAtPath
 import platform.Foundation.seekToEndOfFile
 import platform.Foundation.setValue
@@ -139,6 +140,6 @@ class IosPlatform : Platform {
 
     override fun clearCookies() = dispatch_async(dispatch_get_main_queue()) {
         WKWebsiteDataStore.defaultDataStore().removeDataOfTypes(
-            WKWebsiteDataStore.allWebsiteDataTypes(), NSDate(timeIntervalSince1970 = 0.0)) {}
+            WKWebsiteDataStore.allWebsiteDataTypes(), NSDate.dateWithTimeIntervalSince1970(0.0)) {}
     }
 }
