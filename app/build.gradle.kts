@@ -66,8 +66,8 @@ android {
         applicationId = "io.github.mortenfyhn.feltbok"
         minSdk = 26
         targetSdk = 36
-        versionCode = 19
-        versionName = "1.4.1"
+        versionCode = 20
+        versionName = "1.5"
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         buildConfigField("String", "GIT_VERSION", "\"$gitVersionRelease\"")
         // BuildConfig.DEBUG tracks the `debuggable` flag, which the debug build type turns OFF for

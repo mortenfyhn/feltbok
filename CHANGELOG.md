@@ -4,11 +4,13 @@
 
 ## Neste utgivelse
 
+## v1.5 (13. november 2026)
+
 - «Arkiver» heter nå «Slett», og arkivet heter «Papirkurv».
 - Medobservatørlista er enklere å bruke.
-- Appen er raskere.
-- Forbedra tidsvelger.
+- Inntasting av dato og tid er forbedra.
 - Bedre layout på mobiler med stor skrift.
+- Appen er raskere.
 - Mange små forbedringer og feilrettinger.
 
 ## v1.4.1 (11. november 2026)
