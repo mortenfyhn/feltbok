@@ -106,8 +106,10 @@ class UndoFlowTest {
         rule.onNodeWithText(Strings.Notes.deleteSelected).performClick()
         rule.onNodeWithText(Strings.Notes.deleted(1)).assertIsDisplayed()
 
-        // "+" leaves the list, which the dismiss effect in App() treats as acting on the offer.
-        rule.onNodeWithText("+").performClick()
+        // Leaving the list counts as acting on the offer, so the dismiss effect in App() drops it.
+        // Not by tapping "+": the snackbar covers the button's centre, so the tap lands on the
+        // snackbar (it used to hit "Angre", which passed for the wrong reason).
+        rule.runOnUiThread { vm.startAdd() }
         rule.onNodeWithText(Strings.Notes.undo).assertDoesNotExist()
     }
 }

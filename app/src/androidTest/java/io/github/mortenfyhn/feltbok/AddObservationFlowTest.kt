@@ -40,6 +40,10 @@ class AddObservationFlowTest {
         val vm = MainViewModel(app)
         rule.setContent { App(vm) }
 
+        // On the empty list the + button carries a label, so a first-time user sees where to start.
+        // The label's text lives only in the unmerged tree; the button clears its children's semantics.
+        rule.onNodeWithText(Strings.Notes.newNote, useUnmergedTree = true).assertIsDisplayed()
+
         // List -> the + button opens species search.
         rule.onNodeWithText("+").performClick()
 
@@ -57,5 +61,9 @@ class AddObservationFlowTest {
         // Save returns to the list, where NoteRow renders "<count> <species>".
         rule.onNodeWithText(Strings.Detail.save).performClick()
         rule.onNodeWithText("kjøttmeis", substring = true).assertIsDisplayed()
+        // With a note in the list, the button shrinks back to a plain + (after its collapse animation).
+        rule.waitUntil(timeoutMillis = 5_000) {
+            rule.onAllNodesWithText(Strings.Notes.newNote, useUnmergedTree = true).fetchSemanticsNodes().isEmpty()
+        }
     }
 }
