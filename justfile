@@ -20,6 +20,11 @@ test:
     .venv/bin/python -m unittest discover -s scripts -p 'test_*.py'
     ./gradlew :ui:testAndroidHostTest :shared:jvmTest
 
+# Cut a release: ./release.sh with the same arguments (see docs/release.md)
+[group('app')]
+release *args:
+    ./release.sh {{args}}
+
 # Install git hooks
 [group('dev')]
 hooks:

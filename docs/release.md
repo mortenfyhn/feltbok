@@ -1,6 +1,6 @@
 # Releasing Feltbok
 
-Releases are **signed APKs published as GitHub releases**, cut locally with `./release.sh`.
+Releases are **signed APKs published as GitHub releases**, cut locally with `./release.sh` (or `just release`).
 The release page is the share-with-birders landing spot: each one prepends the get-started
 steps from `release-notes-install.md` via `gh release create --notes-file`, and those steps
 link to the one screenshot walkthrough in [install.md](install.md). The README points users at
