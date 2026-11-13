@@ -2,11 +2,14 @@ package io.github.mortenfyhn.feltbok
 
 import android.app.Application
 import androidx.compose.ui.test.assertIsDisplayed
+import androidx.compose.ui.test.hasSetTextAction
 import androidx.compose.ui.test.junit4.v2.createComposeRule
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
+import androidx.compose.ui.test.performTextReplacement
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
+import org.junit.Assert.assertEquals
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -73,5 +76,21 @@ class EditFlowTest {
 
         marked.forEach { rule.onNodeWithText("5 $it", substring = true).assertIsDisplayed() }
         rule.onNodeWithText("5 $untouched", substring = true).assertDoesNotExist()
+    }
+
+    /**
+     * Emptying the count field means "unknown". It used to keep the old count, which then saved as
+     * 1. Non-digits are dropped. The count is the editor's only text field.
+     */
+    @Test
+    fun countFieldEmptiesToUnknownAndDropsNonDigits() {
+        val vm = start()
+        rule.runOnUiThread { vm.seedNote("kjøttmeis") }
+        rule.onNodeWithText("kjøttmeis", substring = true).performClick()
+
+        rule.onNode(hasSetTextAction()).performTextReplacement("1a2")
+        assertEquals(12, rule.runOnIdle { vm.dCount })
+        rule.onNode(hasSetTextAction()).performTextReplacement("")
+        assertEquals(UNKNOWN_COUNT, rule.runOnIdle { vm.dCount })
     }
 }
