@@ -26,8 +26,8 @@ Recipes live in `just --list`. Gotchas not covered there:
   rule if needed.
 - **Instrumented R8 smoke tests** (`just itest`, device-gated) run against the minified `releaseTest`
   variant, so an R8 strip fails a test instead of shipping broken. Skipped cleanly when no device is
-  attached. Also carries a UI-wiring layer (`UndoFlowTest`, `NavigationFlowTest`, `EditFlowTest`) —
-  add to it only where a pure-JVM test genuinely can't reach, and only once the UI has settled.
+  attached. Also carries a UI-flow layer (`UndoFlowTest`, `NavigationFlowTest`, `EditFlowTest`) for
+  behaviour a pure-JVM test can't reach.
 - `just format` / `just lint` are CI-gated (ktlint / ruff). ktlint only fixes whitespace/imports —
   it won't churn line structure or naming.
 - Fresh worktree: copy `local.properties` from the main checkout (gitignored, Gradle needs it), and
@@ -56,10 +56,15 @@ a `MainViewModel` must start with `ClearAppDataRule` — otherwise the suite bec
 - **Minimal diffs.** Implement only what's asked; prefer the smallest change and removing code over
   adding it. Prefer pure functions; small focused classes. Match surrounding style and comment
   density (comments explain WHY).
-- **Bug fixes come with a regression test by default.** Add a test that fails on the old behaviour
-  and passes with the fix, and check that it does fail without the fix. Prefer a pure-JVM test
-  (`androidHostTest`, or `commonTest` in `:shared`). If no test can reach the bug at a reasonable
-  cost, say so instead of skipping it silently.
+- **Goal: no manual testing beyond a quick bench check** (#201). Releases shouldn't depend on
+  soaking the app in the field, so every change to behaviour comes with tests, not only bug fixes:
+  - A bug fix gets a regression test. Check that it fails without the fix.
+  - Prefer a pure-JVM test (`commonTest` in `:shared`, or `androidHostTest`). When only the UI can
+    reach the behaviour, write an instrumented test. Being UI is no reason to skip the test.
+  - Look for untested behaviour in the code nearby, especially cheap wins, and propose tests for
+    it, so coverage grows over time.
+  - If no test can reach a change at a reasonable cost, say so and discuss it. Never skip it
+    silently.
 - **Keep new logic platform-free.** Put new non-UI logic in the `:shared` module
   (`shared/src/commonMain`, plain Kotlin, no Android or JVM imports; like `Search.kt`), not in
   `Model.kt` or `MainViewModel.kt`, so the coming iOS app (#115) gets it too. It builds for JVM
