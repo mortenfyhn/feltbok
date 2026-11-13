@@ -1530,8 +1530,8 @@ fun DetailScreen(vm: MainViewModel) {
         }
         // Delete and save sit side by side - red left, green right - so the destructive action
         // isn't stacked directly under the thumb's path to Lagre, where it was easy to hit by
-        // mistake (#96).
-        Row(
+        // mistake (#96). Hidden while the keyboard is up, so it doesn't ride up above the keys.
+        if (WindowInsets.ime.getBottom(LocalDensity.current) == 0) Row(
             Modifier.fillMaxWidth().background(cs.surface).bottomInsetPadding().padding(horizontal = 14.dp, vertical = 11.dp),
             horizontalArrangement = Arrangement.spacedBy(10.dp),
         ) {
