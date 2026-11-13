@@ -91,8 +91,13 @@ fun App(vm: MainViewModel, screens: @Composable (LazyListState) -> Unit = { Scre
                     // Lifted above the list's footer bar (Material floats snackbars above persistent
                     // bottom chrome), so the undo toast can't cover the Papirkurv/feedback links - which it
                     // otherwise does exactly when you've just deleted and might want the papirkurv. The
-                    // footer is a single fixed 13sp text row, so a constant clears it.
-                    snackbarHost = { SnackbarHost(snackbar, Modifier.padding(bottom = 40.dp)) },
+                    // footer is a single fixed 13sp text row, so a constant clears it. On the list it also
+                    // floats above the + button's 88 dp box, as Material puts snackbars above the FAB;
+                    // over it, a tap meant for + hit the snackbar or its Angre.
+                    snackbarHost = {
+                        val overFab = vm.screen == Screen.LIST && !vm.selectionMode
+                        SnackbarHost(snackbar, Modifier.padding(bottom = if (overFab) 40.dp + 88.dp else 40.dp))
+                    },
                     containerColor = Color.Transparent,
                 ) { _ ->
                     screens(listState)
