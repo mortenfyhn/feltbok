@@ -28,15 +28,16 @@ interaction paths (map tap-gating especially) that the automated suites can't co
 First draft the version's entry in `CHANGELOG.md` (terse, user-facing highlights only). Then:
 
 ```sh
-./release.sh 0.8
+./release.sh v0.8       # --help lists the steps
 ```
 
 The script runs its cheap checks first (clean tree, master's tip, tag free, keystore), so anything
-missing costs a second rather than a full instrumented test run. It then **waits while you write
-the notes** — one file at a time, no abort-and-re-run. The `## Neste utgivelse` section stays a
-hand edit (rewriting it into shippable notes is a real part of cutting a release, and the heading
-rename rides along with it); the English F-Droid "what's new" is optional, so `skip` passes. The
-preview further down shows what it parsed, and `e` re-reads the file if you want another pass.
+missing costs a second rather than a full instrumented test run. It then **opens the notes in
+git's editor** (`git var GIT_EDITOR`: `core.editor`, then `$VISUAL`, then `$EDITOR`), one file at a
+time, and carries on when you close it, so the editor must wait (`subl -w`, not `subl`). If the
+editor fails to start, the script pauses until you hit enter. The `## Neste utgivelse` section stays a hand edit
+(rewriting it into shippable notes is a real part of cutting a release); the script only adds the
+`## v0.8` heading above its bullets.
 
 Next come the two gates: the R8 smoke tests (`just itest`) and the seed→export→paste-import check,
 which the script sets up for you on request — `just install`, `just seed`, `just run`, so the dev
@@ -44,7 +45,8 @@ app is loaded with the sample batch and you only do the paste by hand. Both are 
 by typing `skip`.
 
 After that it commits (version bump + changelog), tags `v0.8`, and builds the signed APK
-(`feltbok-v0.8.apk`). All of that is local.
+(`feltbok-v0.8.apk`) and the Play AAB (`app/build/outputs/bundle/release/app-release.aab`). All of
+that is local. The script prints the AAB's path at the end; upload it in Play Console by hand.
 
 **Pushing is its own prompt at the end.** Answer anything but `yes` and the tag stays local, the
 APK is kept for sideloading, and the script prints the two commands that undo it (`git tag -d` +
@@ -174,7 +176,7 @@ or future-proof it.
 
 - **Google Play** (#74, free — in closed testing since Aug 2026). The only channel with *no*
   Play Protect prompt — apps installed via Play aren't treated as unknown. Upload is an
-  **AAB**, not an APK: `./gradlew bundleRelease`. With **Play App Signing** Google holds the final signing key and we upload with an
+  **AAB**, not an APK, which `release.sh` builds (`./gradlew bundleRelease`). With **Play App Signing** Google holds the final signing key and we upload with an
   *upload key*, so a Play install carries a third signature (GitHub keystore / F-Droid key /
   Play key all differ). Consequence worth knowing: nobody can move between channels without
   uninstalling first. Harmless here — notes are exported then deleted, so there's nothing to

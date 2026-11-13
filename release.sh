@@ -1,9 +1,9 @@
 #!/usr/bin/env bash
 # Cut a signed Feltbok release locally — replaces the old (slow) Semaphore Release job.
-# Validates, runs the pre-flight gates, then builds + signs the APK, tags, and — only after
+# Validates, runs the pre-flight gates, then builds + signs the APK and AAB, tags, and — only after
 # a final yes — pushes and publishes the GitHub release with the changelog notes.
 #
-#   ./release.sh 0.8
+#   ./release.sh v0.8     (./release.sh --help for the steps)
 #
 # Everything up to the push is local and undoable, so this doubles as a rehearsal: Ctrl-C at
 # the "build & tag" pause leaves the tree untouched, and answering no at the push prompt
@@ -16,11 +16,40 @@ set -euo pipefail
 # Formatting
 bold()  { printf '\e[1m%s\e[0m\n' "$*"; }
 
-tag="${1:?usage: ./release.sh <tag>   e.g. v0.8}"
+usage() {
+    cat <<EOF
+Usage: ./release.sh <tag>      e.g. ./release.sh v1.6
+
+Cuts a signed release from master's tip, or from a release/* branch's tip:
+  1. Checks: clean tree (drafted changelogs allowed), branch tip, tag free, keystore.
+  2. Opens CHANGELOG.md, then the English F-Droid changelog, in git's editor, and waits.
+  3. Gates: the R8 smoke tests (just itest) and the paste-import check. Type 'skip' to skip one.
+  4. Bumps versionCode, commits, tags, and builds the signed APK and the Play AAB. All local.
+  5. Asks before pushing and publishing the GitHub release. Answer no to keep it a rehearsal.
+
+The Play AAB is uploaded by hand. See docs/release.md.
+EOF
+}
+case "${1:-}" in
+    -h|--help) usage; exit 0 ;;
+    "") usage >&2; exit 1 ;;
+esac
+tag="$1"
 # versionName is the tag without the leading v, e.g. v1.2 -> 1.2
 version="${tag#v}"
 gradle="app/build.gradle.kts"
 changelog="CHANGELOG.md"
+
+# Open a file in the editor git uses (core.editor, then $VISUAL, then $EDITOR) and wait for it to
+# close, as `git commit` does, so it must wait (`subl -w`). If the editor fails, pause instead.
+edit() {
+    local editor
+    editor=$(git var GIT_EDITOR)
+    echo "-> $2: $1"
+    if ! sh -c "$editor \"\$1\"" "$editor" "$1"; then
+        read -rp "   Hit enter when done " _
+    fi
+}
 
 if [ -t 1 ]; then green=$'\e[1;32m'; reset=$'\e[0m'; else green=; reset=; fi
 
@@ -85,10 +114,9 @@ if [ -z "$(notes)" ]; then
     sed -i "0,/^## Neste utgivelse$/s//&\n\n## $tag ($today)/" "$changelog"
 fi
 # Bullets pile up as changes land, so they read like a commit log until someone tightens them.
-echo "-> Update $changelog"
-read -rp "   Hit enter when done " _
+edit "$changelog" "Update"
 while [ -z "$(notes)" ]; do
-    read -rp "-> No '## $tag' section in $changelog. Add one, then hit enter " _
+    edit "$changelog" "No '## $tag' section, add one"
 done
 
 # F-Droid shows these per-version files inline as the version's "what's new". They're plain text,
@@ -113,8 +141,7 @@ for f in "$fdroid_nb" "$fdroid_en"; do
     mkdir -p "$(dirname "$f")"
     [ -f "$f" ] || notes | fdroid_text > "$f"
 done
-echo "-> Translate $fdroid_en to English"
-read -rp "   Hit enter when done " _
+edit "$fdroid_en" "Translate to English"
 
 # ---- Pre-flight gates: both need a device or a human, so they run once validation passed.
 
@@ -168,20 +195,22 @@ git tag "$tag"
 
 # Build AFTER tagging so `git describe` bakes the clean tag into the in-app version string.
 # F-Droid builds from source on its own servers and never redistributes this APK; the attachment
-# is just for sideloading.
-./gradlew assembleRelease --console=plain
+# is just for sideloading. The AAB is for Play, uploaded by hand.
+./gradlew assembleRelease bundleRelease --console=plain
 # A recognisable name, not Gradle's app-release.apk.
 apk="feltbok-$tag.apk"
 cp app/build/outputs/apk/release/app-release.apk "$apk"
+aab="$PWD/app/build/outputs/bundle/release/app-release.aab"
 
 # ---- The only outward-facing step, behind its own gate so a rehearsal stops here.
 
 echo
-echo "Built $apk, tagged $tag locally."
+echo "Built $apk and the Play AAB, tagged $tag locally."
 read -rp "Push and publish the GitHub release? (yes / anything else keeps it local): " ans
 if [ "$ans" != yes ]; then
     cat <<EOF
-Not pushed. $tag exists locally only, and the APK is kept for sideloading. To undo:
+Not pushed. $tag exists locally only, and the APK is kept for sideloading. The AAB is in
+$aab. To undo:
   git tag -d $tag
   git reset HEAD~1     # mixed, so your CHANGELOG edits stay in the working tree
 EOF
@@ -200,3 +229,4 @@ gh release create "$tag" "$apk" \
 rm -f "$apk" "$notes"
 printf '\n  %s🎉  Feltbok %s er ute!  🎉%s\n' "$green" "$tag" "$reset"
 printf '  https://github.com/mortenfyhn/feltbok/releases/tag/%s\n\n' "$tag"
+echo "Upload the AAB to Play: $aab"
