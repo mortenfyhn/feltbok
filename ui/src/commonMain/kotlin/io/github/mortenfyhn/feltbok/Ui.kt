@@ -27,6 +27,7 @@ import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.WindowInsetsSides
+import androidx.compose.foundation.layout.defaultMinSize
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -59,7 +60,7 @@ import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.ColorScheme
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.FloatingActionButton
+import androidx.compose.material3.ExtendedFloatingActionButton
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.LocalMinimumInteractiveComponentSize
@@ -252,18 +253,22 @@ fun ListScreen(vm: MainViewModel, listState: LazyListState) {
                 // used to land on the note row behind it. Wrap it in a larger transparent
                 // clickable ring (no ripple) so the hitbox grows without the button looking bigger.
                 if (!selecting) Box(
-                    Modifier.align(Alignment.BottomEnd).padding(6.dp).size(88.dp)
+                    Modifier.align(Alignment.BottomEnd).padding(6.dp).defaultMinSize(88.dp, 88.dp)
                         .clickable(
                             interactionSource = remember { MutableInteractionSource() },
                             indication = null,
                         ) { vm.startAdd() },
                     contentAlignment = Alignment.Center,
                 ) {
-                    FloatingActionButton(
+                    // Labelled while the list is empty, so a first-time user sees where to start.
+                    ExtendedFloatingActionButton(
+                        text = { Text(Strings.Notes.newNote) },
+                        icon = { Text("+", fontSize = 30.sp) },
                         onClick = { vm.startAdd() },
+                        expanded = vm.notes.isEmpty(),
                         containerColor = cs.primary, contentColor = Color.White,
-                        modifier = Modifier.size(64.dp),
-                    ) { Text("+", fontSize = 30.sp) }
+                        modifier = Modifier.heightIn(min = 64.dp).widthIn(min = 64.dp),
+                    )
                 }
             }
             // Footer bar: Papirkurv / Tilbakemelding, with the version tucked in the centre.

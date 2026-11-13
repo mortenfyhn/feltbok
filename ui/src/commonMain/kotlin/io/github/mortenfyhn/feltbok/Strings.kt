@@ -23,7 +23,8 @@ object Strings {
     )
 
     object Notes {
-        const val empty = "Trykk + for ny observasjon"
+        const val empty = "Ingen observasjoner ennå"
+        const val newNote = "Ny observasjon"
         const val today = "I dag"
         const val yesterday = "I går"
         const val feedback = "Gi tilbakemelding"
