@@ -4,33 +4,16 @@
 
 ## Neste utgivelse
 
+- Slett- og Lagre-knappene legger seg ikke lenger oppå tastaturet når du skriver antall eller kommentar.
+
+## v1.5 (13. november 2026)
+
 - «Arkiver» heter nå «Slett», og arkivet heter «Papirkurv».
 - Medobservatørlista er enklere å bruke.
-- Appen er raskere.
-- Forbedra tidsvelger.
+- Inntasting av dato og tid er forbedra.
 - Bedre layout på mobiler med stor skrift.
+- Appen er raskere.
 - Mange små forbedringer og feilrettinger.
-- Logg inn fra kartet for å hente dine private lokaliteter og alle nye lokaliteter i tette områder. Logg ut ved sida av «Oppdater lokaliteter».
-- Den svenske betaversjonen (Fältbok) er lagt ned.
-- Den grønne toppen og bunnlinja går helt ut til kanten av skjermen.
-- Lista reagerer raskere, særlig på eldre telefoner.
-- Kartet henger bedre med når du zoomer.
-- Kartet henger ikke lenger etter når du zoomer raskt med to fingre.
-- Kartet hopper ikke lenger av og til når du slipper det etter et sveip.
-- Slett- og Lagre-knappene legger seg ikke lenger oppå tastaturet når du skriver antall eller kommentar.
-- Toppen sier ikke lenger «du er her» når du står like utenfor en lokalitet.
-- «Lagre» er grått når du endrer observasjoner, helt til du faktisk har endra noe.
-- En ny lokalitet du lager fra statuslinja blir gjeldende lokalitet, i stedet for å åpne en tom observasjon.
-- Når du lager en ny lokalitet blir du på kartet, så du ser den før du velger den.
-- Et trykk like utenfor kanten av en lokalitet på kartet velger den.
-- Ymse småforbedringer på eksportsida.
-- Tidsvalget er ryddigere og brekker ikke lenger linjene med stor tekst.
-- Bedre plass med stor tekst og på små skjermer: valgvinduene er ikke lenger like breie som skjermen, og tekst overlapper ikke eller brekker midt i ord.
-- Velg medobservatører med brytere, og slett navn med langt trykk, som i observasjonslista. Sletting kan angres.
-- Hjulet for radius på en ny lokalitet er merka «Radius».
-- «Arkiver» heter nå «Slett», og arkivet heter «Papirkurv». Sletta observasjoner kan fortsatt gjenopprettes derfra.
-- Bunnlinja er skjult mens du markerer, så du ikke åpner papirkurven ved et uhell.
-- Medobservatørene står alfabetisk etter etternavn, og brukeraliaset vises bare når det trengs for å skille folk med samme navn.
 
 ## v1.4.1 (11. november 2026)
 

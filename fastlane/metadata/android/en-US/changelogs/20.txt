@@ -1,0 +1,6 @@
+• «Arkiver» is now «Slett», and the archive is called «Papirkurv».
+• The co-observer liste is easier to use.
+• Entering date and time is improved.
+• Better layout on phones with large text.
+• The app is faster.
+• Many small improvements and fixes.

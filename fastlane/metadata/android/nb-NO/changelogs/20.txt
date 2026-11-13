@@ -1,0 +1,6 @@
+• «Arkiver» heter nå «Slett», og arkivet heter «Papirkurv».
+• Medobservatørlista er enklere å bruke.
+• Inntasting av dato og tid er forbedra.
+• Bedre layout på mobiler med stor skrift.
+• Appen er raskere.
+• Mange små forbedringer og feilrettinger.
