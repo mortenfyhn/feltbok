@@ -360,7 +360,8 @@ range with edge auto-scroll, circles, day-header toggles, the header turning int
 a selection bar) — the one difference is that a plain tap marks the note instead
 of opening it, since a deleted note can't be opened; the first tap is enough to
 start marking, so getting one note back needs no long-press. The single action is
-**Gjenopprett**, which moves the marked notes back into the live list. There is no
+**Gjenopprett**, which moves the marked notes back into the live list and returns
+to it. The list scrolls to the newest restored note, and the restored notes flash once. There is no
 true delete in the app — clearing the app's data is the escape hatch if someone
 really wants everything gone. The papirkurv lives in its own file (`archive.jsonl`,
 append-only on delete), so launch and saving stay

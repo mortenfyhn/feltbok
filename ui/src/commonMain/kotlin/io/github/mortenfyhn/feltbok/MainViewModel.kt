@@ -183,7 +183,8 @@ class MainViewModel(private val platform: Platform) : ViewModel() {
         screen = Screen.LIST
     }
 
-    /** Move the marked archived notes back to the live list (they re-sort into their day groups). */
+    /** Move the marked archived notes back to the live list (they re-sort into their day groups),
+     *  and go back to that list. */
     fun restoreSelected() {
         val sel = archived.filter { it.id in selected }
         if (sel.isEmpty()) return
@@ -191,8 +192,10 @@ class MainViewModel(private val platform: Platform) : ViewModel() {
         saveArchive(storage, archived.toList())
         notes.addAll(sel)
         addNewLocalitiesOf(sel)   // a restored note's brand-new spot is pickable again at once
-        clearSelection()
         persist()
+        flashIds = sel.map { it.id }.toSet()
+        scrollToNoteId = sel.maxBy { it.time }.id
+        closeArchive()
     }
 
     // ---- Batch edit (#120): apply fields to every marked note at once. Undoable (restores the prior
@@ -382,12 +385,16 @@ class MainViewModel(private val platform: Platform) : ViewModel() {
     var showExport by mutableStateOf(false); private set
     var fix by mutableStateOf<GpsFix?>(null); private set
 
-    // Id of a just-added note the list should scroll to reveal. A fresh obs starts a new day-group
+    // Id of a just-added (or restored) note the list should scroll to reveal. A fresh obs starts a new day-group
     // above the current scroll position, so the list stays anchored on the old top and the new note
     // lands off-screen unless we scroll up to it. Consumed (cleared) once shown, so returning from an
     // edit doesn't re-scroll to it.
     var scrollToNoteId by mutableStateOf<Long?>(null); private set
     fun clearScrollTarget() { scrollToNoteId = null }
+
+    // Just-restored notes the list flashes once, so you see where they landed. Cleared once shown.
+    var flashIds by mutableStateOf<Set<Long>>(emptySet()); private set
+    fun clearFlash() { flashIds = emptySet() }
 
     // Remembered locality-picker zoom, so reopening it keeps your last zoom level.
     var mapZoom = 16.0

@@ -87,6 +87,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.focus.onFocusChanged
@@ -183,16 +184,24 @@ fun ListScreen(vm: MainViewModel, listState: LazyListState) {
                     // Inverted lookup for the drag-select range sweep, so it's O(1) instead of an O(n)
                     // indexOf on every drag move / auto-scroll frame.
                     val orderedIndex = remember(orderedIds) { orderedIds.withIndex().associate { (i, id) -> id to i } }
-                    // A just-added obs lands off-screen when it starts a new day above the current
-                    // scroll position - jump to its day header so it's visible. Consumed once shown.
+                    // A just-added or restored obs can land off-screen - scroll to the item just above
+                    // it, so it shows with a bit of context: its day header when it's the day's first
+                    // note (always so for a just-added one). Consumed once shown.
                     LaunchedEffect(vm.scrollToNoteId) {
                         val id = vm.scrollToNoteId ?: return@LaunchedEffect
                         var idx = 1   // the party row precedes the first day header
                         for (g in groups) {
-                            if (g.notes.any { it.id == id }) { listState.animateScrollToItem(idx); break }
+                            val pos = g.notes.indexOfFirst { it.id == id }
+                            if (pos >= 0) { listState.animateScrollToItem(idx + pos); break }
                             idx += 1 + g.notes.size   // day header + its rows
                         }
                         vm.clearScrollTarget()
+                    }
+                    // Long enough for the scroll above plus each row's fade.
+                    LaunchedEffect(vm.flashIds) {
+                        if (vm.flashIds.isEmpty()) return@LaunchedEffect
+                        delay(5000)
+                        vm.clearFlash()
                     }
                     val ds = remember { DragSelect<Long>({ vm.selected.toSet() }, vm::setSelection) }
                     SelectDragAutoScroll(listState, orderedIds, orderedIndex, ds)
@@ -224,6 +233,7 @@ fun ListScreen(vm: MainViewModel, listState: LazyListState) {
                                 NoteRow(
                                     n, vm.noteName(n), vm.langPrefs.primary == Lang.LATIN, vm.statusFor(n.latin),
                                     selecting = selecting, selected = n.id in vm.selected,
+                                    flash = n.id in vm.flashIds,
                                     // Tap toggles the mark while marking, else opens the editor. Entering
                                     // selection (long-press, optionally dragged into a range) is handled by
                                     // the list's dragToSelect so it doesn't fight a row-level long-press -
@@ -770,8 +780,17 @@ private fun AnnotatedString.Builder.appendBoldSymbols(text: String) {
 }
 
 @Composable
-private fun NoteRow(n: Note, name: String, nameItalic: Boolean, status: String, selecting: Boolean, selected: Boolean, onClick: () -> Unit) {
+private fun NoteRow(
+    n: Note, name: String, nameItalic: Boolean, status: String, selecting: Boolean, selected: Boolean,
+    flash: Boolean = false, onClick: () -> Unit,
+) {
     val cs = MaterialTheme.colorScheme
+    // A flashing row holds the selection tint for a moment, then fades out. Drawn in the draw phase, so the
+    // fade doesn't recompose the row every frame.
+    val flashAlpha = remember { Animatable(0f) }
+    LaunchedEffect(flash) {
+        if (flash) { flashAlpha.snapTo(1f); flashAlpha.animateTo(0f, tween(3000, delayMillis = 1000)) }
+    }
     val hasLoc = n.locName.isNotBlank()
     // age + sex (sex symbol bolded so the thin ♂/♀ glyphs read at a glance), each shown only when
     // set. Lowest priority of the four pieces: it's the first to ellipsize/drop when space is tight.
@@ -789,6 +808,7 @@ private fun NoteRow(n: Note, name: String, nameItalic: Boolean, status: String, 
         Modifier.fillMaxWidth()
             .clickable(onClick = onClick)
             .background(if (selected) cs.primaryContainer else cs.surface)
+            .drawBehind { if (flashAlpha.value > 0f) drawRect(cs.primaryContainer.copy(alpha = flashAlpha.value)) }
             .padding(horizontal = 16.dp, vertical = 9.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {

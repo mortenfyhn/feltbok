@@ -5,6 +5,7 @@
 ## Neste utgivelse
 
 - Slett- og Lagre-knappene legger seg ikke lenger oppå tastaturet når du skriver antall eller kommentar.
+- «Gjenopprett» i papirkurven tar deg rett tilbake til lista, der observasjonene du henta tilbake blinker.
 
 ## v1.5 (13. november 2026)
 

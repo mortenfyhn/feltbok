@@ -60,12 +60,10 @@ class TrashFlowTest {
         rule.onNodeWithText(Strings.Archive.title).performClick()
         rule.onNodeWithText(Strings.Archive.empty).assertDoesNotExist()
 
-        // A plain tap marks a deleted note; Gjenopprett moves it back to the list.
+        // A plain tap marks a deleted note; Gjenopprett moves it back and returns to the list.
         rule.onNodeWithText("kjøttmeis", substring = true).performClick()
         rule.onNodeWithText(Strings.Archive.restore).performClick()
-        rule.onNodeWithText(Strings.Archive.empty).assertIsDisplayed()
-
-        rule.onNodeWithText("‹ ${Strings.back}").performClick()
+        rule.onNodeWithText(Strings.Archive.restore).assertDoesNotExist()
         rule.onNodeWithText("kjøttmeis", substring = true).assertIsDisplayed()
     }
 }
