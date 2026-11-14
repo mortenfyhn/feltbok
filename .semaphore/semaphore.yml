@@ -44,14 +44,14 @@ blocks:
           # The unit tests live in :shared (JVM) and :ui (Android host tests); the app module
           # has none left.
           # ktlintCheck gates formatting (run `just format` locally to fix), detektAll static analysis
-          # (detekt.yml). Android Lint runs per
-          # module (:ui holds nearly all the code). The releaseTest APKs are built, not run (no
-          # emulator here), so R8 and the instrumented tests' sources are still checked.
+          # (detekt.yml). Android Lint runs per module (:ui holds nearly all the code). The
+          # releaseTest APKs are built, not run (no emulator here), so R8 and the instrumented tests'
+          # sources are still checked. koverLog prints the unit tests' coverage (report only).
           commands:
             # Falls back to the newest older cache (prefix match), so a build-file change doesn't
             # start cold: a cold run takes about 4 minutes longer.
             - cache restore gradle-$(checksum app/build.gradle.kts)-$(checksum shared/build.gradle.kts)-$(checksum ui/build.gradle.kts),gradle-
-            - ./gradlew ktlintCheck detektAll :ui:testAndroidHostTest :shared:jvmTest assembleDebug :app:lintDebug :ui:lintAndroidMain assembleReleaseTest assembleReleaseTestAndroidTest --console=plain --no-daemon
+            - ./gradlew ktlintCheck detektAll :ui:testAndroidHostTest :shared:jvmTest assembleDebug :app:lintDebug :ui:lintAndroidMain assembleReleaseTest assembleReleaseTestAndroidTest :koverLog :koverHtmlReport --console=plain --no-daemon
             - cache store gradle-$(checksum app/build.gradle.kts)-$(checksum shared/build.gradle.kts)-$(checksum ui/build.gradle.kts) ~/.gradle
       # Publish the debug APK as a workflow artifact so the Claude issue→PR loop (and
       # any branch build) gives a downloadable APK to test, without pulling the branch locally.
@@ -62,6 +62,8 @@ blocks:
           commands:
             - export VERSION=$(git describe --tags --always --dirty)
             - artifact push workflow app/build/outputs/apk/debug/app-debug.apk --destination feltbok-$VERSION.apk
+            # The coverage report (just coverage); the total is also in the job log (koverLog).
+            - artifact push workflow build/reports/kover/html --destination coverage-$VERSION
 
   # Lint + test scripts/ Python, and shellcheck the shell scripts, on a plain VM (no Android
   # container) - they need no SDK/JDK. Parallel with Test & build via dependencies: []. Grab ruff's

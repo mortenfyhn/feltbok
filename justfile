@@ -20,6 +20,11 @@ test:
     .venv/bin/python -m unittest discover -s scripts -p 'test_*.py'
     ./gradlew :ui:testAndroidHostTest :shared:jvmTest
 
+# Unit-test line coverage (no composables): prints the total, HTML in build/reports/kover/html
+[group('check')]
+coverage:
+    ./gradlew :koverLog :koverHtmlReport
+
 # Install git hooks
 [group('dev')]
 hooks:

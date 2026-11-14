@@ -10,6 +10,7 @@ plugins {
     // Copies libraries' Compose resources (MapLibre's attribution strings) into the iOS app bundle.
     id("org.jetbrains.compose")
     id("org.jlleitschuh.gradle.ktlint")
+    id("org.jetbrains.kotlinx.kover")
 }
 
 // Compose Multiplatform 1.11 (material3 1.9) maps to the androidx Compose 1.11 (material3 1.4) the

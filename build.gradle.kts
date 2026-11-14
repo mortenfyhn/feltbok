@@ -15,6 +15,7 @@ plugins {
     id("org.jetbrains.compose") version "1.11.1" apply false
     id("org.jlleitschuh.gradle.ktlint") version "12.1.2" apply false
     id("dev.detekt") version "2.0.0-alpha.6" apply false
+    id("org.jetbrains.kotlinx.kover") version "0.9.11"
 }
 
 // Static analysis for every module. Run the type-resolved tasks (detektAll below), not plain
@@ -36,4 +37,16 @@ tasks.register("detektAll") {
         ":ui:detektMainAndroid", ":ui:detektHostTestAndroid",
         ":app:detektDebug", ":app:detektReleaseTestAndroidTest",
     )
+}
+
+// Line coverage of the unit tests, merged over :shared and :ui (`just coverage`). Report only, no
+// gate. Composables are left out: the unit tests don't render them, so they'd drown the number.
+dependencies {
+    kover(project(":shared"))
+    kover(project(":ui"))
+}
+kover {
+    reports {
+        filters { excludes { annotatedBy("androidx.compose.runtime.Composable") } }
+    }
 }
