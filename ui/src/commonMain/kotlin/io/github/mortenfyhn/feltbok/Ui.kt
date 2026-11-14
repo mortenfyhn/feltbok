@@ -514,7 +514,7 @@ private fun SelectionBar(vm: MainViewModel, onEdit: () -> Unit, modifier: Modifi
  *  actions, and it broke mid-word ("mar/ker", #198); then it drops the word and keeps the number, or
  *  at the very largest sizes drops out (the marked rows still show), for as long as the bar is up. */
 @Composable
-private fun SelectedCount(n: Int, modifier: Modifier) {
+private fun SelectedCount(n: Int, modifier: Modifier = Modifier) {
     var shrink by remember { mutableIntStateOf(0) }
     Text(when (shrink) { 0 -> Strings.Notes.selected(n); 1 -> "$n"; else -> "" }, color = Color.White,
         fontWeight = FontWeight.SemiBold, maxLines = 1, softWrap = false,
@@ -1209,13 +1209,13 @@ internal fun ScreenHeader(
         val loose = constraints.copy(minWidth = 0, minHeight = 0)
         val lead = measurables[0].measure(loose)
         val trail = measurables[1].measure(loose)
-        val title = measurables[2].measure(loose.copy(maxWidth = (w - lead.width - trail.width).coerceAtLeast(0)))
-        val h = maxOf(lead.height, trail.height, title.height, constraints.minHeight)
+        val middle = measurables[2].measure(loose.copy(maxWidth = (w - lead.width - trail.width).coerceAtLeast(0)))
+        val h = maxOf(lead.height, trail.height, middle.height, constraints.minHeight)
         layout(w, h) {
             lead.placeRelative(0, (h - lead.height) / 2)
             trail.placeRelative(w - trail.width, (h - trail.height) / 2)
-            val x = ((w - title.width) / 2).coerceIn(lead.width, maxOf(lead.width, w - trail.width - title.width))
-            title.placeRelative(x, (h - title.height) / 2)
+            val x = ((w - middle.width) / 2).coerceIn(lead.width, maxOf(lead.width, w - trail.width - middle.width))
+            middle.placeRelative(x, (h - middle.height) / 2)
         }
     }
 }

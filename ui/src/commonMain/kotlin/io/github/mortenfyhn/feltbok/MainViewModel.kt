@@ -2,6 +2,8 @@ package io.github.mortenfyhn.feltbok
 
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateMapOf
 import androidx.compose.runtime.mutableStateOf
@@ -399,14 +401,14 @@ class MainViewModel(private val platform: Platform) : ViewModel() {
     private var changingSpecies = false
     var dSpecies by mutableStateOf("")
     var dLatin by mutableStateOf("")
-    var dCount by mutableStateOf(1)
+    var dCount by mutableIntStateOf(1)
     var dAge by mutableStateOf("")
     var dAct by mutableStateOf("")
     var dSex by mutableStateOf("")
     var dPub by mutableStateOf("")
     var dPriv by mutableStateOf("")
     var dLoc by mutableStateOf<Locality?>(null)
-    var dTime by mutableStateOf(0L)
+    var dTime by mutableLongStateOf(0L)
     var dEndTime by mutableStateOf<Long?>(null)   // observation end; null = single time point
     var dTimeUnknown by mutableStateOf(false)     // time-of-day left unspecified (date still known)
     var dUncertain by mutableStateOf(false)
@@ -579,7 +581,7 @@ class MainViewModel(private val platform: Platform) : ViewModel() {
 
     /** Bumped on each copyAsNew so the editor can play a slide-in: copying stays on the DETAIL
      *  screen, so without this cue the near-identical form makes it unclear a new copy was made. */
-    var copyToken by mutableStateOf(0); private set
+    var copyToken by mutableIntStateOf(0); private set
 
     // True while the draft is a copy of an existing observation (not editing it, but carrying its
     // location). Lets the picker focus on that inherited locality like editing does, instead of
@@ -665,7 +667,7 @@ class MainViewModel(private val platform: Platform) : ViewModel() {
         for (c in cells) checkedCells[c] = now
         viewModelScope.launch {
             val budget = RequestBudget(LIVE_FETCH_BUDGET)
-            val results = groups.map { fetchCells(it, budget) { s, w, n, e -> fetchSites(platform, s, w, n, e) } }
+            val results = groups.map { fetchCells(it, budget) { south, west, north, east -> fetchSites(platform, south, west, north, east) } }
             val done = results.flatMap { it.done }
             val rows = results.flatMap { it.rows }
             // Logged in, private rows are the sites you can see, not only your own: also other
@@ -954,7 +956,7 @@ class MainViewModel(private val platform: Platform) : ViewModel() {
         val loc = dLoc ?: nearest()   // fall back to GPS-nearest if not picked yet
         val n = Note(
             // id is the stable key; bump past any same-millisecond collision so it stays unique.
-            id = if (isEditing) editingId!! else {
+            id = editingId ?: run {
                 var id = dTime.takeIf { it > 0 } ?: nowMs()
                 while (notes.any { it.id == id }) id++
                 id

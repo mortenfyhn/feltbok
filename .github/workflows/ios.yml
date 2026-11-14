@@ -35,5 +35,7 @@ jobs:
           path: ~/.konan
           key: konan-${{ runner.os }}-${{ hashFiles('build.gradle.kts', 'shared/build.gradle.kts', 'ui/build.gradle.kts') }}
           restore-keys: konan-${{ runner.os }}-
+      # detekt for iosMain, which only exists on macOS (Semaphore runs the rest: detektAll).
+      - run: ./gradlew :shared:detektMainIosArm64 :ui:detektMainIosArm64
       - run: brew install xcodegen
       - run: iosApp/ci-test.sh

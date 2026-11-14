@@ -48,6 +48,7 @@ class AndroidPlatform(private val app: Application) : Platform {
 }
 
 /** How Android (and the instrumented tests) build the view model. */
+@Suppress("FunctionNaming") // a factory function, named for the type it builds
 fun MainViewModel(app: Application) = MainViewModel(AndroidPlatform(app))
 
 /**

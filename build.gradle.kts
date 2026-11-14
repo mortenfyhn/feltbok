@@ -14,4 +14,26 @@ plugins {
     id("org.jetbrains.kotlin.plugin.compose") version "2.4.21" apply false
     id("org.jetbrains.compose") version "1.11.1" apply false
     id("org.jlleitschuh.gradle.ktlint") version "12.1.2" apply false
+    id("dev.detekt") version "2.0.0-alpha.6" apply false
+}
+
+// Static analysis for every module. Run the type-resolved tasks (detektAll below), not plain
+// `detekt`: only they run the rules that need the compiler's types, such as the one that bans `!!`.
+subprojects {
+    apply(plugin = "dev.detekt")
+    extensions.configure<dev.detekt.gradle.extensions.DetektExtension> {
+        buildUponDefaultConfig.set(true)
+        config.setFrom(rootProject.file("detekt.yml"))
+    }
+    dependencies { "detektPlugins"("io.nlopez.compose.rules:detekt:0.6.8") }
+}
+
+// Every type-resolved detekt task that runs on Linux. iosMain is only analysed on macOS, where the
+// iOS targets exist: the iOS workflow runs those tasks.
+tasks.register("detektAll") {
+    dependsOn(
+        ":shared:detektMainJvm", ":shared:detektTestJvm",
+        ":ui:detektMainAndroid", ":ui:detektHostTestAndroid",
+        ":app:detektDebug", ":app:detektReleaseTestAndroidTest",
+    )
 }

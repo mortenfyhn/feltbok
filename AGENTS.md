@@ -28,8 +28,11 @@ Recipes live in `just --list`. Gotchas not covered there:
   variant, so an R8 strip fails a test instead of shipping broken. Skipped cleanly when no device is
   attached. Also carries a UI-wiring layer (`UndoFlowTest`, `NavigationFlowTest`, `EditFlowTest`) —
   add to it only where a pure-JVM test genuinely can't reach, and only once the UI has settled.
-- `just format` / `just lint` are CI-gated (ktlint / ruff). ktlint only fixes whitespace/imports —
-  it won't churn line structure or naming.
+- `just format` / `just lint` are CI-gated (ktlint, detekt, ruff). ktlint only fixes
+  whitespace/imports; it won't churn line structure or naming. Detekt (`detekt.yml`, with the
+  Compose rules) has no auto-fix, and bans `!!` outside tests. Only its type-resolved tasks run
+  that rule, so use `./gradlew detektAll`, not plain `detekt`. iosMain is analysed only on macOS
+  (the iOS workflow).
 - Fresh worktree: copy `local.properties` from the main checkout (gitignored, Gradle needs it), and
   link its Python venv. Worktrees don't all live at the same depth, so use the main checkout's path:
   `main=$(git worktree list | head -1 | cut -d' ' -f1); cp $main/local.properties .; ln -s $main/.venv .venv`.

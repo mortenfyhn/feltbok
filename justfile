@@ -54,10 +54,10 @@ format:
     ./gradlew ktlintFormat
     .venv/bin/ruff format scripts/
 
-# Check formatting/lint without changing files (what CI gates on)
+# Check formatting/lint without changing files (what CI gates on): ktlint, detekt, ruff
 [group('check')]
 lint:
-    ./gradlew ktlintCheck
+    ./gradlew ktlintCheck detektAll
     .venv/bin/ruff check scripts/
     .venv/bin/ruff format --check scripts/
 

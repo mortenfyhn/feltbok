@@ -19,8 +19,8 @@ class FakePlatform : Platform {
     }
     override val location = object : LocationSource {
         override val fix = MutableStateFlow<GpsFix?>(null)
-        override fun start() {}
-        override fun stop() {}
+        override fun start() = Unit
+        override fun stop() = Unit
     }
 
     var cookie: String? = null
@@ -28,8 +28,8 @@ class FakePlatform : Platform {
 
     /** URL fragment -> answer (null: the request fails). The first matching fragment wins. */
     val answers = LinkedHashMap<String, (String) -> String?>()
-    val requests = java.util.Collections.synchronizedList(ArrayList<Pair<String, Map<String, String>>>())
-    val toasts = java.util.Collections.synchronizedList(ArrayList<String>())
+    val requests: MutableList<Pair<String, Map<String, String>>> = java.util.Collections.synchronizedList(ArrayList<Pair<String, Map<String, String>>>())
+    val toasts: MutableList<String> = java.util.Collections.synchronizedList(ArrayList<String>())
 
     fun requestsTo(fragment: String) = synchronized(requests) { requests.filter { fragment in it.first } }
 

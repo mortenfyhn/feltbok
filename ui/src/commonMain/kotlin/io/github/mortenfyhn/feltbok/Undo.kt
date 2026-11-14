@@ -1,6 +1,7 @@
 package io.github.mortenfyhn.feltbok
 
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 
@@ -25,7 +26,7 @@ sealed interface Undoable {
  *  Android-free so that rule is unit-testable (see UndoOfferTest). */
 class UndoOffer {
     var current by mutableStateOf<Undoable?>(null); private set
-    var token by mutableStateOf(0); private set
+    var token by mutableIntStateOf(0); private set
 
     fun offer(u: Undoable) { current = u; token++ }
     fun clear() { current = null }

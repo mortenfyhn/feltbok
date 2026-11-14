@@ -1,0 +1,69 @@
+# Detekt on top of its default config (buildUponDefaultConfig in build.gradle.kts): only overrides.
+# Formatting is ktlint's job (.editorconfig); what stays on here is about bugs. Turned off: rules
+# with arbitrary thresholds, pure style preferences, and rules that fight the app's design.
+
+complexity:
+  ComplexCondition:
+    active: false
+  CyclomaticComplexMethod:
+    active: false
+  LargeClass:
+    active: false
+  LongMethod:
+    active: false
+  LongParameterList:
+    active: false
+  NestedBlockDepth:
+    active: false
+  TooManyFunctions:
+    active: false
+
+coroutines:
+  # The app has no dependency injection to inject dispatchers through.
+  InjectDispatcher:
+    active: false
+
+naming:
+  # Composables are PascalCase.
+  FunctionNaming:
+    ignoreAnnotated: ['Composable']
+  # Files are named for their topic, not for their one declaration.
+  MatchingDeclarationName:
+    active: false
+
+potential-bugs:
+  UnsafeCallOnNullableType:
+    # The default test paths, plus :ui's host tests. A `!!` in a test fails that test, which is fine.
+    excludes: ['**/test/**', '**/androidTest/**', '**/commonTest/**', '**/jvmTest/**', '**/androidHostTest/**', '**/iosTest/**']
+
+style:
+  DestructuringDeclarationWithTooManyEntries:
+    active: false
+  LoopWithTooManyJumpStatements:
+    active: false
+  # Most hits are Compose sizes and colours (8.dp, 0.6f), clearer inline than as named constants.
+  MagicNumber:
+    active: false
+  # ktlint leaves line length alone too (.editorconfig): neither tool can reflow code.
+  MaxLineLength:
+    active: false
+  MayBeConstant:
+    active: false
+  ReturnCount:
+    active: false
+  UseOrEmpty:
+    active: false
+
+# The Compose rules (io.nlopez.compose.rules).
+Compose:
+  # The screens are written as sections of the screen, not reusable components.
+  ModifierMissing:
+    active: false
+  MultipleEmitters:
+    active: false
+  # onPageFinished keeps the name of the WebView callback it forwards.
+  ParameterNaming:
+    active: false
+  # One MainViewModel holds all UI state (no navigation library), and screens take it directly.
+  ViewModelForwarding:
+    active: false

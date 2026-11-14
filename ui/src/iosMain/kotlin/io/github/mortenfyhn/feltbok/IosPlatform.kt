@@ -46,7 +46,7 @@ import kotlin.coroutines.resume
 class IosStorage : Storage {
     private val dir: String = (
         NSFileManager.defaultManager.URLsForDirectory(NSDocumentDirectory, NSUserDomainMask).first() as NSURL
-        ).path!!
+        ).path ?: error("no Documents folder")
 
     private fun path(name: String) = "$dir/$name"
 
@@ -71,7 +71,7 @@ class IosStorage : Storage {
         if (!exists(name)) return write(name, text)
         val handle = NSFileHandle.fileHandleForWritingAtPath(p) ?: error("append failed: $name")
         handle.seekToEndOfFile()
-        handle.writeData(ns(text).dataUsingEncoding(NSUTF8StringEncoding)!!)
+        handle.writeData(ns(text).dataUsingEncoding(NSUTF8StringEncoding) ?: error("append failed: $name"))
         handle.closeFile()
     }
 
