@@ -59,3 +59,15 @@ class FakePlatform : Platform {
         fun loggedInClaims(seconds: Long = 3600) = """[{"type":"bff:session_expires_in","value":$seconds}]"""
     }
 }
+
+/** A view model with its bundled-locality load finished. With an unconfined Main, that load lands on
+ *  a background thread, so a test that doesn't wait races it (or resetMain in tearDown). */
+fun loadedViewModel(platform: Platform = FakePlatform()): MainViewModel {
+    val vm = MainViewModel(platform)
+    val until = System.currentTimeMillis() + 5000
+    while (!vm.localitiesLoaded) {
+        check(System.currentTimeMillis() < until) { "timed out waiting for bundled localities" }
+        Thread.sleep(10)
+    }
+    return vm
+}

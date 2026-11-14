@@ -20,7 +20,7 @@ class NewLocalityTest {
     @Before
     fun setUp() {
         Dispatchers.setMain(UnconfinedTestDispatcher())
-        vm = MainViewModel(FakePlatform())
+        vm = loadedViewModel()
     }
 
     @After
@@ -55,7 +55,7 @@ class NewLocalityTest {
         appendToArchive(platform.storage, listOf(Note(id = 1L, species = "kjøttmeis", latin = "", count = 1,
             age = "", activity = "", sex = "", publicComment = "", privateComment = "",
             locName = "Brygga", locFull = "Brygga", lat = 59.9, lon = 10.7, newLoc = true, locRadius = 50)))
-        vm = MainViewModel(platform)
+        vm = loadedViewModel(platform)
         vm.openArchive()
         vm.toggleSelect(1L)
         vm.restoreSelected()
