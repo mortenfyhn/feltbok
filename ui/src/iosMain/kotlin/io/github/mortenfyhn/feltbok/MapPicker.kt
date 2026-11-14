@@ -40,9 +40,12 @@ import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableFloatStateOf
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
@@ -197,11 +200,11 @@ actual fun LocalityScreen(vm: MainViewModel) {
     var tapped by remember { mutableStateOf<Locality?>(null) }
     var newMode by remember { mutableStateOf(false) }      // placing a brand-new spot
     var created by remember { mutableStateOf<Locality?>(null) }  // the spot just placed, highlighted until tapped
-    var newRadius by remember { mutableStateOf(100) }
+    var newRadius by remember { mutableIntStateOf(100) }
     var newName by remember { mutableStateOf("") }
-    var sheetH by remember { mutableStateOf(0) }           // bottom-panel height (px), to centre the crosshair
-    var mapW by remember { mutableStateOf(0f) }
-    var mapH by remember { mutableStateOf(0f) }
+    var sheetH by remember { mutableIntStateOf(0) }           // bottom-panel height (px), to centre the crosshair
+    var mapW by remember { mutableFloatStateOf(0f) }
+    var mapH by remember { mutableFloatStateOf(0f) }
 
     val start = remember {
         val (lat, lon) = pickerCenter(focus = vm.pickerFocus, fix = vm.fix, nearest = vm.nearest())
@@ -422,7 +425,8 @@ private fun RadiusWheel(value: Int, onChange: (Int) -> Unit) {
             i.coerceIn(0, RADII.lastIndex)
         }
     }
-    LaunchedEffect(centred) { onChange(RADII[centred]) }
+    val change by rememberUpdatedState(onChange)
+    LaunchedEffect(centred) { change(RADII[centred]) }
     Box(Modifier.width(96.dp).height(rowH * 3)) {
         Box(Modifier.align(Alignment.Center).fillMaxWidth().height(rowH).border(1.dp, cs.outline))
         LazyColumn(
@@ -475,7 +479,7 @@ private fun RecenterButton(onClick: () -> Unit) {
 /** The main-screen minimap is hidden on Android (SHOW_MINIMAP = false), so it isn't ported. */
 // No minimap on iOS yet.
 @Composable
-actual fun LocalityPreview(vm: MainViewModel, modifier: Modifier) {}
+actual fun LocalityPreview(vm: MainViewModel, modifier: Modifier) = Unit
 
 private fun c(argb: Long) = Color(argb.toInt())
 

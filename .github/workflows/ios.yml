@@ -35,5 +35,9 @@ jobs:
           path: ~/.konan
           key: konan-${{ runner.os }}-${{ hashFiles('build.gradle.kts', 'shared/build.gradle.kts', 'ui/build.gradle.kts') }}
           restore-keys: konan-${{ runner.os }}-
+      # detekt for iosMain, which only exists on macOS (Semaphore runs the rest: detektAll). Detekt
+      # has no type resolution for native targets, so the rules that need it (such as the `!!` ban)
+      # don't run here.
+      - run: ./gradlew :ui:detektIosMainSourceSet
       - run: brew install xcodegen
       - run: iosApp/ci-test.sh

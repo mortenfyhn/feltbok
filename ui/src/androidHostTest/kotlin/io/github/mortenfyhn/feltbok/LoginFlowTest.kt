@@ -44,7 +44,7 @@ class LoginFlowTest {
         Dispatchers.setMain(UnconfinedTestDispatcher())
         p.answers["/bff/user"] = { if (p.cookie != null) loggedInClaims() else null }
         p.answers["ByBoundingBox"] = { "[" + (publicRows + privateRows).joinToString(",") + "]" }
-        p.answers["ByUser"] = { mine?.let { """{"data":[${it.joinToString(",")}],"totalPages":1}""" } }
+        p.answers["ByUser"] = { mine?.let { rows -> """{"data":[${rows.joinToString(",")}],"totalPages":1}""" } }
         vm = MainViewModel(p)
         // Main is unconfined here, so the bundled load finishes on a background thread. Let it land
         // first, or it races the test's own changes to the locality list.

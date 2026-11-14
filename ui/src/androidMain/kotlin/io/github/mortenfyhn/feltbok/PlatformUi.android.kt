@@ -27,11 +27,11 @@ private class AndroidPlatformUi(private val ctx: Context) : PlatformUi {
         "${Build.MANUFACTURER} ${Build.MODEL}\nAndroid ${Build.VERSION.RELEASE} (API ${Build.VERSION.SDK_INT})"
 
     override fun openUrl(url: String) {
-        runCatching { ctx.startActivity(Intent(Intent.ACTION_VIEW, url.toUri())) }
+        val _ = runCatching { ctx.startActivity(Intent(Intent.ACTION_VIEW, url.toUri())) }
     }
 
     override fun sendMail(uri: String) {
-        runCatching { ctx.startActivity(Intent(Intent.ACTION_SENDTO, uri.toUri())) }
+        val _ = runCatching { ctx.startActivity(Intent(Intent.ACTION_SENDTO, uri.toUri())) }
     }
 
     override fun toast(message: String) = Toast.makeText(ctx, message, Toast.LENGTH_SHORT).show()

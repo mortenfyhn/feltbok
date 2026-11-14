@@ -529,7 +529,7 @@ private fun SelectionBar(vm: MainViewModel, onEdit: () -> Unit, modifier: Modifi
  *  actions, and it broke mid-word ("mar/ker", #198); then it drops the word and keeps the number, or
  *  at the very largest sizes drops out (the marked rows still show), for as long as the bar is up. */
 @Composable
-private fun SelectedCount(n: Int, modifier: Modifier) {
+private fun SelectedCount(n: Int, modifier: Modifier = Modifier) {
     var shrink by remember { mutableIntStateOf(0) }
     Text(when (shrink) { 0 -> Strings.Notes.selected(n); 1 -> "$n"; else -> "" }, color = Color.White,
         fontWeight = FontWeight.SemiBold, maxLines = 1, softWrap = false,
@@ -1235,13 +1235,13 @@ internal fun ScreenHeader(
         val loose = constraints.copy(minWidth = 0, minHeight = 0)
         val lead = measurables[0].measure(loose)
         val trail = measurables[1].measure(loose)
-        val title = measurables[2].measure(loose.copy(maxWidth = (w - lead.width - trail.width).coerceAtLeast(0)))
-        val h = maxOf(lead.height, trail.height, title.height, constraints.minHeight)
+        val middle = measurables[2].measure(loose.copy(maxWidth = (w - lead.width - trail.width).coerceAtLeast(0)))
+        val h = maxOf(lead.height, trail.height, middle.height, constraints.minHeight)
         layout(w, h) {
             lead.placeRelative(0, (h - lead.height) / 2)
             trail.placeRelative(w - trail.width, (h - trail.height) / 2)
-            val x = ((w - title.width) / 2).coerceIn(lead.width, maxOf(lead.width, w - trail.width - title.width))
-            title.placeRelative(x, (h - title.height) / 2)
+            val x = ((w - middle.width) / 2).coerceIn(lead.width, maxOf(lead.width, w - trail.width - middle.width))
+            middle.placeRelative(x, (h - middle.height) / 2)
         }
     }
 }
@@ -1429,7 +1429,7 @@ fun DetailScreen(vm: MainViewModel) {
     // right to make clear a fresh observation was created (#110). Fires only on copyToken changes,
     // not on a normal open: a fresh DetailScreen re-seeds `seen` to the current token.
     val slide = remember { Animatable(0f) }
-    var seen by remember { mutableStateOf(vm.copyToken) }
+    var seen by remember { mutableIntStateOf(vm.copyToken) }
     LaunchedEffect(vm.copyToken) {
         if (vm.copyToken != seen) {
             seen = vm.copyToken
@@ -1934,7 +1934,7 @@ private fun FieldRow(
 
 /** One numbered step: a circled number on the left, title + body on the right. */
 @Composable
-private fun Step(n: Int, title: String, body: @Composable () -> Unit) {
+private fun Step(n: Int, title: String, content: @Composable () -> Unit) {
     Row(Modifier.fillMaxWidth().padding(vertical = 10.dp)) {
         Box(
             Modifier.size(26.dp).clip(RoundedCornerShape(50)).background(MaterialTheme.colorScheme.primary),
@@ -1945,7 +1945,7 @@ private fun Step(n: Int, title: String, body: @Composable () -> Unit) {
         Spacer(Modifier.width(12.dp))
         Column(Modifier.weight(1f)) {
             Text(title, fontWeight = FontWeight.SemiBold, fontSize = 15.sp)
-            body()
+            content()
         }
     }
 }

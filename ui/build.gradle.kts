@@ -10,6 +10,7 @@ plugins {
     // Copies libraries' Compose resources (MapLibre's attribution strings) into the iOS app bundle.
     id("org.jetbrains.compose")
     id("org.jlleitschuh.gradle.ktlint")
+    id("org.jetbrains.kotlinx.kover")
 }
 
 // Compose Multiplatform 1.11 (material3 1.9) maps to the androidx Compose 1.11 (material3 1.4) the
@@ -47,6 +48,11 @@ kotlin {
             warningsAsErrors = true
             // Dependency updates are picked deliberately, not on lint's nudge.
             disable += setOf("GradleDependency", "NewerVersionAvailable", "AndroidGradlePluginVersion")
+            // Also the checks that are off by default, except: SyntheticAccessor only costs a method
+            // call when a lambda reaches a private member, and MemberExtensionConflict flags the
+            // LazyListScope.items(List) extension, which has no member counterpart.
+            checkAllWarnings = true
+            disable += setOf("SyntheticAccessor", "MemberExtensionConflict")
         }
         compilerOptions {
             jvmTarget.set(org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_17)
@@ -78,6 +84,8 @@ kotlin {
         allWarningsAsErrors.set(true)
         // Opt-in checks such as redundant modifiers and a var that could be a val.
         extraWarnings.set(true)
+        // An unused return value is an error (allWarningsAsErrors), e.g. `list.plus(x)` meant as `list += x`.
+        freeCompilerArgs.add("-Xreturn-value-checker=full")
     }
     sourceSets {
         commonMain.dependencies {

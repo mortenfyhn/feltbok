@@ -34,6 +34,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
@@ -94,9 +95,9 @@ actual fun LocalityScreen(vm: MainViewModel) {
     var tapped by remember { mutableStateOf<Locality?>(null) }
     var newMode by remember { mutableStateOf(false) }      // placing a brand-new spot
     var created by remember { mutableStateOf<Locality?>(null) }  // the spot just placed, highlighted until tapped
-    var newRadius by remember { mutableStateOf(100) }
+    var newRadius by remember { mutableIntStateOf(100) }
     var newName by remember { mutableStateOf("") }
-    var sheetH by remember { mutableStateOf(0) }           // bottom-panel height (px), to centre the crosshair
+    var sheetH by remember { mutableIntStateOf(0) }           // bottom-panel height (px), to centre the crosshair
 
     val mapView = remember {
         configureOsmdroid(ctx)
@@ -343,7 +344,7 @@ fun configureOsmdroid(ctx: Context) {
  */
 @Composable
 actual fun LocalityPreview(vm: MainViewModel, modifier: Modifier) {
-    vm.nearest() ?: return                       // nothing to preview until GPS settles
+    if (vm.nearest() == null) return                     // nothing to preview until GPS settles
     val ctx = LocalContext.current
     val cs = MaterialTheme.colorScheme
     val map = remember {

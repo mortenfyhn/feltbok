@@ -86,7 +86,10 @@ private fun StringBuilder.point(lat: Double, lon: Double) {
 
 private fun StringBuilder.polygon(ring: List<DoubleArray>) {
     append("""{"type":"Polygon","coordinates":[[""")
-    ring.forEachIndexed { i, v -> if (i > 0) append(','); append('[').append(v[1]).append(',').append(v[0]).append(']') }
+    ring.forEachIndexed { i, v ->
+        if (i > 0) append(',')
+        append('[').append(v[1]).append(',').append(v[0]).append(']')
+    }
     val f = ring.first(); val l = ring.last()
     if (f[0] != l[0] || f[1] != l[1]) append(",[").append(f[1]).append(',').append(f[0]).append(']')
     append("]]}")

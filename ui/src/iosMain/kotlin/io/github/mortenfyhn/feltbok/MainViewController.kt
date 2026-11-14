@@ -20,6 +20,7 @@ import kotlinx.coroutines.delay
 import platform.Foundation.NSBundle
 
 /** The iOS app's root view controller, hosted by the Swift app (iosApp/). */
+@Suppress("FunctionNaming") // the Swift app calls it by this name
 fun MainViewController() = run { configureMapRuntime(); ComposeUIViewController {
     val vm = remember {
         val info = NSBundle.mainBundle.infoDictionary

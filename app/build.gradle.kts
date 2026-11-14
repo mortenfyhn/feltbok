@@ -135,6 +135,8 @@ android {
     testBuildType = "releaseTest"
     lint {
         warningsAsErrors = true
+        // Also the checks that are off by default.
+        checkAllWarnings = true
         // Dependency updates are picked deliberately, not on lint's nudge.
         disable += setOf("GradleDependency", "NewerVersionAvailable", "AndroidGradlePluginVersion")
         // A themed (monochrome) launcher icon needs its own artwork.
@@ -207,5 +209,7 @@ kotlin {
         allWarningsAsErrors.set(true)
         // Opt-in checks such as redundant modifiers and a var that could be a val.
         extraWarnings.set(true)
+        // An unused return value is an error (allWarningsAsErrors), e.g. `list.plus(x)` meant as `list += x`.
+        freeCompilerArgs.add("-Xreturn-value-checker=full")
     }
 }

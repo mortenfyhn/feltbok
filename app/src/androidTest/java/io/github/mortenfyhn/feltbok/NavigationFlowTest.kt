@@ -34,6 +34,7 @@ class NavigationFlowTest {
     @get:Rule(order = 1)
     val rule = createAndroidComposeRule<ComponentActivity>()
 
+    @IgnorableReturnValue
     private fun start(): MainViewModel {
         val vm = MainViewModel(rule.activity.application)
         rule.setContent { App(vm) }

@@ -1,3 +1,6 @@
+// Prints a table for a developer to read, so the default locale is fine.
+@file:Suppress("ImplicitDefaultLocale")
+
 package io.github.mortenfyhn.feltbok
 
 import org.junit.Assert.assertEquals

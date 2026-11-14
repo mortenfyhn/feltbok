@@ -48,6 +48,7 @@ class AndroidPlatform(private val app: Application) : Platform {
 }
 
 /** How Android (and the instrumented tests) build the view model. */
+@Suppress("FunctionNaming") // a factory function, named for the type it builds
 fun MainViewModel(app: Application) = MainViewModel(AndroidPlatform(app))
 
 /**
@@ -61,7 +62,7 @@ private fun importSeedNotes(ctx: Context) {
     if (!ctx.packageName.endsWith(".debug")) return
     val seed = File(ctx.getExternalFilesDir(null), "seed-notes.json")
     if (!seed.exists()) return
-    runCatching {
+    val _ = runCatching {
         File(ctx.filesDir, "notes.json").writeText(seed.readText())
         seed.delete()
     }
