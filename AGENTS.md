@@ -99,6 +99,32 @@ a `MainViewModel` must start with `ClearAppDataRule` — otherwise the suite bec
   edits the wrong tree. Re-grep inside the worktree after entering; confirm `git status` before
   trusting a build.
 
+## Usability
+Strive to follow Jakob Nielsen's ten usability heuristics
+(https://www.nngroup.com/articles/ten-usability-heuristics/):
+
+1. **Visibility of system status:** designs should keep users informed about what is going on,
+   through appropriate, timely feedback.
+2. **Match between system and the real world:** the design should speak the users' language. Use
+   words, phrases, and concepts familiar to the user, rather than internal jargon.
+3. **User control and freedom:** users often perform actions by mistake. They need a clearly marked
+   "emergency exit" to leave the unwanted action.
+4. **Consistency and standards:** users should not have to wonder whether different words,
+   situations, or actions mean the same thing. Follow platform conventions.
+5. **Error prevention:** good error messages are important, but the best designs carefully prevent
+   problems from occurring in the first place.
+6. **Recognition rather than recall:** minimize the user's memory load by making elements, actions,
+   and options visible. Avoid making users remember information.
+7. **Flexibility and efficiency of use:** shortcuts, hidden from novice users, may speed up the
+   interaction for the expert user.
+8. **Aesthetic and minimalist design:** interfaces should not contain information which is
+   irrelevant. Every extra unit of information in an interface competes with the relevant units of
+   information.
+9. **Recognize, diagnose, and recover from errors:** error messages should be expressed in plain
+   language (no error codes), precisely indicate the problem, and constructively suggest a solution.
+10. **Help and documentation:** it's best if the design doesn't need any additional explanation.
+    However, it may be necessary to provide documentation to help users complete their tasks.
+
 ## Where things live
 - `shared/` — Kotlin Multiplatform module with the platform-free code (search, frequency, use
   scores, the species, locality and note models, locality geometry, live localities, co-observer and
