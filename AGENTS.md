@@ -28,7 +28,7 @@ Recipes live in `just --list`. Gotchas not covered there:
   variant, so an R8 strip fails a test instead of shipping broken. Skipped cleanly when no device is
   attached. Also carries a UI-wiring layer (`UndoFlowTest`, `NavigationFlowTest`, `EditFlowTest`) —
   add to it only where a pure-JVM test genuinely can't reach, and only once the UI has settled.
-- `just format` / `just lint` are CI-gated (ktlint, detekt, ruff). ktlint only fixes
+- `just format` / `just lint` are CI-gated (ktlint, detekt, ruff, shellcheck). ktlint only fixes
   whitespace/imports; it won't churn line structure or naming. Detekt (`detekt.yml`, with the
   Compose rules) has no auto-fix, and bans `!!` outside tests. Only its type-resolved tasks run
   that rule, so use `./gradlew detektAll`, not plain `detekt`. iosMain is analysed only on macOS

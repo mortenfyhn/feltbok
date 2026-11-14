@@ -54,12 +54,13 @@ format:
     ./gradlew ktlintFormat
     .venv/bin/ruff format scripts/
 
-# Check formatting/lint without changing files (what CI gates on): ktlint, detekt, ruff
+# Check formatting/lint without changing files (what CI gates on): ktlint, detekt, ruff, shellcheck
 [group('check')]
 lint:
     ./gradlew ktlintCheck detektAll
     .venv/bin/ruff check scripts/
     .venv/bin/ruff format --check scripts/
+    shellcheck $(git ls-files '*.sh') .githooks/pre-commit
 
 # CI fails late on style slips (e.g. blank-line-before-declaration) that `just test` alone
 # never checks; run this before pushing, or `just format` first to auto-fix the mechanical stuff.

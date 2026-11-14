@@ -63,9 +63,10 @@ blocks:
             - export VERSION=$(git describe --tags --always --dirty)
             - artifact push workflow app/build/outputs/apk/debug/app-debug.apk --destination feltbok-$VERSION.apk
 
-  # Lint + test scripts/ Python on a plain VM (no Android container) - it needs no SDK/JDK.
-  # Parallel with Test & build via dependencies: []. Grab ruff's prebuilt binary (like the
-  # gh download below) to dodge a venv; the only third-party test dep is requests (pip-installed).
+  # Lint + test scripts/ Python, and shellcheck the shell scripts, on a plain VM (no Android
+  # container) - they need no SDK/JDK. Parallel with Test & build via dependencies: []. Grab ruff's
+  # and shellcheck's prebuilt binaries to dodge a venv and apt; the only third-party test dep is
+  # requests (pip-installed).
   - name: Lint (scripts/)
     dependencies: []
     task:
@@ -85,6 +86,8 @@ blocks:
             - /tmp/ruff-x86_64-unknown-linux-gnu/ruff format --check scripts/
             - pip install --quiet --break-system-packages requests
             - python3 -m unittest discover -s scripts -p 'test_*.py'
+            - curl -fsSL https://github.com/koalaman/shellcheck/releases/download/v0.11.0/shellcheck-v0.11.0.linux.x86_64.tar.xz | tar -xJ -C /tmp
+            - /tmp/shellcheck-v0.11.0/shellcheck $(git ls-files '*.sh') .githooks/pre-commit
 
   # Releases are cut locally with ./release.sh (see docs/release.md) — building the
   # signed APK on a connected machine is faster than a cold Semaphore tag build.
