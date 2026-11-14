@@ -56,6 +56,9 @@ style:
 
 # The Compose rules (io.nlopez.compose.rules).
 Compose:
+  CompositionLocalAllowlist:
+    # iOS: marks content that is shown but not navigated, so its back handlers stay inactive.
+    allowedCompositionLocals: ['LocalBackHandlersActive']
   # The screens are written as sections of the screen, not reusable components.
   ModifierMissing:
     active: false
