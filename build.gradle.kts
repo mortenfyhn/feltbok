@@ -29,8 +29,8 @@ subprojects {
     dependencies { "detektPlugins"("io.nlopez.compose.rules:detekt:0.6.8") }
 }
 
-// Every type-resolved detekt task that runs on Linux. iosMain is only analysed on macOS, where the
-// iOS targets exist: the iOS workflow runs those tasks.
+// Every type-resolved detekt task. iosMain exists only on macOS, and detekt can't type-resolve
+// native targets: the iOS workflow runs :ui:detektIosMainSourceSet, without the type-resolved rules.
 tasks.register("detektAll") {
     dependsOn(
         ":shared:detektMainJvm", ":shared:detektTestJvm",

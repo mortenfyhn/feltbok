@@ -32,7 +32,7 @@ Recipes live in `just --list`. Gotchas not covered there:
   whitespace/imports; it won't churn line structure or naming. Detekt (`detekt.yml`, with the
   Compose rules) has no auto-fix, and bans `!!` outside tests. Only its type-resolved tasks run
   that rule, so use `./gradlew detektAll`, not plain `detekt`. iosMain is analysed only on macOS
-  (the iOS workflow).
+  (the iOS workflow), and without type resolution, so `!!` isn't caught there.
 - Fresh worktree: copy `local.properties` from the main checkout (gitignored, Gradle needs it), and
   link its Python venv. Worktrees don't all live at the same depth, so use the main checkout's path:
   `main=$(git worktree list | head -1 | cut -d' ' -f1); cp $main/local.properties .; ln -s $main/.venv .venv`.
