@@ -344,7 +344,7 @@ fun configureOsmdroid(ctx: Context) {
  */
 @Composable
 actual fun LocalityPreview(vm: MainViewModel, modifier: Modifier) {
-    vm.nearest() ?: return                       // nothing to preview until GPS settles
+    if (vm.nearest() == null) return                     // nothing to preview until GPS settles
     val ctx = LocalContext.current
     val cs = MaterialTheme.colorScheme
     val map = remember {

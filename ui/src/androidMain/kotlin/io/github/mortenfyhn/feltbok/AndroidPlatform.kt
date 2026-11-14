@@ -62,7 +62,7 @@ private fun importSeedNotes(ctx: Context) {
     if (!ctx.packageName.endsWith(".debug")) return
     val seed = File(ctx.getExternalFilesDir(null), "seed-notes.json")
     if (!seed.exists()) return
-    runCatching {
+    val _ = runCatching {
         File(ctx.filesDir, "notes.json").writeText(seed.readText())
         seed.delete()
     }

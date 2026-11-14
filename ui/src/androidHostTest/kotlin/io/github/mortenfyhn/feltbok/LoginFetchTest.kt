@@ -15,7 +15,7 @@ class LoginFetchTest {
     @Test
     fun siteFetchSendsTheSessionCookieOnlyWhenThereIsOne() = runBlocking {
         p.answers["ByBoundingBox"] = { "[${site(1, "A", false)}]" }
-        fetchSites(p, 59.9, 10.7, 59.91, 10.72)
+        val _ = fetchSites(p, 59.9, 10.7, 59.91, 10.72)
         assertNull(p.requests.last().second["Cookie"])
         p.cookie = "__Host-bff=abc"
         assertEquals(1, fetchSites(p, 59.9, 10.7, 59.91, 10.72)!!.size)

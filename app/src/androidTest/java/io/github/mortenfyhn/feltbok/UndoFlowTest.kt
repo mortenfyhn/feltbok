@@ -32,6 +32,7 @@ class UndoFlowTest {
     @get:Rule(order = 1)
     val rule = createComposeRule()
 
+    @IgnorableReturnValue
     private fun start(): MainViewModel {
         val vm = MainViewModel(ApplicationProvider.getApplicationContext<Application>())
         rule.setContent { App(vm) }
