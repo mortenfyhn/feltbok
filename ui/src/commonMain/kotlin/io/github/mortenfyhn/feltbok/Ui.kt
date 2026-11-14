@@ -612,6 +612,7 @@ private fun StatusStrip(vm: MainViewModel) {
         Column(Modifier.weight(1f).clickable { vm.openCurrentLocalityPicker() }) {
             // Name ellipsizes; the chevron is pinned beside it so it can't wrap to its own line.
             Row(verticalAlignment = Alignment.CenterVertically) {
+                if (cur != null) LocalityKindDot(cur)
                 Text(if (cur != null) cur.lokalitet else Strings.findingPosition,
                     color = Color.White, fontWeight = FontWeight.SemiBold,
                     maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.weight(1f, fill = false))
@@ -1380,6 +1381,15 @@ private fun ArchiveSelectionBar(vm: MainViewModel, modifier: Modifier = Modifier
     }
 }
 
+/** A small green/yellow dot before a locality's name: public vs private (your own or brand-new),
+ *  in the map's colours. The white ring keeps it visible on the green status strip. */
+@Composable
+private fun LocalityKindDot(loc: Locality) {
+    Box(Modifier.padding(end = 6.dp).size(10.dp).clip(CircleShape)
+        .background(Color(if (loc.public) MapPalette.GreenStroke else MapPalette.YellowStroke))
+        .border(1.dp, Color.White, CircleShape))
+}
+
 /** Muted, single-line hint shown in a batch-edit row where the marked notes disagree: a preview of
  *  their current values (shared value or the mix). Nothing when there's nothing to preview. */
 @Composable
@@ -1510,6 +1520,7 @@ fun DetailScreen(vm: MainViewModel) {
                 val loc = vm.dLoc
                 when {
                     loc != null -> {
+                        LocalityKindDot(loc)
                         Text(loc.lokalitet, fontWeight = FontWeight.Medium, maxLines = 1,
                             overflow = TextOverflow.Ellipsis, modifier = Modifier.weight(1f, fill = false))
                         vm.distanceTo(loc)?.let {

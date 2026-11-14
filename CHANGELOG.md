@@ -8,6 +8,7 @@
 - «Gjenopprett» i papirkurven tar deg rett tilbake til lista, der observasjonene du henta tilbake blinker.
 - Når lista er tom, står det «Ny observasjon» på +-knappen, så det er lettere å se hvor du begynner.
 - «Angre»-meldinga dekker ikke lenger +-knappen.
+- Du ser om valgt lokalitet er allmenn eller privat.
 
 ## v1.5 (13. november 2026)
 

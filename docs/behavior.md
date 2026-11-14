@@ -247,6 +247,9 @@ format as the other dates.
 
 ## Locality picker (map)
 
+The status strip and the detail screen's locality field show a small dot before the locality's
+name: green for a public locality, yellow for a private one (your own or a brand-new one).
+
 Tapping the locality field (or the status strip) opens a map of the registered localities over
 OpenStreetMap tiles. Each locality is a filled green disk at its real radius
 (polygons trace their real outline; superlocalities are a deeper green), and the selected one is
