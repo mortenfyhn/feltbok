@@ -1394,7 +1394,7 @@ fun DetailScreen(vm: MainViewModel) {
     // right to make clear a fresh observation was created (#110). Fires only on copyToken changes,
     // not on a normal open: a fresh DetailScreen re-seeds `seen` to the current token.
     val slide = remember { Animatable(0f) }
-    var seen by remember { mutableStateOf(vm.copyToken) }
+    var seen by remember { mutableIntStateOf(vm.copyToken) }
     LaunchedEffect(vm.copyToken) {
         if (vm.copyToken != seen) {
             seen = vm.copyToken
@@ -1898,7 +1898,7 @@ private fun FieldRow(
 
 /** One numbered step: a circled number on the left, title + body on the right. */
 @Composable
-private fun Step(n: Int, title: String, body: @Composable () -> Unit) {
+private fun Step(n: Int, title: String, content: @Composable () -> Unit) {
     Row(Modifier.fillMaxWidth().padding(vertical = 10.dp)) {
         Box(
             Modifier.size(26.dp).clip(RoundedCornerShape(50)).background(MaterialTheme.colorScheme.primary),
@@ -1909,7 +1909,7 @@ private fun Step(n: Int, title: String, body: @Composable () -> Unit) {
         Spacer(Modifier.width(12.dp))
         Column(Modifier.weight(1f)) {
             Text(title, fontWeight = FontWeight.SemiBold, fontSize = 15.sp)
-            body()
+            content()
         }
     }
 }

@@ -47,6 +47,11 @@ kotlin {
             warningsAsErrors = true
             // Dependency updates are picked deliberately, not on lint's nudge.
             disable += setOf("GradleDependency", "NewerVersionAvailable", "AndroidGradlePluginVersion")
+            // Also the checks that are off by default, except: SyntheticAccessor only costs a method
+            // call when a lambda reaches a private member, and MemberExtensionConflict flags the
+            // LazyListScope.items(List) extension, which has no member counterpart.
+            checkAllWarnings = true
+            disable += setOf("SyntheticAccessor", "MemberExtensionConflict")
         }
         compilerOptions {
             jvmTarget.set(org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_17)

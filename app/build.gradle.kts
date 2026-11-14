@@ -135,6 +135,8 @@ android {
     testBuildType = "releaseTest"
     lint {
         warningsAsErrors = true
+        // Also the checks that are off by default.
+        checkAllWarnings = true
         // Dependency updates are picked deliberately, not on lint's nudge.
         disable += setOf("GradleDependency", "NewerVersionAvailable", "AndroidGradlePluginVersion")
         // A themed (monochrome) launcher icon needs its own artwork.
