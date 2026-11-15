@@ -33,9 +33,8 @@ interface Platform {
     /** A GET of [url]. */
     suspend fun httpGet(url: String, headers: Map<String, String>, timeoutMs: Int): HttpResult
 
-    /** A POST of the JSON [body] to [url]. Android only for now (the upload prototype). */
-    suspend fun httpPostJson(url: String, headers: Map<String, String>, body: String, timeoutMs: Int): HttpResult =
-        NoAnswer(offline = false)
+    /** A POST of the JSON [body] to [url]. */
+    suspend fun httpPostJson(url: String, headers: Map<String, String>, body: String, timeoutMs: Int): HttpResult
 
     /** The `Cookie` header value for [Country.sitesHost] from the login WebView's cookie store, or
      *  null when there is none. Logged in, ByBoundingBox leaves out other users' private sites. */
