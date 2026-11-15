@@ -93,4 +93,25 @@ class EditFlowTest {
         rule.onNode(hasSetTextAction()).performTextReplacement("")
         assertEquals(UNKNOWN_COUNT, rule.runOnIdle { vm.dCount })
     }
+
+    /** The same change to a second note explains batch edit, once: dismissed, it stays gone. */
+    @Test
+    fun repeatingAnEditShowsTheBatchTipOnce() {
+        val vm = start()
+        val names = vm.species.map { it.norsk }.filter { it.isNotBlank() }.distinct().take(3)
+        rule.runOnUiThread { names.forEach { vm.seedNote(it) } }
+
+        fun editCount(name: String) {
+            rule.onNodeWithText(name, substring = true).performClick()
+            rule.runOnUiThread { vm.setCount(5) }
+            rule.onNodeWithText(Strings.Detail.save).performClick()
+        }
+        editCount(names[0])
+        rule.onNodeWithText(Strings.Notes.batchTipTitle).assertDoesNotExist()
+        editCount(names[1])
+        rule.onNodeWithText(Strings.Notes.batchTipClose).performClick()
+
+        editCount(names[2])
+        rule.onNodeWithText(Strings.Notes.batchTipTitle).assertDoesNotExist()
+    }
 }

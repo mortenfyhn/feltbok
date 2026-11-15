@@ -94,6 +94,8 @@ a `MainViewModel` must start with `ClearAppDataRule` — otherwise the suite bec
   bullet under the standing **"Neste utgivelse"** heading for any user-visible change. At release
   time that heading is renamed by hand during `release.sh`'s pause step, which pulls notes from the
   `## v<version>` section (aborts if missing) — the same text is pasted into the GitHub release.
+- **UI strings must be truthful.** Don't make a button claim the user agrees or understands
+  ("Skjønner", "OK") when all it does is close. Name what it does ("Lukk").
 - **Shared working tree:** parallel agents may leave unrelated uncommitted changes; leave them alone
   and commit only your own files. The user often makes last-minute manual edits — re-check the diff
   at commit time rather than reverting or assuming the tree matches what you last wrote.

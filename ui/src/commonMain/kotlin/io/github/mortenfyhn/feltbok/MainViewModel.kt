@@ -875,8 +875,26 @@ class MainViewModel(private val platform: Platform) : ViewModel() {
         val before = if (isEditing) notes.firstOrNull { it.id == editingId } else null
         commitDraft()
         if (before != null && notes.any { it.id == before.id && it != before }) setUndo(Undoable.Edited(listOf(before)))
+        before?.let { b -> notes.firstOrNull { it.id == b.id }?.let { noticeEdit(b, it) } }
         resetDraft()
         screen = Screen.LIST
+    }
+
+    // Users didn't discover marking, so batch edit went unused. When they make the same change to a
+    // second note in a row, explain it once.
+    var showBatchTip by mutableStateOf(false); private set
+    private var lastEdit: NoteEdit? = null
+
+    private fun noticeEdit(before: Note, after: Note) {
+        val edit = NoteEdit(after.id, batchableChanges(before, after))
+        if (edit.changes.isEmpty()) return
+        if (repeatsEdit(lastEdit, edit) && !storage.exists(BATCH_TIP_SEEN)) showBatchTip = true
+        lastEdit = edit
+    }
+
+    fun dismissBatchTip() {
+        showBatchTip = false
+        storage.write(BATCH_TIP_SEEN, "")
     }
 
     // ---- Batch edit via the editor (#120) ----

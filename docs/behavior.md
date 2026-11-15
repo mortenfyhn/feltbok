@@ -147,6 +147,10 @@ undo), since that's the gesture many people try first. Swiping right does nothin
 swiping is off while marking. Undoing a delete flashes the notes that came back, as
 restoring from the papirkurv does.
 
+Marking is easy to miss, so the app explains it once: when you make the same change
+(the same field set to the same value) to a second note in a row, a dialog describes
+how to mark several notes and use **Endre**. After you dismiss it, it never shows again.
+
 ### Endre (batch edit)
 
 `Endre` opens the ordinary observation editor over the whole selection. Fields the

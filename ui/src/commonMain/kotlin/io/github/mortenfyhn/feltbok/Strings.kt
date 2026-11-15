@@ -51,6 +51,12 @@ object Strings {
         fun deleted(n: Int) = "Sletta $n ${if (n == 1) "observasjon" else "observasjoner"}"
         fun edited(n: Int) = "Endra $n ${if (n == 1) "observasjon" else "observasjoner"}"
         const val undo = "Angre"
+
+        // One-time tip after the same change to two notes in a row: marking was hard to discover.
+        const val batchTipTitle = "Tips: Endre flere på en gang"
+        const val batchTipText = "Trykk og hold på en observasjon for å markere den. Deretter kan du markere flere, " +
+            "og trykke «Endre» for å endre alle på en gang."
+        const val batchTipClose = "Lukk"
     }
 
     // The trash bin. Deleting never destroys a note: it moves to the bin and can be restored (#153).
