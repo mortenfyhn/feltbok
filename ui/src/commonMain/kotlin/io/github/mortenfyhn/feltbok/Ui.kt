@@ -216,13 +216,11 @@ fun ListScreen(vm: MainViewModel, listState: LazyListState) {
                         // The party rides along as the list's first row, so it scrolls away like a
                         // day header - it's a reminder for when you're logging, not permanent chrome.
                         item(key = "party") { PartyStrip(vm) }
-                        // The grand total of species rides along on the newest day's header only.
-                        val totalSpecies = vm.notes.map { it.latin }.distinct().size
-                        groups.forEachIndexed { index, group ->
+                        groups.forEach { group ->
                             item(key = "day:${group.label}") {
                                 val species = group.notes.map { it.latin }.distinct().size
-                                val label = "${group.label} · ${Strings.Notes.speciesCount(species)}" +
-                                    if (index == 0) " ${Strings.Notes.speciesTotal(totalSpecies)}" else ""
+                                val label = "${group.label} (${Strings.Notes.speciesCount(species)}, " +
+                                    "${Strings.Notes.noteCount(group.notes.size)})"
                                 val ids = group.notes.map { it.id }
                                 DayHeader(
                                     label, selecting,
