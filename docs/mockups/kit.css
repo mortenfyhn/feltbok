@@ -36,11 +36,10 @@ h2 { font-size: 16px; margin: 32px 0 4px; }
 .tap { outline: 2px dashed var(--tap); outline-offset: -2px; }
 
 /* ---------- Phone frame ---------- */
-/* 411 dp wide like the emulator (just emu), so mockups compare 1:1 with its screenshots. 840 tall
-   is a little short of its 914, to fit a laptop screen. Override width/height inline to check a
-   small phone (360 wide) or show a longer screen. */
+/* 360 x 760 dp: a small phone, the same size as the emulator (just emu), so mockups compare 1:1
+   with its screenshots. Override width/height inline to show a longer screen. */
 .phone {
-  position: relative; width: 411px; height: 840px; overflow: hidden; display: flex; flex-direction: column;
+  position: relative; width: 360px; height: 760px; overflow: hidden; display: flex; flex-direction: column;
   background: var(--bg); color: var(--on-bg); border-radius: 18px; box-shadow: 0 0 0 1px #D5DAD8, 0 2px 8px rgba(0,0,0,.08);
   font: 16px/24px Roboto, sans-serif; letter-spacing: .5px; /* bodyLarge: Text's default style */
 }

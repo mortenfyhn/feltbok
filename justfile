@@ -100,13 +100,15 @@ run: install
     adb shell am start -n io.github.mortenfyhn.feltbok.debug/io.github.mortenfyhn.feltbok.MainActivity
 
 # Headless, for agents to check UI without the phone. Freshly created AVDs crash SurfaceFlinger
-# when headless; this existing one boots with host GPU rendering.
+# when headless; this existing one boots with host GPU rendering. The display is set to
+# 360 x 760 dp, a small phone, the same size as the phones in docs/mockups/.
 
 # Boot a headless emulator (target it with ANDROID_SERIAL=emulator-5554)
 [group('dev')]
 emu:
     setsid nohup "$ANDROID_HOME/emulator/emulator" -avd Medium_Phone_API_36.1 -no-window -no-audio -no-boot-anim -no-snapshot -gpu host >/dev/null 2>&1 &
     adb -s emulator-5554 wait-for-device shell 'while [ -z "$(getprop sys.boot_completed)" ]; do sleep 1; done'
+    adb -s emulator-5554 shell 'wm size 1080x2280 && wm density 480'
 
 # Shut down the emulator
 [group('dev')]
