@@ -124,7 +124,8 @@ sense of position. The papirkurv list has it too.
 
 ### Marking (masse-handlinger)
 
-Long-press a row to start marking. A leading circle then appears on every row (and
+Long-press a row to start marking, or tap **Merk** at the right end of a day header to
+start with that whole day marked. A leading circle then appears on every row (and
 on each day header), filling with a check when marked — tap a row or its circle to
 toggle it, and a day header's circle marks or clears that whole day at once. You can
 also **long-press and drag** across rows to sweep a range in one gesture (drag back
