@@ -4,12 +4,17 @@ package io.github.mortenfyhn.feltbok
 
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.viewinterop.UIKitView
 import kotlinx.cinterop.ExperimentalForeignApi
+import kotlinx.cinterop.ObjCSignatureOverride
 import kotlinx.cinterop.readValue
 import platform.CoreGraphics.CGRectZero
+import platform.Foundation.NSError
 import platform.Foundation.NSURL
 import platform.Foundation.NSURLRequest
 import platform.UIKit.UIColor
@@ -23,9 +28,30 @@ import platform.darwin.NSObject
 private class IosSyncWeb(
     onPageFinished: (SyncWeb, String) -> Unit,
 ) : SyncWeb {
+    override var loading by mutableStateOf(false)
+        private set
+
+    // The delegate methods share Kotlin signatures, hence @ObjCSignatureOverride.
     private val navigation = object : NSObject(), WKNavigationDelegateProtocol {
+        @ObjCSignatureOverride
+        override fun webView(webView: WKWebView, didStartProvisionalNavigation: WKNavigation?) {
+            loading = true
+        }
+
+        @ObjCSignatureOverride
         override fun webView(webView: WKWebView, didFinishNavigation: WKNavigation?) {
+            loading = false
             webView.URL?.absoluteString?.let { onPageFinished(this@IosSyncWeb, it) }
+        }
+
+        @ObjCSignatureOverride
+        override fun webView(webView: WKWebView, didFailProvisionalNavigation: WKNavigation?, withError: NSError) {
+            loading = false
+        }
+
+        @ObjCSignatureOverride
+        override fun webView(webView: WKWebView, didFailNavigation: WKNavigation?, withError: NSError) {
+            loading = false
         }
     }
 

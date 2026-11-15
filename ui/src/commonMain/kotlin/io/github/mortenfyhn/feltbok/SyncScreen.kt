@@ -3,6 +3,7 @@ package io.github.mortenfyhn.feltbok
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
@@ -11,6 +12,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -63,6 +65,9 @@ fun PickerFooter(vm: MainViewModel, modifier: Modifier = Modifier) {
 interface SyncWeb {
     fun load(url: String)
 
+    /** True while a page loads, from the request on: the login's own redirects can take seconds. */
+    val loading: Boolean
+
     /** Make sure the session cookie outlives the app process. */
     fun persistSession() {}
 
@@ -96,6 +101,9 @@ fun SyncScreen(vm: MainViewModel) {
 
     Column(Modifier.fillMaxSize().bottomInsetPadding()) {
         ScreenHeader(Strings.Sync.login, onCancel = { vm.closeSync() })
-        web.View(Modifier.weight(1f).fillMaxWidth())
+        Box(Modifier.weight(1f).fillMaxWidth()) {
+            web.View(Modifier.fillMaxSize())
+            if (web.loading) LinearProgressIndicator(Modifier.fillMaxWidth())
+        }
     }
 }
