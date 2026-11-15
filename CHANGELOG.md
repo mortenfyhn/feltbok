@@ -10,6 +10,7 @@
 - «Angre»-meldinga dekker ikke lenger +-knappen.
 - Du ser om valgt lokalitet er allmenn eller privat.
 - Ny lokalitet foreslår navn fra Norgeskart, med flere å velge mellom.
+- Hver dag i lista viser antall arter og antall observasjoner den dagen, i stedet for totalt antall arter.
 
 ## v1.5 (13. november 2026)
 
