@@ -6,6 +6,7 @@ import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.junit4.v2.createComposeRule
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
+import androidx.compose.ui.test.performScrollTo
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import org.junit.Rule
@@ -69,7 +70,7 @@ class ExportFlowTest {
         rule.runOnUiThread { vm.seedNote("kjøttmeis") }
 
         rule.onNodeWithText(Strings.Notes.export).performClick()
-        rule.onNodeWithText(Strings.Export.clearAll(1)).performClick()
+        rule.onNodeWithText(Strings.Export.clearAll(1)).performScrollTo().performClick()
 
         rule.onNodeWithText(Strings.Notes.deleted(1)).assertIsDisplayed()
         rule.onNodeWithText(Strings.Notes.undo).performClick()
