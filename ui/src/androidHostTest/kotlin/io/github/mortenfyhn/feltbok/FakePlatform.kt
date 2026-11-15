@@ -48,6 +48,15 @@ class FakePlatform : Platform {
             ?: NoAnswer(offline)
     }
 
+    /** POST bodies by URL, and the answer to give each (default: no answer). */
+    val posts: MutableList<Pair<String, String>> = java.util.Collections.synchronizedList(ArrayList())
+    var postAnswer: (String) -> HttpResult = { NoAnswer(offline) }
+
+    override suspend fun httpPostJson(url: String, headers: Map<String, String>, body: String, timeoutMs: Int): HttpResult {
+        posts += url to body
+        return postAnswer(body)
+    }
+
     override suspend fun siteCookie() = cookie
     override fun clearCookies() { cookie = null }
 

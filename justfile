@@ -128,6 +128,13 @@ build-ubestemt:
     .venv/bin/python scripts/build_ubestemt.py
     mv ubestemt.csv app/src/main/assets/ubestemt.csv
 
+# Build app/src/main/assets/taxon_ids.csv (each species' Artsobservasjoner taxon id, for the upload).
+# Run after rebuilding species.csv or ubestemt.csv.
+[group('data')]
+build-taxon-ids:
+    .venv/bin/python scripts/build_taxon_ids.py
+    mv taxon_ids.csv app/src/main/assets/taxon_ids.csv
+
 # Merges into the unified latin,norsk,svensk,status,count schema, with authoritative names from the
 # IOC World Bird List (pass --ioc for a non-default xlsx path).
 
@@ -163,8 +170,9 @@ push-data:
 # Seed the dev app with varied sample observations and restart it (overwrites its notes!)
 [group('dev')]
 seed:
-    .venv/bin/python scripts/dev/seed_notes.py > /tmp/feltbok-seed-notes.json
+    .venv/bin/python scripts/dev/seed_notes.py --users /tmp/feltbok-seed-users.json > /tmp/feltbok-seed-notes.json
     adb push /tmp/feltbok-seed-notes.json {{data_dir}}/seed-notes.json
+    adb push /tmp/feltbok-seed-users.json {{data_dir}}/seed-coobs-users.json
     adb shell am force-stop {{app_id}}
     adb shell am start -n {{app_id}}/io.github.mortenfyhn.feltbok.MainActivity
 

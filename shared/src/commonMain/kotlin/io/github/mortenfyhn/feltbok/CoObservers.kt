@@ -12,11 +12,16 @@ import kotlinx.serialization.json.jsonObject
 /** A registered Artsobservasjoner user, as the co-observer search returns them. The import links a
  *  Medobservatør cell on [alias] ("brukeralias"): a bare name fails when two users share it, and the
  *  numeric user id isn't accepted at all (both found by test paste-import). */
-data class AoUser(val name: String, val alias: String, val city: String)
+data class AoUser(
+    val name: String,
+    val alias: String,
+    val city: String,
+    val id: Long? = null, // the upload links observers by id; null for users picked before it was kept
+)
 
 fun parseAoUsers(json: String): List<AoUser> {
     return parseJson(json).jsonArray.map { it.jsonObject }
-        .map { AoUser(it.optString("name").trim(), it.optString("userAlias"), it.optString("city").trim()) }
+        .map { AoUser(it.optString("name").trim(), it.optString("userAlias"), it.optString("city").trim(), it.optLong("id").takeIf { id -> id > 0 }) }
         .filter { it.name.isNotEmpty() && it.alias.isNotEmpty() }
 }
 

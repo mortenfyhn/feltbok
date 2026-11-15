@@ -91,7 +91,6 @@ object Country {
     // Fallback map centre when there's no GPS fix or nearby locality (central Norway).
     val mapCenterLat = 63.7
     val mapCenterLon = 8.7
-    val importUrl = "https://www.artsobservasjoner.no/ImportSighting"
 
     // ---- logging in: a WebView logs in, and the app sends its session cookie with its own requests
     // (Platform.siteCookie). syncEnabled gates the picker footer. ----

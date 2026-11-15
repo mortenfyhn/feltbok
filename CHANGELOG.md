@@ -16,6 +16,8 @@
 - Sveip en observasjon mot venstre for å slette den.
 - Observasjoner du får tilbake med «Angre» blinker, så du ser hvor de havna.
 - Innlogginga på Artsobservasjoner viser at den jobber mens siden laster.
+- Eksporter rett til «Kontroller funn» på Artsobservasjoner, uten kopiering og liming. Krever innlogging.
+- Arter må velges fra artslista. For andre arter: velg nærmeste «ub.»-art og skriv resten i merknaden.
 
 ## v1.5 (13. november 2026)
 

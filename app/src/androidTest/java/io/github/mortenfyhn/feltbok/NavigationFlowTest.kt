@@ -9,6 +9,7 @@ import androidx.compose.ui.test.junit4.v2.createAndroidComposeRule
 import androidx.compose.ui.test.onAllNodesWithText
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
+import androidx.compose.ui.test.performScrollTo
 import androidx.compose.ui.test.performScrollToNode
 import androidx.compose.ui.test.performTextInput
 import androidx.test.ext.junit.runners.AndroidJUnit4
@@ -64,9 +65,9 @@ class NavigationFlowTest {
 
         // The export overlay is a separate Back branch in App()'s handler.
         rule.onNodeWithText(Strings.Notes.export).performClick()
-        rule.onNodeWithText(Strings.Export.copy).assertIsDisplayed()
+        rule.onNodeWithText(Strings.Upload.info, substring = true).assertIsDisplayed()
         pressBack()
-        rule.onNodeWithText(Strings.Export.copy).assertDoesNotExist()
+        rule.onNodeWithText(Strings.Upload.info, substring = true).assertDoesNotExist()
         rule.onNodeWithText("+").assertIsDisplayed()
     }
 
@@ -131,7 +132,8 @@ class NavigationFlowTest {
         rule.onNodeWithText(Strings.Detail.save).assertIsDisplayed()
 
         // The co-observer picker has no own handler; the app-level COOBS branch must catch it.
-        rule.onNodeWithText(Strings.Detail.coObservers).performClick()
+        // Below the fold with large text: scroll to it first.
+        rule.onNodeWithText(Strings.Detail.coObservers).performScrollTo().performClick()
         rule.onNodeWithText(Strings.CoObs.title).assertIsDisplayed()
         pressBack()
         rule.onNodeWithText(Strings.Detail.save).assertIsDisplayed()

@@ -34,6 +34,24 @@ class AndroidPlatform(private val app: Application) : Platform {
             }.getOrElse { NoAnswer(offline = !online()) }
         }
 
+    override suspend fun httpPostJson(url: String, headers: Map<String, String>, body: String, timeoutMs: Int): HttpResult =
+        withContext(Dispatchers.IO) {
+            runCatching {
+                val c = URL(url).openConnection() as HttpURLConnection
+                c.connectTimeout = 5000
+                c.readTimeout = timeoutMs
+                c.requestMethod = "POST"
+                c.doOutput = true
+                headers.forEach { (k, v) -> c.setRequestProperty(k, v) }
+                c.setRequestProperty("Content-Type", "application/json; charset=utf-8")
+                try {
+                    c.outputStream.use { it.write(body.encodeToByteArray()) }
+                    val stream = if (c.responseCode in 200..299) c.inputStream else c.errorStream
+                    HttpResponse(c.responseCode, stream?.bufferedReader()?.readText().orEmpty())
+                } finally { c.disconnect() }
+            }.getOrElse { NoAnswer(offline = !online()) }
+        }
+
     private fun online() = app.getSystemService(ConnectivityManager::class.java).run {
         getNetworkCapabilities(activeNetwork)?.hasCapability(NetworkCapabilities.NET_CAPABILITY_VALIDATED) == true
     }
@@ -60,10 +78,13 @@ fun MainViewModel(app: Application) = MainViewModel(AndroidPlatform(app))
  */
 private fun importSeedNotes(ctx: Context) {
     if (!ctx.packageName.endsWith(".debug")) return
-    val seed = File(ctx.getExternalFilesDir(null), "seed-notes.json")
-    if (!seed.exists()) return
-    val _ = runCatching {
-        File(ctx.filesDir, "notes.json").writeText(seed.readText())
-        seed.delete()
+    // The notes, and the co-observers on them that were picked from the user search.
+    for ((pushed, file) in listOf("seed-notes.json" to "notes.json", "seed-coobs-users.json" to "coobs_users.json")) {
+        val seed = File(ctx.getExternalFilesDir(null), pushed)
+        if (!seed.exists()) continue
+        val _ = runCatching {
+            File(ctx.filesDir, file).writeText(seed.readText())
+            seed.delete()
+        }
     }
 }

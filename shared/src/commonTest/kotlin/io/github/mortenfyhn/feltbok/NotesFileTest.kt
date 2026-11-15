@@ -41,7 +41,7 @@ class NotesFileTest {
 
     @Test
     fun savedNotesLoadBack() {
-        val notes = parseNotes(androidNotesJson).mapIndexed { i, n -> if (i == 0) n.copy(locId = "352401") else n }
+        val notes = parseNotes(androidNotesJson).mapIndexed { i, n -> if (i == 0) n.copy(locId = "352401", sightingId = 42226913) else n }
         assertEquals(notes, parseNotes(notesJson(notes)))
     }
 }

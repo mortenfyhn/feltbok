@@ -13,7 +13,6 @@ import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.gestures.detectDragGesturesAfterLongPress
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.gestures.scrollBy
-import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -63,6 +62,7 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExtendedFloatingActionButton
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
+import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.LocalMinimumInteractiveComponentSize
 import androidx.compose.material3.LocalTextStyle
 import androidx.compose.material3.MaterialTheme
@@ -110,7 +110,6 @@ import androidx.compose.ui.hapticfeedback.HapticFeedback
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.Layout
-import androidx.compose.ui.platform.LocalClipboard
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.LocalHapticFeedback
@@ -128,6 +127,7 @@ import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.TextFieldValue
+import androidx.compose.ui.text.style.LineBreak
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.text.withStyle
@@ -822,7 +822,9 @@ private fun SwipeToDelete(enabled: Boolean, onDelete: () -> Unit, content: @Comp
 @Composable
 private fun NoteRow(
     n: Note, name: String, nameItalic: Boolean, status: String, selecting: Boolean, selected: Boolean,
-    flash: Boolean = false, onClick: () -> Unit,
+    flash: Boolean = false,
+    problem: String? = null, // why the export stopped on this note, in red under the row
+    onClick: () -> Unit,
 ) {
     val cs = MaterialTheme.colorScheme
     // A flashing row holds the selection tint for a moment, then fades out. Drawn in the draw phase, so the
@@ -862,72 +864,74 @@ private fun NoteRow(
             SelectCircle(selected)
             Spacer(Modifier.width(12.dp))
         }
-        Layout(
-            content = {
-                Row(verticalAlignment = Alignment.CenterVertically) {   // [0] count + species + status + comment
-                    Text(
-                        buildAnnotatedString {
-                            val count = if (n.count == UNKNOWN_COUNT) "?" else n.count.toString()
-                            withStyle(SpanStyle(color = cs.onPrimaryContainer, fontWeight = FontWeight.Bold)) { append("$count ") }
-                            val shown = if (n.uncertain) "$name?" else name
-                            if (nameItalic) withStyle(SpanStyle(fontStyle = FontStyle.Italic)) { append(shown) } else append(shown)
-                            // Status code (VU/SE/…) inline right after the name, coloured like the badge.
-                            if (status.isNotBlank()) {
-                                withStyle(SpanStyle(color = statusColor(status, cs), fontWeight = FontWeight.Bold, fontSize = 11.sp, letterSpacing = 0.5.sp)) {
-                                    append(" $status")
+        Column(Modifier.weight(1f)) {
+            Layout(
+                content = {
+                    Row(verticalAlignment = Alignment.CenterVertically) {   // [0] count + species + status + comment
+                        Text(
+                            buildAnnotatedString {
+                                val count = if (n.count == UNKNOWN_COUNT) "?" else n.count.toString()
+                                withStyle(SpanStyle(color = cs.onPrimaryContainer, fontWeight = FontWeight.Bold)) { append("$count ") }
+                                val shown = if (n.uncertain) "$name?" else name
+                                if (nameItalic) withStyle(SpanStyle(fontStyle = FontStyle.Italic)) { append(shown) } else append(shown)
+                                // Status code (VU/SE/…) inline right after the name, coloured like the badge.
+                                if (status.isNotBlank()) {
+                                    withStyle(SpanStyle(color = statusColor(status, cs), fontWeight = FontWeight.Bold, fontSize = 11.sp, letterSpacing = 0.5.sp)) {
+                                        append(" $status")
+                                    }
                                 }
+                            },
+                            maxLines = 1, overflow = TextOverflow.Ellipsis,
+                        )
+                        CommentBadge(n)
+                        CoObserverBadge(n)
+                    }
+                    Text(   // [1] sex/age preview
+                        buildAnnotatedString {
+                            preview.forEachIndexed { i, (text, bold) ->
+                                if (i > 0) append(" ")
+                                if (bold) appendBoldSymbols(text) else append(text)
                             }
                         },
-                        maxLines = 1, overflow = TextOverflow.Ellipsis,
+                        color = cs.onSurfaceVariant, fontSize = 13.sp, maxLines = 1, overflow = previewOverflow,
                     )
-                    CommentBadge(n)
-                    CoObserverBadge(n)
+                    // End-align so a truncated name's "…" hugs the right edge instead of leaving the
+                    // ellipsized box's trailing slack, keeping every locality flush against the timestamp.
+                    Text(n.locName, color = cs.onSurface, fontSize = 13.sp, textAlign = TextAlign.End,   // [2] locality
+                        maxLines = 1, overflow = TextOverflow.Ellipsis)
+                    // A no-time obs has no clock to show; a blanked-out clock marks it (the day header carries the date).
+                    Text(if (n.timeUnknown) "--:--" else shortTime(n.time), color = cs.onSurfaceVariant, fontSize = 13.sp)   // [3] timestamp
+                },
+            ) { measurables, constraints ->
+                val w = constraints.maxWidth
+                val gap = 8.dp.roundToPx()
+                val time = measurables[3].measure(Constraints(maxWidth = w))
+                val leftBudget = (w - time.width - gap).coerceAtLeast(0)               // room left of the timestamp
+                val species = measurables[0].measure(Constraints(maxWidth = leftBudget))
+                // Locality keeps its room ahead of the preview: it's measured against everything left of the
+                // name, before the preview gets a look in.
+                val afterName = (leftBudget - species.width - gap).coerceAtLeast(0)
+                val locBudget = if (hasLoc) afterName else 0
+                val loc = measurables[2].measure(Constraints(maxWidth = locBudget))
+                // Only count the locality toward the row height when it's actually shown: a Text measured at
+                // width 0 (no locality, or a long name leaving no room) balloons to two lines, which would
+                // inflate the row and leave the content floating in a too-tall box.
+                val showLoc = hasLoc && locBudget > 0
+                // Preview is last in line: it gets whatever sits between the name and the locality. It's
+                // short (sex + age), so show it all-or-nothing — measured at its natural width and dropped
+                // whole (dot included) when it won't fit, rather than collapsing to a stray "· …".
+                val previewBudget = (afterName - (if (showLoc) loc.width + gap else 0)).coerceAtLeast(0)
+                val prev = measurables[1].measure(Constraints())
+                val showPreview = preview.isNotEmpty() && prev.width <= previewBudget
+                val h = maxOf(species.height, time.height, if (showLoc) loc.height else 0, if (showPreview) prev.height else 0)
+                layout(w, h) {
+                    species.placeRelative(0, (h - species.height) / 2)
+                    time.placeRelative(w - time.width, (h - time.height) / 2)
+                    if (showPreview) prev.placeRelative(species.width + gap, (h - prev.height) / 2)
+                    if (showLoc) loc.placeRelative(w - time.width - gap - loc.width, (h - loc.height) / 2)
                 }
-                Text(   // [1] sex/age preview
-                    buildAnnotatedString {
-                        preview.forEachIndexed { i, (text, bold) ->
-                            if (i > 0) append(" ")
-                            if (bold) appendBoldSymbols(text) else append(text)
-                        }
-                    },
-                    color = cs.onSurfaceVariant, fontSize = 13.sp, maxLines = 1, overflow = previewOverflow,
-                )
-                // End-align so a truncated name's "…" hugs the right edge instead of leaving the
-                // ellipsized box's trailing slack, keeping every locality flush against the timestamp.
-                Text(n.locName, color = cs.onSurface, fontSize = 13.sp, textAlign = TextAlign.End,   // [2] locality
-                    maxLines = 1, overflow = TextOverflow.Ellipsis)
-                // A no-time obs has no clock to show; a blanked-out clock marks it (the day header carries the date).
-                Text(if (n.timeUnknown) "--:--" else shortTime(n.time), color = cs.onSurfaceVariant, fontSize = 13.sp)   // [3] timestamp
-            },
-            modifier = Modifier.weight(1f),
-        ) { measurables, constraints ->
-            val w = constraints.maxWidth
-            val gap = 8.dp.roundToPx()
-            val time = measurables[3].measure(Constraints(maxWidth = w))
-            val leftBudget = (w - time.width - gap).coerceAtLeast(0)               // room left of the timestamp
-            val species = measurables[0].measure(Constraints(maxWidth = leftBudget))
-            // Locality keeps its room ahead of the preview: it's measured against everything left of the
-            // name, before the preview gets a look in.
-            val afterName = (leftBudget - species.width - gap).coerceAtLeast(0)
-            val locBudget = if (hasLoc) afterName else 0
-            val loc = measurables[2].measure(Constraints(maxWidth = locBudget))
-            // Only count the locality toward the row height when it's actually shown: a Text measured at
-            // width 0 (no locality, or a long name leaving no room) balloons to two lines, which would
-            // inflate the row and leave the content floating in a too-tall box.
-            val showLoc = hasLoc && locBudget > 0
-            // Preview is last in line: it gets whatever sits between the name and the locality. It's
-            // short (sex + age), so show it all-or-nothing — measured at its natural width and dropped
-            // whole (dot included) when it won't fit, rather than collapsing to a stray "· …".
-            val previewBudget = (afterName - (if (showLoc) loc.width + gap else 0)).coerceAtLeast(0)
-            val prev = measurables[1].measure(Constraints())
-            val showPreview = preview.isNotEmpty() && prev.width <= previewBudget
-            val h = maxOf(species.height, time.height, if (showLoc) loc.height else 0, if (showPreview) prev.height else 0)
-            layout(w, h) {
-                species.placeRelative(0, (h - species.height) / 2)
-                time.placeRelative(w - time.width, (h - time.height) / 2)
-                if (showPreview) prev.placeRelative(species.width + gap, (h - prev.height) / 2)
-                if (showLoc) loc.placeRelative(w - time.width - gap - loc.width, (h - loc.height) / 2)
             }
+            if (problem != null) Text(problem, color = cs.error, fontSize = 13.sp)
         }
     }
     HorizontalDivider(color = cs.outline.copy(alpha = 0.4f))
@@ -959,12 +963,6 @@ fun SearchScreen(vm: MainViewModel) {
     // and forth the top row was a stale, low-ranked match instead of the best one (#64).
     val listState = rememberLazyListState()
     LaunchedEffect(results) { listState.scrollToItem(0) }
-    // Offer a free-text "add" row (at the bottom, so the best checklist match stays on top) for a
-    // species not in the list (#144), unless the typed name already matches a shown result exactly.
-    val query = q.trim()
-    val canAdd = query.isNotBlank() && results.none { s ->
-        fold(vm.primaryName(s)) == fold(query) || vm.secondaryName(s)?.let { fold(it) == fold(query) } == true
-    }
     Column(Modifier.fillMaxSize().bottomInsetPadding()) {
         Row(
             Modifier.fillMaxWidth().background(cs.surface).padding(start = 4.dp, end = 12.dp, top = 2.dp, bottom = 2.dp),
@@ -1025,11 +1023,6 @@ fun SearchScreen(vm: MainViewModel) {
                     }
                 }
                 HorizontalDivider(color = cs.outline.copy(alpha = 0.4f))
-            }
-            if (canAdd) item(key = "add") {
-                OptionItem(Strings.Search.add(query), selected = false, fullScreen = true) {
-                    vm.pickArbitrarySpecies(query)
-                }
             }
         }
     }
@@ -1981,98 +1974,108 @@ private fun FieldRow(
 
 // ============================ EXPORT ============================
 
-/** One numbered step: a circled number on the left, title + body on the right. */
+/** The notes the export stopped on (by id, with why), drawn as the list draws them, by day. A tap
+ *  opens [onClick] (the editor, to fix it). */
 @Composable
-private fun Step(n: Int, title: String, content: @Composable () -> Unit) {
-    Row(Modifier.fillMaxWidth().padding(vertical = 10.dp)) {
-        Box(
-            Modifier.size(26.dp).clip(RoundedCornerShape(50)).background(MaterialTheme.colorScheme.primary),
-            contentAlignment = Alignment.Center,
-        ) {
-            Text("$n", color = Color.White, fontWeight = FontWeight.Bold, fontSize = 14.sp)
-        }
-        Spacer(Modifier.width(12.dp))
-        Column(Modifier.weight(1f)) {
-            Text(title, fontWeight = FontWeight.SemiBold, fontSize = 15.sp)
-            content()
+private fun ProblemNotes(vm: MainViewModel, notes: List<Note>, problems: Map<Long, String>, onClick: (Note) -> Unit) {
+    val shown = notes.filter { it.id in problems }
+    for (group in groupNotesByDay(shown, Strings.dateNames)) {
+        DayHeader(group.label, selecting = false, allSelected = false, onToggle = {}, onLongPress = {})
+        group.notes.forEach { n ->
+            NoteRow(
+                n, vm.noteName(n), vm.langPrefs.primary == Lang.LATIN, vm.statusFor(n.latin),
+                selecting = false, selected = false, problem = problems[n.id], onClick = { onClick(n) },
+            )
         }
     }
 }
 
-/**
- * Full-page export walkthrough. Defaults to all-at-once: copy every note, paste once. Field testing
- * showed people reaching for the share sheet, so copy → open → paste is spelled out as numbered
- * steps. Shown as an overlay over the list (via showExport), so it needs its own opaque background.
- */
+/** Full-page upload: sends the notes to Artsobservasjoner's review page, lists any that need fixing
+ *  first, and offers to delete them from the app once all are uploaded. Shown as an overlay over the
+ *  list (via showExport), so it needs its own opaque background. */
 @Composable
 fun ExportScreen(vm: MainViewModel) {
     val cs = MaterialTheme.colorScheme
-    val clip = LocalClipboard.current
-    val scope = rememberCoroutineScope()
     val platform = rememberPlatformUi()
-    // Scope: whatever the export covers - the marked notes when opened from selection, else all.
+    // Scope: whatever the upload covers - the marked notes when opened from selection, else all.
     val exported = vm.exportNotes()
     val isSelection = vm.exportIsSelection()
-    // remember'd: with a big batch the TSV runs to hundreds of KB, so don't rebuild it on every
-    // recomposition.
-    val text = remember(exported) { exportTsv(exported) }
-    // The preview field shows only the first rows: laying out the FULL string in a text field is
-    // what made this screen slow to open on a big batch. The copy button copies everything.
-    val preview = remember(text) { text.lineSequence().take(20).joinToString("\n") }
-    var copied by remember { mutableStateOf(false) }
     var confirmClear by remember { mutableStateOf(false) }
+    val state = vm.upload
+    val running = state is UploadState.Running
+    val result = (state as? UploadState.Finished)?.result
+    val unsent = exported.count { it.id !in vm.sentThisVisit }
+    val allSent = state is UploadState.Finished && unsent == 0
+    val clear = @Composable { m: Modifier ->
+        Text(Strings.Upload.clearExported(exported.size), color = cs.error, fontWeight = FontWeight.Medium, fontSize = 14.sp,
+            // A single note deletes straight through (the undo snackbar catches a mistap);
+            // more than one asks first, same rule as the list's Slett (#157).
+            modifier = m.clickable {
+                if (exported.size > 1) confirmClear = true else { vm.clearExported(); vm.closeExport() }
+            })
+    }
 
     Column(Modifier.fillMaxSize().background(cs.background).bottomInsetPadding()) {
         ScreenHeader(Strings.Export.title, onCancel = { vm.closeExport() })
-        Column(Modifier.weight(1f).verticalScroll(rememberScrollState()).padding(horizontal = 16.dp)) {
-            Step(1, Strings.Export.step1) {
-                // Unwrapped, so each line reads as one row of the paste.
-                Text(preview,
-                    Modifier.padding(top = 6.dp).fillMaxWidth().height(120.dp)
-                        .border(1.dp, cs.outline, MaterialTheme.shapes.extraSmall)
-                        .verticalScroll(rememberScrollState()).horizontalScroll(rememberScrollState())
-                        .padding(horizontal = 8.dp, vertical = 6.dp),
-                    fontSize = 11.sp, lineHeight = 14.sp, softWrap = false)
-                Button(
-                    onClick = {
-                        // Setting the clipboard is suspending since Compose 1.9.
-                        scope.launch {
-                            clip.setClipEntry(plainTextClip(text))
-                        }
-                        copied = true
-                    },
-                    modifier = Modifier.padding(top = 6.dp),
-                ) { Text(if (copied) Strings.Export.copied else Strings.Export.copy) }
+        // The problem notes run edge to edge like the list's rows; everything else keeps a margin.
+        val side = Modifier.padding(horizontal = 16.dp)
+        Column(Modifier.weight(1f).verticalScroll(rememberScrollState())) {
+            Text(
+                if (isSelection) Strings.Upload.infoMarked else Strings.Upload.info + " " + Strings.Upload.subsetHint,
+                side.padding(top = 12.dp), fontSize = 14.sp, color = cs.onSurfaceVariant,
+            )
+            if (vm.exportNeedsLogin && !running) {
+                Text(Strings.Upload.logInFirst, side.padding(top = 12.dp))
+                Button(onClick = { vm.logInForExport() }, side.padding(top = 8.dp)) { Text(Strings.Upload.logIn) }
+            } else {
+                // Off while it runs, once all are sent, and until the notes it stopped on are fixed.
+                val toFix = result is UploadResult.Blocked || (result is UploadResult.Done && result.failed.isNotEmpty())
+                // While it runs, the label it had when tapped.
+                val sentBefore = (state as? UploadState.Running)?.sentBefore ?: (exported.size - unsent)
+                Button(onClick = { vm.uploadExported() }, enabled = !running && !toFix && !allSent, modifier = side.padding(top = 12.dp)) {
+                    Text(
+                        if (sentBefore in 1 until exported.size) Strings.Upload.retry(exported.size - sentBefore)
+                        else Strings.Upload.button(exported.size, all = !isSelection),
+                        // With large text: balanced lines, centred, instead of a lone "(30)".
+                        textAlign = TextAlign.Center, style = LocalTextStyle.current.copy(lineBreak = LineBreak.Heading),
+                    )
+                }
             }
-            Step(2, Strings.Export.step2) {
-                Button(
-                    onClick = {
-                        platform.openUrl(Country.importUrl)
-                    },
-                    modifier = Modifier.padding(top = 6.dp),
-                ) { Text(Strings.Export.open) }
+            if (state != UploadState.Idle) {
+                // How far this visit got; it stays where an export stopped, at 0 when nothing was sent.
+                // The bar reads its value later, when it draws: give it this value, not the view model's.
+                val done = exported.size - unsent
+                val fraction = done / exported.size.coerceAtLeast(1).toFloat()
+                LinearProgressIndicator({ fraction }, side.fillMaxWidth().padding(top = 16.dp).height(6.dp), gapSize = 0.dp, drawStopIndicator = {})
+                if (allSent) {
+                    Text(Strings.Upload.allExported(done), side.padding(top = 6.dp), color = cs.primary, fontWeight = FontWeight.Medium)
+                    OutlinedButton(onClick = { platform.openUrl(Strings.Upload.reviewUrl) }, side.padding(top = 12.dp)) {
+                        Text(Strings.Upload.openReview)
+                    }
+                    clear(side.padding(top = 16.dp))
+                } else {
+                    Text(Strings.Upload.exportedOf(done, exported.size), side.padding(top = 6.dp), fontSize = 14.sp, color = cs.onSurfaceVariant)
+                }
             }
-            Step(3, Strings.Export.step3) {
-                Text(buildAnnotatedString {
-                    append(Strings.Export.pasteBody)
-                    withStyle(SpanStyle(fontWeight = FontWeight.SemiBold)) { append(Strings.Export.pasteEmphasis) }
-                }, fontSize = 13.sp, color = cs.onSurfaceVariant, modifier = Modifier.padding(top = 4.dp))
+            val reason = @Composable { i: Interruption? ->
+                if (i is Interruption.Failed) Text(i.reason, side.padding(top = 2.dp), color = cs.error, fontWeight = FontWeight.Medium)
             }
-            Step(4, Strings.Export.step4) {
-                Text(Strings.Export.step4Body,
-                    fontSize = 13.sp, color = cs.onSurfaceVariant, modifier = Modifier.padding(top = 4.dp))
-            }
-            Step(5, Strings.Export.step5) {
-                Text(Strings.Export.step5Body,
-                    fontSize = 13.sp, color = cs.onSurfaceVariant, modifier = Modifier.padding(top = 4.dp))
-                Text(if (isSelection) Strings.Export.clearSelected(exported.size) else Strings.Export.clearAll(exported.size),
-                    color = cs.error, fontWeight = FontWeight.Medium,
-                    fontSize = 14.sp,
-                    // A single note deletes straight through (the undo snackbar catches a mistap);
-                    // more than one asks first, same rule as the list's Slett (#157).
-                    modifier = Modifier.clickable {
-                        if (exported.size > 1) confirmClear = true else { vm.clearExported(); vm.closeExport() }
-                    }.padding(top = 10.dp))
+            when (result) {
+                null -> {}
+                is UploadResult.NotStarted -> reason(result.why)
+                is UploadResult.Blocked -> {
+                    Text(Strings.Upload.blocked(result.problems.size), side.padding(top = 12.dp, bottom = 8.dp), color = cs.error, fontWeight = FontWeight.Medium)
+                    ProblemNotes(vm, exported, result.problems) { vm.fixForUpload(it) }
+                }
+                is UploadResult.Done -> {
+                    reason(result.stopped)
+                    if (result.failed.isNotEmpty()) {
+                        Text(Strings.Upload.someFailed(result.failed.size), side.padding(top = 12.dp, bottom = 8.dp), color = cs.error, fontWeight = FontWeight.Medium)
+                        ProblemNotes(vm, exported, result.failed) { vm.fixForUpload(it) }
+                    }
+                    // Exported, but stored differently: only the website can fix it now.
+                    ProblemNotes(vm, exported, result.mismatched) { platform.openUrl(Strings.Upload.reviewUrl) }
+                }
             }
             Spacer(Modifier.height(24.dp))
         }
@@ -2081,9 +2084,6 @@ fun ExportScreen(vm: MainViewModel) {
         AlertDialog(
             onDismissRequest = { confirmClear = false },
             title = { Text(if (isSelection) Strings.Export.clearSelectedTitle(exported.size) else Strings.Export.clearTitle) },
-            text = {
-                Text(Strings.Export.clearBody)
-            },
             confirmButton = {
                 Button(
                     onClick = { vm.clearExported(); confirmClear = false; vm.closeExport() },
