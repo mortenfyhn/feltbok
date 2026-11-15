@@ -93,16 +93,4 @@ class EditFlowTest {
         rule.onNode(hasSetTextAction()).performTextReplacement("")
         assertEquals(UNKNOWN_COUNT, rule.runOnIdle { vm.dCount })
     }
-
-    /** The day header's "Merk" is the visible way into marking: it starts with that day marked. */
-    @Test
-    fun merkOnTheDayHeaderMarksTheWholeDay() {
-        val vm = start()
-        val names = vm.species.map { it.norsk }.filter { it.isNotBlank() }.distinct().take(2)
-        rule.runOnUiThread { names.forEach { vm.seedNote(it) } }
-
-        rule.onNodeWithText(Strings.Notes.mark).performClick()
-        rule.onNodeWithText(Strings.Notes.selected(2)).assertIsDisplayed()
-        rule.onNodeWithText(Strings.Notes.mark).assertDoesNotExist()
-    }
 }

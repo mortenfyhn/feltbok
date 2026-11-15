@@ -227,7 +227,7 @@ fun ListScreen(vm: MainViewModel, listState: LazyListState) {
                                     label, selecting,
                                     allSelected = group.notes.all { it.id in vm.selected },
                                     onToggle = { vm.toggleDay(ids) },
-                                    onStartMarking = { vm.startSelectDay(ids) },
+                                    onLongPress = { vm.startSelectDay(ids) },
                                 )
                             }
                             items(group.notes, key = { it.id }) { n ->
@@ -565,18 +565,17 @@ private fun SelectCircle(selected: Boolean) {
 
 /** Per-day section header. Plain date+count text normally; while marking it grows a leading circle
  *  (like the rows) that selects/deselects the whole day at once - Material's "parent checkbox". A
- *  long-press starts marking the whole day even from the plain state, mirroring a row's long-press,
- *  and so does the trailing "Merk": the visible way in, since users didn't find the long-press. */
+ *  long-press starts marking the whole day even from the plain state, mirroring a row's long-press. */
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
-private fun DayHeader(label: String, selecting: Boolean, allSelected: Boolean, onToggle: () -> Unit, onStartMarking: () -> Unit) {
+private fun DayHeader(label: String, selecting: Boolean, allSelected: Boolean, onToggle: () -> Unit, onLongPress: () -> Unit) {
     val cs = MaterialTheme.colorScheme
     Row(
         Modifier.fillMaxWidth()
             // Tap toggles the day only once marking; the plain header still long-presses into it.
             // Vertical padding is a touch roomier than a bare label since the whole header is now a
             // press target.
-            .combinedClickable(onClick = { if (selecting) onToggle() }, onLongClick = onStartMarking)
+            .combinedClickable(onClick = { if (selecting) onToggle() }, onLongClick = onLongPress)
             .padding(horizontal = 16.dp, vertical = 7.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
@@ -584,12 +583,7 @@ private fun DayHeader(label: String, selecting: Boolean, allSelected: Boolean, o
             SelectCircle(allSelected)
             Spacer(Modifier.width(12.dp))
         }
-        Text(label, color = cs.onSurfaceVariant, fontSize = 13.sp, modifier = Modifier.weight(1f))
-        if (!selecting) {
-            Text(Strings.Notes.mark, color = cs.primary, fontSize = 13.sp, fontWeight = FontWeight.Medium,
-                modifier = Modifier.clip(RoundedCornerShape(4.dp)).clickable(onClick = onStartMarking)
-                    .padding(horizontal = 8.dp, vertical = 2.dp))
-        }
+        Text(label, color = cs.onSurfaceVariant, fontSize = 13.sp)
     }
 }
 
@@ -1342,7 +1336,7 @@ private fun ArchiveScreenContent(vm: MainViewModel) {
                             group.label, selecting,
                             allSelected = group.notes.all { it.id in vm.selected },
                             onToggle = { vm.toggleDay(ids) },
-                            onStartMarking = { vm.startSelectDay(ids) },
+                            onLongPress = { vm.startSelectDay(ids) },
                         )
                     }
                     items(group.notes, key = { it.id }) { n ->

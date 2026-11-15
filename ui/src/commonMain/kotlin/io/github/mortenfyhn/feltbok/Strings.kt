@@ -38,7 +38,6 @@ object Strings {
         fun gpsAccuracy(m: Int) = "(GPS ±$m m)"
 
         // Selection mode: long-press a note to mark it, then tap more, then delete the marked ones.
-        const val mark = "Merk"
         fun selected(n: Int) = "$n markert"
         const val deleteSelected = "Slett"
 
