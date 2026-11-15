@@ -4,11 +4,15 @@ import android.annotation.SuppressLint
 import android.content.Context
 import android.graphics.Color
 import android.webkit.CookieManager
+import android.webkit.WebChromeClient
 import android.webkit.WebView
 import android.webkit.WebViewClient
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.viewinterop.AndroidView
@@ -18,6 +22,9 @@ private class AndroidSyncWeb(
     ctx: Context,
     onPageFinished: (SyncWeb, String) -> Unit,
 ) : SyncWeb {
+    override var loading by mutableStateOf(false)
+        private set
+
     val view: WebView = WebView(ctx).apply {
         // Default WebView background is white; on first attach it flashes full-bleed for a frame
         // before Compose settles it into its slot, briefly whitening the green header area. A
@@ -29,6 +36,13 @@ private class AndroidSyncWeb(
         settings.domStorageEnabled = true
         // Identify ourselves to the site operator; the stock WebView UA stays intact in front.
         settings.userAgentString = "${settings.userAgentString} Feltbok/${AppInfo.versionName}"
+        // Unlike onPageStarted, progress starts when the request goes out, so it covers the wait
+        // for the server after "Logg inn".
+        webChromeClient = object : WebChromeClient() {
+            override fun onProgressChanged(view: WebView, newProgress: Int) {
+                loading = newProgress < 100
+            }
+        }
         webViewClient = object : WebViewClient() {
             override fun onPageFinished(view: WebView, url: String?) {
                 if (url != null) onPageFinished(this@AndroidSyncWeb, url)

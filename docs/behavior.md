@@ -315,7 +315,8 @@ are kept, leaving room for the other names.
 ### Logging in
 
 The footer under the map says **"Logg inn for å vise private lokaliteter"** while you're logged out.
-Tapping it opens the Artsobservasjoner login page in the app ("Logg inn"). When the login lands back on
+Tapping it opens the Artsobservasjoner login page in the app ("Logg inn"). A thin progress bar runs along
+the top of the page while a page loads, including the wait after you tap the site's own "Logg inn". When the login lands back on
 the site, the screen closes by itself and you're back in the picker with your observation as it was;
 "‹ Tilbake" also returns to the picker. If Artsobservasjoner's login server still remembers you, the
 page goes straight through without asking for a password. The session is kept in the login page's
