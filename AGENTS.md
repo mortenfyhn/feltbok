@@ -78,6 +78,8 @@ a `MainViewModel` must start with `ClearAppDataRule` — otherwise the suite bec
   (`shared/src/commonMain`, plain Kotlin, no Android or JVM imports; like `Search.kt`), not in
   `Model.kt` or `MainViewModel.kt`, so the coming iOS app (#115) gets it too. It builds for JVM
   everywhere and for iOS on macOS hosts only.
+- **HTML mockups start from `docs/mockups/`** (see its README), so they look like the app. Keep
+  `screens.html` in sync when a UI change lands.
 - **Avoid custom styling unless necessary.** Lean on Material defaults and existing shared
   composables; extend a component (e.g. a flag on an existing row) over bespoke layout.
 - **Commit messages in English, explaining the why. No trailers** (`Co-Authored-By` etc. — history
