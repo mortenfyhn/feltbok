@@ -28,6 +28,7 @@ import platform.Foundation.NSUTF8StringEncoding
 import platform.Foundation.NSUserDomainMask
 import platform.Foundation.closeFile
 import platform.Foundation.create
+import platform.Foundation.dataUsingEncoding
 import platform.Foundation.dataTaskWithRequest
 import platform.Foundation.dataUsingEncoding
 import platform.Foundation.dateWithTimeIntervalSince1970
@@ -108,9 +109,18 @@ class IosPlatform : Platform {
 
     override fun toast(message: String, long: Boolean) = IosToast.show(message, long)
 
-    override suspend fun httpGet(url: String, headers: Map<String, String>, timeoutMs: Int): HttpResult {
+    override suspend fun httpGet(url: String, headers: Map<String, String>, timeoutMs: Int): HttpResult =
+        send("GET", url, headers, null, timeoutMs)
+
+    override suspend fun httpPostJson(url: String, headers: Map<String, String>, body: String, timeoutMs: Int): HttpResult =
+        send("POST", url, headers + ("Content-Type" to "application/json; charset=utf-8"), body, timeoutMs)
+
+    @OptIn(BetaInteropApi::class)
+    private suspend fun send(method: String, url: String, headers: Map<String, String>, body: String?, timeoutMs: Int): HttpResult {
         val nsUrl = NSURL.URLWithString(url) ?: return NoAnswer(offline = false)
         val request = NSMutableURLRequest.requestWithURL(nsUrl).apply {
+            setHTTPMethod(method)
+            body?.let { setHTTPBody(NSString.create(string = it).dataUsingEncoding(NSUTF8StringEncoding)) }
             setTimeoutInterval(timeoutMs / 1000.0)
             headers.forEach { (k, v) -> setValue(v, forHTTPHeaderField = k) }
             // Otherwise NSHTTPCookieStorage (a different store from the WebView's) may replace it.
