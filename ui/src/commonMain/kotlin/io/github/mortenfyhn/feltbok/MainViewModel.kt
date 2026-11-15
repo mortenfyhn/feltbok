@@ -148,6 +148,9 @@ class MainViewModel(private val platform: Platform) : ViewModel() {
     /** Toggle a whole day group at once (the date header's circle). Set-maths in [toggledDay]. */
     fun toggleDay(ids: List<Long>) = setSelection(toggledDay(selected.toSet(), ids))
 
+    /** Swipe-to-delete on a list row. */
+    fun deleteNote(id: Long) = archive(notes.filter { it.id == id })
+
     fun deleteSelected() {
         archive(notes.filter { it.id in selected })
         clearSelection()
@@ -233,6 +236,7 @@ class MainViewModel(private val platform: Platform) : ViewModel() {
                 val ids = u.notes.map { it.id }.toSet()
                 saveArchive(storage, loadArchive(storage).filterNot { it.id in ids })
                 persist()
+                flashIds = ids
             }
             is Undoable.Discarded -> screen = Screen.DETAIL              // draft is still in the editor
             is Undoable.Edited -> { u.before.forEach { b -> notes.indexOfFirst { it.id == b.id }.takeIf { it >= 0 }?.let { notes[it] = b } }; persist() }
@@ -394,7 +398,7 @@ class MainViewModel(private val platform: Platform) : ViewModel() {
     var scrollToNoteId by mutableStateOf<Long?>(null); private set
     fun clearScrollTarget() { scrollToNoteId = null }
 
-    // Just-restored notes the list flashes once, so you see where they landed. Cleared once shown.
+    // Just-restored notes (from the papirkurv or an undone delete) the list flashes once, so you see where they landed. Cleared once shown.
     var flashIds by mutableStateOf<Set<Long>>(emptySet()); private set
     fun clearFlash() { flashIds = emptySet() }
 

@@ -51,5 +51,6 @@ class TrashTest {
         vm.undo()
         assertEquals(listOf(note), vm.notes.toList())
         assertEquals(emptyList<Note>(), loadArchive(platform.storage))
+        assertEquals(setOf(note.id), vm.flashIds)
     }
 }

@@ -142,6 +142,10 @@ Back, finishing an action, or by clearing the last mark — the bar disappears w
 The footer (Papirkurv, Tilbakemelding, version) is hidden while marking, so a tap
 at the bottom after a long drag-select can't open the papirkurv by mistake.
 While *not* marking, a plain tap on a row opens it for editing.
+Swiping a row to the left deletes it straight away (to the papirkurv, with the usual
+undo), since that's the gesture many people try first. Swiping right does nothing, and
+swiping is off while marking. Undoing a delete flashes the notes that came back, as
+restoring from the papirkurv does.
 
 ### Endre (batch edit)
 
