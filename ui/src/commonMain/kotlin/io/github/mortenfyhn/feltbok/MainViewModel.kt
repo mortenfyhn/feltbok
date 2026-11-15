@@ -401,6 +401,9 @@ class MainViewModel(private val platform: Platform) : ViewModel() {
     // Remembered locality-picker zoom, so reopening it keeps your last zoom level.
     var mapZoom = 16.0
 
+    // The editor's scroll offset, kept while one of its pickers is open (see DetailScreen).
+    var detailScroll = 0
+
     // ---- draft (current add/edit) ----
     // Observable so isEditing recomposes the editor when it changes without a screen switch -
     // e.g. copyAsNew turning an edit into a fresh observation in place (#110).

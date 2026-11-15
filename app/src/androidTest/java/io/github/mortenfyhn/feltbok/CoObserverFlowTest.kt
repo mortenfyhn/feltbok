@@ -2,6 +2,8 @@ package io.github.mortenfyhn.feltbok
 
 import androidx.activity.ComponentActivity
 import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.semantics.SemanticsProperties.VerticalScrollAxisRange
+import androidx.compose.ui.test.SemanticsMatcher
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.assertIsEnabled
 import androidx.compose.ui.test.assertIsNotEnabled
@@ -13,8 +15,11 @@ import androidx.compose.ui.test.longClick
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.onRoot
 import androidx.compose.ui.test.performClick
+import androidx.compose.ui.test.performScrollTo
 import androidx.compose.ui.test.performTouchInput
 import androidx.test.ext.junit.runners.AndroidJUnit4
+import org.junit.Assert.assertEquals
+import org.junit.Assert.assertTrue
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -114,5 +119,23 @@ class CoObserverFlowTest {
         rule.runOnIdle { rule.activity.onBackPressedDispatcher.onBackPressed() }
         rule.onNodeWithText(Strings.CoObs.title).assertIsDisplayed()
         rule.onNodeWithText("Kari").assertIsOff()
+    }
+
+    /** The editor keeps its scroll position across a trip to the picker, rather than jumping to the top. */
+    @Test
+    fun editorKeepsItsScrollPositionAcrossThePicker() {
+        val vm = MainViewModel(rule.activity.application)
+        rule.setContent { App(vm) }
+        rule.runOnUiThread { vm.seedNote("kjøttmeis"); vm.editNote(vm.notes.single()) }
+        val editorScroll = SemanticsMatcher.keyIsDefined(VerticalScrollAxisRange)
+        fun offset() = rule.onNode(editorScroll).fetchSemanticsNode().config[VerticalScrollAxisRange].value()
+
+        rule.onNodeWithText(Strings.Detail.coObservers).performScrollTo()
+        val before = offset()
+        assertTrue("the editor must scroll for this test to mean anything", before > 0f)
+
+        rule.onNodeWithText(Strings.Detail.coObservers).performClick()
+        rule.onNodeWithText(Strings.CoObs.done).performClick()
+        assertEquals(before, offset())
     }
 }
