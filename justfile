@@ -1,5 +1,9 @@
 export ANDROID_HOME := env("ANDROID_HOME", home_directory() / "Android/Sdk")
 
+# Device recipes go to the phone even while an emulator runs (`just emu`), so the emulator never
+# breaks them with "more than one device". Set ANDROID_SERIAL=emulator-5554 to target the emulator.
+export ANDROID_SERIAL := env("ANDROID_SERIAL", `adb devices 2>/dev/null | awk 'NR > 1 && $2 == "device" && $1 !~ /^emulator-/ { print $1; exit }'`)
+
 # Dev build carries the .debug applicationId suffix so it installs alongside the release app
 # I use daily. Every device-facing recipe targets this id, not the release "io.github.mortenfyhn.feltbok".
 app_id := "io.github.mortenfyhn.feltbok.debug"
@@ -94,6 +98,20 @@ install: build
 [group('app')]
 run: install
     adb shell am start -n io.github.mortenfyhn.feltbok.debug/io.github.mortenfyhn.feltbok.MainActivity
+
+# Headless, for agents to check UI without the phone. Freshly created AVDs crash SurfaceFlinger
+# when headless; this existing one boots with host GPU rendering.
+
+# Boot a headless emulator (target it with ANDROID_SERIAL=emulator-5554)
+[group('dev')]
+emu:
+    setsid nohup "$ANDROID_HOME/emulator/emulator" -avd Medium_Phone_API_36.1 -no-window -no-audio -no-boot-anim -no-snapshot -gpu host >/dev/null 2>&1 &
+    adb -s emulator-5554 wait-for-device shell 'while [ -z "$(getprop sys.boot_completed)" ]; do sleep 1; done'
+
+# Shut down the emulator
+[group('dev')]
+emu-stop:
+    adb -s emulator-5554 emu kill
 
 # Show device logs for the app
 [group('app')]
