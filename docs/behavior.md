@@ -285,6 +285,25 @@ the new bundle is re-harvested: that drops localities since deleted, renamed or 
 still-new ones are fetched again when viewed. Lookups wait until the bundled list has loaded, so a
 picker opened right after launch doesn't count every locality in view as new.
 
+### New locality name
+
+"＋ Ny lokalitet" places a spot at the crosshair, above a panel with the name and the radius. The
+zoom buttons hide while the panel is open; the re-centre button stays above it and puts the crosshair
+on your GPS position. The name field starts blank, with "Ny lokalitet" as a hint, and Lagre sits
+at the bottom of the panel, level with the foot of the radius wheel. Under the field, "Se
+navneforslag (n)" offers names from Kartverket's stedsnavn register (the source behind
+Norgeskart): the app asks for the names within 1000 m of the crosshair each time the map settles,
+with a small spinner while it waits. The link hides as soon as you pan, since the names are for the
+old spot. The link opens a list with each name's type and distance; tapping one fills the field.
+Nothing is filled in without that tap, and a spot saved with an empty field is named "Ny lokalitet".
+✕ clears the field. Offline, the link doesn't show.
+
+The ranking drops bus stops, administrative areas and historical names, sorts the rest by distance
+from the crosshair, and keeps the nearest 12. The distance is to the name's shape in the register,
+not to where Norgeskart puts the label: a street or river is a line, so you're close to it when you
+stand by any part of it. In a town that puts many streets within 100 m, so at most 4 street names
+are kept, leaving room for the other names.
+
 ### Logging in
 
 The footer under the map says **"Logg inn for å vise private lokaliteter"** while you're logged out.

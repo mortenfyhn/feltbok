@@ -1,6 +1,7 @@
 package io.github.mortenfyhn.feltbok
 
-// The two web lookups: the co-observer user search (#128) and the live locality fetch (#173).
+// The web lookups: the co-observer user search (#128), the live locality fetch (#173), the user's
+// own localities, and place-name suggestions (#137).
 // URLs and parsing live here; the HTTP GET itself is per platform ([Platform.httpGet]).
 
 private fun HttpResult.okBody() = (this as? HttpResponse)?.takeIf { it.status in 200..299 }?.body
@@ -55,4 +56,12 @@ suspend fun fetchMySites(platform: Platform, onFailed: (HttpResult) -> Unit = {}
         page++
     }
     return out
+}
+
+/** Ranked place names near a point, for naming a new locality (#137). Empty on any failure. */
+suspend fun fetchPlaceNames(platform: Platform, lat: Double, lon: Double): List<PlaceSuggestion> {
+    val url = "https://api.kartverket.no/stedsnavn/v1/punkt?nord=$lat&ost=$lon&koordsys=4258&utkoordsys=4258" +
+        "&radius=$PLACE_NAME_RADIUS_M&treffPerSide=500&side=1"
+    val json = platform.httpGet(url, mapOf("User-Agent" to "Feltbok/${AppInfo.versionName}"), timeoutMs = 5000).okBody()
+    return json?.let { runCatching { rankPlaceNames(parsePlaceNames(it)) }.getOrNull() } ?: emptyList()
 }

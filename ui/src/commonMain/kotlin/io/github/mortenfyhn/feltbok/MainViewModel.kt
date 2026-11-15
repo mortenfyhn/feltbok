@@ -469,6 +469,7 @@ class MainViewModel(private val platform: Platform) : ViewModel() {
 
     /** Co-observer search by name (#128); empty on any failure. */
     suspend fun searchUsers(query: String): List<AoUser> = searchAoUsers(platform, query)
+    suspend fun placeNames(lat: Double, lon: Double): List<PlaceSuggestion> = fetchPlaceNames(platform, lat, lon)
 
     fun startLocationUpdates() = tracker.start()
     fun stopLocationUpdates() = tracker.stop()

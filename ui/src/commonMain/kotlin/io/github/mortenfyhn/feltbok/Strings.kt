@@ -239,5 +239,7 @@ object Strings {
         const val nameLabel = "Navn"
         const val namePlaceholder = "Ny lokalitet"
         const val save = "Lagre"
+        fun suggestions(n: Int) = "Se navneforslag ($n)"
+        const val suggestionsTitle = "Navneforslag"
     }
 }

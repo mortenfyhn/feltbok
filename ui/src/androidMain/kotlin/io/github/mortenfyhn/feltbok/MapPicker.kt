@@ -18,16 +18,12 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.material3.Button
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -47,13 +43,14 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.viewinterop.AndroidView
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.launch
 import org.osmdroid.config.Configuration
 import org.osmdroid.events.MapListener
@@ -90,7 +87,6 @@ private class NorwegianCopyrightOverlay(ctx: android.content.Context) : Copyrigh
  */
 @Composable
 actual fun LocalityScreen(vm: MainViewModel) {
-    val cs = MaterialTheme.colorScheme
     val ctx = LocalContext.current
     var tapped by remember { mutableStateOf<Locality?>(null) }
     var newMode by remember { mutableStateOf(false) }      // placing a brand-new spot
@@ -98,6 +94,7 @@ actual fun LocalityScreen(vm: MainViewModel) {
     var newRadius by remember { mutableIntStateOf(100) }
     var newName by remember { mutableStateOf("") }
     var sheetH by remember { mutableIntStateOf(0) }           // bottom-panel height (px), to centre the crosshair
+    val mapMoves = remember { MutableStateFlow(0) }         // bumped on pan/zoom, to re-suggest a name
 
     val mapView = remember {
         configureOsmdroid(ctx)
@@ -134,16 +131,18 @@ actual fun LocalityScreen(vm: MainViewModel) {
     LaunchedEffect(tapped) { tapped?.let { delay(300); vm.pickLocality(it) } }
 
     // Whether the map is already (about) centred on the GPS fix — drives the re-centre button's
-    // enabled state. Recomputed when the map moves (listener) and when a new fix arrives.
+    // enabled state. Recomputed when the map moves (listener) and when a new fix arrives. In new-spot
+    // mode "centred" means under the crosshair, which sits above the panel.
     var centered by remember { mutableStateOf(false) }
+    fun panelPx() = if (newMode) sheetH else 0
     fun recomputeCentered() {
         val f = vm.fix
         centered = f != null && mapView.width > 0 && run {
             val pt = mapView.projection.toPixels(GeoPoint(f.lat, f.lon), null)
-            hypot((pt.x - mapView.width / 2).toFloat(), (pt.y - mapView.height / 2).toFloat()) < 24f
+            hypot((pt.x - mapView.width / 2).toFloat(), (pt.y - (mapView.height - panelPx()) / 2).toFloat()) < 24f
         }
     }
-    LaunchedEffect(vm.fix) { recomputeCentered() }
+    LaunchedEffect(vm.fix, newMode, sheetH) { recomputeCentered() }
 
     // Once the map has settled for a second, look up public localities in view (#173). Skip it when
     // zoomed out: you're not picking there yet, and a dense area would take many requests.
@@ -163,8 +162,8 @@ actual fun LocalityScreen(vm: MainViewModel) {
     DisposableEffect(Unit) {
         mapView.onResume()
         val listener = object : MapListener {
-            override fun onScroll(e: ScrollEvent?): Boolean { recomputeCentered(); scheduleLiveFetch(); return false }
-            override fun onZoom(e: ZoomEvent?): Boolean { recomputeCentered(); scheduleLiveFetch(); return false }
+            override fun onScroll(e: ScrollEvent?): Boolean { recomputeCentered(); scheduleLiveFetch(); mapMoves.value++; return false }
+            override fun onZoom(e: ZoomEvent?): Boolean { recomputeCentered(); scheduleLiveFetch(); mapMoves.value++; return false }
         }
         mapView.addMapListener(listener)
         scheduleLiveFetch()
@@ -173,6 +172,11 @@ actual fun LocalityScreen(vm: MainViewModel) {
             vm.mapZoom = mapView.zoomLevelDouble     // keep the zoom for next time
             mapView.onPause(); mapView.onDetach()
         }
+    }
+
+    fun crosshair() = mapView.projection.fromPixels(mapView.width / 2, (mapView.height - sheetH) / 2)
+    val places = rememberPlaceSuggestions(vm, newMode, mapMoves) {
+        if (mapView.width == 0) null else crosshair().let { it.latitude to it.longitude }
     }
 
     overlay.tapsBlocked = newMode                          // in new-spot mode, pan instead of select
@@ -193,7 +197,7 @@ actual fun LocalityScreen(vm: MainViewModel) {
         Box(Modifier.weight(1f).fillMaxWidth()) {
             AndroidView(
                 factory = { mapView },
-                modifier = Modifier.fillMaxSize().clipToBounds(),  // keep the map off the toolbar
+                modifier = Modifier.fillMaxSize().clipToBounds().clearFocusOnPress(),  // keep the map off the toolbar
                 update = { m ->
                     // Only touch the overlay when something actually changed, so a GPS tick
                     // mid-gesture doesn't force a redraw (which flickers the view).
@@ -214,9 +218,10 @@ actual fun LocalityScreen(vm: MainViewModel) {
                     }
                 },
             )
-            // One-handed zoom + re-centre: thumb-reachable buttons (the new-spot panel covers them).
-            if (!newMode) Column(
-                Modifier.align(Alignment.BottomEnd).padding(16.dp),
+            // One-handed zoom + re-centre: thumb-reachable buttons. In new-spot mode only re-centre
+            // stays, above the panel.
+            Column(
+                Modifier.align(Alignment.BottomEnd).padding(bottom = with(LocalDensity.current) { panelPx().toDp() }).padding(16.dp),
                 verticalArrangement = Arrangement.spacedBy(12.dp),
             ) {
                 // Re-centre on the current GPS fix (keeps the current zoom); only shown when there's
@@ -224,57 +229,43 @@ actual fun LocalityScreen(vm: MainViewModel) {
                 if (vm.fix != null && !centered) RecenterButton {
                     vm.fix?.let {
                         mapView.controller.stopPanning()   // kill any fling momentum, else it fights the animateTo
-                        mapView.controller.animateTo(GeoPoint(it.lat, it.lon))
+                        // Pan so the fix lands on the crosshair, half the panel above the centre.
+                        val pt = mapView.projection.toPixels(GeoPoint(it.lat, it.lon), null)
+                        mapView.controller.animateTo(mapView.projection.fromPixels(pt.x, pt.y + panelPx() / 2))
                     }
                 }
-                ZoomButton("+") { mapView.controller.zoomIn() }
-                ZoomButton("−") { mapView.controller.zoomOut() }
+                if (!newMode) {
+                    ZoomButton("+") { mapView.controller.zoomIn() }
+                    ZoomButton("−") { mapView.controller.zoomOut() }
+                }
             }
             // New-spot panel OVERLAYS the map (so the map doesn't resize/jump); the overlay
             // draws the crosshair above it, at the centre of the visible map.
             // Wheel + form side by side so the white panel stays short and leaves the map visible.
-            if (newMode) Row(
-                Modifier.align(Alignment.BottomCenter).fillMaxWidth()
-                    .background(Color.White).padding(14.dp)
-                    .onSizeChanged { sheetH = it.height },
-                horizontalArrangement = Arrangement.spacedBy(14.dp),
-                verticalAlignment = Alignment.CenterVertically,
+            if (newMode) NewLocalityPanel(
+                newName, { newName = it }, places,
+                onSave = {
+                    val gp = crosshair()
+                    created = vm.createNewLocality(gp.latitude, gp.longitude, newRadius, newName)
+                    newMode = false; newName = ""
+                },
+                // Measured outside the padding, so sheetH is the whole white panel (as on iOS).
+                modifier = Modifier.align(Alignment.BottomCenter).fillMaxWidth()
+                    .onSizeChanged { sheetH = it.height }
+                    .background(Color.White).padding(14.dp),
             ) {
-                Column(
-                    Modifier.weight(1f),
-                    verticalArrangement = Arrangement.spacedBy(8.dp),
-                ) {
-                    OutlinedTextField(
-                        value = newName, onValueChange = { newName = it }, singleLine = true,
-                        keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.Sentences),
-                        label = { Text(Strings.Picker.nameLabel) },
-                        placeholder = { Text(Strings.Picker.namePlaceholder) }, modifier = Modifier.fillMaxWidth(),
-                    )
-                    Text(Country.adjustHint, color = cs.onSurfaceVariant, style = MaterialTheme.typography.bodySmall)
-                    Button(
-                        onClick = {
-                            val gp = mapView.projection.fromPixels(mapView.width / 2, (mapView.height - sheetH) / 2)
-                            created = vm.createNewLocality(gp.latitude, gp.longitude, newRadius, newName)
-                            newMode = false; newName = ""
-                        },
-                        modifier = Modifier.fillMaxWidth(),
-                    ) { Text(Strings.Picker.save) }
-                }
-                Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                    Text(Strings.Picker.radiusLabel, color = cs.onSurfaceVariant, fontSize = 12.sp)
-                    AndroidView(factory = { c ->
-                        NumberPicker(c).apply {
-                            minValue = 0
-                            maxValue = RADII.lastIndex
-                            displayedValues = RADII.map { Strings.Picker.meters(it) }.toTypedArray()
-                            wrapSelectorWheel = false
-                            // Block the inner EditText so long-pressing a value can't pop the keyboard.
-                            descendantFocusability = ViewGroup.FOCUS_BLOCK_DESCENDANTS
-                            value = RADII.indexOf(newRadius)
-                            setOnValueChangedListener { _, _, i -> newRadius = RADII[i] }
-                        }
-                    }, update = { it.value = RADII.indexOf(newRadius) })
-                }
+                AndroidView(factory = { c ->
+                    NumberPicker(c).apply {
+                        minValue = 0
+                        maxValue = RADII.lastIndex
+                        displayedValues = RADII.map { Strings.Picker.meters(it) }.toTypedArray()
+                        wrapSelectorWheel = false
+                        // Block the inner EditText so long-pressing a value can't pop the keyboard.
+                        descendantFocusability = ViewGroup.FOCUS_BLOCK_DESCENDANTS
+                        value = RADII.indexOf(newRadius)
+                        setOnValueChangedListener { _, _, i -> newRadius = RADII[i] }
+                    }
+                }, update = { it.value = RADII.indexOf(newRadius) })
             }
         }
         if (!newMode && Country.syncEnabled) PickerFooter(vm)

@@ -72,6 +72,10 @@ a `MainViewModel` must start with `ClearAppDataRule` — otherwise the suite bec
   (`shared/src/commonMain`, plain Kotlin, no Android or JVM imports; like `Search.kt`), not in
   `Model.kt` or `MainViewModel.kt`, so the coming iOS app (#115) gets it too. It builds for JVM
   everywhere and for iOS on macOS hosts only.
+- **Everything online must work offline.** The app is used in the field, often without signal. Any
+  network feature degrades quietly: a failed, slow or malformed response leaves the app usable, with
+  no error dialog and no blocked input (a spinner at most). Go through `Platform.httpGet`, which
+  returns null on any failure, and test the offline path (`FakePlatform` with no answer).
 - **Avoid custom styling unless necessary.** Lean on Material defaults and existing shared
   composables; extend a component (e.g. a flag on an existing row) over bespoke layout.
 - **Commit messages in English, explaining the why. No trailers** (`Co-Authored-By` etc. — history
