@@ -12,6 +12,8 @@
 - Ny lokalitet foreslår navn fra Norgeskart, med flere å velge mellom.
 - «Endre observasjon» hopper ikke lenger til toppen når du kommer tilbake fra medobservatører, art eller lokalitet.
 - Hver dag i lista viser antall arter og antall observasjoner den dagen, i stedet for totalt antall arter.
+- Sveip en observasjon mot venstre for å slette den.
+- Observasjoner du får tilbake med «Angre» blinker, så du ser hvor de havna.
 
 ## v1.5 (13. november 2026)
 

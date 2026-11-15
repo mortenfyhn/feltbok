@@ -1,15 +1,21 @@
 package io.github.mortenfyhn.feltbok
 
 import android.app.Application
+import androidx.compose.ui.graphics.toPixelMap
 import androidx.compose.ui.test.assertIsDisplayed
+import androidx.compose.ui.test.captureToImage
 import androidx.compose.ui.test.hasSetTextAction
 import androidx.compose.ui.test.junit4.v2.createComposeRule
 import androidx.compose.ui.test.onAllNodesWithText
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performTextInput
+import androidx.compose.ui.test.performTouchInput
+import androidx.compose.ui.test.swipeLeft
+import androidx.compose.ui.test.swipeRight
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
+import org.junit.Assert.assertEquals
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -53,6 +59,67 @@ class UndoFlowTest {
 
         rule.onNodeWithText(Strings.Notes.deleted(1)).assertIsDisplayed()
         rule.onNodeWithText(Strings.Notes.undo).performClick()
+        rule.onNodeWithText("kjøttmeis", substring = true).assertIsDisplayed()
+    }
+
+    @Test
+    fun swipingLeftDeletesANoteAndUndoBringsItBack() {
+        val vm = start()
+        // A second note keeps the day group alive, so the row comes back into a list that kept
+        // its saved state - the case where the swipe state used to come back dismissed and
+        // delete the note again.
+        rule.runOnUiThread {
+            vm.seedNote("kjøttmeis")
+            vm.seedNote("blåmeis")
+        }
+        val row = rule.onNodeWithText("kjøttmeis", substring = true)
+
+        // Only leftward deletes.
+        row.performTouchInput { swipeRight() }
+        row.assertIsDisplayed()
+
+        row.performTouchInput { swipeLeft() }
+        rule.onNodeWithText("kjøttmeis", substring = true).assertDoesNotExist()
+        rule.onNodeWithText(Strings.Notes.deleted(1)).assertIsDisplayed()
+        rule.onNodeWithText(Strings.Notes.undo).performClick()
+        rule.onNodeWithText("kjøttmeis", substring = true).assertIsDisplayed()
+    }
+
+    /**
+     * The list clears its flash 5 s after it starts; a row whose fade began late (here: the same
+     * delete undone twice, the second time 3 s in) used to be cut off mid-fade and stay tinted.
+     */
+    @Test
+    fun aFlashCutShortStillFadesOut() {
+        val vm = start()
+        rule.runOnUiThread {
+            vm.seedNote("kjøttmeis")
+            vm.seedNote("blåmeis")
+        }
+        val id = vm.notes.first { it.species == "kjøttmeis" }.id
+        rule.mainClock.autoAdvance = false
+        repeat(2) {
+            rule.runOnUiThread { vm.deleteNote(id) }
+            rule.mainClock.advanceTimeByFrame()   // let the row leave, so the undo composes it afresh
+            rule.runOnUiThread { vm.undo() }
+            rule.mainClock.advanceTimeBy(3_000)
+        }
+        rule.mainClock.advanceTimeBy(10_000)
+
+        // The top-left corner of each name is background, not glyph: the flashed row must match the other.
+        fun corner(name: String) = rule.onNodeWithText(name, substring = true).captureToImage().toPixelMap()[0, 0]
+        assertEquals(corner("blåmeis"), corner("kjøttmeis"))
+    }
+
+    /** While marking, a sideways drag must not delete one row out from under the selection. */
+    @Test
+    fun swipingDoesNothingWhileMarking() {
+        val vm = start()
+        rule.runOnUiThread {
+            vm.seedNote("kjøttmeis")
+            vm.setSelection(vm.notes.map { it.id })
+        }
+        rule.onNodeWithText("kjøttmeis", substring = true).performTouchInput { swipeLeft() }
         rule.onNodeWithText("kjøttmeis", substring = true).assertIsDisplayed()
     }
 

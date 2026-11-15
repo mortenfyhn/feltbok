@@ -68,6 +68,10 @@ import androidx.compose.material3.LocalTextStyle
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Surface
+import androidx.compose.material3.SwipeToDismissBox
+import androidx.compose.material3.SwipeToDismissBoxDefaults
+import androidx.compose.material3.SwipeToDismissBoxState
+import androidx.compose.material3.SwipeToDismissBoxValue
 import androidx.compose.material3.Switch
 import androidx.compose.material3.SwitchDefaults
 import androidx.compose.material3.Text
@@ -230,7 +234,7 @@ fun ListScreen(vm: MainViewModel, listState: LazyListState) {
                                 )
                             }
                             items(group.notes, key = { it.id }) { n ->
-                                NoteRow(
+                                SwipeToDelete(enabled = !selecting, onDelete = { vm.deleteNote(n.id) }) { NoteRow(
                                     n, vm.noteName(n), vm.langPrefs.primary == Lang.LATIN, vm.statusFor(n.latin),
                                     selecting = selecting, selected = n.id in vm.selected,
                                     flash = n.id in vm.flashIds,
@@ -242,7 +246,7 @@ fun ListScreen(vm: MainViewModel, listState: LazyListState) {
                                         if (ds.suppressTap) ds.suppressTap = false
                                         else if (selecting) vm.toggleSelect(n.id) else vm.editNote(n)
                                     },
-                                )
+                                ) }
                             }
                         }
                     }
@@ -784,6 +788,29 @@ private fun AnnotatedString.Builder.appendBoldSymbols(text: String) {
     }
 }
 
+/** Swipe a row left to delete it: the gesture many people try first. Undo and the papirkurv cover
+ *  a slip, so it deletes without asking. */
+@Composable
+private fun SwipeToDelete(enabled: Boolean, onDelete: () -> Unit, content: @Composable () -> Unit) {
+    val cs = MaterialTheme.colorScheme
+    // Not rememberSwipeToDismissBoxState: that one is saveable, and the list keeps saved state per
+    // key, so a note brought back by undo got its "dismissed" state back and was deleted again.
+    val threshold = SwipeToDismissBoxDefaults.positionalThreshold
+    val state = remember { SwipeToDismissBoxState(SwipeToDismissBoxValue.Settled, threshold) }
+    SwipeToDismissBox(
+        state,
+        backgroundContent = {
+            // Only while swiping, so the hidden "Slett" doesn't sit in the tree behind every row.
+            if (state.dismissDirection == SwipeToDismissBoxValue.EndToStart) Box(Modifier.fillMaxSize().background(cs.error).padding(horizontal = 16.dp), contentAlignment = Alignment.CenterEnd) {
+                Text(Strings.Notes.deleteSelected, color = cs.onError, fontWeight = FontWeight.Bold)
+            }
+        },
+        enableDismissFromStartToEnd = false,
+        gesturesEnabled = enabled,
+        onDismiss = { onDelete() },
+    ) { content() }
+}
+
 @Composable
 private fun NoteRow(
     n: Note, name: String, nameItalic: Boolean, status: String, selecting: Boolean, selected: Boolean,
@@ -794,7 +821,13 @@ private fun NoteRow(
     // fade doesn't recompose the row every frame.
     val flashAlpha = remember { Animatable(0f) }
     LaunchedEffect(flash) {
-        if (flash) { flashAlpha.snapTo(1f); flashAlpha.animateTo(0f, tween(3000, delayMillis = 1000)) }
+        if (flash) {
+            flashAlpha.snapTo(1f); flashAlpha.animateTo(0f, tween(3000, delayMillis = 1000))
+        } else {
+            // The list cleared the flash before this row's fade ended (it started late), which cancelled
+            // the fade above: finish it, or the row stays tinted.
+            flashAlpha.animateTo(0f, tween(300))
+        }
     }
     val hasLoc = n.locName.isNotBlank()
     // age + sex (sex symbol bolded so the thin ♂/♀ glyphs read at a glance), each shown only when
