@@ -148,6 +148,14 @@ fun ListScreen(vm: MainViewModel, listState: LazyListState) {
     if (showFeedback) FeedbackDialog { showFeedback = false }
     var showAbout by remember { mutableStateOf(false) }
     if (showAbout) AboutDialog(onDismiss = { showAbout = false }, onSettings = { showAbout = false; vm.openSettings() })
+    if (vm.showBatchTip) {
+        AlertDialog(
+            onDismissRequest = vm::dismissBatchTip,
+            title = { Text(Strings.Notes.batchTipTitle) },
+            text = { Text(Strings.Notes.batchTipText) },
+            confirmButton = { TextButton(onClick = vm::dismissBatchTip) { Text(Strings.Notes.batchTipClose) } },
+        )
+    }
     val selecting = vm.selectionMode
     val haptic = LocalHapticFeedback.current
     // While marking notes, system Back leaves selection mode rather than exiting the app.

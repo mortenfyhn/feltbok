@@ -143,6 +143,10 @@ The footer (Papirkurv, Tilbakemelding, version) is hidden while marking, so a ta
 at the bottom after a long drag-select can't open the papirkurv by mistake.
 While *not* marking, a plain tap on a row opens it for editing.
 
+Marking is easy to miss, so the app explains it once: when you make the same change
+(the same field set to the same value) to a second note in a row, a dialog describes
+how to mark several notes and use **Endre**. After you dismiss it, it never shows again.
+
 ### Endre (batch edit)
 
 `Endre` opens the ordinary observation editor over the whole selection. Fields the

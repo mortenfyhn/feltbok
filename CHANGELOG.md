@@ -9,6 +9,7 @@
 - Når lista er tom, står det «Ny observasjon» på +-knappen, så det er lettere å se hvor du begynner.
 - «Angre»-meldinga dekker ikke lenger +-knappen.
 - Du ser om valgt lokalitet er allmenn eller privat.
+- Gjør du samme endring på flere observasjoner etter hverandre, får du et tips om hvordan du endrer flere på en gang.
 - Ny lokalitet foreslår navn fra Norgeskart, med flere å velge mellom.
 
 ## v1.5 (13. november 2026)
