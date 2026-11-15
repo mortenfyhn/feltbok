@@ -2083,12 +2083,12 @@ fun ExportScreen(vm: MainViewModel) {
     if (confirmClear) {
         AlertDialog(
             onDismissRequest = { confirmClear = false },
-            title = { Text(if (isSelection) Strings.Export.clearSelectedTitle(exported.size) else Strings.Export.clearTitle) },
+            title = { Text(Strings.Notes.confirmDeleteTitle(exported.size)) }, // the same as the list's Slett
             confirmButton = {
                 Button(
                     onClick = { vm.clearExported(); confirmClear = false; vm.closeExport() },
                     colors = ButtonDefaults.buttonColors(containerColor = cs.error),
-                ) { Text(Strings.Export.clearConfirm) }
+                ) { Text(Strings.Notes.deleteSelected) }
             },
             dismissButton = { TextButton(onClick = { confirmClear = false }) { Text(Strings.cancel) } },
         )

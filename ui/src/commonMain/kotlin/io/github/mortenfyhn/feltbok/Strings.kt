@@ -168,12 +168,6 @@ object Strings {
 
     object Export {
         const val title = "Eksporter"
-        const val clearTitle = "Slett alle observasjoner?"
-
-        // Shown instead when the export covered only marked notes (#120): names the count so it's
-        // clear the rest of the list is untouched.
-        fun clearSelectedTitle(n: Int) = "Slett de $n eksporterte observasjonene?"
-        const val clearConfirm = "Slett"
     }
     object Upload {
         const val info = "Eksporter alle observasjonene i lista til «Kontroller funn» på Artsobservasjoner."
