@@ -160,12 +160,13 @@ push-data:
 # instead push a seed file to the external dir, which the dev build imports on next launch (see
 # importSeedNotes). Targets the .debug app only — never the release app with the real field notes.
 
-# Seed the dev app with varied sample observations (overwrites its notes!)
+# Seed the dev app with varied sample observations and restart it (overwrites its notes!)
 [group('dev')]
 seed:
     .venv/bin/python scripts/dev/seed_notes.py > /tmp/feltbok-seed-notes.json
     adb push /tmp/feltbok-seed-notes.json {{data_dir}}/seed-notes.json
     adb shell am force-stop {{app_id}}
+    adb shell am start -n {{app_id}}/io.github.mortenfyhn.feltbok.MainActivity
 
 # Installs a dev build whose footer shows the release version, then drives it with
 # scripts/dev/screenshots.py. Clears the dev app's data.
