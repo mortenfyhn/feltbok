@@ -74,6 +74,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
@@ -1402,6 +1403,8 @@ private fun BatchHint(text: String) {
     }
 }
 
+private val DETAIL_PICKERS = setOf(Screen.SEARCH, Screen.LOCALITY, Screen.COOBS)
+
 @Composable
 fun DetailScreen(vm: MainViewModel) {
     val cs = MaterialTheme.colorScheme
@@ -1436,6 +1439,13 @@ fun DetailScreen(vm: MainViewModel) {
             slide.snapTo(1f)
             slide.animateTo(0f, tween(durationMillis = 250))
         }
+    }
+    // The species, locality and co-observer pickers are screens of their own, so the editor leaves
+    // composition on the way there. Keep its scroll position for the way back, so it doesn't jump to
+    // the top; leaving for anywhere else starts the next draft at the top.
+    val scroll = rememberScrollState(vm.detailScroll)
+    DisposableEffect(Unit) {
+        onDispose { vm.detailScroll = if (vm.screen in DETAIL_PICKERS) scroll.value else 0 }
     }
     Column(Modifier.fillMaxSize()) {
         // This screen composes a draft, so leaving discards it: a bare ✕ (the conventional dismiss)
@@ -1476,7 +1486,7 @@ fun DetailScreen(vm: MainViewModel) {
         Column(
             Modifier.weight(1f)
                 .graphicsLayer { translationX = slide.value * size.width }
-                .verticalScroll(rememberScrollState())
+                .verticalScroll(scroll)
                 // Tapping empty space drops focus/caret out of any text field (the number
                 // keyboard has no Done key, so this is the only way out of it). Taps on the
                 // rows are consumed by their own clickables and never reach here.
