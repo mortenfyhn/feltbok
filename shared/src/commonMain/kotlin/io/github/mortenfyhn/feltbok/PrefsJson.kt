@@ -36,11 +36,18 @@ fun countsJson(counts: Map<String, Int>): String = JsonObject(counts.mapValues {
 /** coobs_users.json: users picked from the co-observer search, by brukeralias. */
 fun parseCoObsUsers(text: String): Map<String, AoUser> =
     parseJson(text).jsonArray.map { it.jsonObject }
-        .map { AoUser(it.getString("name"), it.getString("alias"), it.optString("city")) }
+        .map { AoUser(it.getString("name"), it.getString("alias"), it.optString("city"), if (it.has("id")) it.getLong("id") else null) }
         .associateBy { it.alias }
 
 fun coObsUsersJson(users: Collection<AoUser>): String =
-    JsonArray(users.map { buildJsonObject { put("name", it.name); put("alias", it.alias); put("city", it.city) } }).toString()
+    JsonArray(
+        users.map { u ->
+            buildJsonObject {
+                put("name", u.name); put("alias", u.alias); put("city", u.city)
+                u.id?.let { put("id", it) }
+            }
+        },
+    ).toString()
 
 /** party.json: the current field party ("følget mitt"). */
 fun parseParty(text: String): List<String> = parseJson(text).jsonArray.map { it.jsonPrimitive.content }

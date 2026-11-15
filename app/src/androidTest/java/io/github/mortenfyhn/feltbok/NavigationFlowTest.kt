@@ -65,9 +65,9 @@ class NavigationFlowTest {
 
         // The export overlay is a separate Back branch in App()'s handler.
         rule.onNodeWithText(Strings.Notes.export).performClick()
-        rule.onNodeWithText(Strings.Export.copy).assertIsDisplayed()
+        rule.onNodeWithText(Strings.Upload.info, substring = true).assertIsDisplayed()
         pressBack()
-        rule.onNodeWithText(Strings.Export.copy).assertDoesNotExist()
+        rule.onNodeWithText(Strings.Upload.info, substring = true).assertDoesNotExist()
         rule.onNodeWithText("+").assertIsDisplayed()
     }
 

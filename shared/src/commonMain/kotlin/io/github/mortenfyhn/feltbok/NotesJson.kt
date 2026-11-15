@@ -44,6 +44,7 @@ internal fun noteToJson(n: Note): JsonObject = buildJsonObject {
     if (n.kommune.isNotBlank()) put("kommune", n.kommune)
     if (n.locId.isNotBlank()) put("locId", n.locId)
     n.hideUntil?.let { put("hideUntil", it) }
+    n.sightingId?.let { put("sightingId", it) }
 }
 
 internal fun noteFromJson(o: JsonObject): Note = Note(
@@ -70,6 +71,7 @@ internal fun noteFromJson(o: JsonObject): Note = Note(
     kommune = o.optString("kommune"),
     locId = o.optString("locId"),
     hideUntil = if (o.has("hideUntil")) o.getLong("hideUntil") else null,
+    sightingId = if (o.has("sightingId")) o.getLong("sightingId") else null,
 )
 
 /** notes.json's content: a JSON array of [noteToJson] objects. Throws on a malformed file. */

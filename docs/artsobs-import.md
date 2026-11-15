@@ -1,6 +1,10 @@
 # Artsobservasjoner import — observed behaviour
 
-Feltbok produces text you paste into Artsobservasjoner's **"Importer observasjoner"**
+> Feltbok no longer uses this import: since #149 it uploads through the mobile API
+> (`POST /core/Sightings`, see `Network.kt`). Kept for reference, and in case a paste fallback
+> comes back.
+
+Feltbok produced text you paste into Artsobservasjoner's **"Importer observasjoner"**
 page. There is **no official spec**: the maintainers confirmed by email (2026-06)
 that *no written documentation of the import/locality-matching behaviour exists*.
 Everything here is reverse-engineered from live testing, so treat it as empirical —

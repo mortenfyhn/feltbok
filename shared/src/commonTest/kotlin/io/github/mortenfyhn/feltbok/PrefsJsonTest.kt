@@ -26,8 +26,9 @@ class PrefsJsonTest {
 
     @Test
     fun coObserverUsersRoundTrip() {
-        val users = parseCoObsUsers("""[{"name":"Kari Nordmann","alias":"kari1","city":"Trøndelag"},{"name":"Ola","alias":"ola"}]""")
-        assertEquals(mapOf("kari1" to AoUser("Kari Nordmann", "kari1", "Trøndelag"), "ola" to AoUser("Ola", "ola", "")), users)
+        // Ola was picked before the user id was kept.
+        val users = parseCoObsUsers("""[{"name":"Kari Nordmann","alias":"kari1","city":"Trøndelag","id":7},{"name":"Ola","alias":"ola"}]""")
+        assertEquals(mapOf("kari1" to AoUser("Kari Nordmann", "kari1", "Trøndelag", 7), "ola" to AoUser("Ola", "ola", "")), users)
         assertEquals(users, parseCoObsUsers(coObsUsersJson(users.values)))
     }
 

@@ -138,10 +138,10 @@ class LoginFlowTest {
             return lastToast()
         }
         p.errors["ByUser"] = 503
-        assertEquals("Artsobservasjoner.no utilgjengelig, prøv igjen seinere (kode 503)", update())
+        assertEquals("Artsobservasjoner utilgjengelig, prøv igjen seinere (kode 503)", update())
         p.errors.clear()
         mine = null
-        assertEquals("Artsobservasjoner.no svarer ikke, prøv igjen seinere", update())
+        assertEquals("Artsobservasjoner svarer ikke, prøv igjen seinere", update())
         p.offline = true
         assertEquals("Ingen internettilkobling", update())
         assertTrue("only a refused session logs you out", vm.loggedIn)
@@ -195,5 +195,33 @@ class LoginFlowTest {
         await("toast") { p.toasts.isNotEmpty() }
         assertEquals("Henta 1 privat lokalitet", lastToast())
         await("login check") { vm.loggedIn }
+    }
+
+    @Test
+    fun theExportScreenAsksForALoginFirstAndReturnsThere() {
+        vm.openExport() // no session cookie
+        await("login check") { vm.exportNeedsLogin }
+
+        vm.logInForExport()
+        assertEquals(Screen.SYNC, vm.screen)
+        p.cookie = "session"
+        vm.closeSync(loggedIn = true)
+        assertEquals(Screen.LIST, vm.screen)
+        assertTrue(vm.showExport)
+        await("login check") { !vm.exportNeedsLogin }
+    }
+
+    @Test
+    fun anExportThatFindsTheLoginGoneAsksForANewOne() {
+        p.cookie = "__Host-bff=abc"
+        val _ = p.answers.remove("/bff/user") // offline: the export itself says so
+        vm.openExport()
+        Thread.sleep(200)
+        assertFalse(vm.exportNeedsLogin)
+        p.errors["/bff/user"] = 401 // the login ended while the screen was open
+        vm.uploadExported()
+        await("export to finish") { vm.upload is UploadState.Finished }
+        assertEquals(UploadResult.NotStarted(Interruption.LoggedOut), (vm.upload as UploadState.Finished).result)
+        assertTrue(vm.exportNeedsLogin)
     }
 }

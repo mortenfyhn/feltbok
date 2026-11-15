@@ -53,15 +53,10 @@ per keystroke.
 
 ### Species not in the list
 
-If what you saw isn't in the checklist — a rarity, or a non-bird species — a
-**"Velg «…»"** row appears at the bottom of the results whenever your typed name
-doesn't already match a listed species exactly. Tapping it records the observation
-with the name exactly as you typed it — nothing is added to the app's species list,
-so it won't be searchable next time; each such observation is typed in fresh. That
-name is exported verbatim in the
-`Artsnavn` column, so it's on you to type something the destination portal will
-match on import (it isn't checked against any list). These free-typed species get no
-season/location ranking or recents boost — they aren't in the dataset.
+Only checklist species can be logged: an upload needs the species' taxon id on Artsobservasjoner.
+For a bird that isn't in the list, pick the nearest "ub." entry and describe it in the comment.
+Notes saved with a typed-in species by an older version can't be uploaded until a listed species
+is picked for them.
 
 ### Ubestemt (ub.) entries
 
@@ -97,9 +92,8 @@ bird via its Swedish name. A **"søk i begge språk"** toggle
 recall the primary-language name (e.g. a Swedish birder searching Norwegian). The third,
 unshown language is never searched.
 
-The **export is unaffected** by this choice: the pasted `Artsnavn` is always the
-Norwegian name Artsobservasjoner accepts — so, e.g., a feral rock dove exports and is looked up as `bydue` even
-though IOC's species name is `klippedue`.
+The **export is unaffected** by this choice: it sends the species' Artsobservasjoner taxon id,
+whatever name the app shows.
 
 ## The notes list
 
@@ -137,7 +131,7 @@ the list. `Slett` moves the marked notes to the papirkurv (undoable, and restora
 from the papirkurv later — see Papirkurv below); deleting more than one asks to
 confirm first, since several vanishing at once is surprising (a single mark deletes
 straight away). `Eksporter` opens the export
-walkthrough scoped to just them (see below). You leave marking via the ✕, system
+screen scoped to just them (see below). You leave marking via the ✕, system
 Back, finishing an action, or by clearing the last mark — the bar disappears with it.
 The footer (Papirkurv, Tilbakemelding, version) is hidden while marking, so a tap
 at the bottom after a long drag-select can't open the papirkurv by mistake.
@@ -232,11 +226,9 @@ The party never resets on its own — it
 tracks exactly what you last saved, since wrongly crediting someone who wasn't there (in a
 public database) is worse than the small chore of clearing it.
 
-On export, co-observers become the template's **`Medobservatør`** columns (one per name,
-matched by header). A user picked from the search exports as their **brukeralias**, which
-the import links to exactly that person. A free-text name exports as typed: it links if
-exactly one user has that name, fails when several do, and must otherwise be fixed to free
-text in the import's error dialog. The numeric user id is not accepted by the import.
+On export, a user picked from the search is linked to the sighting as an observer, by their user
+id (looked up by brukeralias when the app doesn't have it yet, so namesakes never mix). A
+free-text name can't be linked, so it goes into the public comment as "Medobservatør: …".
 
 ## Skjul t.o.m. (hide until)
 
@@ -250,8 +242,7 @@ seeded a year ahead (hiding usually runs past the next breeding season). The pic
 row; Back or a tap outside closes it unchanged. The row is batch-editable, so marking a run of
 observations and setting one date hides the whole trip.
 
-On export it fills the template's **`Skjul funn til dato`** column, in the same `dd.MM.yyyy`
-format as the other dates.
+On export it becomes the sighting's hide-until date.
 
 ## Locality picker (map)
 
@@ -335,8 +326,8 @@ Tapping "Oppdater lokaliteter" (with a spinner in the footer) fetches your priva
 fetches the public ones in view again, even if they were checked recently, then shows one toast:
 "Henta 2 allmenne lokaliteter og 1 endra privat lokalitet", "Henta 99 private lokaliteter" the first
 time, or "Allerede oppdatert". When it fails, the toast says why: "Ingen internettilkobling" when the phone
-has no working network, "Artsobservasjoner.no svarer ikke, prøv igjen seinere" when the site
-didn't answer, "Artsobservasjoner.no utilgjengelig, prøv igjen seinere (kode 503)" with the HTTP
+has no working network, "Artsobservasjoner svarer ikke, prøv igjen seinere" when the site
+didn't answer, "Artsobservasjoner utilgjengelig, prøv igjen seinere (kode 503)" with the HTTP
 status it answered with, or "Klarte ikke å hente lokaliteter" when the answer couldn't be read or saved.
 Coming back from the login does the same.
 A session can stop working for your own localities while the site still counts you as logged in
@@ -360,22 +351,43 @@ you're inside both. A point locality (no radius) falls back to plain centre dist
 
 ## Export
 
-One **Eksporter** button (top right of the status strip) opens a step-by-step
-walkthrough: copy *all* your observations as a single block, paste it into
-Artsobservasjoner's "Importer observasjoner", then clear them from the app once
-they're safely in. (Exporting from a marking selection scopes the whole walkthrough
-to just the marked notes — the copied block and the final clear
-step cover only those, so it never touches the rest of the list.) The clear step
-follows the same rule as the list's `Slett`: clearing more than one note asks to
-confirm first, a single one clears straight away — both undoable, and the cleared
-notes land in the papirkurv like any other delete.
+**Eksporter** (top right of the status strip) opens the export screen. It sends the observations
+straight to «Kontroller funn» on Artsobservasjoner, one by one, through the site's mobile API
+(`POST /core/Sightings`), so nothing is copied or pasted. The button says what it sends:
+"Eksporter alle (30)", or "Eksporter markerte (3)" when opened from a marking selection, which
+scopes the whole screen to the marked notes.
 
-Everything pastes in one go. The copy step previews the first rows of the block unwrapped,
-exactly as they paste. Each observation carries the Artsobservasjoner site id of its locality in the `Lokalitetsnavn` column, and
-the import links an id to exactly that site, public or your own, even when other sites
-share its name. Observations saved before the app kept the id, and brand-new spots,
-export the name as before. (The deep why — what links vs. what mints a private
-duplicate — lives in `docs/artsobs-import.md`.)
+Exporting needs a login. When the screen opens it checks the stored login with the site; without
+one, or when the site refuses it, a "Logg inn" button stands in for the export button, and logging
+in returns to the screen. Offline the export button stays on, and the export says what's wrong.
+
+Every note is checked before anything is sent: first in the app (a species from the list, a
+locality that still exists, known age, sex and activity, an even count for "I par", no date in the
+future, an end after the start), then against the site (the taxon id when the bundled list lacks
+it, the co-observers' user ids, the comment's length with the co-observers added). Any problem
+blocks the whole export, so it never stops halfway over something the app could find. The notes
+that need fixing are listed like the main list, each with what's wrong and what to do; a tap opens
+the editor and returns to the export screen. The export button stays off until all are fixed.
+
+While it sends, a bar and "12 av 30 eksportert" show how far it got, and the greyed button keeps
+the label it was tapped with. The bar stays where an export stopped (at 0 when nothing was sent):
+- A lost connection or login stops it, with the reason under the bar, and the button becomes
+  "Eksporter resten (18)".
+- A note the site rejects is listed with the site's own reason; the rest are sent. The button
+  stays off until it's fixed.
+- A note the site stored differently from what was sent (each field of its answer is compared)
+  is listed as exported, naming the fields, for fixing on the site.
+
+The screen remembers what it sent only while it's open. Leaving it with notes left over marks those
+in the list, so Eksporter there sends just them. The next export sends exactly what it's asked to,
+including notes sent before: duplicates are the user's call. Each note keeps its sighting id from
+the site, but nothing uses it yet.
+
+When all are sent, the bar is full and reads "✓ 30 av 30 eksportert", the export button stays off,
+and two actions appear: "Åpne «Kontroller funn»" (the old site's review page, which most users
+prefer) and "Slett eksporterte observasjoner fra appen (30)". Deleting follows the list's `Slett`
+rule: more than one asks first, a single one goes straight away, both undoable, and the notes land
+in the papirkurv.
 
 ## Papirkurv
 
