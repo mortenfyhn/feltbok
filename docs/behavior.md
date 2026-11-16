@@ -379,7 +379,7 @@ it's obvious); a tap opens the editor and returns to the export screen. The expo
 While it sends, a bar and "12 av 30 eksportert" show how far it got, and the greyed button keeps
 the label it was tapped with. The bar stays where an export stopped (at 0 when nothing was sent):
 - A lost connection or login stops it, with the reason under the bar, and the button becomes
-  "Eksporter resten (18)".
+  "Prøv igjen (18 gjenstår)".
 - A note the site rejects is listed with the site's own reason (asked for in Norwegian, without
   its "Invalid arguments: " prefix); the rest are sent. The button
   stays off until it's fixed.

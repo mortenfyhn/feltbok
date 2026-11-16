@@ -179,7 +179,9 @@ object Strings {
         const val subsetHint = "Vil du bare eksportere noen? Marker dem i lista først."
         fun exportedOf(done: Int, total: Int) = "$done av $total eksportert"
         fun allExported(n: Int) = "✓ $n av $n eksportert"
-        fun retry(unsent: Int) = "Eksporter resten ($unsent)"
+
+        // "Prøv igjen", not "Eksporter resten": the app doesn't know whether the problem is gone.
+        fun retry(unsent: Int) = "Prøv igjen ($unsent\u00A0gjenstår)"
         fun clearExported(n: Int) = "Slett eksporterte observasjoner fra appen\u00A0($n)"
         const val logInFirst = "Logg inn på Artsobservasjoner for å eksportere."
         fun blocked(n: Int) = if (n == 1) "1 observasjon må rettes:" else "$n observasjoner må rettes:"
