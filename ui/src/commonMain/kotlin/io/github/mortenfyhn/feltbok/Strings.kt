@@ -234,7 +234,7 @@ object Strings {
         /** "Oppdater lokaliteter" when a request to Artsobservasjoner failed. */
         fun failed(r: HttpResult) = when {
             r is NoAnswer && r.offline -> "Ingen internettilkobling"
-            r is NoAnswer -> "Artsobservasjoner svarer ikke, prøv igjen seinere"
+            r is NoAnswer -> "Artsobservasjoner utilgjengelig, prøv igjen seinere"
             r.rejected -> "Innlogging utløpt, logg inn igjen"
             else -> "Artsobservasjoner utilgjengelig, prøv igjen seinere (kode ${(r as HttpResponse).status})"
         }

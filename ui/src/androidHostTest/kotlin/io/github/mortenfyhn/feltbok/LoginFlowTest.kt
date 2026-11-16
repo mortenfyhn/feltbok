@@ -141,7 +141,7 @@ class LoginFlowTest {
         assertEquals("Artsobservasjoner utilgjengelig, prøv igjen seinere (kode 503)", update())
         p.errors.clear()
         mine = null
-        assertEquals("Artsobservasjoner svarer ikke, prøv igjen seinere", update())
+        assertEquals("Artsobservasjoner utilgjengelig, prøv igjen seinere", update())
         p.offline = true
         assertEquals("Ingen internettilkobling", update())
         assertTrue("only a refused session logs you out", vm.loggedIn)

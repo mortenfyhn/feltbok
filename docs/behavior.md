@@ -333,9 +333,8 @@ Tapping "Oppdater lokaliteter" (with a spinner in the footer) fetches your priva
 fetches the public ones in view again, even if they were checked recently, then shows one toast:
 "Henta 2 allmenne lokaliteter og 1 endra privat lokalitet", "Henta 99 private lokaliteter" the first
 time, or "Allerede oppdatert". When it fails, the toast says why: "Ingen internettilkobling" when the phone
-has no working network, "Artsobservasjoner svarer ikke, prøv igjen seinere" when the site
-didn't answer, "Artsobservasjoner utilgjengelig, prøv igjen seinere (kode 503)" with the HTTP
-status it answered with, or "Klarte ikke å hente lokaliteter" when the answer couldn't be read or saved.
+has no working network, "Artsobservasjoner utilgjengelig, prøv igjen seinere" when the site
+didn't answer, the same with "(kode 503)" added when it answered with an error status, or "Klarte ikke å hente lokaliteter" when the answer couldn't be read or saved.
 Coming back from the login does the same.
 A session can stop working for your own localities while the site still counts you as logged in
 (seen a month after a login). The app then logs you out as "Logg ut" does: the toast says
