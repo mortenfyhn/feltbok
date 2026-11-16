@@ -11,9 +11,9 @@ Recipes live in `just --list`. Gotchas not covered there:
 - `just install` / `just run` build and install the **debug** build on a connected device. **Ask
   before testing on the phone** — the usual flow is that the maintainer runs `just run` and tests by
   hand. Build and report; never install on the device unless okayed in that moment.
-- **Check UI changes on the emulator before reporting back.** `just emu` boots a headless one
-  (about 20 s); then use `ANDROID_SERIAL=emulator-5554` with the device recipes (`just run`,
-  `just seed`) and look with `adb exec-out screencap -p` and `uiautomator dump`. Without
+- **Check UI changes on the emulator before reporting back.** `just emu` boots one in a window
+  (seconds, from its snapshot); then use `ANDROID_SERIAL=emulator-5554` with the device recipes
+  (`just run`, `just seed`) and look with `adb exec-out screencap -p` and `uiautomator dump`. Without
   `ANDROID_SERIAL`, recipes target the phone. Grant location with `pm grant <app id>
   android.permission.ACCESS_FINE_LOCATION` and fake a fix with `adb emu geo fix <lon> <lat>`.
   `just emu-stop` when done.
