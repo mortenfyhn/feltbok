@@ -30,6 +30,13 @@ suspend fun fetchSites(platform: Platform, s: Double, w: Double, n: Double, e: D
     return json?.let { runCatching { siteRows(it) }.getOrNull() }
 }
 
+/** True when the site certainly won't take an export: no login, or the site refused it. Offline
+ *  is not refused, so the export can still try and say what went wrong. */
+suspend fun loginRefused(platform: Platform): Boolean {
+    val cookie = platform.siteCookie() ?: return true
+    return platform.httpGet(Country.sessionUrl, headers("Accept" to "application/json", "Cookie" to cookie), timeoutMs = 5000).rejected
+}
+
 /** When the Artsobservasjoner session ends (epoch ms), or null when logged out or offline. An
  *  expired cookie doesn't fail ByBoundingBox (you just get the anonymous answer), so this is how
  *  to tell. */
@@ -64,4 +71,111 @@ suspend fun fetchPlaceNames(platform: Platform, lat: Double, lon: Double): List<
         "&radius=$PLACE_NAME_RADIUS_M&treffPerSide=500&side=1"
     val json = platform.httpGet(url, mapOf("User-Agent" to "Feltbok/${AppInfo.versionName}"), timeoutMs = 5000).okBody()
     return json?.let { runCatching { rankPlaceNames(parsePlaceNames(it)) }.getOrNull() } ?: emptyList()
+}
+
+/** Why an upload didn't start, or stopped before the last note. */
+sealed interface Interruption {
+    /** Only a new login helps. */
+    data object LoggedOut : Interruption
+
+    /** Offline, or the site didn't answer: try again. */
+    data class Failed(val reason: String) : Interruption
+}
+
+/** How an upload ended. [Blocked] and [NotStarted] sent nothing. */
+sealed interface UploadResult {
+    data class NotStarted(val why: Interruption) : UploadResult
+
+    /** Nothing sent: these notes (by id) need fixing first. */
+    data class Blocked(val problems: Map<Long, String>) : UploadResult
+
+    /** Sent; [failed] (by id) are the notes the server refused. [stopped] says why it stopped early. */
+    data class Done(val sent: Int, val failed: Map<Long, String>, val stopped: Interruption? = null) : UploadResult
+}
+
+/** Where the export screen's upload is. One value, so the screen can't see a half-updated state. */
+sealed interface UploadState {
+    data object Idle : UploadState
+
+    /** [sentBefore]: how many this visit had sent when it started, so the button keeps its label. */
+    data class Running(val sentBefore: Int) : UploadState
+    data class Finished(val result: UploadResult) : UploadState
+}
+
+/** Uploads [notes] to the review page (POST /core/Sightings), one by one. Everything that can be checked is checked first, so a problem blocks the whole
+ *  upload before anything is sent. [taxonIds] are the bundled taxon ids by scientific name. [users] are the
+ *  co-observers picked from the user search, by brukeralias; anyone else on a note was typed in, and
+ *  goes into the public comment. Ids missing from either are looked up. [onSent] gets each uploaded
+ *  note and its sighting id as it lands, for the caller to keep. */
+suspend fun uploadNotes(
+    platform: Platform,
+    notes: List<Note>,
+    taxonIds: Map<String, Long>,
+    users: Map<String, AoUser>,
+    onSent: (Note, Long) -> Unit,
+): UploadResult {
+    val isUser = { s: String -> s in users }
+    val cookie = platform.siteCookie() ?: return UploadResult.NotStarted(Interruption.LoggedOut)
+    // Asks for the site's rejection reasons in Norwegian, if it has them.
+    val h = headers("Accept" to "application/json", "Cookie" to cookie, "Accept-Language" to "nb-NO,nb;q=0.9,no;q=0.8")
+    val get = suspend { url: String -> platform.httpGet(url, h, timeoutMs = 10000) }
+    val session = get(Country.sessionUrl)
+    val me = session.okBody()?.let(::parseUserId)
+        ?: return UploadResult.NotStarted(if (session.rejected) Interruption.LoggedOut else Interruption.Failed(Strings.Upload.failed(session)))
+
+    // Co-observers who aren't users can't be linked, so they go into the public comment.
+    val publicComment = { n: Note ->
+        n.coObservers.filterNot(isUser).let { if (it.isEmpty()) n.publicComment else Strings.Upload.withCoObservers(n.publicComment, it) }
+    }
+    val now = nowMs()
+    val problems = LinkedHashMap<Long, String>()
+    notes.forEach { n -> uploadProblem(n, now)?.let { problems[n.id] = Strings.Upload.problem(it, n) } }
+    // Look up what the notes refer to. A lookup that gets no answer stops here; one that answers
+    // "not found" is the note's problem. A note that passes gets its request body.
+    val taxa = HashMap<String, Long?>(taxonIds)
+    val userIds = HashMap<String, Long?>(users.mapNotNull { (alias, u) -> u.id?.let { alias to it } }.toMap())
+    val bodies = ArrayList<Pair<Note, String>>()
+    for (n in notes.filter { it.id !in problems }) {
+        if (n.latin !in taxa) {
+            val r = get("${Country.sitesHost}/core/TaxonName/Search?search=${uriEncode(n.latin)}&includeSubSpecies=true")
+            if (r !is HttpResponse) return UploadResult.NotStarted(Interruption.Failed(Strings.Upload.failed(r)))
+            taxa[n.latin] = r.okBody()?.let { parseTaxonId(it, n.latin) }
+        }
+        for (alias in n.coObservers.filter(isUser).filter { it !in userIds }) {
+            val r = get("${Country.sitesHost}/core/Users/ByUserAlias?userAlias=${uriEncode(alias)}")
+            if (r !is HttpResponse) return UploadResult.NotStarted(Interruption.Failed(Strings.Upload.failed(r)))
+            userIds[alias] = r.okBody()?.let(::parseId)
+        }
+        val taxon = taxa[n.latin]
+        val coUsers = n.coObservers.filter(isUser)
+        val missing = coUsers.filter { userIds[it] == null }
+        when {
+            taxon == null -> problems[n.id] = Strings.Upload.unknownSpecies
+            missing.isNotEmpty() -> problems[n.id] = Strings.Upload.unknownCoObserver(missing.map { users[it]?.name ?: it })
+            n.privateComment.length > MAX_COMMENT -> problems[n.id] = Strings.Upload.privateTooLong
+            n.publicComment.length > MAX_COMMENT -> problems[n.id] = Strings.Upload.publicTooLong
+            publicComment(n).length > MAX_COMMENT -> problems[n.id] = Strings.Upload.publicTooLongWithCoObservers
+            else -> bodies += n to sightingJson(n, taxon, listOf(me) + coUsers.mapNotNull { userIds[it] }, publicComment(n))
+        }
+    }
+    if (problems.isNotEmpty()) return UploadResult.Blocked(problems)
+
+    val failed = LinkedHashMap<Long, String>()
+    var sent = 0
+    for ((n, body) in bodies) {
+        val r = platform.httpPostJson("${Country.sitesHost}/core/Sightings", h, body, timeoutMs = 15000)
+        val answer = r.okBody()
+        val id = answer?.let(::parseId)
+        if (id != null) {
+            onSent(n, id)
+            sent++
+        } else if (r is HttpResponse && r.status != 401) {
+            failed[n.id] = parseErrorDetail(r.body)?.let(Strings.Upload::rejected) ?: Strings.Upload.failed(r)
+        } else {
+            // Logged out or no answer: the rest would fail the same way. Stop, and the next try
+            // sends what's left.
+            return UploadResult.Done(sent, failed, if (r is HttpResponse) Interruption.LoggedOut else Interruption.Failed(Strings.Upload.lost(r)))
+        }
+    }
+    return UploadResult.Done(sent, failed)
 }

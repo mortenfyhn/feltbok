@@ -106,7 +106,6 @@ object Strings {
 
     object Search {
         const val placeholder = "Søk art…"
-        fun add(name: String) = "Velg «$name»"
     }
 
     object Detail {
@@ -121,6 +120,7 @@ object Strings {
         const val unspecified = "(Uspesifisert)"
         const val commentPublic = "Åpen kommentar"
         const val commentPrivate = "Privat kommentar"
+        fun commentLength(n: Int, max: Int) = "$n/$max"
         const val commentDone = "Ferdig"
         const val uncertain = "Usikker artsbestemming"
         const val coObservers = "Medobs."   // short, so the names beside it get the room (#176)
@@ -170,30 +170,60 @@ object Strings {
 
     object Export {
         const val title = "Eksporter"
-        const val step1 = "Kopier observasjoner"
-        const val copy = "Kopier"
-        const val copied = "Kopiert ✓"
-        const val step2 = "Åpne Artsobservasjoner"
-        const val open = "Åpne"
-        const val step3 = "Lim inn og importer"
+    }
+    object Upload {
+        const val info = "Eksporter alle observasjonene i lista til «Kontroller funn» på Artsobservasjoner."
+        const val infoMarked = "Eksporter de markerte observasjonene til «Kontroller funn» på Artsobservasjoner."
 
-        // Ends in <pasteEmphasis, semibold>, the label of the site's button.
-        const val pasteBody = "Lim inn observasjonene og trykk "
-        const val pasteEmphasis = "Importer"
+        /** For [total] notes; [all]: the whole list, not marked notes. */
+        fun button(total: Int, all: Boolean) = if (all) "Eksporter alle ($total)" else "Eksporter markerte ($total)"
+        const val subsetHint = "Vil du bare eksportere noen? Marker dem i lista først."
+        fun exportedOf(done: Int, total: Int) = "$done av $total eksportert"
+        fun allExported(n: Int) = "✓ $n av $n eksportert"
 
-        const val step4 = "Kontroller funn"
-        const val step4Body = "Sjekk at observasjonene vises i Artsobservasjoner"
-        const val step5 = "Slett i appen"
-        const val step5Body = "Når alt er på plass, kan du slette observasjonene i appen"
-        fun clearAll(n: Int) = "Slett alle observasjoner ($n)"
-        const val clearTitle = "Slett alle observasjoner?"
+        // "Prøv igjen", not "Eksporter resten": the app doesn't know whether the problem is gone.
+        fun retry(unsent: Int) = "Prøv igjen ($unsent\u00A0gjenstår)"
+        fun clearExported(n: Int) = "Slett eksporterte observasjoner fra appen\u00A0($n)"
+        const val logInFirst = "Logg inn på Artsobservasjoner for å eksportere."
+        fun blocked(n: Int) = if (n == 1) "1 observasjon må rettes:" else "$n observasjoner må rettes:"
+        fun someFailed(n: Int) = if (n == 1) "1 observasjon ble avvist av Artsobservasjoner:" else "$n observasjoner ble avvist av Artsobservasjoner:"
+        const val logIn = "Logg inn"
+        const val openReview = "Åpne «Kontroller funn»"
 
-        // Shown instead when the export covered only marked notes (#120): names the count so it's
-        // clear the rest of the list is untouched.
-        fun clearSelected(n: Int) = "Slett $n ${if (n == 1) "observasjon" else "observasjoner"}"
-        fun clearSelectedTitle(n: Int) = "Slett de $n eksporterte observasjonene?"
-        const val clearBody = "Sørg for alt er på plass i Artsobservasjoner!"
-        const val clearConfirm = "Slett"
+        // The old site's review page: most users still prefer it to the new site's.
+        const val reviewUrl = "https://www.artsobservasjoner.no/ReviewSighting"
+
+        // Error and status lines end without a full stop, like the toasts; explanatory sentences keep it.
+        const val unknownSpecies = "Arten finnes ikke på Artsobservasjoner"
+        const val privateTooLong = "Privat kommentar er for lang (maks 254 tegn)"
+        const val publicTooLong = "Åpen kommentar er for lang (maks 254 tegn)"
+        const val publicTooLongWithCoObservers = "Åpen kommentar blir for lang (maks 254 tegn) med medobservatørene som ikke er valgt fra brukersøket"
+        fun unknownCoObserver(names: List<String>) =
+            "${if (names.size == 1) "Brukeren" else "Brukerne"} ${andList(names)} finnes ikke på Artsobservasjoner"
+        private fun andList(xs: List<String>) = if (xs.size < 2) xs.joinToString() else xs.dropLast(1).joinToString() + " og " + xs.last()
+
+        /** [p] is [n]'s problem. */
+        fun problem(p: UploadProblem, n: Note) = when (p) {
+            UploadProblem.NO_SPECIES -> "Appen støtter ikke arten «${n.species}»"
+            UploadProblem.NO_SITE -> "Lokaliteten finnes ikke, velg ny lokalitet"
+            UploadProblem.UNKNOWN_AGE -> "Ugyldig alder «${n.age}»"
+            UploadProblem.UNKNOWN_SEX -> "Ugyldig kjønn «${n.sex}»"
+            UploadProblem.UNKNOWN_ACTIVITY -> "Ugyldig aktivitet «${n.activity}»"
+            UploadProblem.ODD_PAIR -> "«I par» krever partall"
+            UploadProblem.FUTURE -> "Datoen er i framtida"
+            UploadProblem.END_BEFORE_START -> "Sluttid er før starttid"
+        }
+
+        /** The public comment with co-observers who aren't users added, since they can't be linked. */
+        fun withCoObservers(comment: String, names: List<String>) =
+            listOf(comment.trim(), "Medobservatør: ${names.joinToString()}").filter { it.isNotEmpty() }.joinToString(". ")
+        fun failed(r: HttpResult) = Sync.failed(r)
+
+        /** Why an export stopped after it had started sending. */
+        fun lost(r: HttpResult) = if (r is NoAnswer && r.offline) "Mista internettilkoblinga" else failed(r)
+
+        /** The site's own reason for refusing a note: a rule the app doesn't check, so only its words. */
+        fun rejected(detail: String) = "«${detail.removePrefix("Invalid arguments: ")}»"
     }
 
     object Sync {
@@ -207,9 +237,9 @@ object Strings {
         /** "Oppdater lokaliteter" when a request to Artsobservasjoner failed. */
         fun failed(r: HttpResult) = when {
             r is NoAnswer && r.offline -> "Ingen internettilkobling"
-            r is NoAnswer -> "Artsobservasjoner.no svarer ikke, prøv igjen seinere"
+            r is NoAnswer -> "Artsobservasjoner utilgjengelig, prøv igjen seinere"
             r.rejected -> "Innlogging utløpt, logg inn igjen"
-            else -> "Artsobservasjoner.no utilgjengelig, prøv igjen seinere (kode ${(r as HttpResponse).status})"
+            else -> "Artsobservasjoner utilgjengelig, prøv igjen seinere (kode ${(r as HttpResponse).status})"
         }
 
         /** "Oppdater lokaliteter": [newPublic] new public ones in view, and what changed in your own. */

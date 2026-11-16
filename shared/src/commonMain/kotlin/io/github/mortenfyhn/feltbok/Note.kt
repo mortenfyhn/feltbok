@@ -33,4 +33,7 @@ data class Note(
     // Hide the observation from everyone else until after this date (-> "Skjul funn til dato").
     // For vulnerable birds you don't want a crowd turning up to search for. null = not hidden.
     val hideUntil: Long? = null,
+    // The Artsobservasjoner sighting this note was uploaded as; null = not uploaded. A retry skips
+    // notes that have one, so a half-finished upload doesn't make duplicates.
+    val sightingId: Long? = null,
 )

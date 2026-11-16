@@ -7,11 +7,11 @@ not a one-off tap-through.
 
 ## Already automated — don't re-test these by hand
 
-- `./gradlew test` — pure-JVM units: TSV export cells, note JSON round-trip, species-search ranking
+- `./gradlew test` — pure-JVM units: the export's checks and request body, note JSON round-trip, species-search ranking
   (search is a pure function, so its logic is covered here, not on-device).
 - `just itest` (device, minified `releaseTest` variant; also a `release.sh` pre-flight): app launch,
   osmdroid Projection, asset loads, **add-observation flow** (search → save → in list), **export
-  flow** (open → TSV renders → copy). A regression in these fails the gate, not the shipped APK.
+  flow** against a fake server (sent, the bar, the result, deleting). A regression in these fails the gate, not the shipped APK.
 - `just itest` also covers the UI wiring on top of the unit-tested logic: **undo** (snackbar after a
   delete, Angre puts the note back, navigating away dismisses it, undo after a **discarded draft**
   returns to the intact editor, and undo after a **saved single edit** restores the original values,
@@ -24,7 +24,8 @@ not a one-off tap-through.
   **pinch zoom**, and notes, papirkurv and use scores **surviving a restart**.
 - Host tests cover the logic behind the network features with a fake server: the **login update**
   (own localities, toasts, failures), the **live locality fetch** (splitting cut-off responses,
-  the 2 km cells), **site-id export**, and **files written by v1.4** loading after the update.
+  the 2 km cells), the **export** (checks before sending, stopping and resuming, a rejected note,
+  the login check), and **files written by v1.4** loading after the update.
 
 ## Hand-test these — automation can't (or doesn't yet)
 
@@ -42,26 +43,22 @@ not a one-off tap-through.
 - Just outside a **polygon** locality, the strip shows the distance to its edge, not "du er her".
 - A new spot made from the status strip becomes the current locality.
 
-**Paste-import against the live site** *(the export format end-to-end — automation stops at "TSV
-renders"; the real import site can't be scripted)*
-- `just seed` a clean batch, then export from the app and paste into Artsobservasjoner "Importer
-  observasjoner". `release.sh` offers to do the install + seed + launch for you, so during a release
-  only the paste is by hand. The seed spans every export path (new-spot coords + radius, blank `Antall`,
-  uncertain, same-day/multi-day ranges, the two no-time cases, 0/1/12 co-observers).
-- It should validate with **no errors** and rows should reach **Kontroller funn** (not just the green
-  banner). Any error is a real regression — see [artsobs-import.md](artsobs-import.md) for the format.
-- Leave the import form's area (kommune/fylke) field **empty**: it rejects every site id outside it.
-- In Kontroller funn, the **Austrått** row links to Ørland's site (354419), not Sandnes'.
+**Export against the live site** *(host tests use a fake server)*
+- Run `LiveUploadTest` with a logged-in cookie (the command is in its KDoc). It uploads a note for
+  every case, reads each back, checks it and deletes it. Then delete the "Feltbok live-test" site
+  it leaves under Mine lokaliteter.
+- `just seed` a clean batch, fix or delete the notes the export flags, then export from the app.
+  All reach **Kontroller funn**, and the **Austrått** row links to Ørland's site (354419), not
+  Sandnes'. Delete them there afterwards.
 - On your own phone, export one note at **one of your private localities** and one at a
-  **live-fetched** public locality (one the map toast reported). Each links to that exact site,
-  and the import doesn't create a private duplicate.
+  **live-fetched** public locality (one the map toast reported). Each links to that exact site.
 
 **Upgrade from the previous release** *(the host test reads v1.4's files; nothing installs the new
 APK over the old one)*
 - `release.sh` keeps the signed APK locally until the push prompt. Install it over the daily
   release app before answering `yes`. Notes, papirkurv, co-observers, the party, name-language
   settings and private localities are all still there. Notes saved under the old version still
-  export (by name).
+  export.
 
 **Login and network on the release build** *(the R8 smoke tests don't reach these code paths, and
 host tests use a fake server)*

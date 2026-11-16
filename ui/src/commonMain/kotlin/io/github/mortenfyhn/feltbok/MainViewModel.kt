@@ -387,7 +387,14 @@ class MainViewModel(private val platform: Platform) : ViewModel() {
         return used.sortedByDescending { actUses[it] ?: 0 } + rest
     }
 
-    var screen by mutableStateOf(Screen.LIST); private set
+    private var screenState by mutableStateOf(Screen.LIST)
+    var screen: Screen
+        get() = screenState
+        private set(value) {
+            screenState = value
+            // Back on the list after fixing a note from the export screen: return to the export screen.
+            if (value == Screen.LIST) fixingForUpload?.let(::returnToUpload)
+        }
     var showExport by mutableStateOf(false); private set
     var fix by mutableStateOf<GpsFix?>(null); private set
 
@@ -467,6 +474,9 @@ class MainViewModel(private val platform: Platform) : ViewModel() {
 
     /** Localities-dependent startup, run once they've finished loading. */
     private fun onLocalitiesLoaded() {
+        val before = notes.toList()
+        val filled = backfillLocIds(before, localities)
+        if (filled != before) { notes.clear(); notes.addAll(filled); persist() }
         // Re-add brand-new spots from saved notes, so a custom locality stays selectable
         // across restarts (until it's been uploaded and adjusted on the website).
         addNewLocalitiesOf(notes)
@@ -561,20 +571,6 @@ class MainViewModel(private val platform: Platform) : ViewModel() {
         saveUses(storage, uses)
         if (!changingSpecies && !isEditing && !batchEditing) {
             dTime = now  // stamp the entry time now
-            dLoc = currentLocality()
-        }
-        changingSpecies = false
-        screen = Screen.DETAIL
-    }
-
-    /** Commit a free-typed species name not in the checklist (#144). The typed text becomes the
-     *  exported Artsnavn verbatim; latin is left blank (no registry entry), which the display
-     *  fallbacks (nameForLatin) and export already tolerate. No use-score bump - there's no stable
-     *  latin key to attribute it to, and it won't reappear in recents. */
-    fun pickArbitrarySpecies(name: String) {
-        dSpecies = name.trim(); dLatin = ""
-        if (!changingSpecies && !isEditing && !batchEditing) {
-            dTime = nowMs()
             dLoc = currentLocality()
         }
         changingSpecies = false
@@ -754,9 +750,26 @@ class MainViewModel(private val platform: Platform) : ViewModel() {
     // ---- "Synk mine lokaliteter" (pull the user's own privates from Artsobservasjoner) ----
     // The login screen, opened from the picker; back there, with the draft intact.
     fun openSync() { screen = Screen.SYNC }
+
+    // Logging in from the export screen returns there, not to the picker.
+    private var loginForExport = false
+    fun logInForExport() {
+        loginForExport = true
+        showExport = false
+        screen = Screen.SYNC
+    }
+
     fun closeSync(loggedIn: Boolean = false) {
-        screen = Screen.LOCALITY
         checkSession()
+        if (loginForExport) {
+            loginForExport = false
+            screen = Screen.LIST
+            showExport = true
+            if (loggedIn) updateResult { null } // the button now says what's left to send
+            checkExportLogin()
+            return
+        }
+        screen = Screen.LOCALITY
         if (loggedIn) {
             checkedCells.clear()   // fetched logged out, so possibly truncated
             updateLocalities()
@@ -1006,6 +1019,9 @@ class MainViewModel(private val platform: Platform) : ViewModel() {
             uncertain = dUncertain, coObservers = dCoObs.toList(), kommune = loc?.kommune ?: "",
             locId = loc?.id ?: "",
             hideUntil = dHideUntil,
+            // An edit keeps the upload mark: the edit doesn't reach Artsobservasjoner, and a re-upload
+            // would duplicate the sighting.
+            sightingId = if (isEditing) notes.firstOrNull { it.id == editingId }?.sightingId else null,
         )
         if (isEditing) {
             val i = notes.indexOfFirst { it.id == n.id }
@@ -1040,9 +1056,85 @@ class MainViewModel(private val platform: Platform) : ViewModel() {
     // so it survives a later selection change - and the marks stay put, so backing out of export
     // lands you back in selection mode where you left it.
     private var exportScope by mutableStateOf<List<Long>?>(null)
-    fun openExport() { exportScope = null; showExport = true }
-    fun exportSelected() { exportScope = selected.toList(); showExport = true }
-    fun closeExport() { showExport = false }
+    fun openExport() { exportScope = null; openExportScreen() }
+    fun exportSelected() { exportScope = selected.toList(); openExportScreen() }
+    private fun openExportScreen() {
+        // A new visit, unless an upload from the last one still runs.
+        if (upload !is UploadState.Running) { upload = UploadState.Idle; sentThisVisit.clear() }
+        showExport = true
+        checkExportLogin()
+    }
+
+    /** The notes (by id) sent during this visit to the export screen, so a retry sends only the rest.
+     *  Forgotten on leaving: the next export sends what it's asked to. */
+    val sentThisVisit = mutableStateListOf<Long>()
+    private fun exportLeft(): List<Note> = exportNotes().filter { it.id !in sentThisVisit }
+
+    /** The export screen offers "Logg inn" instead of exporting: no login, or the site refused it. */
+    var exportNeedsLogin by mutableStateOf(false); private set
+    private fun checkExportLogin() { viewModelScope.launch { exportNeedsLogin = loginRefused(platform) } }
+    fun closeExport() {
+        showExport = false
+        // A running upload carries on, and its result shows if the screen is opened again.
+        if (upload !is UploadState.Finished) return
+        // Left halfway: mark what's left, so Eksporter in the list sends just that.
+        val left = exportLeft()
+        if (sentThisVisit.isNotEmpty() && left.isNotEmpty()) { selected.clear(); selected.addAll(left.map { it.id }) }
+        upload = UploadState.Idle
+    }
+
+    var upload by mutableStateOf<UploadState>(UploadState.Idle); private set
+    private val taxonIds by lazy { loadTaxonIds(storage) }
+
+    private var fixingForUpload: Long? = null // the note opened from the upload screen's problem list
+
+    /** Open [n] in the editor from the upload screen's problem list. Leaving the editor returns there. */
+    fun fixForUpload(n: Note) {
+        fixingForUpload = n.id
+        showExport = false
+        editNote(n)
+    }
+
+    // The note leaves the problem list once it passes the local checks (the next upload checks the
+    // rest again). Still failing, it stays, with the reason it fails for now.
+    private fun returnToUpload(id: Long) {
+        fixingForUpload = null
+        showExport = true
+        val n = notes.firstOrNull { it.id == id } ?: return dropProblem(id) // deleted in the editor
+        val problem = uploadProblem(n, nowMs()) ?: return dropProblem(id)
+        updateResult { r -> if (r is UploadResult.Blocked) UploadResult.Blocked(r.problems + (id to Strings.Upload.problem(problem, n))) else r }
+    }
+
+    private fun dropProblem(id: Long) = updateResult { r ->
+        when (r) {
+            is UploadResult.Blocked -> UploadResult.Blocked(r.problems - id).takeIf { it.problems.isNotEmpty() }
+            is UploadResult.Done -> r.copy(failed = r.failed - id)
+            is UploadResult.NotStarted -> r
+        }
+    }
+
+    /** Change a finished upload's result; null clears it. */
+    private fun updateResult(f: (UploadResult) -> UploadResult?) {
+        val s = upload
+        if (s is UploadState.Finished) upload = f(s.result)?.let(UploadState::Finished) ?: UploadState.Idle
+    }
+
+    fun uploadExported() {
+        if (upload is UploadState.Running) return
+        val todo = exportLeft().sortedBy { it.time }
+        upload = UploadState.Running(sentThisVisit.size)
+        viewModelScope.launch {
+            val r = uploadNotes(platform, todo, taxonIds, coObsUsers.toMap()) { n, sightingId ->
+                sentThisVisit += n.id
+                val i = notes.indexOfFirst { it.id == n.id }
+                if (i >= 0) { notes[i] = notes[i].copy(sightingId = sightingId); persist() }
+            }
+            upload = UploadState.Finished(r)
+            val why = (r as? UploadResult.NotStarted)?.why ?: (r as? UploadResult.Done)?.stopped
+            if (why == Interruption.LoggedOut) exportNeedsLogin = true
+            checkSession()
+        }
+    }
 
     /** The notes the current export covers - the marked ones when exporting a selection, else all.
      *  Copied, not the live list: [clearExported] hands the result to [archive], which then removes

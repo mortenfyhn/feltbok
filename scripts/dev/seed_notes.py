@@ -39,6 +39,7 @@ in the gitignored `coobs-cache.json` next to this script, so the repo doesn't ca
 directory. Delete the cache to look them up again.
 """
 
+import csv
 import json
 import sys
 import time
@@ -100,8 +101,11 @@ MINUTE = 60_000
 HOUR = 60 * MINUTE
 DAY = 24 * HOUR
 
-# Trondheim-ish coordinates; the list doesn't show them, so one point is fine for all.
+# Fallback coordinates for a locality not in the bundled list (the private one). A registry note
+# carries its locality's own position, as a real note does: the map draws it there, and the app
+# finds an old note's site id by name and position (backfillLocIds).
 LAT, LON = 63.43, 10.40
+LOCALITIES = Path(__file__).parents[2] / "app/src/main/assets/localities.csv"
 # A brand-new spot's own coordinates (a real point near Ladehammeren, Trondheim), for the one
 # newLoc row that exercises the coordinate + radius export (mints a private locality on import).
 NEW_LAT, NEW_LON = 63.4485, 10.4380
@@ -241,6 +245,17 @@ ROWS = [
         "Permanent revir",
         "Ilsvika",
         hide_days=400,
+    ),
+    note(
+        "hide-until date that has passed (an old note hidden for a while)",
+        52,
+        STORSPOVE,
+        1,
+        "",
+        "",
+        "",
+        "Ilsvika",
+        hide_days=-10,
     ),
     note(
         "unknown count ('?' in list / blank Antall on export), long activity, solo",
@@ -564,20 +579,21 @@ SURNAMES = [
 ALIAS_CACHE = Path(__file__).with_name("coobs-cache.json")
 
 
-def cached_aliases(n):
+def cached_users(n):
+    """`n` real users as the app saves one picked from the co-observer search ({name, alias, city,
+    id}). Cached; an older cache of bare aliases is fetched again."""
     if ALIAS_CACHE.exists():
-        aliases = json.loads(ALIAS_CACHE.read_text())
-        if len(aliases) >= n:
-            return aliases[:n]
-    aliases = fetch_aliases(n)
-    ALIAS_CACHE.write_text(json.dumps(aliases, ensure_ascii=False))
-    return aliases
+        users = json.loads(ALIAS_CACHE.read_text())
+        if len(users) >= n and all(isinstance(u, dict) for u in users):
+            return users[:n]
+    users = fetch_users(n)
+    ALIAS_CACHE.write_text(json.dumps(users, ensure_ascii=False))
+    return users
 
 
-def fetch_aliases(n):
-    """`n` distinct real brukeraliases. The import links a Medobservatør cell on alias, which works
-    even when the user's name is shared, so these resolve without hand-picking."""
-    aliases = []
+def fetch_users(n):
+    """`n` distinct real users with a brukeralias, which is what a co-observer is stored by."""
+    users = []
     for name in SURNAMES:
         url = (
             "https://mobil.artsobservasjoner.no/core/Users/Search?"
@@ -587,11 +603,18 @@ def fetch_aliases(n):
         with urllib.request.urlopen(req, timeout=10) as r:
             for u in json.load(r):
                 alias = (u.get("userAlias") or "").strip()
-                if alias and alias not in aliases:
-                    aliases.append(alias)
-        if len(aliases) >= n:
-            return aliases[:n]
-    sys.exit(f"Only found {len(aliases)} of {n} co-observer aliases")
+                if alias and alias not in {x["alias"] for x in users}:
+                    users.append(
+                        {
+                            "name": (u.get("name") or "").strip(),
+                            "alias": alias,
+                            "city": (u.get("city") or "").strip(),
+                            "id": u["id"],
+                        }
+                    )
+        if len(users) >= n:
+            return users[:n]
+    sys.exit(f"Only found {len(users)} of {n} co-observer users")
 
 
 def big_crowd_row():
@@ -604,11 +627,18 @@ def big_crowd_row():
         "",
         "Rastende",
         "Leangenbukta",
-        coobs=cached_aliases(100),
+        coobs=[u["alias"] for u in cached_users(100)],
     )
 
 
+def site_positions():
+    """{site id: (lat, lon)} from the bundled locality list."""
+    with open(LOCALITIES, newline="", encoding="utf-8") as f:
+        return {r["id"]: (float(r["lat"]), float(r["lon"])) for r in csv.DictReader(f)}
+
+
 def build(now_ms, rows=ROWS):
+    pos = site_positions()
     notes = []
     for i, r in enumerate(rows):
         sp, latin, _status = r["species"]
@@ -631,8 +661,12 @@ def build(now_ms, rows=ROWS):
             "locFull": ""
             if new_loc or r["private_loc"] or not r["loc"]
             else f"{r['loc']}, Trondheim, Trøndelag",
-            "lat": NEW_LAT if new_loc else LAT,
-            "lon": NEW_LON if new_loc else LON,
+            "lat": NEW_LAT
+            if new_loc
+            else pos.get(SITE_IDS.get(r["loc"]), (LAT, LON))[0],
+            "lon": NEW_LON
+            if new_loc
+            else pos.get(SITE_IDS.get(r["loc"]), (LAT, LON))[1],
             "newLoc": new_loc,
             "locRadius": r["radius"],
             "uncertain": r["unc"],
@@ -664,3 +698,8 @@ if __name__ == "__main__":
         # Single-line JSON: `adb shell`'s PTY would translate embedded newlines, so keep it newline-free.
         rows = ROWS + [big_crowd_row()]
         print(json.dumps(build(int(time.time() * 1000), rows), ensure_ascii=False))
+        # --users FILE: the 100-user row's co-observers, as the app saves users picked from the
+        # search (coobs_users.json), so they upload as linked users rather than as free text.
+        if "--users" in sys.argv:
+            out = Path(sys.argv[sys.argv.index("--users") + 1])
+            out.write_text(json.dumps(cached_users(100), ensure_ascii=False))

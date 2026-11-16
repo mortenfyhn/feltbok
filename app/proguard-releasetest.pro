@@ -44,3 +44,11 @@
 -keep class io.github.mortenfyhn.feltbok.MainViewModel { *; }
 -keep class io.github.mortenfyhn.feltbok.Strings { *; }
 -keep class io.github.mortenfyhn.feltbok.Strings$* { *; }
+
+# ExportFlowTest wraps the real platform in a fake Artsobservasjoner (Platform by AndroidPlatform),
+# answering with the app's HttpResult types.
+-keep class io.github.mortenfyhn.feltbok.Platform { *; }
+-keep class io.github.mortenfyhn.feltbok.AndroidPlatform { *; }
+-keep class io.github.mortenfyhn.feltbok.HttpResult { *; }
+-keep class io.github.mortenfyhn.feltbok.HttpResponse { *; }
+-keep class io.github.mortenfyhn.feltbok.Country { *; }

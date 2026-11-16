@@ -1,8 +1,9 @@
 # Feltbok — repo guide
 
 Offline-first Android app (Kotlin + Jetpack Compose, package `io.github.mortenfyhn.feltbok`, minSdk 26)
-for capturing bird observations in Norway and exporting a TSV to paste into Artsobservasjoner's
-"Importer observasjoner". Zero-login and shareable; works fully offline in the field.
+for capturing bird observations in Norway and exporting them straight to Artsobservasjoner's review
+page ("Kontroller funn"). Logging works fully offline in the field with no login; only exporting
+needs one.
 
 ## Build / test / run
 Recipes live in `just --list`. Gotchas not covered there:
@@ -84,6 +85,12 @@ a `MainViewModel` must start with `ClearAppDataRule` — otherwise the suite bec
   returns null on any failure, and test the offline path (`FakePlatform` with no answer).
 - **HTML mockups start from `docs/mockups/`** (see its README), so they look like the app. Keep
   `screens.html` in sync when a UI change lands.
+- **Make illegal states unrepresentable.** Model data so its type only allows valid combinations:
+  one sealed type instead of several nullable fields that must agree, a non-null type where a value
+  must exist. Let the compiler check each case with `when` over the sealed type, instead of a `!!`
+  or a comment like "non-null while X". In Compose, read state once into a local `val` and use that
+  in lambdas the UI calls later (the export screen's progress bar crashed reading the view model's
+  state after it had changed).
 - **Avoid custom styling unless necessary.** Lean on Material defaults and existing shared
   composables; extend a component (e.g. a flag on an existing row) over bespoke layout.
 - **Commit messages in English, explaining the why. No trailers** (`Co-Authored-By` etc. — history
@@ -150,7 +157,8 @@ Strive to follow Jakob Nielsen's ten usability heuristics
   moved into piece by piece for the iOS port (#115).
 - `ui/` — Kotlin Multiplatform module (Android + iOS, Compose Multiplatform) with the UI, built on
   `:shared`. `commonMain`: `MainViewModel.kt` (all UI state, no nav lib), `Ui.kt` and `App.kt` (the
-  Compose screens), `Model.kt` (TSV export), `SyncScreen.kt` ("Hent mine lokaliteter", over a
+  Compose screens), `Model.kt` (the old TSV export, unused since #149), `Network.kt` (the web requests, including
+  the export's upload), `SyncScreen.kt` ("Hent mine lokaliteter", over a
   platform `SyncWeb`), `MapLogic.kt` (the picker map's shared rules), theme, `Strings`, `Country`,
   and `Platform.kt` — what the UI needs from each platform: the `Platform` interface the view model
   gets, `PlatformUi` (pickers, links, toasts) and `expect` composables for the map. `androidMain`

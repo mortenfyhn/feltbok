@@ -63,7 +63,7 @@ class CoObserversTest {
         val json = """[{"id":39931,"name":"Audun Amundsen ","userAlias":"Teupaksa","city":"Trondheim"},
             {"id":1,"name":"Uten Alias","userAlias":"","city":"Moss"},{"id":2,"name":"Uten By","userAlias":"utenby"}]"""
         assertEquals(
-            listOf(AoUser("Audun Amundsen", "Teupaksa", "Trondheim"), AoUser("Uten By", "utenby", "")),
+            listOf(AoUser("Audun Amundsen", "Teupaksa", "Trondheim", 39931), AoUser("Uten By", "utenby", "", 2)),
             parseAoUsers(json),
         )
     }

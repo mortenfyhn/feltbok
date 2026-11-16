@@ -32,6 +32,13 @@ private fun csvRows(text: String?): List<List<String>> =
 /** A bundled CSV's rows, empty when this build doesn't ship it. */
 private fun readData(storage: Storage, name: String): List<List<String>> = csvRows(storage.readAsset(name))
 
+/** taxon_ids.csv: Artsobservasjoner's taxon id by scientific name, for the upload. Empty when the
+ *  build doesn't ship it. */
+fun loadTaxonIds(storage: Storage): Map<String, Long> = parseTaxonIds(storage.readAsset("taxon_ids.csv"))
+
+fun parseTaxonIds(csv: String?): Map<String, Long> =
+    csvRows(csv).mapNotNull { r -> r.getOrNull(1)?.toLongOrNull()?.let { r[0] to it } }.toMap()
+
 /** Parse a "POLYGON((lon lat, ...))" WKT into [lat,lon] vertices (empty if not a polygon).
  *  Hand-scanned rather than regex'd: the regex version cost ~9 ms per polygon (Android's
  *  java.util.regex is slow), which dominated app launch. Inner-ring structure is ignored
