@@ -115,7 +115,7 @@ emu:
 # Shut down the emulator
 [group('dev')]
 emu-stop:
-    adb -s emulator-5554 emu kill
+    adb -s emulator-5554 emu kill 2>/dev/null || true
 
 # Show device logs for the app
 [group('app')]
