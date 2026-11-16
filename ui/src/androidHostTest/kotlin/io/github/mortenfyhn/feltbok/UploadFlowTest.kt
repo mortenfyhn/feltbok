@@ -34,10 +34,13 @@ class UploadFlowTest {
         postAnswer = { echo(it) }
     }
 
-    private fun upload(p: FakePlatform, notes: List<Note>, users: Set<String> = setOf("kari")): Pair<UploadResult, Map<Long, Long>> {
+    // Users picked before ids were kept: each is looked up.
+    private fun upload(
+        p: FakePlatform,
+        notes: List<Note>,
+        known: Map<String, AoUser> = mapOf("kari" to AoUser("Kari", "kari", "")),
+    ): Pair<UploadResult, Map<Long, Long>> {
         val sent = LinkedHashMap<Long, Long>()
-        // Users picked before ids were kept: each is looked up.
-        val known = users.associateWith { AoUser(it, it, "") }
         val r = runBlocking { uploadNotes(p, notes, emptyMap(), known) { n, id -> sent[n.id] = id } }
         return r to sent
     }
@@ -55,8 +58,21 @@ class UploadFlowTest {
         val p = platform().apply { answers["TaxonName/Search"] = { "[]" } }
         assertTrue(upload(p, listOf(note(1))).first is UploadResult.Blocked)
         val q = platform().apply { errors["userAlias=ola"] = 400 } // as the site answers an unknown alias
-        val (r, _) = upload(q, listOf(note(1, { it.copy(coObservers = listOf("ola")) })), users = setOf("ola"))
-        assertTrue(r is UploadResult.Blocked && q.posts.isEmpty())
+        val (r, _) = upload(q, listOf(note(1, { it.copy(coObservers = listOf("ola")) })), mapOf("ola" to AoUser("Ola Nordmann", "ola", "")))
+        // Named as the user search showed them: the alias is hidden on the site.
+        assertEquals(mapOf(1L to "Brukeren Ola Nordmann finnes ikke på Artsobservasjoner."), (r as UploadResult.Blocked).problems)
+        assertTrue(q.posts.isEmpty())
+    }
+
+    @Test
+    fun aTooLongCommentSaysWhichAndWhetherTheCoObserversMadeIt() {
+        val long = "x".repeat(250)
+        fun problem(n: Note) = (upload(platform(), listOf(n)).first as UploadResult.Blocked).problems.values.single()
+        assertEquals(Strings.Upload.privateTooLong, problem(note(1, { it.copy(privateComment = long + "xxxxx") })))
+        assertEquals(Strings.Upload.publicTooLong, problem(note(1, { it.copy(publicComment = long + "xxxxx") })))
+        // A user picked from the search is linked by id, so only the typed-in name counts.
+        val n = note(1, { it.copy(publicComment = long, coObservers = listOf("kari", "Per Hansen")) })
+        assertEquals(Strings.Upload.publicTooLongWithCoObservers, problem(n))
     }
 
     @Test
@@ -73,7 +89,7 @@ class UploadFlowTest {
         var calls = 0
         p.postAnswer = { body ->
             when (++calls) {
-                2 -> HttpResponse(400, """{"detail":"Date can not be a date in the future"}""")
+                2 -> HttpResponse(400, """{"detail":"Invalid arguments: Date can not be a date in the future"}""")
                 3 -> HttpResponse(401, "")
                 else -> echo(body, 100L + calls)
             }

@@ -125,7 +125,8 @@ suspend fun uploadNotes(
 ): UploadResult {
     val isUser = { s: String -> s in users }
     val cookie = platform.siteCookie() ?: return UploadResult.NotStarted(Interruption.LoggedOut)
-    val h = headers("Accept" to "application/json", "Cookie" to cookie)
+    // Asks for the site's rejection reasons in Norwegian, if it has them.
+    val h = headers("Accept" to "application/json", "Cookie" to cookie, "Accept-Language" to "nb-NO,nb;q=0.9,no;q=0.8")
     val get = suspend { url: String -> platform.httpGet(url, h, timeoutMs = 10000) }
     val session = get(Country.sessionUrl)
     val me = session.okBody()?.let(::parseUserId)
@@ -137,7 +138,7 @@ suspend fun uploadNotes(
     }
     val now = nowMs()
     val problems = LinkedHashMap<Long, String>()
-    notes.forEach { n -> uploadProblem(n, now)?.let { problems[n.id] = Strings.Upload.problem(it) } }
+    notes.forEach { n -> uploadProblem(n, now)?.let { problems[n.id] = Strings.Upload.problem(it, n) } }
     // Look up what the notes refer to. A lookup that gets no answer stops here; one that answers
     // "not found" is the note's problem. A note that passes gets its request body.
     val taxa = HashMap<String, Long?>(taxonIds)
@@ -159,8 +160,10 @@ suspend fun uploadNotes(
         val missing = coUsers.filter { userIds[it] == null }
         when {
             taxon == null -> problems[n.id] = Strings.Upload.unknownSpecies
-            missing.isNotEmpty() -> problems[n.id] = Strings.Upload.unknownCoObserver(missing)
-            maxOf(publicComment(n).length, n.privateComment.length) > MAX_COMMENT -> problems[n.id] = Strings.Upload.commentTooLong
+            missing.isNotEmpty() -> problems[n.id] = Strings.Upload.unknownCoObserver(missing.map { users[it]?.name ?: it })
+            n.privateComment.length > MAX_COMMENT -> problems[n.id] = Strings.Upload.privateTooLong
+            n.publicComment.length > MAX_COMMENT -> problems[n.id] = Strings.Upload.publicTooLong
+            publicComment(n).length > MAX_COMMENT -> problems[n.id] = Strings.Upload.publicTooLongWithCoObservers
             else -> bodies += n to sightingJson(n, taxon, listOf(me) + coUsers.mapNotNull { userIds[it] }, publicComment(n))
         }
     }

@@ -1102,7 +1102,7 @@ class MainViewModel(private val platform: Platform) : ViewModel() {
         showExport = true
         val n = notes.firstOrNull { it.id == id } ?: return dropProblem(id) // deleted in the editor
         val problem = uploadProblem(n, nowMs()) ?: return dropProblem(id)
-        updateResult { r -> if (r is UploadResult.Blocked) UploadResult.Blocked(r.problems + (id to Strings.Upload.problem(problem))) else r }
+        updateResult { r -> if (r is UploadResult.Blocked) UploadResult.Blocked(r.problems + (id to Strings.Upload.problem(problem, n))) else r }
     }
 
     private fun dropProblem(id: Long) = updateResult { r ->

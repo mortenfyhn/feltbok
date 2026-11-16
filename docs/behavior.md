@@ -366,14 +366,15 @@ locality that still exists, known age, sex and activity, an even count for "I pa
 future, an end after the start), then against the site (the taxon id when the bundled list lacks
 it, the co-observers' user ids, the comment's length with the co-observers added). Any problem
 blocks the whole export, so it never stops halfway over something the app could find. The notes
-that need fixing are listed like the main list, each with what's wrong and what to do; a tap opens
-the editor and returns to the export screen. The export button stays off until all are fixed.
+that need fixing are listed like the main list, each with what's wrong (the fix is left out where
+it's obvious); a tap opens the editor and returns to the export screen. The export button stays off until all are fixed.
 
 While it sends, a bar and "12 av 30 eksportert" show how far it got, and the greyed button keeps
 the label it was tapped with. The bar stays where an export stopped (at 0 when nothing was sent):
 - A lost connection or login stops it, with the reason under the bar, and the button becomes
   "Eksporter resten (18)".
-- A note the site rejects is listed with the site's own reason; the rest are sent. The button
+- A note the site rejects is listed with the site's own reason (asked for in Norwegian, without
+  its "Invalid arguments: " prefix); the rest are sent. The button
   stays off until it's fixed.
 - A note the site stored differently from what was sent (each field of its answer is compared)
   is listed as exported, naming the fields, for fixing on the site.

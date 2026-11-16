@@ -71,7 +71,7 @@ fun sightingJson(
 
 /** Why a note can't be uploaded as it is, found before anything is sent. Mirrors the server's
  *  checks where the app can break them, so an upload doesn't stop halfway. */
-enum class UploadProblem { NO_SPECIES, NO_SITE, UNKNOWN_CHOICE, ODD_PAIR, FUTURE, END_BEFORE_START }
+enum class UploadProblem { NO_SPECIES, NO_SITE, UNKNOWN_AGE, UNKNOWN_SEX, UNKNOWN_ACTIVITY, ODD_PAIR, FUTURE, END_BEFORE_START }
 
 fun uploadProblem(n: Note, now: Long, zone: TimeZone = TimeZone.currentSystemDefault()): UploadProblem? {
     val end = n.endTime ?: n.time
@@ -80,8 +80,9 @@ fun uploadProblem(n: Note, now: Long, zone: TimeZone = TimeZone.currentSystemDef
         n.latin.isBlank() -> UploadProblem.NO_SPECIES // typed in by hand before #144 was dropped
         !n.newLoc && n.locId.isBlank() -> UploadProblem.NO_SITE
         // An age, sex or activity without an id would be left out of the sighting without a word.
-        listOf(n.age to BirdLists.stages, n.sex to BirdLists.genders, n.activity to BirdLists.activities)
-            .any { (v, ids) -> v.isNotEmpty() && v !in ids } -> UploadProblem.UNKNOWN_CHOICE
+        n.age.isNotEmpty() && n.age !in BirdLists.stages -> UploadProblem.UNKNOWN_AGE
+        n.sex.isNotEmpty() && n.sex !in BirdLists.genders -> UploadProblem.UNKNOWN_SEX
+        n.activity.isNotEmpty() && n.activity !in BirdLists.activities -> UploadProblem.UNKNOWN_ACTIVITY
         n.sex == "I par" && n.count != UNKNOWN_COUNT && n.count % 2 != 0 -> UploadProblem.ODD_PAIR
         day(end) > day(now) -> UploadProblem.FUTURE // the server compares dates, not times
         end < n.time -> UploadProblem.END_BEFORE_START
