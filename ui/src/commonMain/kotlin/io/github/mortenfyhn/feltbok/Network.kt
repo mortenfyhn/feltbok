@@ -73,9 +73,6 @@ suspend fun fetchPlaceNames(platform: Platform, lat: Double, lon: Double): List<
     return json?.let { runCatching { rankPlaceNames(parsePlaceNames(it)) }.getOrNull() } ?: emptyList()
 }
 
-// The template's limit for both comment fields ("Maks 254 tegn").
-private const val MAX_COMMENT = 254
-
 /** Why an upload didn't start, or stopped before the last note. */
 sealed interface Interruption {
     /** Only a new login helps. */
@@ -92,14 +89,8 @@ sealed interface UploadResult {
     /** Nothing sent: these notes (by id) need fixing first. */
     data class Blocked(val problems: Map<Long, String>) : UploadResult
 
-    /** Sent; [failed] (by id) are the notes the server refused, and [mismatched] the ones it stored
-     *  differently from the note (uploaded all the same). [stopped] says why it stopped early. */
-    data class Done(
-        val sent: Int,
-        val failed: Map<Long, String>,
-        val mismatched: Map<Long, String>,
-        val stopped: Interruption? = null,
-    ) : UploadResult
+    /** Sent; [failed] (by id) are the notes the server refused. [stopped] says why it stopped early. */
+    data class Done(val sent: Int, val failed: Map<Long, String>, val stopped: Interruption? = null) : UploadResult
 }
 
 /** Where the export screen's upload is. One value, so the screen can't see a half-updated state. */
@@ -170,24 +161,21 @@ suspend fun uploadNotes(
     if (problems.isNotEmpty()) return UploadResult.Blocked(problems)
 
     val failed = LinkedHashMap<Long, String>()
-    val mismatched = LinkedHashMap<Long, String>()
     var sent = 0
     for ((n, body) in bodies) {
         val r = platform.httpPostJson("${Country.sitesHost}/core/Sightings", h, body, timeoutMs = 15000)
         val answer = r.okBody()
         val id = answer?.let(::parseId)
         if (id != null) {
-            // Kept even when it doesn't match: the sighting exists, and a retry would duplicate it.
             onSent(n, id)
             sent++
-            sightingMismatches(body, answer).takeIf { it.isNotEmpty() }?.let { mismatched[n.id] = Strings.Upload.mismatch(it) }
         } else if (r is HttpResponse && r.status != 401) {
             failed[n.id] = parseErrorDetail(r.body)?.let(Strings.Upload::rejected) ?: Strings.Upload.failed(r)
         } else {
             // Logged out or no answer: the rest would fail the same way. Stop, and the next try
             // sends what's left.
-            return UploadResult.Done(sent, failed, mismatched, if (r is HttpResponse) Interruption.LoggedOut else Interruption.Failed(Strings.Upload.lost(r)))
+            return UploadResult.Done(sent, failed, if (r is HttpResponse) Interruption.LoggedOut else Interruption.Failed(Strings.Upload.lost(r)))
         }
     }
-    return UploadResult.Done(sent, failed, mismatched)
+    return UploadResult.Done(sent, failed)
 }

@@ -3,9 +3,11 @@ package io.github.mortenfyhn.feltbok
 import android.app.Application
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.hasSetTextAction
+import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.junit4.v2.createComposeRule
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
+import androidx.compose.ui.test.performTextInput
 import androidx.compose.ui.test.performTextReplacement
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
@@ -55,6 +57,18 @@ class EditFlowTest {
         // Copy commits the open draft and slides in a near-identical one, still on this screen.
         rule.onNodeWithText(Strings.Detail.copy).performClick()
         rule.onNodeWithText(SEED_LOCALITY, substring = true).assertIsDisplayed()
+    }
+
+    @Test
+    fun aCommentStopsAtTheSitesLimit() {
+        val vm = start()
+        rule.runOnUiThread { vm.seedNote("kjøttmeis") }
+        rule.onNodeWithText("kjøttmeis", substring = true).performClick()
+        rule.onNodeWithText(Strings.Detail.commentPublic).performClick()
+        // The page's text field; the editor's count field is behind the dialog.
+        rule.onNode(hasSetTextAction() and hasText("")).performTextInput("x".repeat(300))
+        assertEquals(MAX_COMMENT, vm.dPub.length)
+        rule.onNodeWithText(Strings.Detail.commentLength(MAX_COMMENT, MAX_COMMENT)).assertIsDisplayed()
     }
 
     @Test

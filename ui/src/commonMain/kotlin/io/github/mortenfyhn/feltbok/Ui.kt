@@ -1834,14 +1834,19 @@ private fun CommentField(label: String, value: String, onChange: (String) -> Uni
                 // anywhere lands in the text and a long comment wraps at the real page edges. Enter is
                 // a Done key that finishes and goes back rather than a newline (a newline wouldn't
                 // survive the export anyway - exportTsv flattens it to a space).
-                BasicTextField(tfv, { tfv = it; onChange(it.text) },
-                    Modifier.fillMaxSize().padding(16.dp).focusRequester(requester),
+                // Capped at the site's limit; a paste past it is cut, not refused.
+                BasicTextField(tfv, { v -> tfv = v.copy(text = v.text.take(MAX_COMMENT)); onChange(tfv.text) },
+                    Modifier.weight(1f).fillMaxWidth().padding(16.dp).focusRequester(requester),
                     textStyle = LocalTextStyle.current.copy(color = cs.onSurface, fontSize = 16.sp),
                     cursorBrush = SolidColor(cs.primary),
                     keyboardOptions = KeyboardOptions(
                         capitalization = KeyboardCapitalization.Sentences,
                         imeAction = ImeAction.Done),
                     keyboardActions = KeyboardActions(onDone = { open = false }))
+                // Only near the limit, where it matters.
+                if (tfv.text.length >= MAX_COMMENT - 54)
+                    Text(Strings.Detail.commentLength(tfv.text.length, MAX_COMMENT), Modifier.align(Alignment.End).padding(16.dp, 0.dp, 16.dp, 8.dp),
+                        color = cs.onSurfaceVariant, style = MaterialTheme.typography.bodySmall)
             }
         }
     }
@@ -2073,8 +2078,6 @@ fun ExportScreen(vm: MainViewModel) {
                         Text(Strings.Upload.someFailed(result.failed.size), side.padding(top = 12.dp, bottom = 8.dp), color = cs.error, fontWeight = FontWeight.Medium)
                         ProblemNotes(vm, exported, result.failed) { vm.fixForUpload(it) }
                     }
-                    // Exported, but stored differently: only the website can fix it now.
-                    ProblemNotes(vm, exported, result.mismatched) { platform.openUrl(Strings.Upload.reviewUrl) }
                 }
             }
             Spacer(Modifier.height(24.dp))

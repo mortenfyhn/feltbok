@@ -125,15 +125,6 @@ class UploadFlowTest {
     }
 
     @Test
-    fun aSightingStoredDifferentlyIsKeptButFlagged() {
-        val p = platform()
-        p.postAnswer = { body -> echo(body.replace("\"siteId\":352401", "\"siteId\":3635289")) }
-        val (r, sent) = upload(p, listOf(note(1)))
-        assertEquals(setOf(1L), (r as UploadResult.Done).mismatched.keys)
-        assertEquals(setOf(1L), sent.keys)
-    }
-
-    @Test
     fun eachLookupIsMadeOncePerUpload() {
         val p = platform()
         val _ = upload(p, List(3) { note(it.toLong(), { n -> n.copy(coObservers = listOf("kari")) }) })

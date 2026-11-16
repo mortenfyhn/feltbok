@@ -71,6 +71,9 @@ fun sightingJson(
 
 /** Why a note can't be uploaded as it is, found before anything is sent. Mirrors the server's
  *  checks where the app can break them, so an upload doesn't stop halfway. */
+// The template's limit for both comment fields ("Maks 254 tegn").
+const val MAX_COMMENT = 254
+
 enum class UploadProblem { NO_SPECIES, NO_SITE, UNKNOWN_AGE, UNKNOWN_SEX, UNKNOWN_ACTIVITY, ODD_PAIR, FUTURE, END_BEFORE_START }
 
 fun uploadProblem(n: Note, now: Long, zone: TimeZone = TimeZone.currentSystemDefault()): UploadProblem? {
@@ -127,8 +130,8 @@ fun backfillLocIds(notes: List<Note>, localities: List<Locality>): List<Note> {
 }
 
 /** What the site stored differently from what was sent: the [sent] sightingJson body against the
- *  created sighting in [answer]. Empty when it matches. Catches a sighting landing on the wrong
- *  site, species or day, which a 201 alone doesn't. */
+ *  created sighting in [answer]. Empty when it matches. Only LiveUploadTest uses it: it reads each
+ *  sighting back to catch the site storing a field differently, which a 201 alone doesn't. */
 fun sightingMismatches(sent: String, answer: String): List<String> {
     val s = parseJson(sent).jsonObject
     val a = parseJson(answer).jsonObject
