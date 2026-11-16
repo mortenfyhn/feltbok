@@ -8,6 +8,8 @@ import androidx.compose.runtime.setValue
 import kotlinx.cinterop.BetaInteropApi
 import kotlinx.cinterop.ExperimentalForeignApi
 import kotlinx.coroutines.suspendCancellableCoroutine
+import platform.Foundation.HTTPBody
+import platform.Foundation.HTTPMethod
 import platform.Foundation.HTTPShouldHandleCookies
 import platform.Foundation.NSBundle
 import platform.Foundation.NSData
@@ -30,7 +32,6 @@ import platform.Foundation.closeFile
 import platform.Foundation.create
 import platform.Foundation.dataUsingEncoding
 import platform.Foundation.dataTaskWithRequest
-import platform.Foundation.dataUsingEncoding
 import platform.Foundation.dateWithTimeIntervalSince1970
 import platform.Foundation.fileHandleForWritingAtPath
 import platform.Foundation.seekToEndOfFile
