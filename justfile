@@ -100,6 +100,16 @@ run: install
 log:
     adb logcat -s Feltbok:* AndroidRuntime:* --format=brief
 
+# The software renderer crashes under Fedora's SELinux (execheap), hence the host GPU. Close the
+# window to save the Quick Boot snapshot, so the next start is fast. It runs detached; its output
+# goes to build/emu.log.
+
+# Start the Android emulator on the host GPU, in the background
+[group('app')]
+emu avd="Medium_Phone_API_36.1":
+    mkdir -p build
+    setsid -f "$(sed -n 's/^sdk.dir=//p' local.properties)/emulator/emulator" -avd {{avd}} -gpu host > build/emu.log 2>&1
+
 # Uninstall the dev app from the device (NOT the release app)
 [group('app')]
 uninstall:
