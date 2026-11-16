@@ -118,6 +118,7 @@ object Strings {
         const val age = "Alder"
         const val activity = "Aktivitet"
         const val sex = "Kjønn"
+        const val unspecified = "(Uspesifisert)"
         const val commentPublic = "Åpen kommentar"
         const val commentPrivate = "Privat kommentar"
         const val commentDone = "Ferdig"

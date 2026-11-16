@@ -16,6 +16,7 @@
 - Sveip en observasjon mot venstre for å slette den.
 - Observasjoner du får tilbake med «Angre» blinker, så du ser hvor de havna.
 - Innlogginga på Artsobservasjoner viser at den jobber mens siden laster.
+- Alder, kjønn og aktivitet kan settes til «(Uspesifisert)» i stedet for en strek.
 
 ## v1.5 (13. november 2026)
 

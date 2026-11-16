@@ -67,6 +67,8 @@ import androidx.compose.material3.LocalMinimumInteractiveComponentSize
 import androidx.compose.material3.LocalTextStyle
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
+import androidx.compose.material3.RadioButton
+import androidx.compose.material3.RadioButtonDefaults
 import androidx.compose.material3.Surface
 import androidx.compose.material3.SwipeToDismissBox
 import androidx.compose.material3.SwipeToDismissBoxDefaults
@@ -1744,12 +1746,12 @@ private fun DropdownRow(
     }
     if (!open) return
 
-    // A leading clear row (unless the field is always-set, e.g. the language settings). A muted dash
-    // (rather than the website's truly-blank option or a worded "Ingen"): it reads as "no value" at a
-    // glance without looking like dead space or like just another option in the list.
+    // A leading clear row (unless the field is always-set, e.g. the language settings), muted and in
+    // parentheses so it doesn't read as just another option in the list. When it's the current value it
+    // shows as selected, but stays muted.
     @Composable
     fun Option(opt: String) =
-        if (opt.isEmpty()) OptionItem("—", value.isBlank(), fullScreen, none = true) { onSelect(""); open = false }
+        if (opt.isEmpty()) OptionItem(Strings.Detail.unspecified, value.isBlank(), fullScreen, none = true) { onSelect(""); open = false }
         else OptionItem(opt, opt == value, fullScreen) { onSelect(opt); open = false }
     val all = (if (clearable) listOf("") else emptyList()) + options
     if (fullScreen) {
@@ -1771,7 +1773,7 @@ private fun DropdownRow(
             // A plain scrolling Column (the lists are short), sized to its widest option: rows that
             // fill the width would stretch the dialog to its maximum, nearly edge to edge on a
             // narrow phone (#198). At least the dialog's minimum inner width (280dp less its 24dp
-            // padding each side), so the ✓ still sits at the dialog's edge.
+            // padding each side), so the rows and their ripple span the whole dialog.
             text = {
                 Column(Modifier.widthIn(min = 232.dp).width(IntrinsicSize.Max).heightIn(max = 400.dp)
                     .verticalScroll(rememberScrollState())) {
@@ -1795,10 +1797,18 @@ private fun OptionItem(text: String, selected: Boolean, fullScreen: Boolean, non
             .padding(horizontal = if (fullScreen) 16.dp else 4.dp, vertical = if (fullScreen) 9.dp else 13.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
+        // Dialogs follow Material's single-choice list: a leading radio button, so the selection sits
+        // next to its label. The row handles the click. The muted "none" row stays muted when selected.
+        val accent = if (none) cs.onSurfaceVariant else cs.primary
+        if (!fullScreen) {
+            RadioButton(selected = selected, onClick = null,
+                colors = RadioButtonDefaults.colors(selectedColor = accent))
+            Spacer(Modifier.width(16.dp))
+        }
         Text(text, Modifier.weight(1f),
-            color = if (selected) cs.primary else if (none) cs.onSurfaceVariant else cs.onSurface,
-            fontWeight = if (selected) FontWeight.Bold else if (fullScreen) FontWeight.Medium else FontWeight.Normal)
-        if (selected) Text("✓", color = cs.primary, fontWeight = FontWeight.Bold)
+            color = if (none) cs.onSurfaceVariant else if (selected) cs.primary else cs.onSurface,
+            fontWeight = if (selected && !none) FontWeight.Bold else if (fullScreen) FontWeight.Medium else FontWeight.Normal)
+        if (selected && fullScreen) Text("✓", color = accent, fontWeight = FontWeight.Bold)
     }
     if (fullScreen) HorizontalDivider(color = cs.outline.copy(alpha = 0.4f))
 }
