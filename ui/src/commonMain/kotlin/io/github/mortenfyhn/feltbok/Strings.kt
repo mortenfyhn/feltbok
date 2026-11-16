@@ -141,7 +141,7 @@ object Strings {
         fun titleCount(n: Int) = "$title ($n)"   // with anyone switched on: how many, for a big party
         const val placeholder = "Søk eller skriv navn…"
         const val done = "Ferdig"
-        const val allOff = "Slå av alle"   // the picker's footer: switches everyone off
+        const val allOff = "Ingen medobservatører" // the picker's footer: switches everyone off
 
         // The list-screen party header (#176) when nobody is set. "valgt" (#191): you may just not
         // have picked anyone yet, which "Ingen medobservatører" read as being alone.

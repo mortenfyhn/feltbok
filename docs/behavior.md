@@ -183,7 +183,7 @@ matching **Artsobservasjoner users**, then **Legg til «…»** at the bottom to
 name as free text. The keyboard's Done key only hides the keyboard, and leaving the picker
 never adds what's in the field.
 
-A **Slå av alle** button at the bottom switches everyone off in one tap (greyed out while
+A **Ingen medobservatører** button at the bottom switches everyone off in one tap (greyed out while
 nobody is on, and hidden while the keyboard is open).
 
 The user search runs when you've typed 3 or more letters and you're online;

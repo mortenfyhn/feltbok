@@ -19,7 +19,7 @@ not a one-off tap-through.
   co-observer picker, the **list keeping its scroll position** across a trip into the editor,
   **batch edit** writing only to the marked notes, **Kopier** carrying the original's locality
   into the new draft, and saving a **new spot** keeping you on the picker.
-- `just itest` also covers the **co-observer picker** (switching names on, Slå av alle, marking and
+- `just itest` also covers the **co-observer picker** (switching names on, Ingen medobservatører, marking and
   deleting names with undo), the **papirkurv** (restore, footer hidden while marking), a fast
   **pinch zoom**, and notes, papirkurv and use scores **surviving a restart**.
 - Host tests cover the logic behind the network features with a fake server: the **login update**
@@ -86,7 +86,7 @@ host tests use a fake server)*
   no dialog as wide as the screen.
 - With both gesture navigation and 3-button navigation: the green bars reach the screen edges,
   status-bar icons are readable, and nothing tappable sits under the navigation bar (list footer,
-  picker footer, "Slå av alle").
+  picker footer, "Ingen medobservatører").
 
 **Other interaction bits** *(what's left after the itest wiring layer — see above)*
 - Search names with **å/æ/ø** return the expected birds.
