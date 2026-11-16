@@ -119,8 +119,8 @@ class IosPlatform : Platform {
     private suspend fun send(method: String, url: String, headers: Map<String, String>, body: String?, timeoutMs: Int): HttpResult {
         val nsUrl = NSURL.URLWithString(url) ?: return NoAnswer(offline = false)
         val request = NSMutableURLRequest.requestWithURL(nsUrl).apply {
-            setHTTPMethod(method)
-            body?.let { setHTTPBody(NSString.create(string = it).dataUsingEncoding(NSUTF8StringEncoding)) }
+            HTTPMethod = method
+            body?.let { HTTPBody = NSString.create(string = it).dataUsingEncoding(NSUTF8StringEncoding) }
             setTimeoutInterval(timeoutMs / 1000.0)
             headers.forEach { (k, v) -> setValue(v, forHTTPHeaderField = k) }
             // Otherwise NSHTTPCookieStorage (a different store from the WebView's) may replace it.
