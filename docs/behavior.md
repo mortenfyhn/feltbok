@@ -230,6 +230,13 @@ On export, a user picked from the search is linked to the sighting as an observe
 id (looked up by brukeralias when the app doesn't have it yet, so namesakes never mix). A
 free-text name can't be linked, so it goes into the public comment as "Medobservatør: …".
 
+## Comments
+
+The editor's **Åpen kommentar** and **Privat kommentar** rows each open a full-screen writing page.
+Each holds at most 254 characters, the site's limit: typing stops there, and a longer paste is cut.
+A counter ("230/254") shows from 200 characters. Notes written before the limit can be longer; the
+export lists them for fixing.
+
 ## Skjul t.o.m. (hide until)
 
 Each observation can be hidden from other Artsobservasjoner users until a date you pick. It's
@@ -376,8 +383,6 @@ the label it was tapped with. The bar stays where an export stopped (at 0 when n
 - A note the site rejects is listed with the site's own reason (asked for in Norwegian, without
   its "Invalid arguments: " prefix); the rest are sent. The button
   stays off until it's fixed.
-- A note the site stored differently from what was sent (each field of its answer is compared)
-  is listed as exported, naming the fields, for fixing on the site.
 
 The screen remembers what it sent only while it's open. Leaving it with notes left over marks those
 in the list, so Eksporter there sends just them. The next export sends exactly what it's asked to,

@@ -120,6 +120,7 @@ object Strings {
         const val unspecified = "(Uspesifisert)"
         const val commentPublic = "Åpen kommentar"
         const val commentPrivate = "Privat kommentar"
+        fun commentLength(n: Int, max: Int) = "$n/$max"
         const val commentDone = "Ferdig"
         const val uncertain = "Usikker artsbestemming"
         const val coObservers = "Medobs."   // short, so the names beside it get the room (#176)
@@ -219,17 +220,6 @@ object Strings {
 
         /** The site's own reason for refusing a note: a rule the app doesn't check, so only its words. */
         fun rejected(detail: String) = "«${detail.removePrefix("Invalid arguments: ")}»"
-
-        /** [fields] are sightingMismatches' names. */
-        fun mismatch(fields: List<String>) =
-            "Eksportert, men lagra med annen ${fields.joinToString { fieldNames[it] ?: it }}. Sjekk den på «Kontroller funn»."
-        private val fieldNames = mapOf(
-            "site" to "lokalitet", "taxon" to "art", "startDate" to "startdato", "endDate" to "sluttdato",
-            "hiddenByProvider" to "skjul til-dato", "startTime" to "starttid", "endTime" to "sluttid",
-            "comment" to "merknad", "privateComment" to "privat merknad", "quantity" to "antall",
-            "stageId" to "alder", "genderId" to "kjønn", "activityId" to "aktivitet",
-            "unsureDetermination" to "usikker bestemmelse", "observers" to "observatører",
-        )
     }
 
     object Sync {

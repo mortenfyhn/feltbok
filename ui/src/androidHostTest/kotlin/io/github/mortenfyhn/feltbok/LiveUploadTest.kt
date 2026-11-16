@@ -64,7 +64,7 @@ class LiveUploadTest {
                 val users = listOfNotNull(coObserver).associateWith { AoUser(it, it, "") }
                 uploadNotes(p, notes, taxonIds, users) { n, id -> sent[n.id] = id }
             }
-            assertEquals(UploadResult.Done(notes.size, emptyMap(), emptyMap()), r)
+            assertEquals(UploadResult.Done(notes.size, emptyMap()), r)
             // Read each one back: what's stored, not just what the POST answered.
             val mismatches = sent.mapNotNull { (noteId, sightingId) ->
                 val stored = (p.get("${Country.sitesHost}/core/Sightings/$sightingId") as HttpResponse).body
