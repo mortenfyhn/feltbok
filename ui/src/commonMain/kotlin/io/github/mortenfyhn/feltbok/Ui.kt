@@ -2022,12 +2022,13 @@ fun ExportScreen(vm: MainViewModel) {
     val unsent = exported.count { it.id !in vm.sentThisVisit }
     val allSent = state is UploadState.Finished && unsent == 0
     val clear = @Composable { m: Modifier ->
-        Text(Strings.Upload.clearExported(exported.size), color = cs.error, fontWeight = FontWeight.Medium, fontSize = 14.sp,
-            // A single note deletes straight through (the undo snackbar catches a mistap);
-            // more than one asks first, same rule as the list's Slett (#157).
-            modifier = m.clickable {
-                if (exported.size > 1) confirmClear = true else { vm.clearExported(); vm.closeExport() }
-            })
+        // A button, so it doesn't read as one more red error line. A single note deletes straight
+        // through (the undo snackbar catches a mistap); more than one asks first, same rule as the
+        // list's Slett (#157).
+        OutlinedButton(
+            onClick = { if (exported.size > 1) confirmClear = true else { vm.clearExported(); vm.closeExport() } },
+            m, colors = ButtonDefaults.outlinedButtonColors(contentColor = cs.error),
+        ) { Text(Strings.Upload.clearExported(exported.size), textAlign = TextAlign.Center) }
     }
 
     Column(Modifier.fillMaxSize().background(cs.background).bottomInsetPadding()) {
@@ -2067,7 +2068,7 @@ fun ExportScreen(vm: MainViewModel) {
                     OutlinedButton(onClick = { platform.openUrl(Strings.Upload.reviewUrl) }, side.padding(top = 12.dp)) {
                         Text(Strings.Upload.openReview)
                     }
-                    clear(side.padding(top = 16.dp))
+                    clear(side.padding(top = 8.dp))
                 } else {
                     Text(Strings.Upload.exportedOf(done, exported.size), side.padding(top = 6.dp), fontSize = 14.sp, color = cs.onSurfaceVariant)
                 }

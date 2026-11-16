@@ -60,7 +60,7 @@ class UploadFlowTest {
         val q = platform().apply { errors["userAlias=ola"] = 400 } // as the site answers an unknown alias
         val (r, _) = upload(q, listOf(note(1, { it.copy(coObservers = listOf("ola")) })), mapOf("ola" to AoUser("Ola Nordmann", "ola", "")))
         // Named as the user search showed them: the alias is hidden on the site.
-        assertEquals(mapOf(1L to "Brukeren Ola Nordmann finnes ikke på Artsobservasjoner."), (r as UploadResult.Blocked).problems)
+        assertEquals(mapOf(1L to "Brukeren Ola Nordmann finnes ikke på Artsobservasjoner"), (r as UploadResult.Blocked).problems)
         assertTrue(q.posts.isEmpty())
     }
 

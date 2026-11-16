@@ -192,24 +192,26 @@ object Strings {
 
         // The old site's review page: most users still prefer it to the new site's.
         const val reviewUrl = "https://www.artsobservasjoner.no/ReviewSighting"
-        const val unknownSpecies = "Arten finnes ikke på Artsobservasjoner."
-        const val privateTooLong = "Privat kommentar er for lang (maks 254 tegn)."
-        const val publicTooLong = "Åpen kommentar er for lang (maks 254 tegn)."
-        const val publicTooLongWithCoObservers = "Åpen kommentar blir for lang (maks 254 tegn) med medobservatørene som ikke er valgt fra brukersøket."
+
+        // Error and status lines end without a full stop, like the toasts; explanatory sentences keep it.
+        const val unknownSpecies = "Arten finnes ikke på Artsobservasjoner"
+        const val privateTooLong = "Privat kommentar er for lang (maks 254 tegn)"
+        const val publicTooLong = "Åpen kommentar er for lang (maks 254 tegn)"
+        const val publicTooLongWithCoObservers = "Åpen kommentar blir for lang (maks 254 tegn) med medobservatørene som ikke er valgt fra brukersøket"
         fun unknownCoObserver(names: List<String>) =
-            "${if (names.size == 1) "Brukeren" else "Brukerne"} ${andList(names)} finnes ikke på Artsobservasjoner."
+            "${if (names.size == 1) "Brukeren" else "Brukerne"} ${andList(names)} finnes ikke på Artsobservasjoner"
         private fun andList(xs: List<String>) = if (xs.size < 2) xs.joinToString() else xs.dropLast(1).joinToString() + " og " + xs.last()
 
         /** [p] is [n]'s problem. */
         fun problem(p: UploadProblem, n: Note) = when (p) {
-            UploadProblem.NO_SPECIES -> "Appen støtter ikke arten «${n.species}»."
-            UploadProblem.NO_SITE -> "Lokaliteten finnes ikke. Velg ny lokalitet."
-            UploadProblem.UNKNOWN_AGE -> "Ugyldig alder «${n.age}»."
-            UploadProblem.UNKNOWN_SEX -> "Ugyldig kjønn «${n.sex}»."
-            UploadProblem.UNKNOWN_ACTIVITY -> "Ugyldig aktivitet «${n.activity}»."
-            UploadProblem.ODD_PAIR -> "«I par» krever partall."
-            UploadProblem.FUTURE -> "Datoen er i framtida."
-            UploadProblem.END_BEFORE_START -> "Sluttid er før starttid."
+            UploadProblem.NO_SPECIES -> "Appen støtter ikke arten «${n.species}»"
+            UploadProblem.NO_SITE -> "Lokaliteten finnes ikke, velg ny lokalitet"
+            UploadProblem.UNKNOWN_AGE -> "Ugyldig alder «${n.age}»"
+            UploadProblem.UNKNOWN_SEX -> "Ugyldig kjønn «${n.sex}»"
+            UploadProblem.UNKNOWN_ACTIVITY -> "Ugyldig aktivitet «${n.activity}»"
+            UploadProblem.ODD_PAIR -> "«I par» krever partall"
+            UploadProblem.FUTURE -> "Datoen er i framtida"
+            UploadProblem.END_BEFORE_START -> "Sluttid er før starttid"
         }
 
         /** The public comment with co-observers who aren't users added, since they can't be linked. */
