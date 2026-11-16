@@ -18,7 +18,7 @@ Read `AGENTS.md` first. Then:
    Expect the bar to fill and "✓ 2 av 2 eksportert". Open «Kontroller funn» and check the notes
    are there, then delete them on the site.
 4. Turn on flight mode halfway through an export of several notes: the bar stops, the reason shows
-   under it, and "Eksporter resten (N)" sends the rest once you're back online.
+   under it, and "Prøv igjen (N gjenstår)" sends the rest once you're back online.
 5. With the largest text size, the export button wraps into two balanced, centred lines.
 
 Commit fixes as separate commits on this branch with English messages explaining why, no trailers,
