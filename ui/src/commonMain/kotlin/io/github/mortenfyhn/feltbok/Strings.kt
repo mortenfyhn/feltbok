@@ -188,16 +188,24 @@ object Strings {
 
         // The old site's review page: most users still prefer it to the new site's.
         const val reviewUrl = "https://www.artsobservasjoner.no/ReviewSighting"
-        const val unknownSpecies = "Arten finnes ikke på Artsobservasjoner. Velg arten på nytt."
-        const val commentTooLong = "Merknaden blir over 254 tegn med medobservatørene. Velg dem fra brukersøket, eller fjern noen."
-        fun unknownCoObserver(aliases: Collection<String>) = "Fant ikke brukeren ${aliases.joinToString()}. Velg medobservatøren på nytt."
-        fun problem(p: UploadProblem) = when (p) {
-            UploadProblem.NO_SPECIES -> "Arten er ikke fra artslista. Velg en art fra lista."
-            UploadProblem.NO_SITE -> "Lokaliteten finnes ikke lenger. Velg en lokalitet på nytt."
-            UploadProblem.UNKNOWN_CHOICE -> "Ukjent alder, kjønn eller aktivitet. Velg på nytt."
-            UploadProblem.ODD_PAIR -> "«I par» krever et partall. Rett antallet."
-            UploadProblem.FUTURE -> "Datoen er fram i tid. Rett datoen."
-            UploadProblem.END_BEFORE_START -> "Slutt er før start. Rett tidspunktet."
+        const val unknownSpecies = "Arten finnes ikke på Artsobservasjoner."
+        const val privateTooLong = "Privat kommentar er for lang (maks 254 tegn)."
+        const val publicTooLong = "Åpen kommentar er for lang (maks 254 tegn)."
+        const val publicTooLongWithCoObservers = "Åpen kommentar blir for lang (maks 254 tegn) med medobservatørene som ikke er valgt fra brukersøket."
+        fun unknownCoObserver(names: List<String>) =
+            "${if (names.size == 1) "Brukeren" else "Brukerne"} ${andList(names)} finnes ikke på Artsobservasjoner."
+        private fun andList(xs: List<String>) = if (xs.size < 2) xs.joinToString() else xs.dropLast(1).joinToString() + " og " + xs.last()
+
+        /** [p] is [n]'s problem. */
+        fun problem(p: UploadProblem, n: Note) = when (p) {
+            UploadProblem.NO_SPECIES -> "Appen støtter ikke arten «${n.species}»."
+            UploadProblem.NO_SITE -> "Lokaliteten finnes ikke. Velg ny lokalitet."
+            UploadProblem.UNKNOWN_AGE -> "Ugyldig alder «${n.age}»."
+            UploadProblem.UNKNOWN_SEX -> "Ugyldig kjønn «${n.sex}»."
+            UploadProblem.UNKNOWN_ACTIVITY -> "Ugyldig aktivitet «${n.activity}»."
+            UploadProblem.ODD_PAIR -> "«I par» krever partall."
+            UploadProblem.FUTURE -> "Datoen er i framtida."
+            UploadProblem.END_BEFORE_START -> "Sluttid er før starttid."
         }
 
         /** The public comment with co-observers who aren't users added, since they can't be linked. */
@@ -206,10 +214,10 @@ object Strings {
         fun failed(r: HttpResult) = Sync.failed(r)
 
         /** Why an export stopped after it had started sending. */
-        fun lost(r: HttpResult) = if (r is NoAnswer && r.offline) "Mista internettilkoplinga" else failed(r)
+        fun lost(r: HttpResult) = if (r is NoAnswer && r.offline) "Mista internettilkoblinga" else failed(r)
 
         /** The site's own reason for refusing a note: a rule the app doesn't check, so only its words. */
-        fun rejected(detail: String) = "«$detail»"
+        fun rejected(detail: String) = "«${detail.removePrefix("Invalid arguments: ")}»"
 
         /** [fields] are sightingMismatches' names. */
         fun mismatch(fields: List<String>) =

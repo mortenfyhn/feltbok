@@ -58,7 +58,7 @@ class ExportVisitTest {
         offlineAfter = 1
         vm.openExport()
         export()
-        assertEquals(Interruption.Failed("Mista internettilkoplinga"), ((vm.upload as UploadState.Finished).result as UploadResult.Done).stopped)
+        assertEquals(Interruption.Failed("Mista internettilkoblinga"), ((vm.upload as UploadState.Finished).result as UploadResult.Done).stopped)
         assertEquals(listOf(1L), vm.sentThisVisit.toList())
 
         offlineAfter = Int.MAX_VALUE

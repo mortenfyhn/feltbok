@@ -62,7 +62,9 @@ class UploadTest {
         assertEquals(null, uploadProblem(note(), now, oslo))
         assertEquals(UploadProblem.NO_SPECIES, uploadProblem(note({ it.copy(latin = "") }), now, oslo))
         assertEquals(UploadProblem.NO_SITE, uploadProblem(note({ it.copy(locId = "") }), now, oslo))
-        assertEquals(UploadProblem.UNKNOWN_CHOICE, uploadProblem(note({ it.copy(activity = "Rasta") }), now, oslo))
+        assertEquals(UploadProblem.UNKNOWN_AGE, uploadProblem(note({ it.copy(age = "Ung") }), now, oslo))
+        assertEquals(UploadProblem.UNKNOWN_SEX, uploadProblem(note({ it.copy(sex = "Hann?") }), now, oslo))
+        assertEquals(UploadProblem.UNKNOWN_ACTIVITY, uploadProblem(note({ it.copy(activity = "Rasta") }), now, oslo))
         assertEquals(UploadProblem.ODD_PAIR, uploadProblem(note({ it.copy(sex = "I par", count = 3) }), now, oslo))
         assertEquals(UploadProblem.FUTURE, uploadProblem(note({ it.copy(time = now + 86_400_000) }), now, oslo))
         // Later today is fine: the server compares dates.
