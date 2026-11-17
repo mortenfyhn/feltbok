@@ -355,7 +355,13 @@ to each **footprint**, not just the nearest centre. If you're standing inside on
 the **smallest** containing one is suggested (the most specific — matching how a tap resolves nested
 localities). If you're inside none, the one whose **edge** is closest wins. So a large locality you're
 inside beats a small one you're outside, yet a small locality nested inside a big one still wins when
-you're inside both. A point locality (no radius) falls back to plain centre distance.
+you're inside both.
+
+A point locality (no radius or polygon) counts as a 200 m disk here, as in Artskart. When another
+point locality is closer than 400 m, both shrink to half the distance between them, so the disks just
+touch. So a point locality inside a lake or a reserve is suggested when you're near it. Points at the
+same spot get no disk and fall back to plain centre distance. The disks only affect the suggestion:
+the map draws point localities as before, and a tap on the map still picks as before.
 
 ## Export
 
