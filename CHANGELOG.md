@@ -10,6 +10,7 @@
 - «Angre»-meldinga dekker ikke lenger +-knappen.
 - Du ser om valgt lokalitet er allmenn eller privat.
 - Ny lokalitet foreslår navn fra Norgeskart, med flere å velge mellom.
+- GPS-sirkelen på kartet fortsetter å vokse når du zoomer langt inn.
 
 ## v1.5 (13. november 2026)
 

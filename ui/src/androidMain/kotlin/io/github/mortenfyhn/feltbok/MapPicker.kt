@@ -705,7 +705,7 @@ private class LocalityOverlay(
             proj.toPixels(it, p)
             val px = p.x.toFloat(); val py = p.y.toFloat()
             if (!accuracyM.isNaN() && accuracyM > 0f) {
-                val rAcc = (accuracyM * ppm).toFloat().coerceIn(8f, 600f)
+                val rAcc = (accuracyM * ppm).toFloat()
                 c.drawCircle(px, py, rAcc, accFill)
                 c.drawCircle(px, py, rAcc, accStroke)
             }
