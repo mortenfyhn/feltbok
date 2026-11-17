@@ -179,8 +179,7 @@ fun buildLayerData(
     val gpsAcc = Collection(); val gpsDot = Collection()
     fix?.let { f ->
         if (!f.accuracyM.isNaN() && f.accuracyM > 0f) {
-            val r = (f.accuracyM.toDouble()).coerceIn(8.0 / ppm, 600.0 / ppm)
-            gpsAcc.feature({ polygon(circleRing(f.lat, f.lon, r)) }) {}
+            gpsAcc.feature({ polygon(circleRing(f.lat, f.lon, f.accuracyM.toDouble())) }) {}
         }
         gpsDot.feature({ point(f.lat, f.lon) }) {}
     }
