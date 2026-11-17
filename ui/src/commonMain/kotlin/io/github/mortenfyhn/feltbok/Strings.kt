@@ -234,6 +234,7 @@ object Strings {
         const val titleNew = "Ny lokalitet"
         const val titlePick = "Velg lokalitet"
         const val newButton = "＋ Ny lokalitet"
+        const val followGps = "Følg GPS-posisjonen"   // the GPS button, for screen readers
         const val radiusLabel = "Radius"
         fun meters(m: Int) = "$m m"
         const val nameLabel = "Navn"

@@ -10,6 +10,7 @@
 - «Angre»-meldinga dekker ikke lenger +-knappen.
 - Du ser om valgt lokalitet er allmenn eller privat.
 - Ny lokalitet foreslår navn fra Norgeskart, med flere å velge mellom.
+- GPS-knappen på kartet låser kartet til posisjonen din, så det følger med når du går. Drar du i kartet, slipper det.
 
 ## v1.5 (13. november 2026)
 

@@ -56,6 +56,8 @@ import androidx.compose.ui.graphics.drawscope.Fill
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -68,9 +70,11 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.conflate
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import org.maplibre.compose.camera.CameraMoveReason
 import org.maplibre.compose.camera.CameraPosition
 import org.maplibre.compose.camera.CameraUpdate
 import org.maplibre.compose.interaction.ClickResult
+import org.maplibre.compose.interaction.GestureAnchor
 import org.maplibre.compose.interaction.MapInteractions
 import org.maplibre.compose.map.CameraConstraints
 import org.maplibre.compose.map.DefaultMapRuntime
@@ -217,18 +221,18 @@ actual fun LocalityScreen(vm: MainViewModel) {
 
     fun proj() = projOf(state, mapW, mapH, density)
 
-    // Whether the map is already (about) centred on the GPS fix - drives the re-centre button. In
-    // new-spot mode "centred" means under the crosshair, which sits above the panel.
+    // GPS follow mode: the map keeps the fix on the crosshair (above the panel in new-spot mode)
+    // until you pan. On from the start when the picker opens on your position.
+    var following by remember { mutableStateOf(vm.pickerFocus == null && vm.fix != null) }
     fun panelPx() = if (newMode) sheetH else 0
-    val centered by remember {
-        derivedStateOf {
-            val f = vm.fix
-            val p = proj()
-            f != null && p != null && run {
-                val pt = p.toPixels(f.lat, f.lon)
-                hypot(pt.x - p.widthPx / 2, pt.y - (p.heightPx - panelPx()) / 2) < 24f * density
-            }
-        }
+    LaunchedEffect(following, vm.fix, newMode, sheetH) {
+        val f = vm.fix
+        val p = proj()
+        if (!following || f == null || p == null || state.isCameraMoving && state.cameraMoveReason == CameraMoveReason.Gesture) return@LaunchedEffect
+        // Pan so the fix lands on the crosshair, half the panel above the centre.
+        val pt = p.toPixels(f.lat, f.lon)
+        val (lat, lon) = p.fromPixels(pt.x, pt.y + panelPx() / 2f)
+        state.animateCamera(CameraUpdate(center = Position(lon, lat)))
     }
 
     // Once the map has settled for a second, look up public localities in view (#173).
@@ -319,6 +323,7 @@ actual fun LocalityScreen(vm: MainViewModel) {
                 },
                 interactions = MapInteractions {
                     camera {
+                        pan { onStart { following = false } }
                         rotate { enabled = false }
                         pitch { enabled = false }
                     }
@@ -334,7 +339,16 @@ actual fun LocalityScreen(vm: MainViewModel) {
                     }
                 },
                 // Taps select instantly instead of waiting out a double-tap; pinch still zooms (as on Android).
-                uiOptions = MapUiOptions { bindings { doubleTap { enabled = false } } },
+                // While following GPS, a pinch zooms around the centre and can't pan, so it keeps following.
+                uiOptions = MapUiOptions {
+                    bindings {
+                        doubleTap { enabled = false }
+                        transform {
+                            pan { enabled = !following }
+                            zoom { anchor = if (following) GestureAnchor.CameraCenter else GestureAnchor.Input }
+                        }
+                    }
+                },
                 overlay = {},
             )
             overlay.picked = tapped ?: created ?: vm.pickerFocus
@@ -354,15 +368,8 @@ actual fun LocalityScreen(vm: MainViewModel) {
                     .then(if (newMode) Modifier.padding(bottom = (sheetH / density).dp) else mapInset).padding(16.dp),
                 verticalArrangement = Arrangement.spacedBy(12.dp),
             ) {
-                if (vm.fix != null && !centered) RecenterButton {
-                    vm.fix?.let { f ->
-                        // Pan so the fix lands on the crosshair, half the panel above the centre.
-                        val p = proj() ?: return@let
-                        val pt = p.toPixels(f.lat, f.lon)
-                        val (lat, lon) = p.fromPixels(pt.x, pt.y + panelPx() / 2f)
-                        scope.launch { state.animateCamera(CameraUpdate(center = Position(lon, lat))) }
-                    }
-                }
+                // Turn GPS follow mode back on (keeps the current zoom).
+                if (vm.fix != null && !following) RecenterButton { following = true }
                 if (!newMode) {
                     ZoomButton("+") { scope.launch { state.animateCamera(CameraUpdate(zoom = state.cameraPosition.zoom + 1)) } }
                     ZoomButton("−") { scope.launch { state.animateCamera(CameraUpdate(zoom = state.cameraPosition.zoom - 1)) } }
@@ -455,7 +462,7 @@ private fun RecenterButton(onClick: () -> Unit) {
     Box(
         Modifier.size(52.dp).clip(CircleShape).background(Color.White)
             .border(1.dp, cs.outline, CircleShape)
-            .clickable(onClick = onClick),
+            .clickable(onClick = onClick).semantics { contentDescription = Strings.Picker.followGps },
         contentAlignment = Alignment.Center,
     ) {
         Canvas(Modifier.size(22.dp)) {
