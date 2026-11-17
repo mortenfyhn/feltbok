@@ -479,11 +479,11 @@ class MainViewModel(private val platform: Platform) : ViewModel() {
     private var nearestFix: GpsFix? = null
     private var nearestLoc: Locality? = null
 
-    /** Default locality for the current fix, or null until GPS settles. If you're inside one or more
-     *  localities' footprints, the *smallest* containing one wins (the most specific - matching how a
-     *  tap resolves nesting, #126); otherwise the one whose footprint *edge* is nearest. So a big
-     *  locality you're inside beats a small one you're outside, yet a small locality nested inside a
-     *  big one still wins when you're inside both (#155). */
+    // Point radii depend on the whole list, so recompute them only when the list changes.
+    private var radiiFor: List<Locality>? = null
+    private var radii = DoubleArray(0)
+
+    /** Default locality for the current fix, or null until GPS settles. See [defaultLocality]. */
     fun nearest(): Locality? {
         val f = fix ?: return null
         if (f !== nearestFix) {
@@ -491,9 +491,8 @@ class MainViewModel(private val platform: Platform) : ViewModel() {
             // toList() is the state list's current immutable snapshot, without a copy: iterating
             // that is several times faster than the state list itself, which tracks every read.
             val all = localities.toList()
-            val inside = all.filter { localityContains(it, f.lat, f.lon) }
-            nearestLoc = if (inside.isNotEmpty()) inside.minByOrNull { footprintArea(it) }
-            else all.minByOrNull { distanceToFootprint(it, f.lat, f.lon) }
+            if (all !== radiiFor) { radiiFor = all; radii = pointRadii(all) }
+            nearestLoc = defaultLocality(all, radii, f.lat, f.lon)
         }
         return nearestLoc
     }

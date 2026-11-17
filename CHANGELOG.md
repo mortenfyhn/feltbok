@@ -10,6 +10,7 @@
 - «Angre»-meldinga dekker ikke lenger +-knappen.
 - Du ser om valgt lokalitet er allmenn eller privat.
 - Ny lokalitet foreslår navn fra Norgeskart, med flere å velge mellom.
+- Foreslått lokalitet treffer bedre når du står ved en punktlokalitet inne i et større område, som et vatn eller et reservat.
 
 ## v1.5 (13. november 2026)
 
