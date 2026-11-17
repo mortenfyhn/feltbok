@@ -233,8 +233,7 @@ fun ListScreen(vm: MainViewModel, listState: LazyListState) {
                         groups.forEach { group ->
                             item(key = "day:${group.label}") {
                                 val species = group.notes.map { it.latin }.distinct().size
-                                val label = "${group.label} (${Strings.Notes.speciesCount(species)}, " +
-                                    "${Strings.Notes.noteCount(group.notes.size)})"
+                                val label = "${group.label} (${Strings.Notes.speciesCount(species)})"
                                 val ids = group.notes.map { it.id }
                                 DayHeader(
                                     label, selecting,
