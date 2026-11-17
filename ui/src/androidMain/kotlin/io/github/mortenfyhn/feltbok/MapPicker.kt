@@ -6,6 +6,7 @@ import android.graphics.DashPathEffect
 import android.graphics.Paint
 import android.graphics.Path
 import android.graphics.Point
+import android.graphics.PointF
 import android.graphics.RectF
 import android.view.MotionEvent
 import android.view.ViewGroup
@@ -44,6 +45,8 @@ import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -130,19 +133,20 @@ actual fun LocalityScreen(vm: MainViewModel) {
     // Flash the tapped locality highlighted, then return to the entry screen.
     LaunchedEffect(tapped) { tapped?.let { delay(300); vm.pickLocality(it) } }
 
-    // Whether the map is already (about) centred on the GPS fix — drives the re-centre button's
-    // enabled state. Recomputed when the map moves (listener) and when a new fix arrives. In new-spot
-    // mode "centred" means under the crosshair, which sits above the panel.
-    var centered by remember { mutableStateOf(false) }
+    // GPS follow mode: the map keeps the fix on the crosshair (above the panel in new-spot mode)
+    // until you pan. On from the start when the picker opens on your position.
+    var following by remember { mutableStateOf(vm.pickerFocus == null && vm.fix != null) }
     fun panelPx() = if (newMode) sheetH else 0
-    fun recomputeCentered() {
+    LaunchedEffect(following, vm.fix, newMode, sheetH) {
         val f = vm.fix
-        centered = f != null && mapView.width > 0 && run {
-            val pt = mapView.projection.toPixels(GeoPoint(f.lat, f.lon), null)
-            hypot((pt.x - mapView.width / 2).toFloat(), (pt.y - (mapView.height - panelPx()) / 2).toFloat()) < 24f
-        }
+        if (!following || f == null || mapView.width == 0 || mapView.pinching) return@LaunchedEffect
+        mapView.controller.stopPanning()   // kill any fling momentum, else it fights the animateTo
+        // Pan so the fix lands on the crosshair, half the panel above the centre.
+        val pt = mapView.projection.toPixels(GeoPoint(f.lat, f.lon), null)
+        mapView.controller.animateTo(mapView.projection.fromPixels(pt.x, pt.y + panelPx() / 2))
     }
-    LaunchedEffect(vm.fix, newMode, sheetH) { recomputeCentered() }
+    mapView.onUserPan = { following = false }
+    mapView.pinchPivot = if (following) { { PointF(mapView.width / 2f, (mapView.height - panelPx()) / 2f) } } else null
 
     // Once the map has settled for a second, look up public localities in view (#173). Skip it when
     // zoomed out: you're not picking there yet, and a dense area would take many requests.
@@ -162,8 +166,8 @@ actual fun LocalityScreen(vm: MainViewModel) {
     DisposableEffect(Unit) {
         mapView.onResume()
         val listener = object : MapListener {
-            override fun onScroll(e: ScrollEvent?): Boolean { recomputeCentered(); scheduleLiveFetch(); mapMoves.value++; return false }
-            override fun onZoom(e: ZoomEvent?): Boolean { recomputeCentered(); scheduleLiveFetch(); mapMoves.value++; return false }
+            override fun onScroll(e: ScrollEvent?): Boolean { scheduleLiveFetch(); mapMoves.value++; return false }
+            override fun onZoom(e: ZoomEvent?): Boolean { scheduleLiveFetch(); mapMoves.value++; return false }
         }
         mapView.addMapListener(listener)
         scheduleLiveFetch()
@@ -224,16 +228,9 @@ actual fun LocalityScreen(vm: MainViewModel) {
                 Modifier.align(Alignment.BottomEnd).padding(bottom = with(LocalDensity.current) { panelPx().toDp() }).padding(16.dp),
                 verticalArrangement = Arrangement.spacedBy(12.dp),
             ) {
-                // Re-centre on the current GPS fix (keeps the current zoom); only shown when there's
-                // a fix and the map isn't already there.
-                if (vm.fix != null && !centered) RecenterButton {
-                    vm.fix?.let {
-                        mapView.controller.stopPanning()   // kill any fling momentum, else it fights the animateTo
-                        // Pan so the fix lands on the crosshair, half the panel above the centre.
-                        val pt = mapView.projection.toPixels(GeoPoint(it.lat, it.lon), null)
-                        mapView.controller.animateTo(mapView.projection.fromPixels(pt.x, pt.y + panelPx() / 2))
-                    }
-                }
+                // Turn GPS follow mode back on (keeps the current zoom); only shown when there's a fix
+                // and the map isn't following it.
+                if (vm.fix != null && !following) RecenterButton { following = true }
                 if (!newMode) {
                     ZoomButton("+") { mapView.controller.zoomIn() }
                     ZoomButton("−") { mapView.controller.zoomOut() }
@@ -306,7 +303,7 @@ private fun RecenterButton(onClick: () -> Unit) {
     Box(
         Modifier.size(52.dp).clip(CircleShape).background(Color.White)
             .border(1.dp, cs.outline, CircleShape)
-            .clickable(onClick = onClick),
+            .clickable(onClick = onClick).semantics { contentDescription = Strings.Picker.followGps },
         contentAlignment = Alignment.Center,
     ) {
         Canvas(Modifier.size(22.dp)) {

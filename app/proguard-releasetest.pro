@@ -52,3 +52,11 @@
 -keep class io.github.mortenfyhn.feltbok.HttpResult { *; }
 -keep class io.github.mortenfyhn.feltbok.HttpResponse { *; }
 -keep class io.github.mortenfyhn.feltbok.Country { *; }
+
+# FollowGpsTest hosts LocalityScreen (MapPickerKt) with a fake LocationSource (Platform, above,
+# keeps the rest) and drives the PickerMapView. Only names and these classes' members are kept;
+# osmdroid itself is still fully R8'd.
+-keep interface io.github.mortenfyhn.feltbok.LocationSource { *; }
+-keep class io.github.mortenfyhn.feltbok.GpsFix { *; }
+-keep class io.github.mortenfyhn.feltbok.PickerMapView { *; }
+-keep class io.github.mortenfyhn.feltbok.MapPickerKt { *; }
