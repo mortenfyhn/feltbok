@@ -6,11 +6,12 @@
 #
 #   scripts/dev/store-assets/render.sh        (or: just render-store-assets)
 #
-# Needs rsvg-convert (librsvg) + imagemagick; Liberation Sans supplies the wordmark. The composed
+# Needs rsvg-convert (librsvg), imagemagick and qrencode; Liberation Sans supplies the wordmark. The composed
 # icon.svg/banner.svg are throwaway intermediates (gitignored); art.svg + this script are the source.
 set -euo pipefail
 cd "$(dirname "$0")"
-OUT="$(cd ../../.. && pwd)/fastlane/metadata/android/en-US/images"
+ROOT="$(cd ../../.. && pwd)"
+OUT="$ROOT/fastlane/metadata/android/en-US/images"
 
 BG="#5B7A2B"        # Norway brand green (ic_launcher_background)
 ART="$(cat art.svg)"
@@ -44,3 +45,25 @@ SVG
 rsvg-convert -w 512  -h 512 icon.svg   -o "$OUT/icon.png"
 rsvg-convert -w 1024 -h 500 banner.svg -o "$OUT/featureGraphic.png"
 echo "wrote $OUT/icon.png (512x512) and $OUT/featureGraphic.png (1024x500)"
+
+# QR code for print (flyers, brochures), with the icon in the middle. Encodes the landing page
+# (site/, which sends each phone to its store): a short URL gives a 29x29 grid instead of 49x49 for
+# the Play URL, and the targets can change without reprinting. Level H recovers 30% damage; the icon
+# covers ~10%. The white cutout is a whole number
+# of modules aligned to the grid, so no module is cut in half.
+QR_URL="https://feltbok.fyhn.lol"
+qrencode -l H -m 4 -t SVG --svg-path --foreground=1A1A1A -o qr-base.svg "$QR_URL"
+SIZE=$(sed -n 's/.*viewBox="0 0 \([0-9]*\) .*/\1/p' qr-base.svg)
+CUT=9
+C0=$(( (SIZE - CUT) / 2 ))
+cat > "$ROOT/docs/img/qr.svg" <<SVG
+<svg xmlns="http://www.w3.org/2000/svg" width="$((SIZE * 20))" height="$((SIZE * 20))" viewBox="0 0 $SIZE $SIZE">
+  $(sed -n '/<g id="QRcode">/,/<\/g>/p' qr-base.svg)
+  <rect x="$C0" y="$C0" width="$CUT" height="$CUT" fill="#ffffff" shape-rendering="crispEdges"/>
+  <svg x="$C0.5" y="$C0.5" width="$((CUT - 1))" height="$((CUT - 1))" viewBox="0 0 108 108">
+    $(sed -n '/<svg /,/<\/svg>/{/<svg /d;/<\/svg>/d;p}' icon.svg)
+  </svg>
+</svg>
+SVG
+rsvg-convert -w 1200 -h 1200 "$ROOT/docs/img/qr.svg" -o "$ROOT/docs/img/qr.png"
+echo "wrote docs/img/qr.svg and docs/img/qr.png ($SIZE modules incl. quiet zone)"

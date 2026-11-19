@@ -1,0 +1,39 @@
+<!doctype html>
+<html lang="nb">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Feltbok</title>
+<meta name="description" content="En app for å notere fugler i felt og eksportere til Artsobservasjoner">
+<link rel="icon" href="icon.png">
+<script>
+  // The printed QR codes point here. iPhones have one store, so skip the page; Android has two
+  // (Play and F-Droid), so let the user pick.
+  if (/iPhone|iPad|iPod/.test(navigator.userAgent)) {
+    location.replace("https://apps.apple.com/no/app/feltbok-for-artsobservasjoner/id6829644268");
+  }
+</script>
+<style>
+  body { margin: 0; min-height: 100vh; display: flex; align-items: center; justify-content: center;
+         font-family: system-ui, sans-serif; background: #fff; color: #1a1a1a; text-align: center; }
+  main { padding: 24px 16px; max-width: 420px; }
+  img.icon { width: 96px; height: 96px; }
+  h1 { margin: 12px 0 4px; }
+  p { margin: 0 0 24px; }
+  .badges a { display: block; margin: 12px 0; }
+  .badges img { height: 60px; }
+</style>
+</head>
+<body>
+<main>
+  <img class="icon" src="icon.png" alt="">
+  <h1>Feltbok</h1>
+  <p>En app for å notere fugler i felt og eksportere til Artsobservasjoner.</p>
+  <div class="badges">
+    <a href="https://play.google.com/store/apps/details?id=io.github.mortenfyhn.feltbok"><img src="badges/play.png" alt="Nå på Google Play"></a>
+    <a href="https://apps.apple.com/no/app/feltbok-for-artsobservasjoner/id6829644268"><img src="badges/appstore.svg" alt="Last ned fra App Store"></a>
+    <a href="https://f-droid.org/packages/io.github.mortenfyhn.feltbok/"><img src="badges/fdroid.png" alt="Få den på F-Droid"></a>
+  </div>
+</main>
+</body>
+</html>
