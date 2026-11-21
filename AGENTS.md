@@ -94,6 +94,9 @@ a `MainViewModel` must start with `ClearAppDataRule` — otherwise the suite bec
   state after it had changed).
 - **Avoid custom styling unless necessary.** Lean on Material defaults and existing shared
   composables; extend a component (e.g. a flag on an existing row) over bespoke layout.
+- **Same symbol for the same thing.** Where a symbol marks something, use the same symbol wherever
+  that thing is explained or named, so the two are easy to link (e.g. the upload icon on exported
+  notes in the list and in the editor's "Eksportert til Artsobservasjoner").
 - **Commit messages in English, explaining the why. No trailers** (`Co-Authored-By` etc. — history
   is trailer-free). User-facing strings and the changelog stay Norwegian Bokmål — radical bokmål
   (`lagra`, `henta`, `sletta`; nudge, don't churn). Only commit messages are English.
