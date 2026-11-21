@@ -34,12 +34,12 @@ and change it. Matched against the emulator on 2026-11-15 (v1.5-22). See README.
       <div class="note"><div class="main"><span class="sp"><span><span class="count">12</span> stokkand</span><span class="badge-i private">i</span></span><span class="loc">sjøområdet mellom Brattøra og Munkholmen</span></div><span class="time">15:35</span></div>
       <div class="note"><div class="main"><span class="sp"><span><span class="count">35</span> storskarv</span><span class="rl">NT</span><span class="badge-co">12 <i class="group-icon"></i></span></span><span class="preview">Pu</span><span class="loc">Leangenbukta</span></div><span class="time">15:00</span></div>
       <div class="note"><div class="main"><span class="sp"><span><span class="count">1</span> svartstrupesteinskvett?</span><span class="badge-co">2 <i class="group-icon"></i></span></span><span class="loc">Estenstaddammen</span></div><span class="time">14:30</span></div>
-      <div class="note"><div class="main"><span class="sp"><span><span class="count">1</span> kjøttmeis</span></span><span class="loc">Ilsvika</span></div><span class="time">13:50</span></div>
-      <div class="note"><div class="main"><span class="sp"><span><span class="count">3</span> svarttrost</span><span class="badge-i">i</span><span class="badge-co">1 <i class="group-icon"></i></span></span><span class="preview">Ad <b>♂</b></span><span class="loc">Baklidammen</span></div><span class="time">13:20</span></div>
-      <div class="note"><div class="main"><span class="sp"><span><span class="count">2</span> rådyr</span><span class="badge-i">i</span></span><span class="loc">TKB tredje avdeling</span></div><span class="time">12:30</span></div>
+      <div class="note"><div class="main"><span class="sp"><span><span class="count">1</span> kjøttmeis</span></span><span class="loc">Ilsvika</span></div><span class="time"><i class="upload-icon"></i>13:50</span></div>
+      <div class="note"><div class="main"><span class="sp"><span><span class="count">3</span> svarttrost</span><span class="badge-i">i</span><span class="badge-co">1 <i class="group-icon"></i></span></span><span class="preview">Ad <b>♂</b></span><span class="loc">Baklidammen</span></div><span class="time"><i class="upload-icon"></i>13:20</span></div>
+      <div class="note"><div class="main"><span class="sp"><span><span class="count">2</span> rådyr</span><span class="badge-i">i</span></span><span class="loc">TKB tredje avdeling</span></div><span class="time"><i class="upload-icon"></i>12:30</span></div>
       <div class="note"><div class="main"><span class="sp"><span><span class="count">1</span> kråke</span><span class="badge-i">i</span></span><span class="preview">Ad</span><span class="loc">Haukvatnet</span></div><span class="time">--:--</span></div>
       <div class="day">I går · 10 arter</div>
-      <div class="note"><div class="main"><span class="sp"><span><span class="count">1000</span> storspove?</span><span class="rl">EN</span><span class="badge-i">i</span><span class="badge-co">2 <i class="group-icon"></i></span></span><span class="preview">Ad <b>♂</b></span><span class="loc">Kyvatnet</span></div><span class="time">16:10</span></div>
+      <div class="note"><div class="main"><span class="sp"><span><span class="count">1000</span> storspove?</span><span class="rl">EN</span><span class="badge-i">i</span><span class="badge-co">2 <i class="group-icon"></i></span></span><span class="preview">Ad <b>♂</b></span><span class="loc">Kyvatnet</span></div><span class="time"><i class="upload-icon"></i>16:10</span></div>
     </div>
     <div class="list-footer"><span>Papirkurv</span><span>Gi tilbakemelding</span><span class="ver">v1.5</span></div>
   </div>
@@ -182,14 +182,32 @@ and change it. Matched against the emulator on 2026-11-15 (v1.5-22). See README.
 
 <!-- ===================== EXPORT (ExportScreen) ===================== -->
 <figure id="export">
-<figcaption>Eksporter (ExportScreen), before exporting. Sends the notes straight to «Kontroller funn».</figcaption>
+<figcaption>Eksporter (ExportScreen), before exporting. Sends the notes straight to «Kontroller funn». Only the notes not exported yet; with some exported, the button reads «Eksporter resten (n)».</figcaption>
 <div class="phone">
   <div class="statusbar">17:12</div>
   <div class="header"><span class="lead">‹ Tilbake</span><span class="title">Eksporter</span><span></span></div>
   <div class="content">
     <div class="scroll" style="padding:12px 16px">
       <div style="font-size:14px;line-height:20px;color:var(--muted)">Eksporter alle observasjonene i lista til «Kontroller funn» på Artsobservasjoner. Vil du bare eksportere noen? Marker dem i lista først.</div>
-      <div style="margin-top:12px"><span class="btn">Eksporter alle (29)</span></div>
+      <div style="margin-top:12px;text-align:center"><span class="btn">Eksporter alle (29)</span></div>
+    </div>
+  </div>
+  <div class="gesturebar"></div>
+</div>
+</figure>
+
+<!-- ===================== EXPORT, DONE ===================== -->
+<figure id="export-done">
+<figcaption>Eksporter on a later visit, with every note exported. Exported notes get the upload icon in the list.</figcaption>
+<div class="phone">
+  <div class="statusbar">17:14</div>
+  <div class="header"><span class="lead">‹ Tilbake</span><span class="title">Eksporter</span><span></span></div>
+  <div class="content">
+    <div class="scroll" style="padding:12px 16px">
+      <div style="font-size:14px;line-height:20px;color:var(--muted)">Eksporter alle observasjonene i lista til «Kontroller funn» på Artsobservasjoner. Vil du bare eksportere noen? Marker dem i lista først.</div>
+      <div style="margin-top:12px;text-align:center"><span class="btn">Eksporter på nytt (29)</span></div>
+      <div style="margin-top:16px;text-align:center"><span class="btn-outline">Åpne «Kontroller funn»</span></div>
+      <div style="margin-top:8px;text-align:center"><span class="btn-text danger">Slett eksporterte observasjoner fra appen (29)</span></div>
     </div>
   </div>
   <div class="gesturebar"></div>
