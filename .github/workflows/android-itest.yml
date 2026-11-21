@@ -35,7 +35,9 @@ jobs:
           java-version: 21
       - uses: gradle/actions/setup-gradle@0723195856401067f7a2779048b490ace7a47d7c # v5.0.2
         with:
-          cache-read-only: false # TEMP: measure a warm build on a branch
+          # Branches save their own cache too (by default only master does), so the second push to a
+          # branch builds warm: 20 s instead of 4 min.
+          cache-read-only: false
       # Lets the emulator use KVM.
       - run: |
           echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
