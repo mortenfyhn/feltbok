@@ -80,10 +80,11 @@ lint:
 # never checks; run this before pushing, or `just format` first to auto-fix the mechanical stuff.
 
 # Run the full CI gate locally: ktlint + ruff, unit tests, dev APK, Android Lint, and the minified
-# releaseTest APK + its instrumented tests (built, not run: that needs a device, see itest)
+# releaseTest APK + its instrumented tests (built, not run: that needs a device, see itest), and the
+# coverage floor (koverVerify)
 [group('check')]
 ci: lint test build
-    ./gradlew :app:lintDebug :ui:lintAndroidMain assembleReleaseTest assembleReleaseTestAndroidTest
+    ./gradlew :app:lintDebug :ui:lintAndroidMain assembleReleaseTest assembleReleaseTestAndroidTest :koverVerify
 
 # Install the dev APK on a connected device (-d allows downgrading over a newer build)
 [group('app')]
