@@ -19,8 +19,10 @@
    localities are **real, globally-unique public localities** (unique across the whole country, so
    they resolve to the public locality even without kommune-scoping the import — no "matchet flere
    allmenne lokaliteter"), co-observers are **real registered users** (made-up or ambiguous names
-   fail to resolve), and an "I par" row uses an even count (the site requires partall). So a clean
-   seed should now import with **no errors** — any error is a real signal worth chasing.
+   fail to resolve), and an "I par" row uses an even count (the site requires partall).
+   `INVALID_ROWS` add one note per export error line, all on one day. Export once to see them,
+   delete that day (and the future-dated note), then export again: the rest should go in with
+   **no errors**, so any error is a real signal worth chasing.
 
 Each row's first argument is a short `why` — what that row is meant to exercise — so the intent
 lives next to the data (it's dev documentation, not emitted to the JSON).
@@ -90,8 +92,7 @@ SVARTHALESPOVE = ("svarthalespove", "Limosa limosa", "CR")  # long name + red ba
 # takes the one taxon with exactly that name, so these must be real names on the site.
 RAADYR = ("rådyr", "", "")
 # Insects, by Norwegian and by scientific name; subspecies, with their own Norwegian name and in the
-# site's "X, underarten Y" form (capitalised: case is ignored); and a typo no taxon has, which
-# blocks the export until fixed.
+# site's "X, underarten Y" form (capitalised: case is ignored); and a typo no taxon has.
 SITRONSOMMERFUGL = ("sitronsommerfugl", "", "")
 MARIHONE_LATIN = ("Coccinella septempunctata", "", "")
 SVARTRYGGERLE = ("svartryggerle", "", "")
@@ -358,20 +359,6 @@ ROWS = [
         radius=1,
     ),
     note(
-        # Age/activity/sex are bird-group codes (Adult, Rastende, …) that the import rejects on a
-        # non-bird, so leave them blank here — the user fills only what fits, or fixes it on the site.
-        "arbitrary species typed by hand (#144, blank latin), on a private locality, group fields blank",
-        280,
-        RAADYR,
-        2,
-        "",
-        "",
-        "",
-        "TKB tredje avdeling",
-        pub="beitet i utkanten",
-        private_loc=True,
-    ),
-    note(
         "no-time, single day (#155): date kept, both klokkeslett blank",
         300,
         KRAAKE,
@@ -583,16 +570,6 @@ ROWS = [
         "Ladehammeren",
     ),
     note(
-        "typed insect with a bird activity insects can't have: blocked before sending, naming the option",
-        2 * DAY // MINUTE + 620,
-        SITRONSOMMERFUGL,
-        2,
-        "",
-        "",
-        "Rastende",
-        "Ladehammeren",
-    ),
-    note(
         "typed subspecies with its own Norwegian name (#144): bird fields still apply",
         2 * DAY // MINUTE + 630,
         SVARTRYGGERLE,
@@ -612,10 +589,134 @@ ROWS = [
         "",
         "Ilsvika",
     ),
+]
+
+# Notes the export must stop on, one per error line, all on one day (three days ago) so they're easy
+# to mark and delete. Seed, export once to see every line, delete that day, then export the rest:
+# the remaining rows should all go in.
+BAD_DAY = 3 * DAY // MINUTE + 600
+LONG_COMMENT = "x" * 255  # the site's limit is 254
+INVALID_ROWS = [
     note(
-        "typed name the site doesn't have: export lists 'Arten finnes ikke på Artsobservasjoner'",
-        2 * DAY // MINUTE + 650,
+        "private locality without a site id: 'Lokaliteten finnes ikke'",
+        BAD_DAY,
+        RAADYR,
+        2,
+        "",
+        "",
+        "",
+        "TKB tredje avdeling",
+        private_loc=True,
+    ),
+    note(
+        "typed name the site doesn't have: 'Arten finnes ikke på Artsobservasjoner'",
+        BAD_DAY + 1,
         TYPO,
+        1,
+        "",
+        "",
+        "",
+        "Ilsvika",
+    ),
+    note(
+        "typed insect with a bird activity insects can't have: '«Rastende» kan ikke brukes på virvelløse dyr'",
+        BAD_DAY + 2,
+        SITRONSOMMERFUGL,
+        2,
+        "",
+        "",
+        "Rastende",
+        "Ladehammeren",
+    ),
+    note(
+        "age the app no longer has (an old note): 'Ugyldig alder «Ung»'",
+        BAD_DAY + 3,
+        KRAAKE,
+        1,
+        "Ung",
+        "",
+        "",
+        "Ilsvika",
+    ),
+    note(
+        "sex the app no longer has: 'Ugyldig kjønn «Hann?»'",
+        BAD_DAY + 4,
+        KRAAKE,
+        1,
+        "",
+        "Hann?",
+        "",
+        "Ilsvika",
+    ),
+    note(
+        "activity the app no longer has: 'Ugyldig aktivitet «Rasta»'",
+        BAD_DAY + 5,
+        KRAAKE,
+        1,
+        "",
+        "",
+        "Rasta",
+        "Ilsvika",
+    ),
+    note(
+        "odd count for 'I par': '«I par» krever partall'",
+        BAD_DAY + 6,
+        KRAAKE,
+        3,
+        "",
+        "I par",
+        "",
+        "Ilsvika",
+    ),
+    note(
+        "end before start: 'Sluttid er før starttid'",
+        BAD_DAY + 7,
+        KRAAKE,
+        1,
+        "",
+        "",
+        "",
+        "Ilsvika",
+        dur_min=-30,
+    ),
+    note(
+        "private comment over the limit: 'Privat kommentar er for lang (maks 254 tegn)'",
+        BAD_DAY + 8,
+        KRAAKE,
+        1,
+        "",
+        "",
+        "",
+        "Ilsvika",
+        priv=LONG_COMMENT,
+    ),
+    note(
+        "public comment over the limit: 'Åpen kommentar er for lang (maks 254 tegn)'",
+        BAD_DAY + 9,
+        KRAAKE,
+        1,
+        "",
+        "",
+        "",
+        "Ilsvika",
+        pub=LONG_COMMENT,
+    ),
+    note(
+        "public comment that only goes over the limit with a typed-in co-observer added to it",
+        BAD_DAY + 10,
+        KRAAKE,
+        1,
+        "",
+        "",
+        "",
+        "Ilsvika",
+        pub="x" * 245,
+        coobs=["Ola Testesen"],
+    ),
+    note(
+        "date in the future (shows under its own day, at the top): 'Datoen er i framtida'",
+        -2 * DAY // MINUTE,
+        KRAAKE,
         1,
         "",
         "",
@@ -760,11 +861,11 @@ if __name__ == "__main__":
     if (
         "--why" in sys.argv
     ):  # print the per-row purposes, for a quick legend of what's seeded
-        for i, r in enumerate(ROWS, 1):
+        for i, r in enumerate(ROWS + INVALID_ROWS, 1):
             print(f"{i:2}. {r['species'][0]} — {r['why']}")
     else:
         # Single-line JSON: `adb shell`'s PTY would translate embedded newlines, so keep it newline-free.
-        rows = ROWS + [big_crowd_row()]
+        rows = ROWS + INVALID_ROWS + [big_crowd_row()]
         print(json.dumps(build(int(time.time() * 1000), rows), ensure_ascii=False))
         # --users FILE: the 100-user row's co-observers, as the app saves users picked from the
         # search (coobs_users.json), so they upload as linked users rather than as free text.
