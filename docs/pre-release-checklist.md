@@ -47,8 +47,9 @@ not a one-off tap-through.
 - Run `LiveUploadTest` with a logged-in cookie (the command is in its KDoc). It uploads a note for
   every case, reads each back, checks it and deletes it. Then delete the "Feltbok live-test" site
   it leaves under Mine lokaliteter.
-- `just seed` a clean batch, fix or delete the notes the export flags, then export from the app.
-  All reach **Kontroller funn**, and the **Austrått** row links to Ørland's site (354419), not
+- `just seed` a fresh batch and export from the app. Each note three days back, and the one dated
+  in the future, is listed with its error line (`scripts/dev/seed_notes.py --why` says which).
+  Delete those and export again. All the rest reach **Kontroller funn**, and the **Austrått** row links to Ørland's site (354419), not
   Sandnes'. Delete them there afterwards.
 - On your own phone, export one note at **one of your private localities** and one at a
   **live-fetched** public locality (one the map toast reported). Each links to that exact site.

@@ -23,7 +23,7 @@ Usage: ./release.sh <tag>      e.g. ./release.sh v1.6
 Cuts a signed release from master's tip, or from a release/* branch's tip:
   1. Checks: clean tree (drafted changelogs allowed), branch tip, tag free, keystore.
   2. Opens CHANGELOG.md, then the English F-Droid changelog, in git's editor, and waits.
-  3. Gates: the R8 smoke tests (just itest) and the paste-import check. Type 'skip' to skip one.
+  3. Gates: the R8 smoke tests (just itest) and the seed->export check. Type 'skip' to skip one.
   4. Bumps versionCode, commits, tags, and builds the signed APK and the Play AAB. All local.
   5. Asks before pushing and publishing the GitHub release. Answer no to keep it a rehearsal.
 
@@ -156,9 +156,9 @@ while ! attached; do
 done
 attached && just itest
 
-# Same deal for the seed→export→paste-import check (docs/pre-release-checklist.md): it's the only
-# end-to-end test of the export format against the real site — automation stops at "TSV renders" —
-# but the site can't be scripted, so the script sets the app up and you do the paste by hand.
+# Same deal for the seed->export check (docs/pre-release-checklist.md): host tests use a fake
+# server, and this is the only run against the real site, which needs your login, so the script
+# sets the app up and you export by hand.
 if attached; then
     echo
     read -rp "Set the export test up now — install + seed + launch the dev app (overwrites its notes)? (yes/no): " ans
@@ -166,15 +166,17 @@ if attached; then
         just install
         just seed   # force-stops the app; the seed is imported on the next launch
         just run
-        echo "Now export from the app and paste into Artsobservasjoner \"Importer observasjoner\"."
+        echo "Now export from the app. Each note three days back, and the one dated in the future, should"
+        echo "show its error line (scripts/dev/seed_notes.py --why). Delete those, then export the rest:"
+        echo "all should reach Kontroller funn."
     fi
 fi
 # Require a typed answer (not a stray Enter) so releasing without the check is as deliberate as
 # skipping the R8 tests above.
 while true; do
-    read -rp "Has the seed→export→paste-import test passed on the live site? (yes / 'skip' to release without it): " ans
+    read -rp "Has the seed->export test passed on the live site? (yes / 'skip' to release without it): " ans
     [ "$ans" = yes ] && break
-    [ "$ans" = skip ] && { echo "Skipping the paste-import check for $tag."; break; }
+    [ "$ans" = skip ] && { echo "Skipping the seed->export check for $tag."; break; }
 done
 
 # Re-read rather than reuse what the review step saw: the device gates above take long enough
