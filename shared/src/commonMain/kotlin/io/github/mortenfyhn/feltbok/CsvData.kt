@@ -79,16 +79,11 @@ fun parseLocalityRow(c: List<String>): Locality? {
     val lat = fastDouble(c[5]) ?: return null
     val lon = fastDouble(c[6]) ?: return null
     val obs = c.getOrElse(8) { "" }.toIntOrNull() ?: 0
-    // radius onward sit one column later in legacy CSVs that still carry a text `fullname` at
-    // index 9 (older bundles + a not-yet-resynced my-localities.csv). Detect by content, not
-    // width: the standard layout has the numeric radius at 9, a legacy fullname is non-numeric
-    // there - a width test would mistake the newer `super` column for the legacy shift.
-    val b = if (c.size >= 14 && fastDouble(c.getOrElse(9) { "" }) == null) 10 else 9
-    val radius = fastDouble(c.getOrElse(b) { "" }) ?: 0.0
-    val poly = parsePolygon(c.getOrElse(b + 1) { "" })
-    val public = c.getOrElse(b + 2) { "1" } != "0"
-    val mine = c.getOrElse(b + 3) { "0" } == "1"
-    val isSuper = c.getOrElse(b + 4) { "0" } == "1"
+    val radius = fastDouble(c.getOrElse(9) { "" }) ?: 0.0
+    val poly = parsePolygon(c.getOrElse(10) { "" })
+    val public = c.getOrElse(11) { "1" } != "0"
+    val mine = c.getOrElse(12) { "0" } == "1"
+    val isSuper = c.getOrElse(13) { "0" } == "1"
     // Show public (allmenn) localities and the user's own customs; drop anything else.
     if (!public && !mine) return null
     return Locality(c[0], c[1], c[2], c[3], lat, lon, obs, radius, poly, public = public, mine = mine, isSuper = isSuper)
