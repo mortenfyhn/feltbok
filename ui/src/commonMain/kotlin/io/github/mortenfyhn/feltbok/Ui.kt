@@ -1607,8 +1607,13 @@ fun DetailScreen(vm: MainViewModel) {
             // template has the column, so the row is absent where the value couldn't be exported.
             if (Country.hideUntilCol != null) HideUntilRow(vm, batch)
             // Edits don't reach the site, so say the note is there already (see save()).
-            if (vm.editingExported) Text(Strings.Upload.exported, Modifier.padding(horizontal = 16.dp, vertical = 12.dp),
-                fontSize = 13.sp, color = cs.onSurfaceVariant)
+            // The same icon as the list's mark, so the two read as one thing.
+            if (vm.editingExported) {
+                Row(Modifier.padding(horizontal = 16.dp, vertical = 12.dp), verticalAlignment = Alignment.CenterVertically) {
+                    Icon(UploadIcon, null, Modifier.size(14.dp), tint = cs.onSurfaceVariant)
+                    Text(Strings.Upload.exported, Modifier.padding(start = 6.dp), fontSize = 13.sp, color = cs.onSurfaceVariant)
+                }
+            }
         }
         // Delete and save sit side by side - red left, green right - so the destructive action
         // isn't stacked directly under the thumb's path to Lagre, where it was easy to hit by
@@ -2019,7 +2024,6 @@ fun ExportScreen(vm: MainViewModel) {
     val exported = vm.exportNotes()
     val isSelection = vm.exportIsSelection()
     var confirmClear by remember { mutableStateOf(false) }
-    var confirmAgain by remember { mutableStateOf(false) }
     val state = vm.upload
     val running = state is UploadState.Running
     val result = (state as? UploadState.Finished)?.result
@@ -2044,19 +2048,23 @@ fun ExportScreen(vm: MainViewModel) {
                 val toFix = result is UploadResult.Blocked || (result is UploadResult.Done && result.failed.isNotEmpty())
                 // While it runs, the label it had when tapped.
                 val sentBefore = (state as? UploadState.Running)?.sentBefore ?: sent
-                Button(
-                    onClick = { if (unsent == 0) confirmAgain = true else vm.uploadExported() },
-                    enabled = !running && !toFix && !allSent, modifier = side.padding(top = 12.dp),
-                ) {
-                    Text(
-                        when (sentBefore) {
-                            0 -> Strings.Upload.button(exported.size, all = !isSelection)
-                            exported.size -> Strings.Upload.again(exported.size)
+                val enabled = !running && !toFix && !allSent
+                val m = side.align(Alignment.CenterHorizontally).padding(top = 12.dp)
+                val label = @Composable { text: String ->
+                    // With large text: balanced lines, centred, instead of a lone "(30)".
+                    Text(text, textAlign = TextAlign.Center, style = LocalTextStyle.current.copy(lineBreak = LineBreak.Heading))
+                }
+                // All sent already: send them again, for notes deleted on the site.
+                val again = sentBefore == exported.size && exported.isNotEmpty()
+                Button(onClick = { if (again) vm.exportAgain() else vm.uploadExported() }, m, enabled) {
+                    label(
+                        when {
+                            again -> Strings.Upload.again(exported.size)
+                            sentBefore == 0 -> Strings.Upload.button(exported.size, all = !isSelection)
                             // Stopped on this visit: the app doesn't know whether the problem is gone.
-                            else -> if (result != null) Strings.Upload.retry(exported.size - sentBefore) else Strings.Upload.rest(exported.size - sentBefore)
+                            result != null -> Strings.Upload.retry(exported.size - sentBefore)
+                            else -> Strings.Upload.rest(exported.size - sentBefore)
                         },
-                        // With large text: balanced lines, centred, instead of a lone "(30)".
-                        textAlign = TextAlign.Center, style = LocalTextStyle.current.copy(lineBreak = LineBreak.Heading),
                     )
                 }
             }
@@ -2091,16 +2099,18 @@ fun ExportScreen(vm: MainViewModel) {
             }
             // Whenever some are sent, also on a later visit: you may review and delete days after.
             if (sent > 0 && !running) {
-                OutlinedButton(onClick = { platform.openUrl(Strings.Upload.reviewUrl) }, side.padding(top = 16.dp)) {
+                OutlinedButton(onClick = { platform.openUrl(Strings.Upload.reviewUrl) }, side.align(Alignment.CenterHorizontally).padding(top = 16.dp)) {
                     Text(Strings.Upload.openReview)
                 }
                 // A button, so it doesn't read as one more red error line. A single note deletes
                 // straight through (the undo snackbar catches a mistap); more than one asks first,
                 // same rule as the list's Slett (#157).
-                OutlinedButton(
+                TextButton(
                     onClick = { if (sent > 1) confirmClear = true else { vm.clearExported(); vm.closeExport() } },
-                    side.padding(top = 8.dp), colors = ButtonDefaults.outlinedButtonColors(contentColor = cs.error),
-                ) { Text(Strings.Upload.clearExported(sent), textAlign = TextAlign.Center) }
+                    side.align(Alignment.CenterHorizontally).padding(top = 8.dp), colors = ButtonDefaults.textButtonColors(contentColor = cs.error),
+                ) {
+                    Text(Strings.Upload.clearExported(sent), textAlign = TextAlign.Center, style = LocalTextStyle.current.copy(lineBreak = LineBreak.Heading))
+                }
             }
             Spacer(Modifier.height(24.dp))
         }
@@ -2116,15 +2126,6 @@ fun ExportScreen(vm: MainViewModel) {
                 ) { Text(Strings.Notes.deleteSelected) }
             },
             dismissButton = { TextButton(onClick = { confirmClear = false }) { Text(Strings.cancel) } },
-        )
-    }
-    if (confirmAgain) {
-        AlertDialog(
-            onDismissRequest = { confirmAgain = false },
-            title = { Text(Strings.Upload.againTitle(exported.size)) },
-            text = { Text(Strings.Upload.againBody(exported.size)) },
-            confirmButton = { Button(onClick = { confirmAgain = false; vm.exportAgain() }) { Text(Strings.Upload.againConfirm) } },
-            dismissButton = { TextButton(onClick = { confirmAgain = false }) { Text(Strings.cancel) } },
         )
     }
 }

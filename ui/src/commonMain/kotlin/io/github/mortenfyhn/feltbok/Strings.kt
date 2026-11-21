@@ -187,11 +187,6 @@ object Strings {
         fun clearExported(n: Int) = "Slett eksporterte observasjoner fra appen\u00A0($n)"
         fun rest(n: Int) = "Eksporter resten ($n)"
         fun again(n: Int) = "Eksporter på nytt ($n)"
-        fun againTitle(n: Int) = if (n == 1) "Eksportere på nytt?" else "Eksportere alle $n på nytt?"
-        fun againBody(n: Int) =
-            if (n == 1) "Har du ikke sletta den på Artsobservasjoner, blir den dobbelt opp der."
-            else "Har du ikke sletta dem på Artsobservasjoner, blir de dobbelt opp der."
-        const val againConfirm = "Eksporter"
         const val exported = "Eksportert til Artsobservasjoner"
         const val logInFirst = "Logg inn på Artsobservasjoner for å eksportere."
         fun blocked(n: Int) = if (n == 1) "1 observasjon må rettes:" else "$n observasjoner må rettes:"
