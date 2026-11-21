@@ -256,6 +256,11 @@ On export it becomes the sighting's hide-until date.
 The status strip and the detail screen's locality field show a small dot before the locality's
 name: green for a public locality, yellow for a private one (your own or a brand-new one).
 
+While there's no GPS fix yet, the status strip says "Finner posisjon…" / "søker GPS". When no fix can
+come (the app has no location permission, or location is switched off), it says "Ingen lokalitet" /
+"GPS er av" instead, and an observation without a locality shows "Velg lokalitet". A locality you
+picked by hand stays, with "GPS er av" under it. Switching location back on takes effect right away.
+
 Tapping the locality field (or the status strip) opens a map of the registered localities over
 OpenStreetMap tiles. Each locality is a filled green disk at its real radius
 (polygons trace their real outline; superlocalities are a deeper green), and the selected one is

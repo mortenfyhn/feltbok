@@ -17,8 +17,12 @@ class FakePlatform : Platform {
         override fun list() = files.keys.toList()
         override fun readAsset(name: String): String? = null
     }
+
+    /** What the fake location source reports as [LocationSource.off]. */
+    val locationOff = MutableStateFlow(false)
     override val location = object : LocationSource {
         override val fix = MutableStateFlow<GpsFix?>(null)
+        override val off = locationOff
         override fun start() = Unit
         override fun stop() = Unit
     }

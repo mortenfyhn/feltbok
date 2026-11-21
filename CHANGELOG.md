@@ -23,6 +23,7 @@
 - Foreslått lokalitet treffer bedre når du står ved en punktlokalitet inne i et større område, som et vatn eller et reservat.
 - GPS-sirkelen på kartet fortsetter å vokse når du zoomer langt inn.
 - Uten GPS og lokalitet åpner kartet zoomet ut over Norge i stedet for inn på en tilfeldig dal.
+- Er posisjonen slått av, står det «GPS er av» i stedet for at appen leter etter GPS i det uendelige.
 - Kartet på Android henger bedre med når du drar og zoomer.
 
 ## v1.5 (13. november 2026)

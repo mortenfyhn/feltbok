@@ -397,6 +397,7 @@ class MainViewModel(private val platform: Platform) : ViewModel() {
         }
     var showExport by mutableStateOf(false); private set
     var fix by mutableStateOf<GpsFix?>(null); private set
+    var locationOff by mutableStateOf(false); private set
 
     // Id of a just-added (or restored) note the list should scroll to reveal. A fresh obs starts a new day-group
     // above the current scroll position, so the list stays anchored on the old top and the new note
@@ -461,6 +462,7 @@ class MainViewModel(private val platform: Platform) : ViewModel() {
             localitiesLoaded = true
             onLocalitiesLoaded()
         }
+        viewModelScope.launch { tracker.off.collect { locationOff = it } }
         viewModelScope.launch {
             tracker.fix.collect { f ->
                 fix = f

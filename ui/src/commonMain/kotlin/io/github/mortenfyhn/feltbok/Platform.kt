@@ -10,6 +10,7 @@ import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.window.DialogProperties
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 
 /** What a GET got back: an HTTP answer, or none. */
@@ -50,6 +51,9 @@ interface Platform {
 /** GPS fixes while started. */
 interface LocationSource {
     val fix: StateFlow<GpsFix?>
+
+    /** True while no fix can come: the app has no permission, or location is switched off. */
+    val off: StateFlow<Boolean> get() = neverOff
     fun start()
     fun stop()
 }
@@ -110,3 +114,5 @@ object NumberPadDone {
 /** The locality picker map. */
 @Composable
 expect fun LocalityScreen(vm: MainViewModel)
+
+private val neverOff = MutableStateFlow(false)
