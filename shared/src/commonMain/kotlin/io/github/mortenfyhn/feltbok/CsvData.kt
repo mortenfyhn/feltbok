@@ -128,7 +128,7 @@ fun liveLocalityRow(s: Locality) = localityCsvRow(s, listOf("1", "0", if (s.isSu
 
 // ---- "my localities" sync (from the mobile API's /core/Sites/ByUser) ----
 
-/** What a sync changed versus the previously cached set, for the "Henta …" confirmation. */
+/** What a sync changed versus the previously cached set, for the "Oppdater private lokaliteter" toast. */
 data class SyncDiff(val total: Int, val changed: Int, val firstSync: Boolean)
 
 // The fields whose change we treat as a meaningful edit to an existing locality (name, place,

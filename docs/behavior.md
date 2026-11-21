@@ -271,7 +271,7 @@ The picker also looks up public localities created after the bundled list was ha
 has been still for a second, and the view is under 40 km across in Web Mercator (about 18 km on the
 ground at 63°N), the app asks Artsobservasjoner's `ByBoundingBox` endpoint for the public localities
 in view, plus a margin of half a view on each side, so a short pan shows localities that are already
-loaded. Any it doesn't already have appear on the map, with a toast ("Henta 3 allmenne lokaliteter").
+loaded. Any it doesn't already have appear on the map, without a toast.
 Nothing shows when there is nothing new or the request fails (offline). Private localities in the
 response are dropped; your own come from a separate request (see "Logging in" below).
 
@@ -314,7 +314,7 @@ are kept, leaving room for the other names.
 
 ### Logging in
 
-The footer under the map says **"Logg inn for å vise private lokaliteter"** while you're logged out.
+The footer under the map says **"Logg inn for å se private lokaliteter"** while you're logged out.
 Tapping it opens the Artsobservasjoner login page in the app ("Logg inn"). A thin progress bar runs along
 the top of the page while a page loads, including the wait after you tap the site's own "Logg inn". When the login lands back on
 the site, the screen closes by itself and you're back in the picker with your observation as it was;
@@ -322,7 +322,7 @@ the site, the screen closes by itself and you're back in the picker with your ob
 page goes straight through without asking for a password. The session is kept in the login page's
 cookie store and lasts 30 days from the login.
 
-Logged in, the footer says **"Oppdater lokaliteter"**, with **"Logg ut"** to the right. "Logg ut"
+Logged in, the footer says **"Oppdater private lokaliteter"**, with **"Logg ut"** to the right. "Logg ut"
 shows the toast "Logga ut" and clears the login page's cookies, the login server's too, so the next login asks for the password.
 Your private localities stay on the phone. The app checks this each time the picker opens
 (`/bff/user`). The app sends the session cookie with its own requests, which gives two things:
@@ -331,22 +331,22 @@ Your private localities stay on the phone. The app checks this each time the pic
   renames and deletions on the website come through. They're kept in `my-localities.csv`.
 - **Complete public localities in dense areas**, as above.
 
-Tapping "Oppdater lokaliteter" (with a spinner in the footer) fetches your private localities and
-fetches the public ones in view again, even if they were checked recently, then shows one toast:
-"Henta 2 allmenne lokaliteter og 1 endra privat lokalitet", "Henta 99 private lokaliteter" the first
-time, or "Allerede oppdatert". When it fails, the toast says why: "Ingen internettilkobling" when the phone
+Tapping "Oppdater private lokaliteter" (with a spinner in the footer) fetches your private localities
+and fetches the public ones in view again, even if they were checked recently, then shows one toast
+about your private ones: "Henta 99 private lokaliteter" the first time, then "Oppdatert" when
+something changed, or "Allerede oppdatert". New public ones appear on the map without a toast. When it fails, the toast says why: "Ingen internettilkobling" when the phone
 has no working network, "Artsobservasjoner utilgjengelig, prøv igjen seinere" when the site
 didn't answer, the same with "(kode 503)" added when it answered with an error status, or "Klarte ikke å hente lokaliteter" when the answer couldn't be read or saved.
 Coming back from the login does the same.
 A session can stop working for your own localities while the site still counts you as logged in
 (seen a month after a login). The app then logs you out as "Logg ut" does: the toast says
-"Innlogging utløpt, logg inn igjen", and the footer offers "Logg inn for å vise private lokaliteter"
+"Innlogging utløpt, logg inn igjen", and the footer offers "Logg inn for å se private lokaliteter"
 again.
 
 You rarely need to tap it. Logged in, the map's response also lists private localities you can see,
 without saying whose: your own, and other people's that you have reported on. When it has one the app
 doesn't know, for example one you just made on the website, the app fetches your own localities in the
-background, with a toast only if something changed ("Henta 99 private lokaliteter (1 endra)"). The
+background, without a toast. The
 ones that turn out to be other people's are remembered until the app is closed, so they don't set off
 another fetch, and are never shown.
 

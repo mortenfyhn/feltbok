@@ -87,24 +87,24 @@ class LoginFlowTest {
         mine = listOf(site(10, "Mine 1 renamed", true), site(11, "Mine 2", true))
         vm.updateLocalities()
         await("toast") { p.toasts.size == 3 }
-        assertEquals("Henta 2 endra private lokaliteter", lastToast())
+        assertEquals("Oppdatert", lastToast())
     }
 
     @Test
-    fun updateFetchesTheViewAgainAndGivesOneToastForBoth() {
+    fun updateFetchesTheViewAgainButOnlyToastsAboutYourOwn() {
         logIn()
         pan()
         await("first fetch") { vm.localities.any { it.id == "1" } }
+        assertTrue("new public localities on the map give no toast", p.toasts.isEmpty())
         val before = p.requestsTo("ByBoundingBox").size
 
         // The view was checked moments ago; Oppdater fetches it again anyway.
         publicRows = publicRows + site(2, "Public 2", false)
         vm.updateLocalities()
-        await("toast") { p.toasts.any { it.startsWith("Henta") && "privat" in it } }
+        await("toast") { p.toasts.isNotEmpty() }
         assertTrue(p.requestsTo("ByBoundingBox").size > before)
         assertTrue(vm.localities.any { it.id == "2" })
-        assertEquals("Henta 1 allmenn lokalitet og 1 privat lokalitet", lastToast())
-        assertFalse("no separate map toast", p.toasts.any { it == Strings.Picker.liveFetched(1) })
+        assertEquals(listOf("Henta 1 privat lokalitet"), p.toasts)
     }
 
     @Test
@@ -167,7 +167,7 @@ class LoginFlowTest {
         await("ByUser") { p.requestsTo("ByUser").size == 1 }
         await("mine applied") { vm.localities.any { it.id == "10" } }
         await("not busy") { !vm.mySitesBusy }
-        assertEquals("Henta 1 privat lokalitet", lastToast())
+        assertTrue("a background fetch gives no toast", p.toasts.isEmpty())
         assertFalse("other people's private sites are never kept", vm.localities.any { it.id == "20" })
 
         // Elsewhere, 20 turns up again: it's known not to be yours, so no second fetch.

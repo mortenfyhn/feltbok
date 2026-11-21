@@ -50,16 +50,11 @@ class LoginFetchTest {
     }
 
     @Test
-    fun updateToastNamesWhatChanged() {
+    fun updateToastGivesTheCountOnlyTheFirstTime() {
         fun d(total: Int, changed: Int, first: Boolean = false) = SyncDiff(total, changed, first)
-        assertEquals("Allerede oppdatert", Strings.Sync.updated(0, d(99, 0)))
-        assertEquals("Henta 99 private lokaliteter", Strings.Sync.updated(0, d(99, 99, first = true)))
-        assertEquals("Henta 1 allmenn lokalitet", Strings.Sync.updated(1, d(99, 0)))
-        assertEquals("Henta 3 allmenne lokaliteter", Strings.Sync.updated(3, d(99, 0)))
-        assertEquals("Henta 1 endra privat lokalitet", Strings.Sync.updated(0, d(99, 1)))
-        assertEquals(
-            "Henta 2 allmenne lokaliteter og 3 endra private lokaliteter",
-            Strings.Sync.updated(2, d(99, 3)),
-        )
+        assertEquals("Henta 99 private lokaliteter", Strings.Sync.updated(d(99, 99, first = true)))
+        assertEquals("Henta 1 privat lokalitet", Strings.Sync.updated(d(1, 1, first = true)))
+        assertEquals("Oppdatert", Strings.Sync.updated(d(99, 3)))
+        assertEquals("Allerede oppdatert", Strings.Sync.updated(d(99, 0)))
     }
 }

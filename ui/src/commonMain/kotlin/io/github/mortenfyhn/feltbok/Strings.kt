@@ -227,13 +227,13 @@ object Strings {
 
     object Sync {
         const val login = "Logg inn"                         // the login screen's title
-        const val update = "Oppdater lokaliteter"            // the picker-map footer, logged in
-        const val loginForPrivate = "Logg inn for å vise private lokaliteter"  // the picker-map footer, logged out
+        const val update = "Oppdater private lokaliteter"    // the picker-map footer, logged in
+        const val loginForPrivate = "Logg inn for å se private lokaliteter"  // the picker-map footer, logged out
         const val error = "Klarte ikke å hente lokaliteter"
         const val logOut = "Logg ut"                         // the picker-map footer, logged in
         const val loggedOut = "Logga ut"
 
-        /** "Oppdater lokaliteter" when a request to Artsobservasjoner failed. */
+        /** "Oppdater private lokaliteter" when a request to Artsobservasjoner failed. */
         fun failed(r: HttpResult) = when {
             r is NoAnswer && r.offline -> "Ingen internettilkobling"
             r is NoAnswer -> "Artsobservasjoner utilgjengelig, prøv igjen seinere"
@@ -241,32 +241,15 @@ object Strings {
             else -> "Artsobservasjoner utilgjengelig, prøv igjen seinere (kode ${(r as HttpResponse).status})"
         }
 
-        /** "Oppdater lokaliteter": [newPublic] new public ones in view, and what changed in your own. */
-        fun updated(newPublic: Int, d: SyncDiff): String {
-            val parts = listOfNotNull(
-                newPublic.takeIf { it > 0 }?.let(::publicCount),
-                when {
-                    d.firstSync -> privateCount(d.total)
-                    d.changed > 0 -> if (d.changed == 1) "1 endra privat lokalitet" else "${d.changed} endra private lokaliteter"
-                    else -> null
-                },
-            )
-            return if (parts.isEmpty()) "Allerede oppdatert" else "Henta " + parts.joinToString(" og ")
+        /** "Oppdater private lokaliteter": the count only the first time; after that, whether anything changed. */
+        fun updated(d: SyncDiff) = when {
+            d.firstSync -> "Henta " + if (d.total == 1) "1 privat lokalitet" else "${d.total} private lokaliteter"
+            d.changed > 0 -> "Oppdatert"
+            else -> "Allerede oppdatert"
         }
-
-        /** After the map set off a fetch of your own localities: first time, or something changed. */
-        fun done(d: SyncDiff) = when {
-            d.firstSync -> "Henta ${privateCount(d.total)}"
-            d.changed > 0 -> "Henta ${privateCount(d.total)} (${d.changed} endra)"
-            else -> "Private lokaliteter er allerede oppdatert"
-        }
-
-        private fun publicCount(n: Int) = if (n == 1) "1 allmenn lokalitet" else "$n allmenne lokaliteter"
-        private fun privateCount(n: Int) = if (n == 1) "1 privat lokalitet" else "$n private lokaliteter"
     }
 
     object Picker {
-        fun liveFetched(n: Int) = "Henta " + if (n == 1) "1 allmenn lokalitet" else "$n allmenne lokaliteter"
         const val titleNew = "Ny lokalitet"
         const val titlePick = "Velg lokalitet"
         const val newButton = "＋ Ny lokalitet"

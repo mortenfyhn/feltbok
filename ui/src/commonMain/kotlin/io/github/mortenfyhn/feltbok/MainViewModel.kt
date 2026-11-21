@@ -658,22 +658,22 @@ class MainViewModel(private val platform: Platform) : ViewModel() {
     var localitiesLoaded = false
         private set
     private var deferredLiveView: DoubleArray? = null
-    private var lastView: DoubleArray? = null   // the picker's last settled view, for "Oppdater lokaliteter"
+    private var lastView: DoubleArray? = null   // the picker's last settled view, for "Oppdater private lokaliteter"
 
     // Bumped on every map settle, so a continuation for a view the map has left stops.
     private var liveGen = 0
 
     /** [resume]: the groups a previous round for this same view didn't get to, if continuing.
-     *  [onDone]: gets the number of new localities instead of a toast. */
+     *  [onDone]: called when this round has finished. */
     private fun fetchLive(
         s: Double, w: Double, n: Double, e: Double, gen: Int, resume: List<List<Long>>?,
-        onDone: ((Int) -> Unit)? = null,
+        onDone: (() -> Unit)? = null,
     ) {
         val now = nowMs()
         val groups = (resume ?: fetchGroups(s, w, n, e))
             .map { g -> g.filter { now - (checkedCells[it] ?: 0L) > 24 * 3600_000L } }.filter { it.isNotEmpty() }
         val cells = groups.flatten()
-        if (cells.isEmpty()) { onDone?.invoke(0); return }
+        if (cells.isEmpty()) { onDone?.invoke(); return }
         for (c in cells) checkedCells[c] = now
         viewModelScope.launch {
             val budget = RequestBudget(LIVE_FETCH_BUDGET)
@@ -699,9 +699,8 @@ class MainViewModel(private val platform: Platform) : ViewModel() {
             if (fresh.isNotEmpty()) {
                 localities.addAll(fresh)
                 withContext(Dispatchers.IO) { appendLiveLocalities(storage, AppInfo.versionCode, fresh) }
-                if (onDone == null && screen == Screen.LOCALITY) platform.toast(Strings.Picker.liveFetched(fresh.size), long = true)
             }
-            onDone?.invoke(fresh.size)
+            onDone?.invoke()
             // A dense view can need more than one budget. Carry on while the map stays put, so you
             // don't have to nudge it; only for zoomed-in views, as completing a wide city view would
             // cost many MB. Not after a failure (budget left over), so it doesn't spin while offline.
@@ -800,31 +799,31 @@ class MainViewModel(private val platform: Platform) : ViewModel() {
     // process, so they don't set off a fetch on every settle.
     private val notMine = HashSet<String>()
 
-    /** "Oppdater lokaliteter": your own localities (everywhere), and the public ones in the picker's
-     *  view again, even if checked recently. One toast for both. */
+    /** "Oppdater private lokaliteter": your own localities (everywhere), and the public ones in the
+     *  picker's view again, even if checked recently. The toast is about your own only. */
     fun updateLocalities() {
         if (mySitesBusy) return
         mySitesBusy = true
         val view = lastView
         viewModelScope.launch {
-            val newPublic = CompletableDeferred<Int>()
+            val publicDone = CompletableDeferred<Unit>()  // the spinner waits for both
             if (view != null && localitiesLoaded) {
                 val (s, w, n, e) = view
                 checkedCells.keys.removeAll(cellsIn(s, w, n, e).toSet())
-                fetchLive(s, w, n, e, ++liveGen, null) { newPublic.complete(it) }
-            } else newPublic.complete(0)
+                fetchLive(s, w, n, e, ++liveGen, null) { publicDone.complete(Unit) }
+            } else publicDone.complete(Unit)
             var failed: HttpResult? = null
             val diff = fetchMySites(platform) { failed = it }?.let { runCatching { applyMySites(it) }.getOrNull() }
-            val fresh = newPublic.await()
+            publicDone.await()
             mySitesBusy = false
             if (failed?.rejected == true) endSession()
             platform.toast(failed?.let(Strings.Sync::failed)
-                ?: diff?.let { Strings.Sync.updated(fresh, it) } ?: Strings.Sync.error, long = true)
+                ?: diff?.let(Strings.Sync::updated) ?: Strings.Sync.error, long = true)
         }
     }
 
-    /** Fetch your own localities when the map saw private ones we don't know ([seen]); a toast only
-     *  if something changed. */
+    /** Fetch your own localities when the map saw private ones we don't know ([seen]). No toast:
+     *  a new one shows up on the map. */
     private fun refreshMySitesQuietly(seen: List<String>) {
         if (mySitesBusy) return
         mySitesBusy = true
@@ -834,8 +833,7 @@ class MainViewModel(private val platform: Platform) : ViewModel() {
             if (sites == null) return@launch
             val ids = sites.mapTo(HashSet()) { it.id }
             notMine += seen.filter { it !in ids }
-            val diff = runCatching { applyMySites(sites) }.getOrNull() ?: return@launch
-            if (diff.changed > 0) platform.toast(Strings.Sync.done(diff), long = true)
+            val _ = runCatching { applyMySites(sites) }
         }
     }
 
