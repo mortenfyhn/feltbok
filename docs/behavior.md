@@ -55,8 +55,9 @@ per keystroke.
 
 When what you typed doesn't match a listed species exactly, a **Velg «…»** row at the bottom of the
 results records the name as typed (#144): a rarity, a subspecies, or a non-bird like an insect.
-Nothing is added to the species list, so it isn't searchable next time. Age, sex and activity keep
-the bird options, and other species groups allow only some of them (an insect can be "Hann" or
+Nothing is added to the species list, so it isn't searchable next time. Changing a typed species
+opens the search with the typed name filled in, so a typo can be fixed without retyping it. Age,
+sex and activity keep the bird options, and other species groups allow only some of them (an insect can be "Hann" or
 "Næringssøkende", not "Rastende"). So for a typed species outside the birds, the export fetches each
 group's options from the site (`/lists/Lists/GetAllLists`) and blocks a note with one its group
 doesn't have: "«Rastende» kan ikke brukes på virvelløse dyr".

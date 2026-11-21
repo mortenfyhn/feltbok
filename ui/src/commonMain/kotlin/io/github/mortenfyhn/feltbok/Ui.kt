@@ -943,7 +943,8 @@ private fun NoteRow(
 @Composable
 fun SearchScreen(vm: MainViewModel) {
     val cs = MaterialTheme.colorScheme
-    var q by remember { mutableStateOf("") }
+    var field by remember { vm.searchStart().let { mutableStateOf(TextFieldValue(it, TextRange(it.length))) } }
+    val q = field.text
     // Suggestions are computed off the typing path: the field updates instantly while a
     // debounced effect refreshes `results` a moment later, so keystrokes never wait on it.
     var results by remember { mutableStateOf(vm.blankQuickList()) }
@@ -982,7 +983,7 @@ fun SearchScreen(vm: MainViewModel) {
             // BasicTextField, not OutlinedTextField: the Material field forces a ~56dp min height
             // with no contentPadding knob, which is what made the bar too tall - here we set the
             // padding directly. Same approach as the count stepper above.
-            BasicTextField(q, { q = it },
+            BasicTextField(field, { field = it },
                 Modifier.weight(1f).focusRequester(focus)
                     .border(1.dp, cs.outline, RoundedCornerShape(8.dp)).padding(horizontal = 12.dp, vertical = 8.dp),
                 singleLine = true,
@@ -1004,7 +1005,7 @@ fun SearchScreen(vm: MainViewModel) {
                         // Clear button - keep focus so the keyboard stays up to retype. Plain clickable
                         // Text (not a TextButton) to avoid its 48dp min height re-inflating the bar.
                         if (q.isNotEmpty()) Text("✕", color = cs.onSurfaceVariant,
-                            modifier = Modifier.clickable { q = ""; focus.requestFocus() }.padding(start = 8.dp))
+                            modifier = Modifier.clickable { field = TextFieldValue(""); focus.requestFocus() }.padding(start = 8.dp))
                     }
                 })
         }

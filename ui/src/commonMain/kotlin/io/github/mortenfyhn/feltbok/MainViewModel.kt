@@ -553,6 +553,9 @@ class MainViewModel(private val platform: Platform) : ViewModel() {
     }
 
     fun changeSpecies() { changingSpecies = true; screen = Screen.SEARCH }
+
+    /** The search's starting text: a typed-in species being changed, so a typo is fixed in place. */
+    fun searchStart() = if (changingSpecies && dLatin.isBlank()) dSpecies else ""
     fun cancelSearch() { screen = if (dSpecies.isNotEmpty() || isEditing) Screen.DETAIL else Screen.LIST }
     fun backToDetail() { screen = Screen.DETAIL }
     fun cancel() { screen = Screen.LIST }
