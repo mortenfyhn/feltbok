@@ -118,7 +118,8 @@ android {
         // carries its own applicationId (.releasetest) so it can NEVER collide with the
         // maintainer's real install, and is debug-signed so it builds without the
         // release keystore (on CI or a fresh checkout). `testBuildType` below aims the
-        // connected tests at it. Run via `just itest` (device-gated, not in CI).
+        // connected tests at it. Run via `just itest` (device-gated) and on an emulator in
+        // GitHub Actions (android-itest.yml).
         create("releaseTest") {
             initWith(getByName("release"))
             applicationIdSuffix = ".releasetest"

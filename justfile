@@ -42,7 +42,7 @@ hooks:
 # src/androidTest on the minified releaseTest variant, in two layers: R8 smoke tests (reflection
 # strips unit tests can't see) and UI wiring (what survives recomposition, where Back goes). Skips
 # (doesn't fail) when no device is attached, so it's safe to call from a wrapper — release.sh does.
-# NOT in CI: no emulator on Semaphore. Installs io.github.mortenfyhn.feltbok.releasetest, never the
+# CI runs these on an emulator (.github/workflows/android-itest.yml). Installs io.github.mortenfyhn.feltbok.releasetest, never the
 # real io.github.mortenfyhn.feltbok. See AGENTS.md and docs/pre-release-checklist.md.
 
 # Instrumented tests on an attached device: R8 smoke + UI wiring (skips if no device)
