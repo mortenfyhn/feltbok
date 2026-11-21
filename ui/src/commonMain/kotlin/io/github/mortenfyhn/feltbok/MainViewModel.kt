@@ -556,6 +556,9 @@ class MainViewModel(private val platform: Platform) : ViewModel() {
     }
 
     fun changeSpecies() { changingSpecies = true; screen = Screen.SEARCH }
+
+    /** The search's starting text: a typed-in species being changed, so a typo is fixed in place. */
+    fun searchStart() = if (changingSpecies && dLatin.isBlank()) dSpecies else ""
     fun cancelSearch() { screen = if (dSpecies.isNotEmpty() || isEditing) Screen.DETAIL else Screen.LIST }
     fun backToDetail() { screen = Screen.DETAIL }
     fun cancel() { screen = Screen.LIST }
@@ -573,6 +576,19 @@ class MainViewModel(private val platform: Platform) : ViewModel() {
         saveUses(storage, uses)
         if (!changingSpecies && !isEditing && !batchEditing) {
             dTime = now  // stamp the entry time now
+            dLoc = currentLocality()
+        }
+        changingSpecies = false
+        screen = Screen.DETAIL
+    }
+
+    /** Commit a free-typed species name not in the checklist (#144). latin is left blank (no
+     *  registry entry), which the display fallbacks (nameForLatin) tolerate; the export looks the
+     *  name up on the site. No use-score bump - there's no stable latin key to attribute it to. */
+    fun pickArbitrarySpecies(name: String) {
+        dSpecies = name.trim(); dLatin = ""
+        if (!changingSpecies && !isEditing && !batchEditing) {
+            dTime = nowMs()
             dLoc = currentLocality()
         }
         changingSpecies = false

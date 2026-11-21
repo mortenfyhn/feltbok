@@ -65,6 +65,45 @@ class UploadFlowTest {
     }
 
     @Test
+    fun aTypedSpeciesIsLookedUpByItsName() {
+        val p = platform().apply {
+            answers["TaxonName/Search"] = { """[{"taxonId":46560,"speciesGroupId":7,"scientificName":{"name":"Gonepteryx rhamni"},"vernacularName":{"name":"sitronsommerfugl"}}]""" }
+        }
+        val typed = { n: Note -> n.copy(species = "sitronsommerfugl", latin = "") }
+        val (r, sent) = upload(p, listOf(note(1, typed)))
+        assertTrue(r is UploadResult.Done)
+        assertEquals(setOf(1L), sent.keys)
+        assertTrue(p.posts.single().second.contains("\"taxonId\":46560"))
+
+        val q = platform().apply { answers["TaxonName/Search"] = { "[]" } }
+        val (blocked, _) = upload(q, listOf(note(1, typed)))
+        assertEquals(mapOf(1L to Strings.Upload.unknownSpecies), (blocked as UploadResult.Blocked).problems)
+    }
+
+    @Test
+    fun birdOptionsOnATypedNonBirdBlockIt() {
+        val bug = """[{"taxonId":46560,"speciesGroupId":7,"scientificName":{"name":"Gonepteryx rhamni"},"vernacularName":{"name":"sitronsommerfugl"}}]"""
+        val bird = """[{"taxonId":4335,"speciesGroupId":8,"scientificName":{"name":"Motacilla alba yarrellii"},"vernacularName":{"name":"svartryggerle"}}]"""
+        val p = platform().apply {
+            answers["TaxonName/Search"] = { if ("sitron" in it) bug else bird }
+            answers["GetAllLists"] = {
+                """{"speciesGroups":[{"id":7,"resourceLabel":"Virvelløse dyr"}],
+                   "speciesGroupActivities":[{"speciesGroupId":7,"activityCategories":[{"activity":[{"id":25}]}]}]}"""
+            }
+        }
+        val typed = { name: String, activity: String -> { n: Note -> n.copy(species = name, latin = "", activity = activity) } }
+        val (r, _) = upload(p, listOf(
+            note(1, typed("sitronsommerfugl", "Rastende")),
+            note(2, typed("sitronsommerfugl", "Næringssøkende")),
+            note(3, typed("svartryggerle", "Rastende")),
+        ))
+        // Before anything is sent, and only the option insects can't have. A typed bird takes them all.
+        assertEquals(mapOf(1L to "«Rastende» kan ikke brukes på virvelløse dyr"), (r as UploadResult.Blocked).problems)
+        assertTrue(p.posts.isEmpty())
+        assertEquals(1, p.requestsTo("GetAllLists").size)
+    }
+
+    @Test
     fun aTooLongCommentSaysWhichAndWhetherTheCoObserversMadeIt() {
         val long = "x".repeat(250)
         fun problem(n: Note) = (upload(platform(), listOf(n)).first as UploadResult.Blocked).problems.values.single()

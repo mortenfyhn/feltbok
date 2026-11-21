@@ -1,8 +1,10 @@
 package io.github.mortenfyhn.feltbok
 
 import android.app.Application
+import androidx.compose.ui.test.assert
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.hasSetTextAction
+import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.junit4.v2.createComposeRule
 import androidx.compose.ui.test.onAllNodesWithText
 import androidx.compose.ui.test.onNodeWithText
@@ -34,6 +36,12 @@ class AddObservationFlowTest {
     @get:Rule(order = 1)
     val rule = createComposeRule()
 
+    // Save hides while the keyboard is up, and the keyboard is still closing after the search.
+    private fun clickSave() {
+        rule.waitUntil(timeoutMillis = 5_000) { rule.onAllNodesWithText(Strings.Detail.save).fetchSemanticsNodes().isNotEmpty() }
+        rule.onNodeWithText(Strings.Detail.save).performClick()
+    }
+
     @Test
     fun addObservationAppearsInList() {
         val app = ApplicationProvider.getApplicationContext<Application>()
@@ -59,11 +67,35 @@ class AddObservationFlowTest {
         rule.runOnUiThread { vm.pickLocality(vm.createNewLocality(63.43, 10.39, 100, "Testlokalitet")) }
 
         // Save returns to the list, where NoteRow renders "<count> <species>".
-        rule.onNodeWithText(Strings.Detail.save).performClick()
+        clickSave()
         rule.onNodeWithText("kjøttmeis", substring = true).assertIsDisplayed()
         // With a note in the list, the button shrinks back to a plain + (after its collapse animation).
         rule.waitUntil(timeoutMillis = 5_000) {
             rule.onAllNodesWithText(Strings.Notes.newNote, useUnmergedTree = true).fetchSemanticsNodes().isEmpty()
+        }
+    }
+
+    // A species not in the list can be typed in (#144); the export looks it up by name. Changing it
+    // starts the search from the typed name, cursor at the end, so a typo is fixed in place.
+    @Test
+    fun aTypedSpeciesCanBeSavedAndFixed() {
+        val vm = MainViewModel(ApplicationProvider.getApplicationContext<Application>())
+        rule.setContent { App(vm) }
+        rule.onNodeWithText("+").performClick()
+        rule.onNode(hasSetTextAction()).performTextInput("sitronsommerfug")
+        rule.waitUntil(timeoutMillis = 5_000) {
+            rule.onAllNodesWithText(Strings.Search.add("sitronsommerfug")).fetchSemanticsNodes().isNotEmpty()
+        }
+        rule.onNodeWithText(Strings.Search.add("sitronsommerfug")).performClick()
+        rule.runOnUiThread { vm.pickLocality(vm.createNewLocality(63.43, 10.39, 100, "Testlokalitet")) }
+        clickSave()
+
+        rule.onNodeWithText("sitronsommerfug", substring = true).performClick()
+        rule.onNodeWithText("sitronsommerfug").performClick() // the species row opens the search
+        rule.onNode(hasSetTextAction()).performTextInput("l")
+        rule.onNode(hasSetTextAction()).assert(hasText("sitronsommerfugl"))
+        rule.waitUntil(timeoutMillis = 5_000) {
+            rule.onAllNodesWithText(Strings.Search.add("sitronsommerfugl")).fetchSemanticsNodes().isNotEmpty()
         }
     }
 }

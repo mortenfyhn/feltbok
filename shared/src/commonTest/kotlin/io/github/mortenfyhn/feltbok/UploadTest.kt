@@ -60,7 +60,6 @@ class UploadTest {
     fun problemsAreFoundBeforeUploading() {
         val now = note().time
         assertEquals(null, uploadProblem(note(), now, oslo))
-        assertEquals(UploadProblem.NO_SPECIES, uploadProblem(note({ it.copy(latin = "") }), now, oslo))
         assertEquals(UploadProblem.NO_SITE, uploadProblem(note({ it.copy(locId = "") }), now, oslo))
         assertEquals(UploadProblem.UNKNOWN_AGE, uploadProblem(note({ it.copy(age = "Ung") }), now, oslo))
         assertEquals(UploadProblem.UNKNOWN_SEX, uploadProblem(note({ it.copy(sex = "Hann?") }), now, oslo))
@@ -69,6 +68,49 @@ class UploadTest {
         assertEquals(UploadProblem.FUTURE, uploadProblem(note({ it.copy(time = now + 86_400_000) }), now, oslo))
         // Later today is fine: the server compares dates.
         assertEquals(null, uploadProblem(note({ it.copy(time = now + 3_600_000) }), now, oslo))
+    }
+
+    @Test
+    fun aTypedSpeciesIsFoundByAnyOfItsNames() {
+        // In the shape TaxonName/Search answers, trimmed.
+        val json = """[
+            {"taxonId":46560,"speciesGroupId":7,"scientificName":{"name":"Gonepteryx rhamni"},
+             "vernacularName":{"name":"sitronsommerfugl"},"vernacularNameSynonyms":[{"name":"sitronsommarfugl"}]},
+            {"taxonId":1,"speciesGroupId":7,"scientificName":{"name":"Gonepteryx"},"vernacularName":{"name":"sitronsommerfugler"}}
+        ]"""
+        assertEquals(TypedTaxon(46560, groupId = 7), parseTaxonByName(json, "Sitronsommerfugl "))
+        assertEquals(46560, parseTaxonByName(json, "sitronsommarfugl")?.id)
+        assertEquals(46560, parseTaxonByName(json, "gonepteryx rhamni")?.id)
+        // Only a whole name counts.
+        assertEquals(null, parseTaxonByName(json, "sitron"))
+    }
+
+    @Test
+    fun aTypedNameThatFitsSeveralTaxaFindsNone() {
+        val json = """[
+            {"taxonId":1,"scientificName":{"name":"A a"},"vernacularName":{"name":"tvilling"}},
+            {"taxonId":2,"scientificName":{"name":"B b"},"vernacularName":{"name":"tvilling"}}
+        ]"""
+        assertEquals(null, parseTaxonByName(json, "tvilling"))
+    }
+
+    @Test
+    fun aGroupAllowsOnlyItsOwnOptions() {
+        // In the shape GetAllLists answers, trimmed: id 0 is the blank choice.
+        val json = """{
+            "speciesGroups":[{"id":7,"resourceLabel":"Virvelløse dyr"},{"id":4,"resourceLabel":"Sopp"}],
+            "speciesGroupStages":[{"speciesGroupId":7,"stages":[{"id":0},{"id":1}]}],
+            "speciesGroupGenders":[{"speciesGroupId":7,"genders":[{"id":1},{"id":2}]}],
+            "speciesGroupActivities":[{"speciesGroupId":7,"activityCategories":[{"activity":[{"id":0},{"id":25}]}]}]
+        }"""
+        val lists = parseGroupLists(json)
+        val bug = lists.getValue(7)
+        assertEquals("Virvelløse dyr", bug.name)
+        assertEquals(null, unfitOption(note({ it.copy(age = "Egg", sex = "Hann", activity = "Næringssøkende") }), bug))
+        assertEquals("Rastende", unfitOption(note({ it.copy(age = "", sex = "Hann", activity = "Rastende") }), bug))
+        assertEquals("Adult", unfitOption(note({ it.copy(age = "Adult", activity = "Rastende") }), bug))
+        // A group without a list allows none of it.
+        assertEquals("Hann", unfitOption(note({ it.copy(age = "", sex = "Hann", activity = "") }), lists.getValue(4)))
     }
 
     @Test

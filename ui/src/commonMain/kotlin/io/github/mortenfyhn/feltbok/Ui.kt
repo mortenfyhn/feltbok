@@ -943,7 +943,8 @@ private fun NoteRow(
 @Composable
 fun SearchScreen(vm: MainViewModel) {
     val cs = MaterialTheme.colorScheme
-    var q by remember { mutableStateOf("") }
+    var field by remember { vm.searchStart().let { mutableStateOf(TextFieldValue(it, TextRange(it.length))) } }
+    val q = field.text
     // Suggestions are computed off the typing path: the field updates instantly while a
     // debounced effect refreshes `results` a moment later, so keystrokes never wait on it.
     var results by remember { mutableStateOf(vm.blankQuickList()) }
@@ -964,6 +965,12 @@ fun SearchScreen(vm: MainViewModel) {
     // and forth the top row was a stale, low-ranked match instead of the best one (#64).
     val listState = rememberLazyListState()
     LaunchedEffect(results) { listState.scrollToItem(0) }
+    // Offer a free-text "add" row (at the bottom, so the best checklist match stays on top) for a
+    // species not in the list (#144), unless the typed name already matches a shown result exactly.
+    val query = q.trim()
+    val canAdd = query.isNotBlank() && results.none { s ->
+        fold(vm.primaryName(s)) == fold(query) || vm.secondaryName(s)?.let { fold(it) == fold(query) } == true
+    }
     Column(Modifier.fillMaxSize().bottomInsetPadding()) {
         Row(
             Modifier.fillMaxWidth().background(cs.surface).padding(start = 4.dp, end = 12.dp, top = 2.dp, bottom = 2.dp),
@@ -976,7 +983,7 @@ fun SearchScreen(vm: MainViewModel) {
             // BasicTextField, not OutlinedTextField: the Material field forces a ~56dp min height
             // with no contentPadding knob, which is what made the bar too tall - here we set the
             // padding directly. Same approach as the count stepper above.
-            BasicTextField(q, { q = it },
+            BasicTextField(field, { field = it },
                 Modifier.weight(1f).focusRequester(focus)
                     .border(1.dp, cs.outline, RoundedCornerShape(8.dp)).padding(horizontal = 12.dp, vertical = 8.dp),
                 singleLine = true,
@@ -998,7 +1005,7 @@ fun SearchScreen(vm: MainViewModel) {
                         // Clear button - keep focus so the keyboard stays up to retype. Plain clickable
                         // Text (not a TextButton) to avoid its 48dp min height re-inflating the bar.
                         if (q.isNotEmpty()) Text("✕", color = cs.onSurfaceVariant,
-                            modifier = Modifier.clickable { q = ""; focus.requestFocus() }.padding(start = 8.dp))
+                            modifier = Modifier.clickable { field = TextFieldValue(""); focus.requestFocus() }.padding(start = 8.dp))
                     }
                 })
         }
@@ -1024,6 +1031,11 @@ fun SearchScreen(vm: MainViewModel) {
                     }
                 }
                 HorizontalDivider(color = cs.outline.copy(alpha = 0.4f))
+            }
+            if (canAdd) item(key = "add") {
+                OptionItem(Strings.Search.add(query), selected = false, fullScreen = true) {
+                    vm.pickArbitrarySpecies(query)
+                }
             }
         }
     }
