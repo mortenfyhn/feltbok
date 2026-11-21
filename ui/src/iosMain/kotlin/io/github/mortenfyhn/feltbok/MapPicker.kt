@@ -474,11 +474,6 @@ private fun RecenterButton(onClick: () -> Unit) {
     }
 }
 
-/** The main-screen minimap is hidden on Android (SHOW_MINIMAP = false), so it isn't ported. */
-// No minimap on iOS yet.
-@Composable
-actual fun LocalityPreview(vm: MainViewModel, modifier: Modifier) = Unit
-
 private fun c(argb: Long) = Color(argb.toInt())
 
 /** What MapLibre doesn't do for the picker: resolving a tap to a locality (Android's rules, in

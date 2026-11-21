@@ -4,7 +4,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
-import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.ClipEntry
 import androidx.compose.ui.text.PlatformTextStyle
 import androidx.compose.ui.text.SpanStyle
@@ -111,7 +110,3 @@ object NumberPadDone {
 /** The locality picker map. */
 @Composable
 expect fun LocalityScreen(vm: MainViewModel)
-
-/** The small map on the editor's locality row. */
-@Composable
-expect fun LocalityPreview(vm: MainViewModel, modifier: Modifier = Modifier)

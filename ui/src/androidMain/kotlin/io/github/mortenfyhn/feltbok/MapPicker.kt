@@ -325,49 +325,6 @@ fun configureOsmdroid(ctx: Context) {
     }
 }
 
-/**
- * A small round minimap for the main screen: tightly zoomed on the GPS-nearest
- * locality (the one named in the status strip) with your position pin. Static and
- * non-interactive; tiles are the same cached OSM ones as the picker.
- */
-@Composable
-actual fun LocalityPreview(vm: MainViewModel, modifier: Modifier) {
-    if (vm.nearest() == null) return                     // nothing to preview until GPS settles
-    val ctx = LocalContext.current
-    val cs = MaterialTheme.colorScheme
-    val map = remember {
-        configureOsmdroid(ctx)
-        MapView(ctx).apply {
-            setTileSource(TileSourceFactory.MAPNIK)
-            setMultiTouchControls(false)
-            setOnTouchListener { _, _ -> true }   // static preview: swallow pan/zoom
-            controller.setZoom(16.0)              // ~280 m across, so a ~100 m accuracy disk reads as a disk
-        }
-    }
-    val overlay = remember { PreviewOverlay().also { map.overlays.add(it) } }
-    DisposableEffect(Unit) {
-        map.onResume()
-        onDispose { map.onPause(); map.onDetach() }
-    }
-    AndroidView(
-        factory = { map },
-        modifier = modifier.size(96.dp).clip(CircleShape).border(2.dp, cs.outline, CircleShape),
-        update = { m ->
-            // Read live state HERE so the view redraws when the fix (incl. accuracy) changes.
-            val f = vm.fix
-            val n = vm.nearest()
-            overlay.loc = n
-            overlay.fix = f?.let { GeoPoint(it.lat, it.lon) }
-            overlay.accuracyM = f?.accuracyM ?: Float.NaN
-            // Centre on the locality so it's always shown, with your GPS pin beside it.
-            val cLat = n?.lat ?: f?.lat
-            val cLon = n?.lon ?: f?.lon
-            if (cLat != null && cLon != null) m.controller.setCenter(GeoPoint(cLat, cLon))
-            m.invalidate()
-        },
-    )
-}
-
 /** Dev tool: when on (and on a dev build), the map draws each locality's tap hitbox on top —
  *  magenta ring = a point's finger-reach, blue outline = a footprint's tap edge, red dashed
  *  = a footprint excluded by [tooBigToTap]. A compile-time `const`, so when off it strips out like a
@@ -391,60 +348,6 @@ private fun tracePolygon(path: Path, polygon: List<DoubleArray>, proj: Projectio
         else path.lineTo(p.x.toFloat(), p.y.toFloat())
     }
     path.close()
-}
-
-private class PreviewOverlay : Overlay() {
-    var loc: Locality? = null
-    var fix: GeoPoint? = null
-    var accuracyM: Float = Float.NaN
-
-    private val fill = fillPaint(MapPalette.GreenFill)
-    private val stroke = strokePaint(MapPalette.GreenStroke, 3f)
-    private val superFill = fillPaint(MapPalette.SuperFill)
-    private val superStroke = strokePaint(MapPalette.SuperStroke, 3f)
-    private val privFill = fillPaint(MapPalette.YellowFill)
-    private val privStroke = strokePaint(MapPalette.YellowStroke, 3f)
-    private val accFill = fillPaint(MapPalette.GpsAccFill)
-    private val accStroke = strokePaint(MapPalette.GpsAccStroke, 2.5f)
-    private val gps = fillPaint(MapPalette.Gps)
-    private val gpsRing = strokePaint(MapPalette.GpsRing, 3f)
-    private val p = Point()
-    private val path = Path()
-
-    override fun draw(c: Canvas, map: MapView, shadow: Boolean) {
-        if (shadow) return
-        val proj = map.projection
-        val center = map.mapCenter
-        val a = proj.toPixels(GeoPoint(center.latitude, center.longitude), null)
-        val b = proj.toPixels(GeoPoint(center.latitude + 100.0 / 111_320.0, center.longitude), null)
-        val ppm = abs(a.y - b.y) / 100.0
-        loc?.let {
-            val fp = if (!it.public) privFill else if (it.isSuper) superFill else fill
-            val sp = if (!it.public) privStroke else if (it.isSuper) superStroke else stroke
-            if (it.polygon.isNotEmpty()) {            // real footprint
-                tracePolygon(path, it.polygon, proj, p)
-                c.drawPath(path, fp)
-                c.drawPath(path, sp)
-            } else {
-                val rPx = if (it.radius > 0.0) (it.radius * ppm).toFloat().coerceIn(POINT_DOT_PX, 200f)
-                else POINT_DOT_PX
-                proj.toPixels(GeoPoint(it.lat, it.lon), p)
-                c.drawCircle(p.x.toFloat(), p.y.toFloat(), rPx, fp)
-                c.drawCircle(p.x.toFloat(), p.y.toFloat(), rPx, sp)
-            }
-        }
-        fix?.let {
-            proj.toPixels(it, p)
-            val px = p.x.toFloat(); val py = p.y.toFloat()
-            if (!accuracyM.isNaN() && accuracyM > 0f) {
-                val rAcc = (accuracyM * ppm).toFloat().coerceIn(6f, 400f)
-                c.drawCircle(px, py, rAcc, accFill)
-                c.drawCircle(px, py, rAcc, accStroke)
-            }
-            c.drawCircle(px, py, 7f, gps)
-            c.drawCircle(px, py, 7f, gpsRing)
-        }
-    }
 }
 
 /** Draws each locality as a green disk at its real-world radius and resolves taps to

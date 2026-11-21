@@ -145,9 +145,6 @@ import kotlinx.coroutines.launch
 
 // ============================ LIST ============================
 
-/** Round GPS minimap on the main screen — hidden for now; flip to re-enable (code kept). */
-private const val SHOW_MINIMAP = false
-
 @Composable
 fun ListScreen(vm: MainViewModel, listState: LazyListState) {
     val cs = MaterialTheme.colorScheme
@@ -312,10 +309,6 @@ fun ListScreen(vm: MainViewModel, listState: LazyListState) {
                 }
             }
         }
-        // Round minimap on the left of the top bar, clipping the top and left edges equally.
-        // Hidden for now (unclear if it's useful); flip SHOW_MINIMAP to bring it back.
-        if (SHOW_MINIMAP)
-            LocalityPreview(vm, Modifier.align(Alignment.TopStart).offset(x = (-6).dp, y = (-6).dp))
     }
 }
 
@@ -604,9 +597,8 @@ private fun StatusStrip(vm: MainViewModel) {
     val cs = MaterialTheme.colorScheme
     val cur = vm.currentLocality()
     Row(
-        // start padding leaves room for the round minimap overlaid on the left (when shown).
         Modifier.fillMaxWidth().background(cs.primary)
-            .padding(start = if (SHOW_MINIMAP) 104.dp else 14.dp, end = 14.dp, top = 11.dp, bottom = 11.dp),
+            .padding(start = 14.dp, end = 14.dp, top = 11.dp, bottom = 11.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         // Distance to the locality edge and GPS accuracy share one line so neither crowds the
