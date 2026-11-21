@@ -265,7 +265,8 @@ The map opens centred on the locality the observation already has, however far t
 GPS fix — you opened the picker to adjust around that place. Only when there's no locality yet does
 it centre on your own position, and then it follows you: the map moves with each new GPS fix until you
 pan it. A pinch or the +/− buttons zoom around your position and keep following. While the map isn't
-following, a GPS button (the blue location dot) turns it back on.
+following, a GPS button (the blue location dot) turns it back on. With neither a locality nor a GPS
+fix (location off), it opens zoomed out on central Norway.
 
 The picker also looks up public localities created after the bundled list was harvested. When the map
 has been still for a second, and the view is under 40 km across in Web Mercator (about 18 km on the

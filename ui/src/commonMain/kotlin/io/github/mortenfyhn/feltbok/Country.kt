@@ -88,9 +88,11 @@ object Country {
     val accuracy = "100 m"
 
     // ---- geography / online services ----
-    // Fallback map centre when there's no GPS fix or nearby locality (central Norway).
+    // Fallback map centre when there's no GPS fix or nearby locality (central Norway), zoomed out
+    // (osmdroid zoom) so it shows the country rather than one valley.
     val mapCenterLat = 63.7
     val mapCenterLon = 8.7
+    val mapOverviewZoom = 5.0
 
     // ---- logging in: a WebView logs in, and the app sends its session cookie with its own requests
     // (Platform.siteCookie). syncEnabled gates the picker footer. ----

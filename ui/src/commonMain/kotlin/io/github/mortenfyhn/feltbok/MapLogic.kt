@@ -19,21 +19,24 @@ internal const val POINT_DOT_PX = 15f
 internal const val DECLUTTER_ZOOM = 14.0
 internal const val DECLUTTER_MIN_SPAN_PX = 24f
 
-/** Where the picker map centres when it opens, as (lat, lon). The [focus] locality - the draft's
+/** Where the picker map opens, as (lat, lon, osmdroid zoom). The [focus] locality - the draft's
  *  own, or the current one when changing that - always wins: you came here to adjust around the
  *  place the observation claims, so dropping you on your own position hides it (#180). Only with no
- *  focus at all does it fall back to the GPS [fix], the [nearest] locality, then the country
- *  default. This used to be gated on a "focused" flag listing the screens that count, which had to
+ *  focus at all does it fall back to the GPS [fix], then the [nearest] locality, at the remembered
+ *  [zoom]. This used to be gated on a "focused" flag listing the screens that count, which had to
  *  be widened for every new one (copying, the current-locality picker, batch edit) and still missed
- *  the plain new observation that inherited a far-away current locality. */
-internal fun pickerCenter(
+ *  the plain new observation that inherited a far-away current locality. With nothing to centre on
+ *  (no GPS, no locality) it shows the whole country, not street level in a random valley. */
+internal fun pickerCamera(
     focus: Locality?,
     fix: GpsFix?,
     nearest: Locality?,
-): Pair<Double, Double> {
-    val lat = focus?.lat ?: fix?.lat ?: nearest?.lat ?: Country.mapCenterLat
-    val lon = focus?.lon ?: fix?.lon ?: nearest?.lon ?: Country.mapCenterLon
-    return lat to lon
+    zoom: Double,
+): Triple<Double, Double, Double> {
+    val lat = focus?.lat ?: fix?.lat ?: nearest?.lat
+    val lon = focus?.lon ?: fix?.lon ?: nearest?.lon
+    if (lat == null || lon == null) return Triple(Country.mapCenterLat, Country.mapCenterLon, Country.mapOverviewZoom)
+    return Triple(lat, lon, zoom)
 }
 
 /** A locality is decluttered - hidden when zoomed far out and its on-screen footprint is tiny.

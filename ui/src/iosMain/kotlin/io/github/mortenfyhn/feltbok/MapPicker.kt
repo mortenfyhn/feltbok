@@ -205,8 +205,9 @@ actual fun LocalityScreen(vm: MainViewModel) {
     var mapH by remember { mutableFloatStateOf(0f) }
 
     val start = remember {
-        val (lat, lon) = pickerCenter(focus = vm.pickerFocus, fix = vm.fix, nearest = vm.nearest())
-        CameraPosition(center = Position(lon, lat), zoom = (if (vm.mapZoom >= 1.0) vm.mapZoom else 16.0) - OSM_ZOOM_OFFSET)
+        val lastZoom = if (vm.mapZoom >= 1.0) vm.mapZoom else 16.0
+        val (lat, lon, zoom) = pickerCamera(focus = vm.pickerFocus, fix = vm.fix, nearest = vm.nearest(), zoom = lastZoom)
+        CameraPosition(center = Position(lon, lat), zoom = zoom - OSM_ZOOM_OFFSET)
     }
     var layerData by remember { mutableStateOf(LayerData.Empty) }
     val state = rememberMapState(baseStyle = OsmStyle, initialCameraPosition = start) {

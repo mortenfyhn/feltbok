@@ -114,8 +114,9 @@ actual fun LocalityScreen(vm: MainViewModel) {
             setScrollableAreaLimitDouble(BoundingBox(85.0, 180.0, -85.0, -180.0))
             overlays.add(NorwegianCopyrightOverlay(ctx))    // required by the OSM tile policy
             zoomController.setVisibility(CustomZoomButtonsController.Visibility.NEVER)  // use our own buttons
-            controller.setZoom(if (vm.mapZoom >= 1.0) vm.mapZoom else 16.0)   // keep the last zoom
-            val (lat, lon) = pickerCenter(focus = vm.pickerFocus, fix = vm.fix, nearest = vm.nearest())
+            val lastZoom = if (vm.mapZoom >= 1.0) vm.mapZoom else 16.0   // keep the last zoom
+            val (lat, lon, zoom) = pickerCamera(focus = vm.pickerFocus, fix = vm.fix, nearest = vm.nearest(), zoom = lastZoom)
+            controller.setZoom(zoom)
             controller.setCenter(GeoPoint(lat, lon))
         }
     }

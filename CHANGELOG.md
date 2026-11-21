@@ -22,6 +22,7 @@
 - GPS-knappen på kartet låser kartet til posisjonen din, så det følger med når du går. Drar du i kartet, slipper det.
 - Foreslått lokalitet treffer bedre når du står ved en punktlokalitet inne i et større område, som et vatn eller et reservat.
 - GPS-sirkelen på kartet fortsetter å vokse når du zoomer langt inn.
+- Uten GPS og lokalitet åpner kartet zoomet ut over Norge i stedet for inn på en tilfeldig dal.
 - Kartet på Android henger bedre med når du drar og zoomer.
 
 ## v1.5 (13. november 2026)
