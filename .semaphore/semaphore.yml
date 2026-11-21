@@ -45,13 +45,14 @@ blocks:
           # has none left.
           # ktlintCheck gates formatting (run `just format` locally to fix), detektAll static analysis
           # (detekt.yml). Android Lint runs per module (:ui holds nearly all the code). The
-          # releaseTest APKs are built, not run (GitHub Actions runs them on an emulator), so R8 and the instrumented tests'
-          # sources are still checked. koverLog prints the unit tests' coverage (report only).
+          # releaseTest APKs are built, not run (GitHub Actions runs them on an emulator), so R8
+          # and the instrumented tests' sources are still checked. koverLog prints the unit tests'
+          # coverage, and koverVerify fails below the floor in build.gradle.kts.
           commands:
             # Falls back to the newest older cache (prefix match), so a build-file change doesn't
             # start cold: a cold run takes about 4 minutes longer.
             - cache restore gradle-$(checksum app/build.gradle.kts)-$(checksum shared/build.gradle.kts)-$(checksum ui/build.gradle.kts),gradle-
-            - ./gradlew ktlintCheck detektAll :ui:testAndroidHostTest :shared:jvmTest assembleDebug :app:lintDebug :ui:lintAndroidMain assembleReleaseTest assembleReleaseTestAndroidTest :koverLog :koverHtmlReport --console=plain --no-daemon
+            - ./gradlew ktlintCheck detektAll :ui:testAndroidHostTest :shared:jvmTest assembleDebug :app:lintDebug :ui:lintAndroidMain assembleReleaseTest assembleReleaseTestAndroidTest :koverLog :koverVerify :koverHtmlReport --console=plain --no-daemon
             - cache store gradle-$(checksum app/build.gradle.kts)-$(checksum shared/build.gradle.kts)-$(checksum ui/build.gradle.kts) ~/.gradle
       # Publish the debug APK as a workflow artifact so the Claude issue→PR loop (and
       # any branch build) gives a downloadable APK to test, without pulling the branch locally.

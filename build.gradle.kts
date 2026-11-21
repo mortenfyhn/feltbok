@@ -39,8 +39,8 @@ tasks.register("detektAll") {
     )
 }
 
-// Line coverage of the unit tests, merged over :shared and :ui (`just coverage`). Report only, no
-// gate. Composables are left out: the unit tests don't render them, so they'd drown the number.
+// Line coverage of the unit tests, merged over :shared and :ui (`just coverage`). Composables are
+// left out: the unit tests don't render them, so they'd drown the number.
 dependencies {
     kover(project(":shared"))
     kover(project(":ui"))
@@ -48,5 +48,8 @@ dependencies {
 kover {
     reports {
         filters { excludes { annotatedBy("androidx.compose.runtime.Composable") } }
+        // `koverVerify` (in `just ci` and Semaphore) fails below this figure, so coverage only goes
+        // up (#201). Raise it when coverage rises past the next whole percent.
+        verify { rule { minBound(66) } }
     }
 }
