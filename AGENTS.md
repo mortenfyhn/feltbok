@@ -33,7 +33,7 @@ Recipes live in `just --list`. Gotchas not covered there:
   rule if needed.
 - **Instrumented R8 smoke tests** (`just itest`, device-gated) run against the minified `releaseTest`
   variant, so an R8 strip fails a test instead of shipping broken. Skipped cleanly when no device is
-  attached. Also carries a UI-flow layer (`UndoFlowTest`, `NavigationFlowTest`, `EditFlowTest`) for
+  attached. GitHub Actions runs them on an emulator on every push (`.github/workflows/android-itest.yml`). Also carries a UI-flow layer (`UndoFlowTest`, `NavigationFlowTest`, `EditFlowTest`) for
   behaviour a pure-JVM test can't reach.
 - `just format` / `just lint` are CI-gated (ktlint, detekt, ruff, shellcheck). ktlint only fixes
   whitespace/imports; it won't churn line structure or naming. Detekt (`detekt.yml`, with the

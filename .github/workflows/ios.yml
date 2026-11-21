@@ -1,6 +1,7 @@
 # Builds the iOS app (#115) and runs its launch smoke test (iosApp/ci-test.sh) on GitHub's macOS
 # runners, which are free for public repos. Android, the shared modules' tests and the Python run on
-# Semaphore (.semaphore/semaphore.yml); this only covers what needs a Mac.
+# Semaphore (.semaphore/semaphore.yml), the instrumented tests in android-itest.yml; this only covers
+# what needs a Mac.
 name: iOS
 
 on:

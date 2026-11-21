@@ -45,7 +45,7 @@ blocks:
           # has none left.
           # ktlintCheck gates formatting (run `just format` locally to fix), detektAll static analysis
           # (detekt.yml). Android Lint runs per module (:ui holds nearly all the code). The
-          # releaseTest APKs are built, not run (no emulator here), so R8 and the instrumented tests'
+          # releaseTest APKs are built, not run (GitHub Actions runs them on an emulator), so R8 and the instrumented tests'
           # sources are still checked. koverLog prints the unit tests' coverage (report only).
           commands:
             # Falls back to the newest older cache (prefix match), so a build-file change doesn't
