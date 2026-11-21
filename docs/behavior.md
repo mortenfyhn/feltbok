@@ -53,10 +53,19 @@ per keystroke.
 
 ### Species not in the list
 
-Only checklist species can be logged: an upload needs the species' taxon id on Artsobservasjoner.
-For a bird that isn't in the list, pick the nearest "ub." entry and describe it in the comment.
-Notes saved with a typed-in species by an older version can't be uploaded until a listed species
-is picked for them.
+When what you typed doesn't match a listed species exactly, a **Velg «…»** row at the bottom of the
+results records the name as typed (#144): a rarity, a subspecies, or a non-bird like an insect.
+Nothing is added to the species list, so it isn't searchable next time. Age, sex and activity keep
+the bird options, and other species groups allow only some of them (an insect can be "Hann" or
+"Næringssøkende", not "Rastende"). So for a typed species outside the birds, the export fetches each
+group's options from the site (`/lists/Lists/GetAllLists`) and blocks a note with one its group
+doesn't have: "«Rastende» kan ikke brukes på virvelløse dyr".
+
+An upload needs the species' taxon id, so the export looks the typed name up on Artsobservasjoner.
+It accepts the taxon, of any species group, whose scientific or Norwegian name, or a synonym of one,
+is the typed name (case aside), e.g. `sitronsommerfugl`, `svartryggerle` or `ærfugl, underarten
+borealis`. When no taxon or several have that name, the note is listed as "Arten finnes ikke på
+Artsobservasjoner".
 
 ### Ubestemt (ub.) entries
 
@@ -375,10 +384,10 @@ Exporting needs a login. When the screen opens it checks the stored login with t
 one, or when the site refuses it, a "Logg inn" button stands in for the export button, and logging
 in returns to the screen. Offline the export button stays on, and the export says what's wrong.
 
-Every note is checked before anything is sent: first in the app (a species from the list, a
+Every note is checked before anything is sent: first in the app (a
 locality that still exists, known age, sex and activity, an even count for "I par", no date in the
 future, an end after the start), then against the site (the taxon id when the bundled list lacks
-it, the co-observers' user ids, the comment's length with the co-observers added). Any problem
+it or the species was typed in, the co-observers' user ids, the comment's length with the co-observers added). Any problem
 blocks the whole export, so it never stops halfway over something the app could find. The notes
 that need fixing are listed like the main list, each with what's wrong (the fix is left out where
 it's obvious); a tap opens the editor and returns to the export screen. The export button stays off until all are fixed.

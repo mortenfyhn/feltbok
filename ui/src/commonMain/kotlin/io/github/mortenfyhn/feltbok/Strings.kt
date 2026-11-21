@@ -105,6 +105,7 @@ object Strings {
 
     object Search {
         const val placeholder = "Søk art…"
+        fun add(name: String) = "Velg «$name»"
     }
 
     object Detail {
@@ -194,6 +195,9 @@ object Strings {
 
         // Error and status lines end without a full stop, like the toasts; explanatory sentences keep it.
         const val unknownSpecies = "Arten finnes ikke på Artsobservasjoner"
+
+        /** [value] is an age, sex or activity; [group] the species group, as the site names it. */
+        fun notForGroup(value: String, group: String) = "«$value» kan ikke brukes på ${group.lowercase()}"
         const val privateTooLong = "Privat kommentar er for lang (maks 254 tegn)"
         const val publicTooLong = "Åpen kommentar er for lang (maks 254 tegn)"
         const val publicTooLongWithCoObservers = "Åpen kommentar blir for lang (maks 254 tegn) med medobservatørene som ikke er valgt fra brukersøket"
@@ -203,7 +207,6 @@ object Strings {
 
         /** [p] is [n]'s problem. */
         fun problem(p: UploadProblem, n: Note) = when (p) {
-            UploadProblem.NO_SPECIES -> "Appen støtter ikke arten «${n.species}»"
             UploadProblem.NO_SITE -> "Lokaliteten finnes ikke, velg ny lokalitet"
             UploadProblem.UNKNOWN_AGE -> "Ugyldig alder «${n.age}»"
             UploadProblem.UNKNOWN_SEX -> "Ugyldig kjønn «${n.sex}»"

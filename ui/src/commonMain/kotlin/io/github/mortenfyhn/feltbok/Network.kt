@@ -133,10 +133,17 @@ suspend fun uploadNotes(
     // Look up what the notes refer to. A lookup that gets no answer stops here; one that answers
     // "not found" is the note's problem. A note that passes gets its request body.
     val taxa = HashMap<String, Long?>(taxonIds)
+    val typedTaxa = HashMap<String, TypedTaxon?>() // by the name a species was typed in as (#144)
+    var groupLists: Map<Int, GroupLists>? = null // fetched once, when a typed non-bird needs it
     val userIds = HashMap<String, Long?>(users.mapNotNull { (alias, u) -> u.id?.let { alias to it } }.toMap())
     val bodies = ArrayList<Pair<Note, String>>()
     for (n in notes.filter { it.id !in problems }) {
-        if (n.latin !in taxa) {
+        val typed = n.latin.isBlank()
+        if (typed && n.species !in typedTaxa) {
+            val r = get("${Country.sitesHost}/core/TaxonName/Search?search=${uriEncode(n.species.trim())}&includeSubSpecies=true")
+            if (r !is HttpResponse) return UploadResult.NotStarted(Interruption.Failed(Strings.Upload.failed(r)))
+            typedTaxa[n.species] = r.okBody()?.let { parseTaxonByName(it, n.species) }
+        } else if (!typed && n.latin !in taxa) {
             val r = get("${Country.sitesHost}/core/TaxonName/Search?search=${uriEncode(n.latin)}&includeSubSpecies=true")
             if (r !is HttpResponse) return UploadResult.NotStarted(Interruption.Failed(Strings.Upload.failed(r)))
             taxa[n.latin] = r.okBody()?.let { parseTaxonId(it, n.latin) }
@@ -146,11 +153,22 @@ suspend fun uploadNotes(
             if (r !is HttpResponse) return UploadResult.NotStarted(Interruption.Failed(Strings.Upload.failed(r)))
             userIds[alias] = r.okBody()?.let(::parseId)
         }
-        val taxon = taxa[n.latin]
+        val taxon = if (typed) typedTaxa[n.species]?.id else taxa[n.latin]
+        // The app's options are the birds'; another species group allows only some of them.
+        val group = typedTaxa[n.species]?.groupId?.takeIf { typed && it != BIRDS }
+        if (group != null && groupLists == null && (n.age.isNotEmpty() || n.sex.isNotEmpty() || n.activity.isNotEmpty())) {
+            val r = get(Country.groupListsUrl)
+            if (r !is HttpResponse) return UploadResult.NotStarted(Interruption.Failed(Strings.Upload.failed(r)))
+            groupLists = r.okBody()?.let { runCatching { parseGroupLists(it) }.getOrNull() }.orEmpty()
+        }
+        // A group the lists lack is left to the site.
+        val lists = group?.let { groupLists?.get(it) }
+        val unfit = lists?.let { unfitOption(n, it) }
         val coUsers = n.coObservers.filter(isUser)
         val missing = coUsers.filter { userIds[it] == null }
         when {
             taxon == null -> problems[n.id] = Strings.Upload.unknownSpecies
+            lists != null && unfit != null -> problems[n.id] = Strings.Upload.notForGroup(unfit, lists.name)
             missing.isNotEmpty() -> problems[n.id] = Strings.Upload.unknownCoObserver(missing.map { users[it]?.name ?: it })
             n.privateComment.length > MAX_COMMENT -> problems[n.id] = Strings.Upload.privateTooLong
             n.publicComment.length > MAX_COMMENT -> problems[n.id] = Strings.Upload.publicTooLong

@@ -66,4 +66,20 @@ class AddObservationFlowTest {
             rule.onAllNodesWithText(Strings.Notes.newNote, useUnmergedTree = true).fetchSemanticsNodes().isEmpty()
         }
     }
+
+    // A species not in the list can be typed in (#144); the export looks it up by name.
+    @Test
+    fun aTypedSpeciesCanBeSaved() {
+        val vm = MainViewModel(ApplicationProvider.getApplicationContext<Application>())
+        rule.setContent { App(vm) }
+        rule.onNodeWithText("+").performClick()
+        rule.onNode(hasSetTextAction()).performTextInput("sitronsommerfugl")
+        rule.waitUntil(timeoutMillis = 5_000) {
+            rule.onAllNodesWithText(Strings.Search.add("sitronsommerfugl")).fetchSemanticsNodes().isNotEmpty()
+        }
+        rule.onNodeWithText(Strings.Search.add("sitronsommerfugl")).performClick()
+        rule.runOnUiThread { vm.pickLocality(vm.createNewLocality(63.43, 10.39, 100, "Testlokalitet")) }
+        rule.onNodeWithText(Strings.Detail.save).performClick()
+        rule.onNodeWithText("sitronsommerfugl", substring = true).assertIsDisplayed()
+    }
 }

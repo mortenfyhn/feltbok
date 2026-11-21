@@ -85,10 +85,18 @@ GRESSHOPPESANGER = (
 )  # long name + red badge
 DOBBELTBEKKASIN = ("dobbeltbekkasin", "Gallinago media", "NT")  # long name + red badge
 SVARTHALESPOVE = ("svarthalespove", "Limosa limosa", "CR")  # long name + red badge
-# An arbitrary species typed by hand (#144): not in the app's bird checklist, so latin is blank
-# (no registry key, no status badge). Exports verbatim in Artsnavn — rådyr resolves on the portal
-# (it covers all species, not just birds), so a clean seed still imports without error.
+# Species typed by hand (#144): not in the app's bird checklist, so latin is blank (no registry
+# key, no status badge). The export looks each name up with TaxonName/Search (any species group) and
+# takes the one taxon with exactly that name, so these must be real names on the site.
 RAADYR = ("rådyr", "", "")
+# Insects, by Norwegian and by scientific name; subspecies, with their own Norwegian name and in the
+# site's "X, underarten Y" form (capitalised: case is ignored); and a typo no taxon has, which
+# blocks the export until fixed.
+SITRONSOMMERFUGL = ("sitronsommerfugl", "", "")
+MARIHONE_LATIN = ("Coccinella septempunctata", "", "")
+SVARTRYGGERLE = ("svartryggerle", "", "")
+AERFUGL_BOREALIS = ("Ærfugl, underarten borealis", "", "")
+TYPO = ("sitronsommerfulg", "", "")
 # ub. (ubestemt/unidentified) entries (#162): a species-complex and a genus-level example.
 # UB_TERNE (the species-complex) was confirmed live to import cleanly via the app's existing
 # free-text override; UB_SVANE (genus-level) wasn't separately tested, but the import mechanism
@@ -553,6 +561,66 @@ ROWS = [
         "",
         "Trekkende",
         "Leangenbukta",
+    ),
+    note(
+        "typed insect, Norwegian name (#144): found on the site by name, group fields blank",
+        2 * DAY // MINUTE + 600,
+        SITRONSOMMERFUGL,
+        1,
+        "",
+        "",
+        "",
+        "Ladehammeren",
+    ),
+    note(
+        "typed insect, scientific name (#144), with bird options insects also have (passes)",
+        2 * DAY // MINUTE + 610,
+        MARIHONE_LATIN,
+        3,
+        "",
+        "Hann",
+        "Næringssøkende",
+        "Ladehammeren",
+    ),
+    note(
+        "typed insect with a bird activity insects can't have: blocked before sending, naming the option",
+        2 * DAY // MINUTE + 620,
+        SITRONSOMMERFUGL,
+        2,
+        "",
+        "",
+        "Rastende",
+        "Ladehammeren",
+    ),
+    note(
+        "typed subspecies with its own Norwegian name (#144): bird fields still apply",
+        2 * DAY // MINUTE + 630,
+        SVARTRYGGERLE,
+        1,
+        "Adult",
+        "Hann",
+        "Næringssøkende",
+        "Ilsvika",
+    ),
+    note(
+        "typed subspecies in the site's 'X, underarten Y' form, capitalised (case is ignored)",
+        2 * DAY // MINUTE + 640,
+        AERFUGL_BOREALIS,
+        4,
+        "",
+        "",
+        "",
+        "Ilsvika",
+    ),
+    note(
+        "typed name the site doesn't have: export lists 'Arten finnes ikke på Artsobservasjoner'",
+        2 * DAY // MINUTE + 650,
+        TYPO,
+        1,
+        "",
+        "",
+        "",
+        "Ilsvika",
     ),
 ]
 

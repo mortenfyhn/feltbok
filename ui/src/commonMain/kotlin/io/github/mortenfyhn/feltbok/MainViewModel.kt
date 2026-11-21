@@ -576,6 +576,19 @@ class MainViewModel(private val platform: Platform) : ViewModel() {
         screen = Screen.DETAIL
     }
 
+    /** Commit a free-typed species name not in the checklist (#144). latin is left blank (no
+     *  registry entry), which the display fallbacks (nameForLatin) tolerate; the export looks the
+     *  name up on the site. No use-score bump - there's no stable latin key to attribute it to. */
+    fun pickArbitrarySpecies(name: String) {
+        dSpecies = name.trim(); dLatin = ""
+        if (!changingSpecies && !isEditing && !batchEditing) {
+            dTime = nowMs()
+            dLoc = currentLocality()
+        }
+        changingSpecies = false
+        screen = Screen.DETAIL
+    }
+
     fun editNote(n: Note) {
         editingId = n.id; changingSpecies = false; fromCopy = false
         dSpecies = n.species; dLatin = n.latin; dCount = n.count

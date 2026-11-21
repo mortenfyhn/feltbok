@@ -98,6 +98,7 @@ object Country {
     val sitesHost = "https://mobil.artsobservasjoner.no"
     val syncLoginUrl = "$sitesHost/bff/login?returnUrl=/my-page"
     val mySitesUrl = "$sitesHost/core/Sites/ByUser"
+    val groupListsUrl = "$sitesHost/lists/Lists/GetAllLists?languageCode=nb"
     val sessionUrl = "$sitesHost/bff/user"  // 200 with the session's claims when logged in, else 401
     val loginPathMarker = "/bff/" // while the URL still contains this we're mid-login; don't fetch yet
 

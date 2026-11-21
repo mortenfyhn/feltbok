@@ -74,13 +74,12 @@ fun sightingJson(
 // The template's limit for both comment fields ("Maks 254 tegn").
 const val MAX_COMMENT = 254
 
-enum class UploadProblem { NO_SPECIES, NO_SITE, UNKNOWN_AGE, UNKNOWN_SEX, UNKNOWN_ACTIVITY, ODD_PAIR, FUTURE, END_BEFORE_START }
+enum class UploadProblem { NO_SITE, UNKNOWN_AGE, UNKNOWN_SEX, UNKNOWN_ACTIVITY, ODD_PAIR, FUTURE, END_BEFORE_START }
 
 fun uploadProblem(n: Note, now: Long, zone: TimeZone = TimeZone.currentSystemDefault()): UploadProblem? {
     val end = n.endTime ?: n.time
     val day = { ms: Long -> Instant.fromEpochMilliseconds(ms).toLocalDateTime(zone).date }
     return when {
-        n.latin.isBlank() -> UploadProblem.NO_SPECIES // typed in by hand before #144 was dropped
         !n.newLoc && n.locId.isBlank() -> UploadProblem.NO_SITE
         // An age, sex or activity without an id would be left out of the sighting without a word.
         n.age.isNotEmpty() && n.age !in BirdLists.stages -> UploadProblem.UNKNOWN_AGE
@@ -108,6 +107,51 @@ fun parseTaxonId(json: String, latin: String): Long? =
             names.any { it.optString("name").equals(latin, ignoreCase = true) }
         }
         ?.optLong("taxonId")
+
+/** A taxon found by name, with its species group (8 = birds). */
+data class TypedTaxon(val id: Long, val groupId: Int)
+
+const val BIRDS = 8
+
+/** The taxon of any species group whose scientific or Norwegian name, or a synonym of one, is
+ *  [name], from a TaxonName/Search answer. For a species typed in by hand (#144); null unless
+ *  exactly one taxon has that name. */
+fun parseTaxonByName(json: String, name: String): TypedTaxon? =
+    parseJson(json).jsonArray.map { it.jsonObject }
+        .filter { h ->
+            val names = listOfNotNull(h.optObject("scientificName"), h.optObject("vernacularName")) +
+                (h.optArray("scientificNameSynonyms").orEmpty() + h.optArray("vernacularNameSynonyms").orEmpty()).map { it.jsonObject }
+            names.any { it.optString("name").trim().equals(name.trim(), ignoreCase = true) }
+        }
+        .map { TypedTaxon(it.optLong("taxonId"), it.optInt("speciesGroupId")) }.distinct().singleOrNull()
+
+/** The age (stage), sex (gender) and activity ids a species group allows, and its name. */
+data class GroupLists(val name: String, val stages: Set<Int>, val genders: Set<Int>, val activities: Set<Int>)
+
+/** Each species group's lists, from /lists/Lists/GetAllLists. A group with no list of a kind
+ *  allows none of it. */
+fun parseGroupLists(json: String): Map<Int, GroupLists> {
+    val o = parseJson(json) as JsonObject
+    fun JsonObject.ids(key: String) = optArray(key).orEmpty().map { it.jsonObject.optInt("id") }.filter { it != 0 }.toSet()
+    fun byGroup(key: String, ids: (JsonObject) -> Set<Int>) =
+        o.optArray(key).orEmpty().map { it.jsonObject }.associate { it.optInt("speciesGroupId") to ids(it) }
+    val stages = byGroup("speciesGroupStages") { it.ids("stages") }
+    val genders = byGroup("speciesGroupGenders") { it.ids("genders") }
+    val activities = byGroup("speciesGroupActivities") { g ->
+        g.optArray("activityCategories").orEmpty().flatMap { it.jsonObject.ids("activity") }.toSet()
+    }
+    return o.optArray("speciesGroups").orEmpty().map { it.jsonObject }.associate { g ->
+        val id = g.optInt("id")
+        id to GroupLists(g.optString("resourceLabel"), stages[id].orEmpty(), genders[id].orEmpty(), activities[id].orEmpty())
+    }
+}
+
+/** The first of [n]'s age, sex and activity (the app's bird options) that [g] doesn't allow. */
+fun unfitOption(n: Note, g: GroupLists): String? = listOf(
+    Triple(n.age, BirdLists.stages, g.stages),
+    Triple(n.sex, BirdLists.genders, g.genders),
+    Triple(n.activity, BirdLists.activities, g.activities),
+).firstOrNull { (value, ids, allowed) -> value.isNotEmpty() && ids[value] !in allowed }?.first
 
 /** The id from an answer that has one: a created sighting, or a Users/ByUserAlias user. */
 fun parseId(json: String): Long? = runCatching { (parseJson(json) as JsonObject).optLong("id") }.getOrNull()
