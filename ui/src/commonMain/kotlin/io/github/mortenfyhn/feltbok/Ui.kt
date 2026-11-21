@@ -764,6 +764,16 @@ private val GroupIcon = ImageVector.Builder("Group", 24.dp, 24.dp, 24f, 24f).add
     fill = SolidColor(Color.Black),
 ).build()
 
+// Material Symbols' "upload" (an arrow out of a tray), inlined like GroupIcon. Its paths use the
+// 0..960 grid with y running from -960, hence the shift.
+private val UploadIcon = ImageVector.Builder("Upload", 24.dp, 24.dp, 960f, 960f).addGroup(translationY = 960f).addPath(
+    addPathNodes(
+        "M440,-320v-326L336,-542l-56,-58 200,-200 200,200 -56,58 -104,-104v326h-80Z" +
+            "M240,-160q-33,0 -56.5,-23.5T160,-240v-120h80v120h480v-120h80v120q0,33 -23.5,56.5T720,-160H240Z",
+    ),
+    fill = SolidColor(Color.Black),
+).clearGroup().build()
+
 /** Append [text] bolding only the ♂/♀ glyphs (with their trailing VS15), so a "(♀)" form keeps its
  *  parens at regular weight — bold parens would dwarf the thin symbol, which barely thickens itself. */
 private fun AnnotatedString.Builder.appendBoldSymbols(text: String) {
@@ -885,7 +895,13 @@ private fun NoteRow(
                     Text(n.locName, color = cs.onSurface, fontSize = 13.sp, textAlign = TextAlign.End,   // [2] locality
                         maxLines = 1, overflow = TextOverflow.Ellipsis)
                     // A no-time obs has no clock to show; a blanked-out clock marks it (the day header carries the date).
-                    Text(if (n.timeUnknown) "--:--" else shortTime(n.time), color = cs.onSurfaceVariant, fontSize = 13.sp)   // [3] timestamp
+                    Row(verticalAlignment = Alignment.CenterVertically) {   // [3] exported mark + timestamp
+                        if (n.sightingId != null) {
+                            Icon(UploadIcon, Strings.Upload.exported, Modifier.size(14.dp), tint = cs.onSurfaceVariant)
+                            Spacer(Modifier.width(3.dp))
+                        }
+                        Text(if (n.timeUnknown) "--:--" else shortTime(n.time), color = cs.onSurfaceVariant, fontSize = 13.sp)
+                    }
                 },
             ) { measurables, constraints ->
                 val w = constraints.maxWidth
@@ -1590,6 +1606,9 @@ fun DetailScreen(vm: MainViewModel) {
             // after this date, so a crowd doesn't turn up to search for it. Only the Norwegian
             // template has the column, so the row is absent where the value couldn't be exported.
             if (Country.hideUntilCol != null) HideUntilRow(vm, batch)
+            // Edits don't reach the site, so say the note is there already (see save()).
+            if (vm.editingExported) Text(Strings.Upload.exported, Modifier.padding(horizontal = 16.dp, vertical = 12.dp),
+                fontSize = 13.sp, color = cs.onSurfaceVariant)
         }
         // Delete and save sit side by side - red left, green right - so the destructive action
         // isn't stacked directly under the thumb's path to Lagre, where it was easy to hit by
@@ -1989,7 +2008,8 @@ private fun ProblemNotes(vm: MainViewModel, notes: List<Note>, problems: Map<Lon
 }
 
 /** Full-page upload: sends the notes to Artsobservasjoner's review page, lists any that need fixing
- *  first, and offers to delete them from the app once all are uploaded. Shown as an overlay over the
+ *  first, and offers to delete the sent ones from the app. A note remembers it was sent (its
+ *  sightingId), so this works on a later visit too, and an export skips what's sent already. Shown as an overlay over the
  *  list (via showExport), so it needs its own opaque background. */
 @Composable
 fun ExportScreen(vm: MainViewModel) {
@@ -1999,20 +2019,13 @@ fun ExportScreen(vm: MainViewModel) {
     val exported = vm.exportNotes()
     val isSelection = vm.exportIsSelection()
     var confirmClear by remember { mutableStateOf(false) }
+    var confirmAgain by remember { mutableStateOf(false) }
     val state = vm.upload
     val running = state is UploadState.Running
     val result = (state as? UploadState.Finished)?.result
-    val unsent = exported.count { it.id !in vm.sentThisVisit }
+    val sent = exported.count { it.sightingId != null }
+    val unsent = exported.size - sent
     val allSent = state is UploadState.Finished && unsent == 0
-    val clear = @Composable { m: Modifier ->
-        // A button, so it doesn't read as one more red error line. A single note deletes straight
-        // through (the undo snackbar catches a mistap); more than one asks first, same rule as the
-        // list's Slett (#157).
-        OutlinedButton(
-            onClick = { if (exported.size > 1) confirmClear = true else { vm.clearExported(); vm.closeExport() } },
-            m, colors = ButtonDefaults.outlinedButtonColors(contentColor = cs.error),
-        ) { Text(Strings.Upload.clearExported(exported.size), textAlign = TextAlign.Center) }
-    }
 
     Column(Modifier.fillMaxSize().background(cs.background).bottomInsetPadding()) {
         ScreenHeader(Strings.Export.title, onCancel = { vm.closeExport() })
@@ -2030,30 +2043,32 @@ fun ExportScreen(vm: MainViewModel) {
                 // Off while it runs, once all are sent, and until the notes it stopped on are fixed.
                 val toFix = result is UploadResult.Blocked || (result is UploadResult.Done && result.failed.isNotEmpty())
                 // While it runs, the label it had when tapped.
-                val sentBefore = (state as? UploadState.Running)?.sentBefore ?: (exported.size - unsent)
-                Button(onClick = { vm.uploadExported() }, enabled = !running && !toFix && !allSent, modifier = side.padding(top = 12.dp)) {
+                val sentBefore = (state as? UploadState.Running)?.sentBefore ?: sent
+                Button(
+                    onClick = { if (unsent == 0) confirmAgain = true else vm.uploadExported() },
+                    enabled = !running && !toFix && !allSent, modifier = side.padding(top = 12.dp),
+                ) {
                     Text(
-                        if (sentBefore in 1 until exported.size) Strings.Upload.retry(exported.size - sentBefore)
-                        else Strings.Upload.button(exported.size, all = !isSelection),
+                        when (sentBefore) {
+                            0 -> Strings.Upload.button(exported.size, all = !isSelection)
+                            exported.size -> Strings.Upload.again(exported.size)
+                            // Stopped on this visit: the app doesn't know whether the problem is gone.
+                            else -> if (result != null) Strings.Upload.retry(exported.size - sentBefore) else Strings.Upload.rest(exported.size - sentBefore)
+                        },
                         // With large text: balanced lines, centred, instead of a lone "(30)".
                         textAlign = TextAlign.Center, style = LocalTextStyle.current.copy(lineBreak = LineBreak.Heading),
                     )
                 }
             }
             if (state != UploadState.Idle) {
-                // How far this visit got; it stays where an export stopped, at 0 when nothing was sent.
+                // How many of the notes are sent; it stays where an export stopped.
                 // The bar reads its value later, when it draws: give it this value, not the view model's.
-                val done = exported.size - unsent
-                val fraction = done / exported.size.coerceAtLeast(1).toFloat()
+                val fraction = sent / exported.size.coerceAtLeast(1).toFloat()
                 LinearProgressIndicator({ fraction }, side.fillMaxWidth().padding(top = 16.dp).height(6.dp), gapSize = 0.dp, drawStopIndicator = {})
                 if (allSent) {
-                    Text(Strings.Upload.allExported(done), side.padding(top = 6.dp), color = cs.primary, fontWeight = FontWeight.Medium)
-                    OutlinedButton(onClick = { platform.openUrl(Strings.Upload.reviewUrl) }, side.padding(top = 12.dp)) {
-                        Text(Strings.Upload.openReview)
-                    }
-                    clear(side.padding(top = 8.dp))
+                    Text(Strings.Upload.allExported(sent), side.padding(top = 6.dp), color = cs.primary, fontWeight = FontWeight.Medium)
                 } else {
-                    Text(Strings.Upload.exportedOf(done, exported.size), side.padding(top = 6.dp), fontSize = 14.sp, color = cs.onSurfaceVariant)
+                    Text(Strings.Upload.exportedOf(sent, exported.size), side.padding(top = 6.dp), fontSize = 14.sp, color = cs.onSurfaceVariant)
                 }
             }
             val reason = @Composable { i: Interruption? ->
@@ -2074,13 +2089,26 @@ fun ExportScreen(vm: MainViewModel) {
                     }
                 }
             }
+            // Whenever some are sent, also on a later visit: you may review and delete days after.
+            if (sent > 0 && !running) {
+                OutlinedButton(onClick = { platform.openUrl(Strings.Upload.reviewUrl) }, side.padding(top = 16.dp)) {
+                    Text(Strings.Upload.openReview)
+                }
+                // A button, so it doesn't read as one more red error line. A single note deletes
+                // straight through (the undo snackbar catches a mistap); more than one asks first,
+                // same rule as the list's Slett (#157).
+                OutlinedButton(
+                    onClick = { if (sent > 1) confirmClear = true else { vm.clearExported(); vm.closeExport() } },
+                    side.padding(top = 8.dp), colors = ButtonDefaults.outlinedButtonColors(contentColor = cs.error),
+                ) { Text(Strings.Upload.clearExported(sent), textAlign = TextAlign.Center) }
+            }
             Spacer(Modifier.height(24.dp))
         }
     }
     if (confirmClear) {
         AlertDialog(
             onDismissRequest = { confirmClear = false },
-            title = { Text(Strings.Notes.confirmDeleteTitle(exported.size)) }, // the same as the list's Slett
+            title = { Text(Strings.Notes.confirmDeleteTitle(sent)) }, // the same as the list's Slett
             confirmButton = {
                 Button(
                     onClick = { vm.clearExported(); confirmClear = false; vm.closeExport() },
@@ -2088,6 +2116,15 @@ fun ExportScreen(vm: MainViewModel) {
                 ) { Text(Strings.Notes.deleteSelected) }
             },
             dismissButton = { TextButton(onClick = { confirmClear = false }) { Text(Strings.cancel) } },
+        )
+    }
+    if (confirmAgain) {
+        AlertDialog(
+            onDismissRequest = { confirmAgain = false },
+            title = { Text(Strings.Upload.againTitle(exported.size)) },
+            text = { Text(Strings.Upload.againBody(exported.size)) },
+            confirmButton = { Button(onClick = { confirmAgain = false; vm.exportAgain() }) { Text(Strings.Upload.againConfirm) } },
+            dismissButton = { TextButton(onClick = { confirmAgain = false }) { Text(Strings.cancel) } },
         )
     }
 }

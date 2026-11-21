@@ -437,6 +437,7 @@ class MainViewModel(private val platform: Platform) : ViewModel() {
     val dCoObs = mutableStateListOf<String>()      // co-observers on the draft (#128)
     var dHideUntil by mutableStateOf<Long?>(null)  // hide from others until this date (#181); null = not hidden
     val isEditing: Boolean get() = editingId != null
+    val editingExported: Boolean get() = editingId?.let { id -> notes.firstOrNull { it.id == id }?.sightingId } != null
 
     /** Whether leaving the editor would actually lose work, so Back/✕ can skip the discard confirm
      *  when there's nothing to discard. A new observation is always unsaved work; an edit only
@@ -1059,15 +1060,13 @@ class MainViewModel(private val platform: Platform) : ViewModel() {
     fun exportSelected() { exportScope = selected.toList(); openExportScreen() }
     private fun openExportScreen() {
         // A new visit, unless an upload from the last one still runs.
-        if (upload !is UploadState.Running) { upload = UploadState.Idle; sentThisVisit.clear() }
+        if (upload !is UploadState.Running) upload = UploadState.Idle
         showExport = true
         checkExportLogin()
     }
 
-    /** The notes (by id) sent during this visit to the export screen, so a retry sends only the rest.
-     *  Forgotten on leaving: the next export sends what it's asked to. */
-    val sentThisVisit = mutableStateListOf<Long>()
-    private fun exportLeft(): List<Note> = exportNotes().filter { it.id !in sentThisVisit }
+    // A note with a sighting id is sent already: exporting again would duplicate it on the site.
+    private fun exportLeft(): List<Note> = exportNotes().filter { it.sightingId == null }
 
     /** The export screen offers "Logg inn" instead of exporting: no login, or the site refused it. */
     var exportNeedsLogin by mutableStateOf(false); private set
@@ -1075,11 +1074,7 @@ class MainViewModel(private val platform: Platform) : ViewModel() {
     fun closeExport() {
         showExport = false
         // A running upload carries on, and its result shows if the screen is opened again.
-        if (upload !is UploadState.Finished) return
-        // Left halfway: mark what's left, so Eksporter in the list sends just that.
-        val left = exportLeft()
-        if (sentThisVisit.isNotEmpty() && left.isNotEmpty()) { selected.clear(); selected.addAll(left.map { it.id }) }
-        upload = UploadState.Idle
+        if (upload is UploadState.Finished) upload = UploadState.Idle
     }
 
     var upload by mutableStateOf<UploadState>(UploadState.Idle); private set
@@ -1121,10 +1116,9 @@ class MainViewModel(private val platform: Platform) : ViewModel() {
     fun uploadExported() {
         if (upload is UploadState.Running) return
         val todo = exportLeft().sortedBy { it.time }
-        upload = UploadState.Running(sentThisVisit.size)
+        upload = UploadState.Running(exportNotes().size - todo.size)
         viewModelScope.launch {
             val r = uploadNotes(platform, todo, taxonIds, coObsUsers.toMap()) { n, sightingId ->
-                sentThisVisit += n.id
                 val i = notes.indexOfFirst { it.id == n.id }
                 if (i >= 0) { notes[i] = notes[i].copy(sightingId = sightingId); persist() }
             }
@@ -1133,6 +1127,16 @@ class MainViewModel(private val platform: Platform) : ViewModel() {
             if (why == Interruption.LoggedOut) exportNeedsLogin = true
             checkSession()
         }
+    }
+
+    /** Export every note in scope again, for when they were deleted on the site: forgets that they
+     *  were sent, then exports as usual. */
+    fun exportAgain() {
+        if (upload is UploadState.Running) return
+        val ids = exportNotes().map { it.id }.toSet()
+        for (i in notes.indices) if (notes[i].id in ids) notes[i] = notes[i].copy(sightingId = null)
+        persist()
+        uploadExported()
     }
 
     /** The notes the current export covers - the marked ones when exporting a selection, else all.
@@ -1144,11 +1148,11 @@ class MainViewModel(private val platform: Platform) : ViewModel() {
      *  step's wording so it never claims to wipe "alle observasjoner" when it only clears a subset. */
     fun exportIsSelection(): Boolean = exportScope != null
 
-    /** Clear the exported notes - after they've been imported and published. Only the export's scope
-     *  (a selection, or all), so a subset export never deletes notes it didn't cover. Undoable like
-     *  the other deletes (#122), so a mis-tap recovers. */
+    /** Clear the exported notes - after they've been imported and published. Only the sent notes in
+     *  the export's scope (a selection, or all), so it never deletes a note that isn't on the site.
+     *  Undoable like the other deletes (#122), so a mis-tap recovers. */
     fun clearExported() {
-        archive(exportNotes())
+        archive(exportNotes().filter { it.sightingId != null })
         clearSelection()  // the exported notes are gone; leave selection mode too
     }
 
