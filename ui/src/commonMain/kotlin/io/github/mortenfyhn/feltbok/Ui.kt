@@ -145,9 +145,6 @@ import kotlinx.coroutines.launch
 
 // ============================ LIST ============================
 
-/** Round GPS minimap on the main screen — hidden for now; flip to re-enable (code kept). */
-private const val SHOW_MINIMAP = false
-
 @Composable
 fun ListScreen(vm: MainViewModel, listState: LazyListState) {
     val cs = MaterialTheme.colorScheme
@@ -312,10 +309,6 @@ fun ListScreen(vm: MainViewModel, listState: LazyListState) {
                 }
             }
         }
-        // Round minimap on the left of the top bar, clipping the top and left edges equally.
-        // Hidden for now (unclear if it's useful); flip SHOW_MINIMAP to bring it back.
-        if (SHOW_MINIMAP)
-            LocalityPreview(vm, Modifier.align(Alignment.TopStart).offset(x = (-6).dp, y = (-6).dp))
     }
 }
 
@@ -604,31 +597,22 @@ private fun StatusStrip(vm: MainViewModel) {
     val cs = MaterialTheme.colorScheme
     val cur = vm.currentLocality()
     Row(
-        // start padding leaves room for the round minimap overlaid on the left (when shown).
         Modifier.fillMaxWidth().background(cs.primary)
-            .padding(start = if (SHOW_MINIMAP) 104.dp else 14.dp, end = 14.dp, top = 11.dp, bottom = 11.dp),
+            .padding(start = 14.dp, end = 14.dp, top = 11.dp, bottom = 11.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         // Distance to the locality edge and GPS accuracy share one line so neither crowds the
         // export button. The accuracy tells you whether to trust the fix / wait for a better one.
-        val fix = vm.fix
-        val subtitle = listOfNotNull(
-            if (cur != null && fix != null) distanceLabel(cur, fix.lat, fix.lon) else null,
-            when {
-                fix == null -> Strings.Notes.searchingGps
-                fix.accuracyM.isNaN() -> Strings.Notes.gps
-                else -> Strings.Notes.gpsAccuracy(fix.accuracyM.toInt())
-            },
-        ).joinToString(" ")
+        val (title, subtitle) = statusLines(cur, vm.fix, vm.locationOff)
         // Tap to open the map and pick a different current locality.
         Column(Modifier.weight(1f).clickable { vm.openCurrentLocalityPicker() }) {
             // Name ellipsizes; the chevron is pinned beside it so it can't wrap to its own line.
             Row(verticalAlignment = Alignment.CenterVertically) {
                 if (cur != null) LocalityKindDot(cur)
-                Text(if (cur != null) cur.lokalitet else Strings.findingPosition,
+                Text(title,
                     color = Color.White, fontWeight = FontWeight.SemiBold,
                     maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.weight(1f, fill = false))
-                if (cur != null) Text(" ›", color = Color.White, fontWeight = FontWeight.SemiBold)
+                if (cur != null || vm.locationOff) Text(" ›", color = Color.White, fontWeight = FontWeight.SemiBold)
             }
             Text(subtitle, color = Color.White.copy(alpha = 0.82f), fontSize = 12.sp,
                 maxLines = 1, overflow = TextOverflow.Ellipsis)
@@ -1571,7 +1555,7 @@ fun DetailScreen(vm: MainViewModel) {
                         }
                     }
                     batch -> BatchHint(vm.batchPreview { it.locName })   // notes differ: show the mix
-                    else -> Text(Strings.findingPosition, color = cs.onSurfaceVariant)
+                    else -> Text(if (vm.locationOff) Strings.Picker.titlePick else Strings.findingPosition, color = cs.onSurfaceVariant)
                 }
             }
             AntallRow(vm)

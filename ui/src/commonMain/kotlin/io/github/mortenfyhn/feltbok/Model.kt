@@ -7,6 +7,21 @@ fun formatDistance(m: Double): String =
 
 /** The status strip's distance to the current locality's edge. Polygons are measured to the
  *  polygon, not their bounding radius, which would claim "du er her" well outside them. */
+/** The status strip's title and subtitle: the current locality and how far it is, and the GPS
+ *  state. With location off no fix will come, so it says so instead of "searching". */
+fun statusLines(cur: Locality?, fix: GpsFix?, locationOff: Boolean): Pair<String, String> {
+    val title = cur?.lokalitet ?: if (locationOff) Strings.Notes.noLocality else Strings.findingPosition
+    val subtitle = if (locationOff) Strings.Notes.gpsOff else listOfNotNull(
+        if (cur != null && fix != null) distanceLabel(cur, fix.lat, fix.lon) else null,
+        when {
+            fix == null -> Strings.Notes.searchingGps
+            fix.accuracyM.isNaN() -> Strings.Notes.gps
+            else -> Strings.Notes.gpsAccuracy(fix.accuracyM.toInt())
+        },
+    ).joinToString(" ")
+    return title to subtitle
+}
+
 fun distanceLabel(loc: Locality, lat: Double, lon: Double): String {
     val edge = distanceToFootprint(loc, lat, lon).coerceAtLeast(0.0)
     return if (edge < 10) Strings.Notes.youAreHere else Strings.Notes.distanceAway(formatDistance(edge))

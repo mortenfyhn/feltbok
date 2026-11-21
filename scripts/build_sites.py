@@ -23,6 +23,7 @@ import csv
 import json
 import os
 import pathlib
+from urllib.parse import unquote
 
 # Where the harvested raw JSON lives (kept out of the repo - it's large). Override with
 # FELTBOK_DATA_DIR; pass --raw to point at a specific file.
@@ -66,7 +67,9 @@ COLS = [
 def rows_from_mobil(raw, overrides):
     """A flat list of mobile-API site rows, already WGS84 with a per-row county. Returns the
     CSV rows for sites that are public (or forced public by an override)."""
-    names = {r["id"]: r["name"] for r in raw}  # resolve parentSiteId -> parent name
+    # parentSiteId -> parent name. Unquoted: a couple of names come URL-encoded from the
+    # registry ("Kaffiskj%C3%A6ret").
+    names = {r["id"]: unquote(r["name"] or "") for r in raw}
     # A site is a superlocality (has sublocalities) iff some other site names it as parent.
     # Derived from the FULL harvest, so a public super with only private children still counts.
     supers = {r["parentSiteId"] for r in raw if r.get("parentSiteId")}
@@ -93,7 +96,7 @@ def rows_from_mobil(raw, overrides):
         out.append(
             {
                 "id": str(r["id"]),
-                "lokalitet": r["name"] or "",
+                "lokalitet": names[r["id"]],
                 "hovedlokalitet": names.get(r.get("parentSiteId"), "") or "",
                 "kommune": r.get("municipalityName") or "",
                 "fylke": r.get("countyName") or "",

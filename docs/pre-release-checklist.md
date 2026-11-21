@@ -89,7 +89,7 @@ host tests use a fake server)*
 - Search names with **å/æ/ø** return the expected birds.
 - A tap just outside a circle's edge selects it. A map fling starts moving right away.
 - Copy an observation → the locality picker **centres on that observation's own locality** (#91-era).
-  The tests only get as far as "the copy kept the locality": `pickerCenter` is unit-tested, but the
+  The tests only get as far as "the copy kept the locality": `pickerCamera` is unit-tested, but the
   map is an AndroidView, so where it actually centred never reaches the semantics tree.
 
 After a clean soak (a few field days, no surprises), cut the release per [release.md](release.md).

@@ -9,6 +9,8 @@ import kotlinx.coroutines.flow.StateFlow
 import platform.CoreLocation.CLLocation
 import platform.CoreLocation.CLLocationManager
 import platform.CoreLocation.CLLocationManagerDelegateProtocol
+import platform.CoreLocation.kCLAuthorizationStatusDenied
+import platform.CoreLocation.kCLAuthorizationStatusRestricted
 import platform.CoreLocation.kCLLocationAccuracyBest
 import platform.Foundation.timeIntervalSince1970
 import platform.darwin.NSObject
@@ -17,6 +19,9 @@ import platform.darwin.NSObject
 class LocationTracker : LocationSource {
     private val _fix = MutableStateFlow<GpsFix?>(null)
     override val fix: StateFlow<GpsFix?> = _fix
+
+    private val _off = MutableStateFlow(false)
+    override val off: StateFlow<Boolean> = _off
 
     private val delegate = object : NSObject(), CLLocationManagerDelegateProtocol {
         override fun locationManager(manager: CLLocationManager, didUpdateLocations: List<*>) {
@@ -29,9 +34,15 @@ class LocationTracker : LocationSource {
             }
         }
 
-        // The first start() asks for permission; updates begin once it's granted.
+        // The first start() asks for permission; updates begin once it's granted. Also called when
+        // the user switches location off or on, for the app or the whole phone.
         override fun locationManagerDidChangeAuthorization(manager: CLLocationManager) {
-            manager.startUpdatingLocation()
+            val status = manager.authorizationStatus
+            val off = !CLLocationManager.locationServicesEnabled() ||
+                status == kCLAuthorizationStatusDenied || status == kCLAuthorizationStatusRestricted
+            _off.value = off
+            if (off) _fix.value = null   // no stale position while off
+            else manager.startUpdatingLocation()
         }
     }
 

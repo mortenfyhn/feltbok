@@ -33,6 +33,8 @@ object Strings {
         const val youAreHere = "du er her"
         fun distanceAway(d: String) = "$d unna"
         const val searchingGps = "søker GPS"
+        const val gpsOff = "GPS er av"
+        const val noLocality = "Ingen lokalitet"
         const val gps = "GPS"
         fun gpsAccuracy(m: Int) = "(GPS ±$m m)"
 

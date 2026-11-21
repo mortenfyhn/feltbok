@@ -18,9 +18,8 @@ class MainActivity : ComponentActivity() {
     private val vm: MainViewModel by viewModels { viewModelFactory { initializer { MainViewModel(application) } } }
 
     private val askLocation =
-        registerForActivityResult(ActivityResultContracts.RequestPermission()) { granted ->
-            if (granted) vm.startLocationUpdates()
-        }
+        // Start either way: the tracker checks the permission itself and reports location as off.
+        registerForActivityResult(ActivityResultContracts.RequestPermission()) { vm.startLocationUpdates() }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         // From targetSdk 35 the system draws the app behind the status and navigation bars and
@@ -38,7 +37,7 @@ class MainActivity : ComponentActivity() {
         if (!hasLocation()) askLocation.launch(Manifest.permission.ACCESS_FINE_LOCATION)
     }
 
-    override fun onStart() { super.onStart(); if (hasLocation()) vm.startLocationUpdates() }
+    override fun onStart() { super.onStart(); vm.startLocationUpdates() }
     override fun onStop() { super.onStop(); vm.stopLocationUpdates() }
 
     private fun hasLocation() = ContextCompat.checkSelfPermission(

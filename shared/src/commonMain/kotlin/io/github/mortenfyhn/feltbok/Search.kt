@@ -50,7 +50,7 @@ private fun preparedFor(s: Species, name: String, index: Int): PreparedSpecies {
  *  aliases share the index, so frequency/tiebreak are identical and the caller dedupes afterwards.
  *  The app passes only the languages the user chose to search (#155) - primary, optionally secondary
  *  - so it doesn't surface birds via a language the user isn't looking in. */
-fun prepare(species: List<Species>, langs: Set<Lang> = Lang.values().toSet()): List<PreparedSpecies> =
+fun prepare(species: List<Species>, langs: Set<Lang> = Lang.entries.toSet()): List<PreparedSpecies> =
     species.flatMapIndexed { i, s ->
         listOf(Lang.NORSK, Lang.SVENSK, Lang.LATIN)
             .filter { it in langs }

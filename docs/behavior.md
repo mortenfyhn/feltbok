@@ -256,6 +256,11 @@ On export it becomes the sighting's hide-until date.
 The status strip and the detail screen's locality field show a small dot before the locality's
 name: green for a public locality, yellow for a private one (your own or a brand-new one).
 
+While there's no GPS fix yet, the status strip says "Finner posisjon…" / "søker GPS". When no fix can
+come (the app has no location permission, or location is switched off), it says "Ingen lokalitet" /
+"GPS er av" instead, and an observation without a locality shows "Velg lokalitet". A locality you
+picked by hand stays, with "GPS er av" under it. Switching location back on takes effect right away.
+
 Tapping the locality field (or the status strip) opens a map of the registered localities over
 OpenStreetMap tiles. Each locality is a filled green disk at its real radius
 (polygons trace their real outline; superlocalities are a deeper green), and the selected one is
@@ -265,7 +270,8 @@ The map opens centred on the locality the observation already has, however far t
 GPS fix — you opened the picker to adjust around that place. Only when there's no locality yet does
 it centre on your own position, and then it follows you: the map moves with each new GPS fix until you
 pan it. A pinch or the +/− buttons zoom around your position and keep following. While the map isn't
-following, a GPS button (the blue location dot) turns it back on.
+following, a GPS button (the blue location dot) turns it back on. With neither a locality nor a GPS
+fix (location off), it opens zoomed out on central Norway.
 
 The picker also looks up public localities created after the bundled list was harvested. When the map
 has been still for a second, and the view is under 40 km across in Web Mercator (about 18 km on the

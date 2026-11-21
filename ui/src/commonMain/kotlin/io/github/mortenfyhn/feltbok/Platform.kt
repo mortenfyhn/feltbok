@@ -4,13 +4,13 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
-import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.ClipEntry
 import androidx.compose.ui.text.PlatformTextStyle
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.window.DialogProperties
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 
 /** What a GET got back: an HTTP answer, or none. */
@@ -51,6 +51,9 @@ interface Platform {
 /** GPS fixes while started. */
 interface LocationSource {
     val fix: StateFlow<GpsFix?>
+
+    /** True while no fix can come: the app has no permission, or location is switched off. */
+    val off: StateFlow<Boolean> get() = neverOff
     fun start()
     fun stop()
 }
@@ -112,6 +115,4 @@ object NumberPadDone {
 @Composable
 expect fun LocalityScreen(vm: MainViewModel)
 
-/** The small map on the editor's locality row. */
-@Composable
-expect fun LocalityPreview(vm: MainViewModel, modifier: Modifier = Modifier)
+private val neverOff = MutableStateFlow(false)
