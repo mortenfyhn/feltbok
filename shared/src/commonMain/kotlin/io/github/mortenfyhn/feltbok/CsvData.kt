@@ -69,7 +69,7 @@ private fun readMyLocalities(storage: Storage): List<List<String>> =
 private const val MY_LOCALITIES = "my-localities.csv"
 
 /** Like toDoubleOrNull but without its per-call regex screen - parseDouble straight, null on
- *  the rare malformed value. Called ~35k times at launch, so the regex screen was costly. */
+ *  the rare malformed value. Called ~240k times at launch, so the regex screen was costly. */
 private fun fastDouble(s: String): Double? =
     if (s.isEmpty()) null else try { s.toDouble() } catch (e: NumberFormatException) { null }
 

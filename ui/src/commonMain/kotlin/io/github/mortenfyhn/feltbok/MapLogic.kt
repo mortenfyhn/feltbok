@@ -97,8 +97,9 @@ internal fun tapHitsDisc(centreDistPx: Float, radiusPx: Float, density: Float): 
  *  on the edge of Jonsvatnet) must never grab the giant. Zoom out until it fits to select it.
  *  Set above 1.0 so a polygon that *nearly* fits stays tappable: an irregular shape (a diagonal
  *  lake like "sjøen mellom Sistranda og Inntian") only half-fills its bounding box, so an empty
- *  bbox corner can poke off-screen while the shape itself is ~all visible. 1.2 tolerates that;
- *  raise it to be more forgiving, lower it toward 1.0 to require the bbox to fit outright.
+ *  bbox corner can poke off-screen while the shape itself is ~all visible. 1.2 was enough for
+ *  that, but made big localities untappable too soon when zooming in, so it was tuned by hand to
+ *  4.0. Raise it to be more forgiving, lower it toward 1.0 to require the bbox to fit outright.
  *  Symmetric to [declutteredAtZoom], which gates out footprints that are too small. */
 internal const val MAX_TAP_FIT_FRACTION = 4.0f
 
