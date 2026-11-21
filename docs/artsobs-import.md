@@ -118,6 +118,20 @@ So a name that matches one of your own private localities links there, whatever 
 The same test on master, which exports the site id, linked each observation to its own
 locality, with the box on and off.
 
+### The manual entry form's list shows the id (2026-11-21)
+
+A v1.5 user reported that every imported observation showed a number as its locality. The
+numbers are in the list of observations entered so far, under the manual entry form. That list
+shows the pasted `Lokalitetsnavn` text, so an exported site id shows as the bare number. The
+observations still link to the correct site: opening a row's edit dialog shows the site, and
+saving it unchanged makes the list show the name. The review page that opens right after the
+import shows the names.
+
+Ruled out while reproducing on the maintainer's account: the user's exported block (it showed
+names on the review page), an area set on the import form (Trondheim), and a phone browser
+(Firefox on Android). Paste tests also showed how an id that doesn't exist (`999999999`) looks
+on the review page: a red number with an error.
+
 > Open question: how does **iGoTerra** export to this same old site and land on public
 > localities? If it genuinely does, a working format exists that name/coords paste does
 > not reach (a locality **id**, or the **v3.0** template). Inspecting a real iGoTerra
