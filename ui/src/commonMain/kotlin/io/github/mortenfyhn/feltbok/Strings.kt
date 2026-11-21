@@ -207,7 +207,7 @@ object Strings {
 
         /** [p] is [n]'s problem. */
         fun problem(p: UploadProblem, n: Note) = when (p) {
-            UploadProblem.NO_SITE -> "Lokaliteten finnes ikke, velg ny lokalitet"
+            UploadProblem.NO_SITE -> "Lokaliteten finnes ikke"
             UploadProblem.UNKNOWN_AGE -> "Ugyldig alder «${n.age}»"
             UploadProblem.UNKNOWN_SEX -> "Ugyldig kjønn «${n.sex}»"
             UploadProblem.UNKNOWN_ACTIVITY -> "Ugyldig aktivitet «${n.activity}»"
