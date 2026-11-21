@@ -2099,7 +2099,12 @@ fun ExportScreen(vm: MainViewModel) {
             }
             // Whenever some are sent, also on a later visit: you may review and delete days after.
             if (sent > 0 && !running) {
-                OutlinedButton(onClick = { platform.openUrl(Strings.Upload.reviewUrl) }, side.align(Alignment.CenterHorizontally).padding(top = 16.dp)) {
+                // Green text: Material's default grey reads as disabled.
+                OutlinedButton(
+                    onClick = { platform.openUrl(Strings.Upload.reviewUrl) },
+                    side.align(Alignment.CenterHorizontally).padding(top = 16.dp),
+                    colors = ButtonDefaults.outlinedButtonColors(contentColor = cs.primary),
+                ) {
                     Text(Strings.Upload.openReview)
                 }
                 // A button, so it doesn't read as one more red error line. A single note deletes
