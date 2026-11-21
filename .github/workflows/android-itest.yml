@@ -34,6 +34,8 @@ jobs:
           distribution: temurin
           java-version: 21
       - uses: gradle/actions/setup-gradle@0723195856401067f7a2779048b490ace7a47d7c # v5.0.2
+        with:
+          cache-read-only: false # TEMP: measure a warm build on a branch
       # Lets the emulator use KVM.
       - run: |
           echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
@@ -41,30 +43,12 @@ jobs:
           sudo udevadm trigger --name-match=kvm
       # Build before booting the emulator, so the build doesn't compete with it for CPU.
       - run: ./gradlew assembleReleaseTest assembleReleaseTestAndroidTest --console=plain
-      # A booted emulator snapshot, so later runs skip the cold boot.
-      - uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
-        id: avd-cache
-        with:
-          path: |
-            ~/.android/avd/*
-            ~/.android/adb*
-          key: avd-${{ env.API_LEVEL }}
-      - if: steps.avd-cache.outputs.cache-hit != 'true'
-        uses: ReactiveCircus/android-emulator-runner@a421e43855164a8197daf9d8d40fe71c6996bb0d # v2.38.0
-        with:
-          api-level: ${{ env.API_LEVEL }}
-          target: google_apis
-          arch: x86_64
-          force-avd-creation: false
-          emulator-options: -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -camera-back none
-          script: echo "Created the AVD snapshot."
       - uses: ReactiveCircus/android-emulator-runner@a421e43855164a8197daf9d8d40fe71c6996bb0d # v2.38.0
         with:
           api-level: ${{ env.API_LEVEL }}
           target: google_apis
           arch: x86_64
-          force-avd-creation: false
-          emulator-options: -no-snapshot-save -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -camera-back none
+          emulator-options: -no-snapshot -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -camera-back none
           # The same small phone as `just emu`. The launch test needs the activity RESUMED, so keep
           # the screen on and unlocked.
           script: |
