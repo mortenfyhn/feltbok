@@ -94,9 +94,11 @@ install: build
 # package id, not the code namespace), so spell out the full component rather than the
 # /.MainActivity shorthand.
 
-# Build, install, and launch the dev app
+# Build, install, and launch the dev app. On an emulator, also set the GPS fix to the app's no-GPS
+# map centre (Country.mapCenterLat/Lon) instead of the emulator's default in California.
 [group('app')]
 run: install
+    s=$(adb get-serialno); case "$s" in emulator-*) adb -s "$s" emu geo fix 8.7 63.7 ;; esac
     adb shell am start -n io.github.mortenfyhn.feltbok.debug/io.github.mortenfyhn.feltbok.MainActivity
 
 # For agents to check UI without the phone, and for the maintainer to watch or use it. Host GPU:
