@@ -7,12 +7,11 @@ import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.setMain
 import org.junit.After
 import org.junit.Assert.assertEquals
-import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
 
-/** The export screen remembers what it sent only while it's open: a retry sends the rest, and
- *  leaving marks the rest in the list. The next visit sends what it's asked to. */
+/** A note remembers that it was sent, so an export, on this visit or a later one, sends only the
+ *  rest. Exporting again and deleting go by the same mark. */
 @OptIn(ExperimentalCoroutinesApi::class)
 class ExportVisitTest {
     private val p = FakePlatform()
@@ -44,8 +43,8 @@ class ExportVisitTest {
     @After
     fun tearDown() = Dispatchers.resetMain()
 
-    private fun export() {
-        vm.uploadExported()
+    private fun export(start: () -> Unit = { vm.uploadExported() }) {
+        start()
         val until = System.currentTimeMillis() + 5000
         while (vm.upload !is UploadState.Finished) {
             check(System.currentTimeMillis() < until) { "timed out waiting for the export" }
@@ -53,34 +52,54 @@ class ExportVisitTest {
         }
     }
 
+    private fun sent() = vm.notes.filter { it.sightingId != null }.map { it.id }.sorted()
+
     @Test
-    fun aRetrySendsOnlyWhatThisVisitDidNot() {
+    fun aRetrySendsOnlyTheUnsent() {
         offlineAfter = 1
         vm.openExport()
         export()
         assertEquals(Interruption.Failed("Mista internettilkoblinga"), ((vm.upload as UploadState.Finished).result as UploadResult.Done).stopped)
-        assertEquals(listOf(1L), vm.sentThisVisit.toList())
+        assertEquals(listOf(1L), sent())
 
         offlineAfter = Int.MAX_VALUE
         p.posts.clear()
         export()
         assertEquals(2, p.posts.size)
-        assertEquals(3, vm.sentThisVisit.size)
+        assertEquals(listOf(1L, 2L, 3L), sent())
     }
 
+    // Regression: a later visit sent every note again, duplicating the ones already on the site.
     @Test
-    fun leavingHalfwayMarksTheRestAndTheNextVisitSendsWhatItIsAskedTo() {
-        offlineAfter = 1
+    fun aLaterVisitSendsOnlyNotesAddedSince() {
         vm.openExport()
         export()
         vm.closeExport()
-        assertEquals(listOf(2L, 3L), vm.selected.toList())
+        vm.notes += vm.notes[0].copy(id = 4L, sightingId = null)
 
-        offlineAfter = Int.MAX_VALUE
-        vm.openExport() // all of them, though note 1 was sent before
-        assertTrue(vm.sentThisVisit.isEmpty())
+        vm.openExport()
         p.posts.clear()
         export()
+        assertEquals(1, p.posts.size)
+        assertEquals(listOf(1L, 2L, 3L, 4L), sent())
+    }
+
+    @Test
+    fun exportAgainSendsEveryNote() {
+        vm.openExport()
+        export()
+        p.posts.clear()
+        export { vm.exportAgain() }
         assertEquals(3, p.posts.size)
+        assertEquals(listOf(4L, 5L, 6L), vm.notes.mapNotNull { it.sightingId }.sorted()) // the new sightings
+    }
+
+    @Test
+    fun clearingDeletesOnlyTheSentNotes() {
+        offlineAfter = 1
+        vm.openExport()
+        export()
+        vm.clearExported()
+        assertEquals(listOf(2L, 3L), vm.notes.map { it.id }.sorted())
     }
 }

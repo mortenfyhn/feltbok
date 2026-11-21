@@ -397,16 +397,20 @@ the label it was tapped with. The bar stays where an export stopped (at 0 when n
   its "Invalid arguments: " prefix); the rest are sent. The button
   stays off until it's fixed.
 
-The screen remembers what it sent only while it's open. Leaving it with notes left over marks those
-in the list, so Eksporter there sends just them. The next export sends exactly what it's asked to,
-including notes sent before: duplicates are the user's call. Each note keeps its sighting id from
-the site, but nothing uses it yet.
+Each sent note keeps its sighting id from the site, so the app remembers it's exported, on this
+visit and every later one. The list shows an upload icon by its time, and its editor says
+"Eksportert til Artsobservasjoner" (an edit doesn't reach the site). The mark means the app sent
+it, not that it's still on the site. An export skips the notes sent already, so it never
+duplicates one; with some sent, the button reads "Eksporter resten (3)" (or "Prøv igjen" after an
+export stopped on this visit). When all of them are sent, the button reads "Eksporter på nytt (30)",
+for notes deleted on the site: it forgets the marks and sends them all, without asking first. To send only some again, mark them in the list first.
 
-When all are sent, the bar is full and reads "✓ 30 av 30 eksportert", the export button stays off,
-and two actions appear: "Åpne «Kontroller funn»" (the old site's review page, which most users
-prefer) and "Slett eksporterte observasjoner fra appen (30)". Deleting follows the list's `Slett`
-rule: more than one asks first, a single one goes straight away, both undoable, and the notes land
-in the papirkurv.
+When all are sent, the bar is full and reads "✓ 30 av 30 eksportert" and the export button stays
+off for the rest of the visit. Whenever some notes are sent, also on a later visit, two actions
+show: "Åpne «Kontroller funn»" (the old site's review page, which most users prefer) and "Slett
+eksporterte observasjoner fra appen (30)", which deletes only the sent notes. Deleting follows the
+list's `Slett` rule: more than one asks first, a single one goes straight away, both undoable, and
+the notes land in the papirkurv.
 
 ## Papirkurv
 
