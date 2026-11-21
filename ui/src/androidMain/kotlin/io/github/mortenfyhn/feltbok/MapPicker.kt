@@ -456,6 +456,8 @@ private class LocalityOverlay(
     // A plain-List snapshot, refreshed from the composable only when the data changes - iterating
     // the live SnapshotStateList every frame got expensive once the table grew past ~10k localities.
     var localities: List<Locality> = emptyList()
+        set(value) { field = value; grid = LocalityGrid(value) }
+    private var grid = LocalityGrid(emptyList())
     var picked: Locality? = null
     var fix: GeoPoint? = null
     var accuracyM: Float = Float.NaN
@@ -636,7 +638,8 @@ private class LocalityOverlay(
         // Labels aren't drawn inline: we collect candidates here, then place them in one greedy
         // collision pass after all shapes so overlapping names get gated, not stacked (#121).
         val labels = ArrayList<LabelCandidate>()
-        for (loc in localities) {
+        val inView = if (bb == null) localities else grid.query(bb.latSouth, bb.latNorth, bb.lonWest, bb.lonEast)
+        for (loc in inView) {
             if (loc === picked) continue              // drawn highlighted on top, after the loop
             // Cull by the locality's geographic bounds, not just its centre: a big polygon
             // (or wide circle) can fill the view while its centre point sits off-screen.
@@ -739,7 +742,12 @@ private class LocalityOverlay(
         val zoom = map.zoomLevelDouble
         val density = map.context.resources.displayMetrics.density
         val hits = ArrayList<TapCandidate>()
-        for (loc in localities) {
+        // Only localities whose bounds come within finger reach of the tap (plus a dot's minimum
+        // drawn size) can be hit.
+        val slopLat = (POINT_DOT_PX + TAP_SLOP_DP * density) / ppm / 111_320.0
+        val slopLon = slopLat / cos(Math.toRadians(tap.latitude))
+        val near = grid.query(tap.latitude - slopLat, tap.latitude + slopLat, tap.longitude - slopLon, tap.longitude + slopLon)
+        for (loc in near) {
             val span = screenSpanPx(loc, ppm)
             if (loc !== picked && (declutteredAtZoom(zoom, span) || tooBigToTap(loc, ppm, map.width, map.height))) continue
             proj.toPixels(GeoPoint(loc.lat, loc.lon), p)
