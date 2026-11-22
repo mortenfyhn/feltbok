@@ -72,8 +72,9 @@ interface PlatformUi {
     fun toast(message: String)
 
     /** The platform date picker, seeded on [initialMs]; [onPick] gets it with the date replaced and
-     *  the time of day kept. [clearLabel] adds a button that calls [onClear] instead. */
-    fun pickDate(initialMs: Long, onPick: (Long) -> Unit, clearLabel: String? = null, onClear: () -> Unit = {})
+     *  the time of day kept. [clearLabel] adds a button that calls [onClear] instead. [maxMs] is the
+     *  latest date it offers. */
+    fun pickDate(initialMs: Long, onPick: (Long) -> Unit, clearLabel: String? = null, onClear: () -> Unit = {}, maxMs: Long? = null)
 
     /** The platform time picker; [onPick] gets [initialMs] with the time of day replaced. */
     fun pickTime(initialMs: Long, onPick: (Long) -> Unit)

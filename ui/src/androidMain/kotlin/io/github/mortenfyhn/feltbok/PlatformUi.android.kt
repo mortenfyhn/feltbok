@@ -36,7 +36,7 @@ private class AndroidPlatformUi(private val ctx: Context) : PlatformUi {
 
     override fun toast(message: String) = Toast.makeText(ctx, message, Toast.LENGTH_SHORT).show()
 
-    override fun pickDate(initialMs: Long, onPick: (Long) -> Unit, clearLabel: String?, onClear: () -> Unit) {
+    override fun pickDate(initialMs: Long, onPick: (Long) -> Unit, clearLabel: String?, onClear: () -> Unit, maxMs: Long?) {
         val cal = Calendar.getInstance().apply { timeInMillis = initialMs }
         DatePickerDialog(ctx, { _, y, mo, d ->
             cal.set(Calendar.YEAR, y); cal.set(Calendar.MONTH, mo)
@@ -44,6 +44,7 @@ private class AndroidPlatformUi(private val ctx: Context) : PlatformUi {
         }, cal.get(Calendar.YEAR), cal.get(Calendar.MONTH), cal.get(Calendar.DAY_OF_MONTH)).apply {
             // Takes over the picker's own "Avbryt" (set before show(), so ours wins).
             if (clearLabel != null) setButton(DialogInterface.BUTTON_NEGATIVE, clearLabel) { _, _ -> onClear() }
+            if (maxMs != null) datePicker.maxDate = maxMs
         }.show()
     }
 

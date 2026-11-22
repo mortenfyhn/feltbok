@@ -1462,7 +1462,10 @@ fun DetailScreen(vm: MainViewModel) {
     val batch = vm.batchEditing
     // Same precondition for saving and for copying (copy commits the draft first). Batch edit acts on
     // existing notes, so it needs no species or locality.
-    val canSave = batch || (vm.dSpecies.isNotBlank() && (vm.dLoc != null || vm.nearest() != null))
+    // Nor while a value would make the export refuse the note. Comments aren't batch-edited.
+    val oddPair = vm.draftOddPair()
+    val longComment = !batch && vm.draftCommentTooLong()
+    val canSave = (batch || (vm.dSpecies.isNotBlank() && (vm.dLoc != null || vm.nearest() != null))) && !oddPair && !longComment
     // Leaving with unsaved work discards it but offers an undo (#122); an untouched edit just goes
     // back with nothing to undo. A batch edit touches nothing until Lagre, so leaving just returns.
     val leave = {
@@ -1590,13 +1593,13 @@ fun DetailScreen(vm: MainViewModel) {
                     else -> Text(if (vm.locationOff) Strings.Picker.titlePick else Strings.findingPosition, color = cs.onSurfaceVariant)
                 }
             }
-            AntallRow(vm)
+            AntallRow(vm, error = if (oddPair) Strings.Upload.oddPair else null)
             DropdownRow(Strings.Detail.age, vm.dAge, Country.ages, batchHint = if (batch) vm.batchPreview { it.age } else "") { vm.dAge = it }
             DropdownRow(Strings.Detail.sex, vm.dSex, Country.sexes, batchHint = if (batch) vm.batchPreview { it.sex } else "") { vm.dSex = it }
             DropdownRow(Strings.Detail.activity, vm.dAct, vm.activityOptions(), fullScreen = true, batchHint = if (batch) vm.batchPreview { it.activity } else "") { vm.dAct = it }
             // Comments aren't batch-editable (rarely the same across notes), so hide them then.
             if (!batch) {
-                CommentField(Strings.Detail.commentPublic, vm.dPub) { vm.dPub = it }
+                CommentField(Strings.Detail.commentPublic, vm.dPub, error = if (longComment) Strings.Upload.publicTooLongWithCoObservers else null) { vm.dPub = it }
                 CommentField(Strings.Detail.commentPrivate, vm.dPriv) { vm.dPriv = it }
             }
             // One row to save space; tap to open the from/to editor (point or range).
@@ -1678,8 +1681,14 @@ private fun HideUntilRow(vm: MainViewModel, batch: Boolean) {
     }
 }
 
+/** Why a field keeps the editor from saving, under its value. */
 @Composable
-private fun AntallRow(vm: MainViewModel) {
+private fun FieldError(text: String, modifier: Modifier = Modifier) =
+    Text(text, modifier.padding(top = 4.dp), color = MaterialTheme.colorScheme.error, fontSize = 13.sp)
+
+@Composable
+private fun AntallRow(vm: MainViewModel, error: String?) {
+    val invalid = error != null
     val cs = MaterialTheme.colorScheme
     val focus = LocalFocusManager.current
     val scope = rememberCoroutineScope()
@@ -1699,7 +1708,7 @@ private fun AntallRow(vm: MainViewModel) {
     ) {
         Text(Strings.Detail.count, color = cs.onSurfaceVariant, fontSize = 14.sp, modifier = Modifier.weight(1f))
         Row(
-            Modifier.border(1.dp, cs.outline, RoundedCornerShape(10.dp)),
+            Modifier.border(if (invalid) 2.dp else 1.dp, if (invalid) cs.error else cs.outline, RoundedCornerShape(10.dp)),
             verticalAlignment = Alignment.CenterVertically,
         ) {
             // Stepping past 1 down lands on "unknown"; stepping back up returns to 1.
@@ -1731,13 +1740,14 @@ private fun AntallRow(vm: MainViewModel) {
                 keyboardActions = KeyboardActions(onDone = { focus.clearFocus() }),
                 textStyle = androidx.compose.ui.text.TextStyle(
                     textAlign = TextAlign.Center, fontWeight = FontWeight.Bold,
-                    fontSize = 18.sp, color = cs.onSurface),
+                    fontSize = 18.sp, color = if (invalid) cs.error else cs.onSurface),
             )
             Box(Modifier.size(44.dp, 40.dp).clickable { set(if (vm.dCount == UNKNOWN_COUNT) 1 else vm.dCount + 1) }, Alignment.Center) {
                 Text("+", fontSize = 22.sp, color = cs.onPrimaryContainer)
             }
         }
     }
+    if (error != null) FieldError(error, Modifier.fillMaxWidth().background(cs.surface).padding(horizontal = 16.dp).padding(bottom = 8.dp))
     HorizontalDivider(color = cs.outline.copy(alpha = 0.4f))
 }
 
@@ -1833,10 +1843,10 @@ private fun OptionItem(text: String, selected: Boolean, fullScreen: Boolean, non
  *  rows' height each, which pushed the fields below it off screen. Tap to write it on a full-screen
  *  page; the row then previews the start of the comment, ellipsized. */
 @Composable
-private fun CommentField(label: String, value: String, onChange: (String) -> Unit) {
+private fun CommentField(label: String, value: String, error: String? = null, onChange: (String) -> Unit) {
     val cs = MaterialTheme.colorScheme
     var open by remember { mutableStateOf(false) }
-    FieldRow(label, onClick = { open = true }) {
+    FieldRow(label, onClick = { open = true }, error = error) {
         if (value.isNotBlank())
             Text(value, fontWeight = FontWeight.Medium, maxLines = 1,
                 overflow = TextOverflow.Ellipsis, modifier = Modifier.weight(1f, fill = false))
@@ -1901,7 +1911,8 @@ private fun TimeDialog(vm: MainViewModel, onDismiss: () -> Unit) {
 
     // The platform pickers: imperative dialogs shown on tap. They keep the untouched half of the
     // instant, so a date pick leaves the time alone and vice versa.
-    fun pickDate(ms: Long, onSet: (Long) -> Unit) = platform.pickDate(ms, onSet)
+    // No later than today: the site refuses a sighting dated in the future.
+    fun pickDate(ms: Long, onSet: (Long) -> Unit) = platform.pickDate(ms, onSet, maxMs = nowMs())
     fun pickTime(ms: Long, onSet: (Long) -> Unit) = platform.pickTime(ms, onSet)
 
     // Keep the range non-inverted: moving the start forward drags the end with it; the end
@@ -1980,6 +1991,7 @@ private fun FieldRow(
     onClick: (() -> Unit)? = null,
     surface: Boolean = true,
     divider: Boolean = true,
+    error: String? = null,
     content: @Composable RowScope.() -> Unit,
 ) {
     val cs = MaterialTheme.colorScheme
@@ -2005,6 +2017,7 @@ private fun FieldRow(
             if (onClick != null) Text("  ›", color = cs.outline, fontSize = 18.sp)
         }
     }
+    if (error != null) FieldError(error, Modifier.fillMaxWidth().background(cs.surface).padding(horizontal = 16.dp).padding(bottom = 8.dp))
     if (divider) HorizontalDivider(color = cs.outline.copy(alpha = 0.4f))
 }
 

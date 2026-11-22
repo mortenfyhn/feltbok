@@ -2,6 +2,7 @@ package io.github.mortenfyhn.feltbok
 
 import android.app.Application
 import androidx.compose.ui.test.assertIsDisplayed
+import androidx.compose.ui.test.assertIsNotEnabled
 import androidx.compose.ui.test.hasSetTextAction
 import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.junit4.v2.createComposeRule
@@ -69,6 +70,17 @@ class EditFlowTest {
         rule.onNode(hasSetTextAction() and hasText("")).performTextInput("x".repeat(300))
         assertEquals(MAX_COMMENT, vm.dPub.length)
         rule.onNodeWithText(Strings.Detail.commentLength(MAX_COMMENT, MAX_COMMENT)).assertIsDisplayed()
+    }
+
+    /** An odd count "I par" would be refused on export, so the editor says why and won't save it. */
+    @Test
+    fun anOddCountInPairsBlocksSaving() {
+        val vm = start()
+        rule.runOnUiThread { vm.seedNote("kjøttmeis") }
+        rule.onNodeWithText("kjøttmeis", substring = true).performClick()
+        rule.runOnUiThread { vm.dSex = "I par" }
+        rule.onNodeWithText(Strings.Upload.oddPair).assertIsDisplayed()
+        rule.onNodeWithText(Strings.Detail.save).assertIsNotEnabled()
     }
 
     @Test

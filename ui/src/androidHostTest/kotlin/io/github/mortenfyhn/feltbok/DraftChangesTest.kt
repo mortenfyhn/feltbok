@@ -11,7 +11,8 @@ import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
 
-/** Lagre is greyed out until an edit or batch edit changes a field (it follows draftHasChanges). */
+/** Lagre is greyed out until an edit or batch edit changes a field (it follows draftHasChanges), and
+ *  while a value would make the export refuse the note. */
 @OptIn(ExperimentalCoroutinesApi::class)
 class DraftChangesTest {
     private lateinit var vm: MainViewModel
@@ -46,5 +47,24 @@ class DraftChangesTest {
         assertFalse(vm.draftHasChanges())
         vm.setCount(5)
         assertTrue(vm.draftHasChanges())
+    }
+
+    @Test
+    fun anOddCountInPairsCantBeSaved() {
+        vm.editNote(vm.notes.first())
+        vm.dSex = "I par"
+        assertTrue(vm.draftOddPair())
+        vm.setCount(2)
+        assertFalse(vm.draftOddPair())
+    }
+
+    @Test
+    fun aCommentTooLongWithTypedCoObserversCantBeSaved() {
+        vm.editNote(vm.notes.first())
+        vm.dPub = "x".repeat(MAX_COMMENT - 10)
+        vm.dCoObs.add("Ola Nordmann") // typed, so it goes into the comment
+        assertTrue(vm.draftCommentTooLong())
+        vm.dCoObs.clear()
+        assertFalse(vm.draftCommentTooLong())
     }
 }

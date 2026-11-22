@@ -48,13 +48,13 @@ private object IosPlatformUi : PlatformUi {
 
     override fun toast(message: String) = IosToast.show(message, long = false)
 
-    override fun pickDate(initialMs: Long, onPick: (Long) -> Unit, clearLabel: String?, onClear: () -> Unit) =
-        showPicker(initialMs, UIDatePickerMode.UIDatePickerModeDate, clearLabel?.let { it to onClear }) { picked ->
+    override fun pickDate(initialMs: Long, onPick: (Long) -> Unit, clearLabel: String?, onClear: () -> Unit, maxMs: Long?) =
+        showPicker(initialMs, UIDatePickerMode.UIDatePickerModeDate, clearLabel?.let { it to onClear }, maxMs) { picked ->
             onPick(merge(dateFrom = picked, timeFrom = initialMs))
         }
 
     override fun pickTime(initialMs: Long, onPick: (Long) -> Unit) =
-        showPicker(initialMs, UIDatePickerMode.UIDatePickerModeTime, null) { picked ->
+        showPicker(initialMs, UIDatePickerMode.UIDatePickerModeTime, null, null) { picked ->
             onPick(merge(dateFrom = initialMs, timeFrom = picked))
         }
 }
@@ -63,7 +63,7 @@ private object IosPlatformUi : PlatformUi {
 actual fun rememberPlatformUi(): PlatformUi = IosPlatformUi
 
 /** iOS's own date/time picker in a sheet: inline calendar for a date, wheels for a time. */
-private fun showPicker(ms: Long, mode: UIDatePickerMode, extra: Pair<String, () -> Unit>?, onPicked: (Long) -> Unit) {
+private fun showPicker(ms: Long, mode: UIDatePickerMode, extra: Pair<String, () -> Unit>?, maxMs: Long?, onPicked: (Long) -> Unit) {
     val vc = UIViewController()
     vc.view.backgroundColor = UIColor.systemBackgroundColor
     // The app's brand green (Brand.primary) instead of iOS blue, like the Android dialogs' accent.
@@ -77,6 +77,7 @@ private fun showPicker(ms: Long, mode: UIDatePickerMode, extra: Pair<String, () 
         }
         locale = NSLocale(localeIdentifier = "nb_NO")
         date = NSDate.dateWithTimeIntervalSince1970(ms / 1000.0)
+        maximumDate = maxMs?.let { NSDate.dateWithTimeIntervalSince1970(it / 1000.0) }
     }
     fun button(title: String, bold: Boolean = false, action: () -> Unit) =
         UIButton.buttonWithType(UIButtonTypeSystem).apply {

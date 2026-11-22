@@ -103,6 +103,11 @@ sealed interface UploadState {
     data class Finished(val result: UploadResult) : UploadState
 }
 
+/** The public comment as exported: co-observers who aren't [users] (by brukeralias) can't be
+ *  linked, so they go into it. */
+fun publicComment(comment: String, coObservers: List<String>, users: Set<String>): String =
+    coObservers.filterNot { it in users }.let { if (it.isEmpty()) comment else Strings.Upload.withCoObservers(comment, it) }
+
 /** Uploads [notes] to the review page (POST /core/Sightings), one by one. Everything that can be checked is checked first, so a problem blocks the whole
  *  upload before anything is sent. [taxonIds] are the bundled taxon ids by scientific name. [users] are the
  *  co-observers picked from the user search, by brukeralias; anyone else on a note was typed in, and
@@ -124,10 +129,7 @@ suspend fun uploadNotes(
     val me = session.okBody()?.let(::parseUserId)
         ?: return UploadResult.NotStarted(if (session.rejected) Interruption.LoggedOut else Interruption.Failed(Strings.Upload.failed(session)))
 
-    // Co-observers who aren't users can't be linked, so they go into the public comment.
-    val publicComment = { n: Note ->
-        n.coObservers.filterNot(isUser).let { if (it.isEmpty()) n.publicComment else Strings.Upload.withCoObservers(n.publicComment, it) }
-    }
+    val publicComment = { n: Note -> publicComment(n.publicComment, n.coObservers, users.keys) }
     val now = nowMs()
     val problems = LinkedHashMap<Long, String>()
     notes.forEach { n -> uploadProblem(n, now)?.let { problems[n.id] = Strings.Upload.problem(it, n) } }

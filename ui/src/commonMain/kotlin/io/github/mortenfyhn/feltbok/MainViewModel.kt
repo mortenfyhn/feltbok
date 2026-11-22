@@ -442,6 +442,10 @@ class MainViewModel(private val platform: Platform) : ViewModel() {
     /** Whether leaving the editor would actually lose work, so Back/✕ can skip the discard confirm
      *  when there's nothing to discard. A new observation is always unsaved work; an edit only
      *  counts if a field changed from the saved note, a batch edit if it would write anything. */
+    /** The draft can't be exported as it is; the editor won't save it until it's fixed. */
+    fun draftOddPair() = oddPair(dSex, dCount)
+    fun draftCommentTooLong() = publicComment(dPub, dCoObs, coObsUsers.keys).length > MAX_COMMENT
+
     fun draftHasChanges(): Boolean {
         if (batchEditing) return !batchChange().isNoOp
         val orig = editingId?.let { id -> notes.firstOrNull { it.id == id } } ?: return true

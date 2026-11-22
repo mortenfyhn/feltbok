@@ -119,7 +119,11 @@ Saving a new observation scrolls the list up to its day section, so you see the 
 you just added even when it starts a fresh day above where the list was scrolled.
 Saving an *edit* that changed something offers an undo ("Endra 1 observasjon"), on the
 same longer timeout as a batch edit — the old values are gone otherwise.
-**Lagre** is greyed out on an edit or batch edit until a field changes. The Slett/Lagre bar is
+**Lagre** is greyed out on an edit or batch edit until a field changes. It is also greyed out
+while a value would make the export refuse the note: an odd count with "I par" (the count turns
+red, with "«I par» krever partall" under it), or a public comment that the co-observers who aren't
+users push past 254 characters (the reason shows under the comment). The count isn't changed for
+you. The Slett/Lagre bar is
 hidden while the keyboard is open, so it doesn't sit on top of the keys.
 
 While you scroll, a thin indicator along the right edge shows where you are in the
@@ -179,6 +183,7 @@ separately-tappable date and time-of-day (so you can change just the day, or jus
 Slutt shows the same as Start until you edit it; then it becomes a real range that may span
 midnight. The end can never fall before the start, and an end in the same minute as the start
 is dropped, so Slutt mirrors Start again. That is how you go back to a single point in time.
+The date pickers offer no day after today, since the site refuses a sighting dated in the future.
 Each row has its own **Nå** button, pinned to the right, that sets just that end to the current
 moment. **Uten klokkeslett** keeps the date but leaves the time unspecified, for observations
 logged after the fact, when you don't remember the time; it exports with the date filled in and

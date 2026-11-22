@@ -76,6 +76,9 @@ const val MAX_COMMENT = 254
 
 enum class UploadProblem { NO_SITE, UNKNOWN_AGE, UNKNOWN_SEX, UNKNOWN_ACTIVITY, ODD_PAIR, FUTURE, END_BEFORE_START }
 
+/** "I par" with a known odd count, which the site refuses. */
+fun oddPair(sex: String, count: Int) = sex == "I par" && count != UNKNOWN_COUNT && count % 2 != 0
+
 fun uploadProblem(n: Note, now: Long, zone: TimeZone = TimeZone.currentSystemDefault()): UploadProblem? {
     val end = n.endTime ?: n.time
     val day = { ms: Long -> Instant.fromEpochMilliseconds(ms).toLocalDateTime(zone).date }
@@ -85,7 +88,7 @@ fun uploadProblem(n: Note, now: Long, zone: TimeZone = TimeZone.currentSystemDef
         n.age.isNotEmpty() && n.age !in BirdLists.stages -> UploadProblem.UNKNOWN_AGE
         n.sex.isNotEmpty() && n.sex !in BirdLists.genders -> UploadProblem.UNKNOWN_SEX
         n.activity.isNotEmpty() && n.activity !in BirdLists.activities -> UploadProblem.UNKNOWN_ACTIVITY
-        n.sex == "I par" && n.count != UNKNOWN_COUNT && n.count % 2 != 0 -> UploadProblem.ODD_PAIR
+        oddPair(n.sex, n.count) -> UploadProblem.ODD_PAIR
         day(end) > day(now) -> UploadProblem.FUTURE // the server compares dates, not times
         end < n.time -> UploadProblem.END_BEFORE_START
         else -> null

@@ -209,13 +209,15 @@ object Strings {
             "${if (names.size == 1) "Brukeren" else "Brukerne"} ${andList(names)} finnes ikke på Artsobservasjoner"
         private fun andList(xs: List<String>) = if (xs.size < 2) xs.joinToString() else xs.dropLast(1).joinToString() + " og " + xs.last()
 
+        const val oddPair = "«I par» krever partall"
+
         /** [p] is [n]'s problem. */
         fun problem(p: UploadProblem, n: Note) = when (p) {
             UploadProblem.NO_SITE -> "Lokaliteten finnes ikke"
             UploadProblem.UNKNOWN_AGE -> "Ugyldig alder «${n.age}»"
             UploadProblem.UNKNOWN_SEX -> "Ugyldig kjønn «${n.sex}»"
             UploadProblem.UNKNOWN_ACTIVITY -> "Ugyldig aktivitet «${n.activity}»"
-            UploadProblem.ODD_PAIR -> "«I par» krever partall"
+            UploadProblem.ODD_PAIR -> oddPair
             UploadProblem.FUTURE -> "Datoen er i framtida"
             UploadProblem.END_BEFORE_START -> "Sluttid er før starttid"
         }
