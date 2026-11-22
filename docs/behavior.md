@@ -297,7 +297,8 @@ picker opened right after launch doesn't count every locality in view as new.
 
 "＋ Ny lokalitet" places a spot at the crosshair, above a panel with the name and the radius. The
 zoom buttons hide while the panel is open; the re-centre button stays above it and puts the crosshair
-on your GPS position. The name field starts blank, with "Ny lokalitet" as a hint, and Lagre sits
+on your GPS position. The map doesn't follow the GPS while the panel is open: opening it in follow mode
+moves the crosshair onto your position once, and from then on new fixes leave the spot where it is. The name field starts blank, with "Ny lokalitet" as a hint, and Lagre sits
 at the bottom of the panel, level with the foot of the radius wheel. Under the field, "Se
 navneforslag (n)" offers names from Kartverket's stedsnavn register (the source behind
 Norgeskart): the app asks for the names within 1000 m of the crosshair each time the map settles,
