@@ -8,10 +8,11 @@ come with them in other_taxa.csv (scripts/build_other_taxa.py).
 
 Takes the bird hit whose scientific name, or one of its scientific synonyms, is the latin exactly.
 Without one, the hit whose Norwegian name is the checklist's: what the paste import matched on. A
-few checklist species are subspecies or another genus on Artsobservasjoner (polarsisik is
-Acanthis flammea exilipes there, dvergflamingo Phoenicopterus minor), so includeSubSpecies matters.
-Fails if a name has no single hit: then fixing the checklist comes first. Lists the matches whose
-Norwegian name differs from the checklist's, to check by hand. Run after rebuilding species.csv.
+few checklist species are subspecies on Artsobservasjoner (polarsisik is Acanthis flammea
+exilipes), so includeSubSpecies matters. Fails if a name has no single hit: then fixing the
+checklist comes first. Lists the matches whose Latin or Norwegian name differs from the
+checklist's, to check by hand: the checklist should use Artsobservasjoner's names. Run after
+rebuilding species.csv.
 
     python scripts/build_taxon_ids.py      # -> taxon_ids.csv
 """
@@ -39,7 +40,8 @@ def search(name):
 
 
 def taxon_ids(latin, norsk):
-    """{id: Norwegian name} of the hits that match, by scientific name first, then Norwegian name."""
+    """{id: (Norwegian, scientific name)} of the hits that match, by scientific name first, then
+    Norwegian name."""
 
     def scientific(h):
         names = [h.get("scientificName") or {}] + (
@@ -50,11 +52,14 @@ def taxon_ids(latin, norsk):
     def vern(h):
         return (h.get("vernacularName") or {}).get("name", "")
 
-    hits = {h["taxonId"]: vern(h) for h in search(latin) if scientific(h)}
+    def names(h):
+        return vern(h), (h.get("scientificName") or {}).get("name", "")
+
+    hits = {h["taxonId"]: names(h) for h in search(latin) if scientific(h)}
     if not hits and norsk:
         time.sleep(DELAY)
         hits = {
-            h["taxonId"]: vern(h)
+            h["taxonId"]: names(h)
             for h in search(norsk)
             if vern(h).lower() == norsk.lower()
         }
@@ -68,10 +73,10 @@ def main():
     for i, (latin, norsk) in enumerate(names, 1):
         hits = taxon_ids(latin, norsk)
         if len(hits) == 1:
-            ((tid, name),) = hits.items()
+            ((tid, (name, sci)),) = hits.items()
             out.append((latin, tid))
-            if name.lower() != norsk.lower():
-                differ.append(f"{latin}: {norsk} -> {tid} {name}")
+            if name.lower() != norsk.lower() or sci != latin:
+                differ.append(f"{latin} {norsk} -> {tid} {sci} {name}")
         else:
             bad.append(f"{latin} ({norsk}): {sorted(hits) or 'not found'}")
         if i % 50 == 0:
@@ -79,7 +84,7 @@ def main():
         time.sleep(DELAY)
     if differ:
         print(
-            "Norwegian name differs, check by hand:\n  " + "\n  ".join(differ),
+            "Name differs, check by hand:\n  " + "\n  ".join(differ),
             file=sys.stderr,
         )
     if bad:
