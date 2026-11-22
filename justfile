@@ -100,7 +100,7 @@ install: build
 [group('app')]
 run: install
     s=$(adb get-serialno); case "$s" in emulator-*) adb -s "$s" emu geo fix 8.7 63.7 ;; esac
-    adb shell am start -n io.github.mortenfyhn.feltbok.debug/io.github.mortenfyhn.feltbok.MainActivity
+    adb shell am start -a android.intent.action.MAIN -c android.intent.category.LAUNCHER -n io.github.mortenfyhn.feltbok.debug/io.github.mortenfyhn.feltbok.MainActivity
 
 # For agents to check UI without the phone, and for the maintainer to watch or use it. Host GPU:
 # the software renderer crashes under Fedora's SELinux (execheap), and freshly created AVDs crash
@@ -199,7 +199,7 @@ seed:
     adb push /tmp/feltbok-seed-notes.json {{data_dir}}/seed-notes.json
     adb push /tmp/feltbok-seed-users.json {{data_dir}}/seed-coobs-users.json
     adb shell am force-stop {{app_id}}
-    adb shell am start -n {{app_id}}/io.github.mortenfyhn.feltbok.MainActivity
+    adb shell am start -a android.intent.action.MAIN -c android.intent.category.LAUNCHER -n {{app_id}}/io.github.mortenfyhn.feltbok.MainActivity
 
 # Installs a dev build whose footer shows the release version, then drives it with
 # scripts/dev/screenshots.py. Clears the dev app's data.
