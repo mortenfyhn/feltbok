@@ -4,10 +4,13 @@ import android.app.Application
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.assertIsNotEnabled
 import androidx.compose.ui.test.junit4.v2.createComposeRule
+import androidx.compose.ui.test.longClick
 import androidx.compose.ui.test.onAllNodesWithText
+import androidx.compose.ui.test.onLast
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performScrollTo
+import androidx.compose.ui.test.performTouchInput
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import kotlinx.coroutines.delay
@@ -95,6 +98,32 @@ class ExportFlowTest {
 
         rule.onNodeWithText(Strings.Upload.exportedOf(1, 2)).assertIsDisplayed()
         rule.onNodeWithText(Strings.Upload.blocked(1)).assertIsDisplayed()
+    }
+
+    /** The notes to fix are marked as in the list: a long-press starts marking, and Slett deletes
+     *  the marked ones, with an undo, and stays on the export screen. */
+    @Test
+    fun deletingAMarkedNoteToFixStaysOnTheExportScreen() {
+        val app = ApplicationProvider.getApplicationContext<Application>()
+        val vm = MainViewModel(FakeArtsobs(AndroidPlatform(app)))
+        rule.setContent { App(vm) }
+        rule.runOnUiThread {
+            vm.seedNote("kjøttmeis"); vm.seedNote("blåmeis"); vm.seedNote("grønnfink")
+            vm.notes[0] = vm.notes[0].copy(sex = "I par", count = 1)
+            vm.notes[1] = vm.notes[1].copy(sex = "I par", count = 1)
+        }
+
+        rule.onNodeWithText(Strings.Notes.export).performClick()
+        rule.onNodeWithText(Strings.Upload.button(3, all = true)).performClick()
+        rule.waitUntil(timeoutMillis = 5_000) { rule.onAllNodesWithText(Strings.Upload.blocked(2)).fetchSemanticsNodes().isNotEmpty() }
+        // The list under the export screen shows the same notes and marks; the export screen's come last.
+        rule.onAllNodesWithText(vm.notes[0].species, substring = true).onLast().performTouchInput { longClick() }
+        rule.onAllNodesWithText(Strings.Notes.selected(1)).onLast().assertIsDisplayed()
+        rule.onAllNodesWithText(Strings.Notes.deleteSelected).onLast().performClick()
+
+        rule.onNodeWithText(Strings.Notes.deleted(1)).assertIsDisplayed()
+        rule.onNodeWithText(Strings.Upload.blocked(1)).assertIsDisplayed()
+        rule.onNodeWithText(Strings.Upload.rest(1)).assertIsDisplayed()
     }
 
     /** Logged in as user 1, and stores each sighting as sent, under ids 1, 2, ... Takes a moment per

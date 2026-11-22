@@ -42,6 +42,7 @@ import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.layout.windowInsetsTopHeight
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
@@ -479,7 +480,7 @@ private fun FeedbackDialog(onDismiss: () -> Unit) {
  *  transforming (Material's selection app-bar) rather than a new row - and can't shift the list.
  *  Export stays top-right, roughly where the whole-list export button sits; Endre/Slett sit before it. */
 @Composable
-private fun SelectionBar(vm: MainViewModel, onEdit: () -> Unit, modifier: Modifier = Modifier) {
+private fun SelectionBar(vm: MainViewModel, onEdit: () -> Unit, modifier: Modifier = Modifier, export: Boolean = true) {
     // Deleting several notes at once is surprising, so confirm it (#156). A single mark deletes
     // straight away - the undo snackbar is enough of a safety net there.
     var confirmDelete by remember { mutableStateOf(false) }
@@ -505,13 +506,16 @@ private fun SelectionBar(vm: MainViewModel, onEdit: () -> Unit, modifier: Modifi
             modifier = Modifier.clip(RoundedCornerShape(8.dp))
                 .clickable { if (vm.selected.size > 1) confirmDelete = true else vm.deleteSelected() }
                 .padding(horizontal = 10.dp, vertical = 8.dp))
-        Spacer(Modifier.width(2.dp))
-        Box(
-            Modifier.clip(RoundedCornerShape(8.dp))
-                .border(1.dp, Color.White.copy(alpha = 0.7f), RoundedCornerShape(8.dp))
-                .clickable { vm.exportSelected() }.padding(horizontal = 12.dp, vertical = 8.dp),
-        ) {
-            Text(Strings.Notes.export, color = Color.White, fontWeight = FontWeight.Medium, fontSize = 14.sp)
+        // Not on the export screen, which is the export.
+        if (export) {
+            Spacer(Modifier.width(2.dp))
+            Box(
+                Modifier.clip(RoundedCornerShape(8.dp))
+                    .border(1.dp, Color.White.copy(alpha = 0.7f), RoundedCornerShape(8.dp))
+                    .clickable { vm.exportSelected() }.padding(horizontal = 12.dp, vertical = 8.dp),
+            ) {
+                Text(Strings.Notes.export, color = Color.White, fontWeight = FontWeight.Medium, fontSize = 14.sp)
+            }
         }
     } }
     if (confirmDelete) {
@@ -2008,17 +2012,28 @@ private fun FieldRow(
 
 // ============================ EXPORT ============================
 
-/** The notes the export stopped on (by id, with why), drawn as the list draws them, by day. A tap
- *  opens [onClick] (the editor, to fix it). */
-@Composable
-private fun ProblemNotes(vm: MainViewModel, notes: List<Note>, problems: Map<Long, String>, onClick: (Note) -> Unit) {
-    val shown = notes.filter { it.id in problems }
-    for (group in groupNotesByDay(shown, Strings.dateNames)) {
-        DayHeader(group.label, selecting = false, allSelected = false, onToggle = {}, onLongPress = {})
-        group.notes.forEach { n ->
+/** The notes the export stopped on (by id, with why), drawn as the list draws them, by day, and
+ *  marked the same way. A tap opens [onClick] (the editor, to fix it), or toggles a mark while marking. */
+private fun LazyListScope.problemNotes(
+    vm: MainViewModel, groups: List<DayGroup>, problems: Map<Long, String>, ds: DragSelect<Long>, onClick: (Note) -> Unit,
+) {
+    for (group in groups) {
+        item(key = "day:${group.label}") {
+            val ids = group.notes.map { it.id }
+            DayHeader(
+                group.label, vm.selectionMode, allSelected = group.notes.all { it.id in vm.selected },
+                onToggle = { vm.toggleDay(ids) }, onLongPress = { vm.startSelectDay(ids) },
+            )
+        }
+        items(group.notes, key = { it.id }) { n ->
+            val selecting = vm.selectionMode
             NoteRow(
                 n, vm.noteName(n), vm.langPrefs.primary == Lang.LATIN, vm.statusFor(n.latin),
-                selecting = false, selected = false, problem = problems[n.id], onClick = { onClick(n) },
+                selecting = selecting, selected = n.id in vm.selected, problem = problems[n.id],
+                onClick = {
+                    if (ds.suppressTap) ds.suppressTap = false
+                    else if (selecting) vm.toggleSelect(n.id) else onClick(n)
+                },
             )
         }
     }
@@ -2044,97 +2059,111 @@ fun ExportScreen(vm: MainViewModel) {
     val allSent = state is UploadState.Finished && unsent == 0
     val problems = vm.exportProblems()
 
+    val selecting = vm.selectionMode
+    val haptic = LocalHapticFeedback.current
+    // System Back leaves marking first (like the list), then the screen.
+    BackHandler { if (selecting) vm.clearSelection() else vm.closeExport() }
     Column(Modifier.fillMaxSize().background(cs.background).bottomInsetPadding()) {
-        ScreenHeader(Strings.Export.title, onCancel = { vm.closeExport() })
+        Box {
+            // As tall as the list's status strip, so the selection bar drawn over it fits (as in the papirkurv).
+            ScreenHeader(Strings.Export.title, onCancel = { vm.closeExport() }, modifier = Modifier.heightIn(min = 64.dp))
+            if (selecting) SelectionBar(vm, onEdit = { vm.fixMarkedForUpload() }, Modifier.matchParentSize(), export = false)
+        }
         // The problem notes run edge to edge like the list's rows; everything else keeps a margin.
         val side = Modifier.padding(horizontal = 16.dp)
-        Column(Modifier.weight(1f).verticalScroll(rememberScrollState())) {
-            Text(
-                if (isSelection) Strings.Upload.infoMarked else Strings.Upload.info + " " + Strings.Upload.subsetHint,
-                side.padding(top = 12.dp), fontSize = 14.sp, color = cs.onSurfaceVariant,
-            )
-            if (vm.exportNeedsLogin && !running) {
-                Text(Strings.Upload.logInFirst, side.padding(top = 12.dp))
-                Button(onClick = { vm.logInForExport() }, side.padding(top = 8.dp)) { Text(Strings.Upload.logIn) }
-            } else {
-                // While it runs, the label it had when tapped.
-                val sentBefore = (state as? UploadState.Running)?.sentBefore ?: sent
-                val skipped = (state as? UploadState.Running)?.skipped ?: problems.size
-                val left = exported.size - sentBefore - skipped
-                val m = side.align(Alignment.CenterHorizontally).padding(top = 12.dp)
-                val label = @Composable { text: String ->
-                    // With large text: balanced lines, centred, instead of a lone "(30)".
-                    Text(text, textAlign = TextAlign.Center, style = LocalTextStyle.current.copy(lineBreak = LineBreak.Heading))
-                }
-                // All sent already: send them again, for notes deleted on the site.
-                val again = sentBefore == exported.size && exported.isNotEmpty()
-                // Off while it runs, once all are sent, and while all that's left needs a fix.
-                val enabled = !running && !allSent && (again || left > 0)
-                Button(onClick = { if (again) vm.exportAgain() else vm.uploadExported() }, m, enabled) {
-                    label(
-                        when {
-                            again -> Strings.Upload.again(exported.size)
-                            left == 0 -> Strings.Upload.button(exported.size, all = !isSelection)
-                            // Skips the notes listed as needing a fix.
-                            skipped > 0 -> Strings.Upload.rest(left)
-                            sentBefore == 0 -> Strings.Upload.button(exported.size, all = !isSelection)
-                            // Stopped on this visit: the app doesn't know whether the problem is gone.
-                            result != null -> Strings.Upload.retry(left)
-                            else -> Strings.Upload.rest(left)
-                        },
-                    )
-                }
-            }
-            if (state != UploadState.Idle) {
-                // How many of the notes are sent; it stays where an export stopped.
-                // The bar reads its value later, when it draws: give it this value, not the view model's.
-                val fraction = sent / exported.size.coerceAtLeast(1).toFloat()
-                LinearProgressIndicator({ fraction }, side.fillMaxWidth().padding(top = 16.dp).height(6.dp), gapSize = 0.dp, drawStopIndicator = {})
-                if (allSent) {
-                    Text(Strings.Upload.allExported(sent), side.padding(top = 6.dp), color = cs.primary, fontWeight = FontWeight.Medium)
+        val listState = rememberLazyListState()
+        val groups = groupNotesByDay(exported.filter { it.id in problems }, Strings.dateNames)
+        val orderedIds = groups.flatMap { g -> g.notes.map { it.id } }
+        val orderedIndex = remember(orderedIds) { orderedIds.withIndex().associate { (i, id) -> id to i } }
+        val ds = remember { DragSelect<Long>({ vm.selected.toSet() }, vm::setSelection) }
+        SelectDragAutoScroll(listState, orderedIds, orderedIndex, ds)
+        LazyColumn(
+            Modifier.weight(1f).dragToSelect(listState, orderedIds, orderedIndex, haptic, ds).scrollIndicator(listState),
+            state = listState, userScrollEnabled = !ds.active, contentPadding = PaddingValues(bottom = 24.dp),
+        ) {
+            item(key = "top") { Column(Modifier.fillMaxWidth()) {
+                Text(
+                    if (isSelection) Strings.Upload.infoMarked else Strings.Upload.info + " " + Strings.Upload.subsetHint,
+                    side.padding(top = 12.dp), fontSize = 14.sp, color = cs.onSurfaceVariant,
+                )
+                if (vm.exportNeedsLogin && !running) {
+                    Text(Strings.Upload.logInFirst, side.padding(top = 12.dp))
+                    Button(onClick = { vm.logInForExport() }, side.padding(top = 8.dp)) { Text(Strings.Upload.logIn) }
                 } else {
-                    Text(Strings.Upload.exportedOf(sent, exported.size), side.padding(top = 6.dp), fontSize = 14.sp, color = cs.onSurfaceVariant)
-                }
-            }
-            val reason = @Composable { i: Interruption? ->
-                if (i is Interruption.Failed) Text(i.reason, side.padding(top = 2.dp), color = cs.error, fontWeight = FontWeight.Medium)
-            }
-            when (result) {
-                null -> {}
-                is UploadResult.NotStarted -> reason(result.why)
-                is UploadResult.Blocked -> {
-                    Text(Strings.Upload.blocked(result.problems.size), side.padding(top = 12.dp, bottom = 8.dp), color = cs.error, fontWeight = FontWeight.Medium)
-                    ProblemNotes(vm, exported, result.problems) { vm.fixForUpload(it) }
-                }
-                is UploadResult.Done -> {
-                    reason(result.stopped)
-                    if (result.failed.isNotEmpty()) {
-                        Text(Strings.Upload.blocked(result.failed.size), side.padding(top = 12.dp, bottom = 8.dp), color = cs.error, fontWeight = FontWeight.Medium)
-                        ProblemNotes(vm, exported, result.failed) { vm.fixForUpload(it) }
+                    // While it runs, the label it had when tapped.
+                    val sentBefore = (state as? UploadState.Running)?.sentBefore ?: sent
+                    val skipped = (state as? UploadState.Running)?.skipped ?: problems.size
+                    val left = exported.size - sentBefore - skipped
+                    val m = side.align(Alignment.CenterHorizontally).padding(top = 12.dp)
+                    val label = @Composable { text: String ->
+                        // With large text: balanced lines, centred, instead of a lone "(30)".
+                        Text(text, textAlign = TextAlign.Center, style = LocalTextStyle.current.copy(lineBreak = LineBreak.Heading))
+                    }
+                    // All sent already: send them again, for notes deleted on the site.
+                    val again = sentBefore == exported.size && exported.isNotEmpty()
+                    // Off while it runs, once all are sent, and while all that's left needs a fix.
+                    val enabled = !running && !allSent && (again || left > 0)
+                    Button(onClick = { if (again) vm.exportAgain() else vm.uploadExported() }, m, enabled) {
+                        label(
+                            when {
+                                again -> Strings.Upload.again(exported.size)
+                                left == 0 -> Strings.Upload.button(exported.size, all = !isSelection)
+                                // Skips the notes listed as needing a fix.
+                                skipped > 0 -> Strings.Upload.rest(left)
+                                sentBefore == 0 -> Strings.Upload.button(exported.size, all = !isSelection)
+                                // Stopped on this visit: the app doesn't know whether the problem is gone.
+                                result != null -> Strings.Upload.retry(left)
+                                else -> Strings.Upload.rest(left)
+                            },
+                        )
                     }
                 }
-            }
-            // Whenever some are sent, also on a later visit: you may review and delete days after.
-            if (sent > 0 && !running) {
-                // Green text: Material's default grey reads as disabled.
-                OutlinedButton(
-                    onClick = { platform.openUrl(Strings.Upload.reviewUrl) },
-                    side.align(Alignment.CenterHorizontally).padding(top = 16.dp),
-                    colors = ButtonDefaults.outlinedButtonColors(contentColor = cs.primary),
-                ) {
-                    Text(Strings.Upload.openReview)
+                if (state != UploadState.Idle) {
+                    // How many of the notes are sent; it stays where an export stopped.
+                    // The bar reads its value later, when it draws: give it this value, not the view model's.
+                    val fraction = sent / exported.size.coerceAtLeast(1).toFloat()
+                    LinearProgressIndicator({ fraction }, side.fillMaxWidth().padding(top = 16.dp).height(6.dp), gapSize = 0.dp, drawStopIndicator = {})
+                    if (allSent) {
+                        Text(Strings.Upload.allExported(sent), side.padding(top = 6.dp), color = cs.primary, fontWeight = FontWeight.Medium)
+                    } else {
+                        Text(Strings.Upload.exportedOf(sent, exported.size), side.padding(top = 6.dp), fontSize = 14.sp, color = cs.onSurfaceVariant)
+                    }
                 }
-                // A button, so it doesn't read as one more red error line. A single note deletes
-                // straight through (the undo snackbar catches a mistap); more than one asks first,
-                // same rule as the list's Slett (#157).
-                TextButton(
-                    onClick = { if (sent > 1) confirmClear = true else { vm.clearExported(); vm.closeExport() } },
-                    side.align(Alignment.CenterHorizontally).padding(top = 8.dp), colors = ButtonDefaults.textButtonColors(contentColor = cs.error),
-                ) {
-                    Text(Strings.Upload.clearExported(sent), textAlign = TextAlign.Center, style = LocalTextStyle.current.copy(lineBreak = LineBreak.Heading))
+                val reason = @Composable { i: Interruption? ->
+                    if (i is Interruption.Failed) Text(i.reason, side.padding(top = 2.dp), color = cs.error, fontWeight = FontWeight.Medium)
                 }
-            }
-            Spacer(Modifier.height(24.dp))
+                when (result) {
+                    null, is UploadResult.Blocked -> {}
+                    is UploadResult.NotStarted -> reason(result.why)
+                    is UploadResult.Done -> reason(result.stopped)
+                }
+                if (problems.isNotEmpty()) {
+                    Text(Strings.Upload.blocked(problems.size), side.padding(top = 12.dp, bottom = 8.dp), color = cs.error, fontWeight = FontWeight.Medium)
+                }
+            } }
+            problemNotes(vm, groups, problems, ds) { vm.fixForUpload(it) }
+            item(key = "bottom") { Column(Modifier.fillMaxWidth()) {
+                // Whenever some are sent, also on a later visit: you may review and delete days after.
+                if (sent > 0 && !running) {
+                    // Green text: Material's default grey reads as disabled.
+                    OutlinedButton(
+                        onClick = { platform.openUrl(Strings.Upload.reviewUrl) },
+                        side.align(Alignment.CenterHorizontally).padding(top = 16.dp),
+                        colors = ButtonDefaults.outlinedButtonColors(contentColor = cs.primary),
+                    ) {
+                        Text(Strings.Upload.openReview)
+                    }
+                    // A button, so it doesn't read as one more red error line. A single note deletes
+                    // straight through (the undo snackbar catches a mistap); more than one asks first,
+                    // same rule as the list's Slett (#157).
+                    TextButton(
+                        onClick = { if (sent > 1) confirmClear = true else { vm.clearExported(); vm.closeExport() } },
+                        side.align(Alignment.CenterHorizontally).padding(top = 8.dp), colors = ButtonDefaults.textButtonColors(contentColor = cs.error),
+                    ) {
+                        Text(Strings.Upload.clearExported(sent), textAlign = TextAlign.Center, style = LocalTextStyle.current.copy(lineBreak = LineBreak.Heading))
+                    }
+                }
+            } }
         }
     }
     if (confirmClear) {

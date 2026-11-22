@@ -117,4 +117,41 @@ class ExportVisitTest {
         assertEquals(listOf(1L, 3L), sent())
         assertEquals(setOf(2L), vm.exportProblems().keys)
     }
+
+    @Test
+    fun theExportScreenMarksItsOwnNotesAndTheListGetsItsMarksBack() {
+        vm.toggleSelect(3L)
+        vm.openExport()
+        assertTrue(vm.selected.isEmpty())
+        vm.toggleSelect(1L)
+        vm.closeExport()
+        assertEquals(listOf(3L), vm.selected.toList())
+    }
+
+    @Test
+    fun fixingTheMarkedNotesAtOnceReturnsToTheExportScreen() {
+        vm.notes[0] = vm.notes[0].copy(sex = "I par")
+        vm.notes[1] = vm.notes[1].copy(sex = "I par")
+        vm.openExport()
+        export()
+        vm.setSelection(listOf(1L, 2L))
+        vm.fixMarkedForUpload()
+        vm.dCount = 2
+        vm.save()
+        assertTrue(vm.showExport)
+        assertTrue(vm.exportProblems().isEmpty())
+    }
+
+    @Test
+    fun deletingMarkedNotesTakesThemOffTheListToFix() {
+        vm.notes[0] = vm.notes[0].copy(sex = "I par")
+        vm.notes[1] = vm.notes[1].copy(sex = "I par")
+        vm.openExport()
+        export()
+        vm.setSelection(listOf(1L))
+        vm.deleteSelected()
+        assertEquals(setOf(2L), vm.exportProblems().keys)
+        vm.undo()
+        assertEquals(setOf(1L, 2L), vm.exportProblems().keys)
+    }
 }

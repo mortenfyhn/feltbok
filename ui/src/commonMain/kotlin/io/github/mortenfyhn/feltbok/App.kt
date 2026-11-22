@@ -95,7 +95,7 @@ fun App(vm: MainViewModel, screens: @Composable (LazyListState) -> Unit = { Scre
                     // floats above the + button's 88 dp box, as Material puts snackbars above the FAB;
                     // over it, a tap meant for + hit the snackbar or its Angre.
                     snackbarHost = {
-                        val overFab = vm.screen == Screen.LIST && !vm.selectionMode
+                        val overFab = vm.screen == Screen.LIST && !vm.selectionMode && !vm.showExport
                         SnackbarHost(snackbar, Modifier.padding(bottom = if (overFab) 40.dp + 88.dp else 40.dp))
                     },
                     containerColor = Color.Transparent,

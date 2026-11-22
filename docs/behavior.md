@@ -398,7 +398,10 @@ it or the species was typed in, the co-observers' user ids, the comment's length
 blocks the whole export, so it never stops halfway over something the app could find. The notes
 that need fixing are listed like the main list, each with what's wrong (the fix is left out where
 it's obvious); a tap opens the editor and returns to the export screen. The export button becomes
-"Eksporter resten (27)", which sends the others and leaves those to fix listed.
+"Eksporter resten (27)", which sends the others and leaves those to fix listed. The notes to fix are
+marked as in the list (long-press, drag, day headers), and the bar over the header offers Endre and
+Slett for the marked ones. Endre returns to the export screen, where the fixed notes leave the list.
+The export screen keeps its own marks: the list's marks are back when you leave it.
 
 While it sends, a bar and "12 av 30 eksportert" show how far it got, and the greyed button keeps
 the label it was tapped with. The bar stays where an export stopped (at 0 when nothing was sent):

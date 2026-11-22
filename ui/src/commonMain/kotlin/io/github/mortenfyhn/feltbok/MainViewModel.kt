@@ -392,7 +392,7 @@ class MainViewModel(private val platform: Platform) : ViewModel() {
         get() = screenState
         private set(value) {
             screenState = value
-            // Back on the list after fixing a note from the export screen: return to the export screen.
+            // Back on the list after fixing notes from the export screen: return to the export screen.
             if (value == Screen.LIST) fixingForUpload?.let(::returnToUpload)
         }
     var showExport by mutableStateOf(false); private set
@@ -1077,6 +1077,9 @@ class MainViewModel(private val platform: Platform) : ViewModel() {
     private fun openExportScreen() {
         // A new visit, unless an upload from the last one still runs.
         if (upload !is UploadState.Running) upload = UploadState.Idle
+        // The export screen marks its own notes to fix; the list gets its marks back on leaving.
+        listMarks = selected.toList()
+        clearSelection()
         showExport = true
         checkExportLogin()
     }
@@ -1087,8 +1090,10 @@ class MainViewModel(private val platform: Platform) : ViewModel() {
     /** The export screen offers "Logg inn" instead of exporting: no login, or the site refused it. */
     var exportNeedsLogin by mutableStateOf(false); private set
     private fun checkExportLogin() { viewModelScope.launch { exportNeedsLogin = loginRefused(platform) } }
+    private var listMarks: List<Long> = emptyList()
     fun closeExport() {
         showExport = false
+        setSelection(listMarks.filter { id -> notes.any { it.id == id } })
         // A running upload carries on, and its result shows if the screen is opened again.
         if (upload is UploadState.Finished) upload = UploadState.Idle
     }
@@ -1096,23 +1101,33 @@ class MainViewModel(private val platform: Platform) : ViewModel() {
     var upload by mutableStateOf<UploadState>(UploadState.Idle); private set
     private val taxonIds by lazy { loadTaxonIds(storage) }
 
-    private var fixingForUpload: Long? = null // the note opened from the upload screen's problem list
+    private var fixingForUpload: Set<Long>? = null // the notes opened from the upload screen's problem list
 
     /** Open [n] in the editor from the upload screen's problem list. Leaving the editor returns there. */
     fun fixForUpload(n: Note) {
-        fixingForUpload = n.id
+        fixingForUpload = setOf(n.id)
         showExport = false
         editNote(n)
     }
 
-    // The note leaves the problem list once it passes the local checks (the next upload checks the
+    /** Edit the notes marked in the upload screen's problem list, all at once. Leaving returns there. */
+    fun fixMarkedForUpload() {
+        fixingForUpload = selected.toSet()
+        showExport = false
+        startBatchEdit()
+    }
+
+    // A note leaves the problem list once it passes the local checks (the next upload checks the
     // rest again). Still failing, it stays, with the reason it fails for now.
-    private fun returnToUpload(id: Long) {
+    private fun returnToUpload(ids: Set<Long>) {
         fixingForUpload = null
         showExport = true
-        val n = notes.firstOrNull { it.id == id } ?: return dropProblem(id) // deleted in the editor
-        val problem = uploadProblem(n, nowMs()) ?: return dropProblem(id)
-        updateResult { r -> if (r is UploadResult.Blocked) UploadResult.Blocked(r.problems + (id to Strings.Upload.problem(problem, n))) else r }
+        for (id in ids) {
+            val n = notes.firstOrNull { it.id == id }
+            val problem = n?.let { uploadProblem(it, nowMs()) } // null too when deleted in the editor
+            if (problem == null) dropProblem(id)
+            else updateResult { r -> if (r is UploadResult.Blocked) UploadResult.Blocked(r.problems + (id to Strings.Upload.problem(problem, n))) else r }
+        }
     }
 
     private fun dropProblem(id: Long) = updateResult { r ->
