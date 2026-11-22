@@ -2042,6 +2042,7 @@ fun ExportScreen(vm: MainViewModel) {
     val sent = exported.count { it.sightingId != null }
     val unsent = exported.size - sent
     val allSent = state is UploadState.Finished && unsent == 0
+    val problems = vm.exportProblems()
 
     Column(Modifier.fillMaxSize().background(cs.background).bottomInsetPadding()) {
         ScreenHeader(Strings.Export.title, onCancel = { vm.closeExport() })
@@ -2056,11 +2057,10 @@ fun ExportScreen(vm: MainViewModel) {
                 Text(Strings.Upload.logInFirst, side.padding(top = 12.dp))
                 Button(onClick = { vm.logInForExport() }, side.padding(top = 8.dp)) { Text(Strings.Upload.logIn) }
             } else {
-                // Off while it runs, once all are sent, and until the notes it stopped on are fixed.
-                val toFix = result is UploadResult.Blocked || (result is UploadResult.Done && result.failed.isNotEmpty())
                 // While it runs, the label it had when tapped.
                 val sentBefore = (state as? UploadState.Running)?.sentBefore ?: sent
-                val enabled = !running && !toFix && !allSent
+                val skipped = (state as? UploadState.Running)?.skipped ?: problems.size
+                val left = exported.size - sentBefore - skipped
                 val m = side.align(Alignment.CenterHorizontally).padding(top = 12.dp)
                 val label = @Composable { text: String ->
                     // With large text: balanced lines, centred, instead of a lone "(30)".
@@ -2068,14 +2068,19 @@ fun ExportScreen(vm: MainViewModel) {
                 }
                 // All sent already: send them again, for notes deleted on the site.
                 val again = sentBefore == exported.size && exported.isNotEmpty()
+                // Off while it runs, once all are sent, and while all that's left needs a fix.
+                val enabled = !running && !allSent && (again || left > 0)
                 Button(onClick = { if (again) vm.exportAgain() else vm.uploadExported() }, m, enabled) {
                     label(
                         when {
                             again -> Strings.Upload.again(exported.size)
+                            left == 0 -> Strings.Upload.button(exported.size, all = !isSelection)
+                            // Skips the notes listed as needing a fix.
+                            skipped > 0 -> Strings.Upload.rest(left)
                             sentBefore == 0 -> Strings.Upload.button(exported.size, all = !isSelection)
                             // Stopped on this visit: the app doesn't know whether the problem is gone.
-                            result != null -> Strings.Upload.retry(exported.size - sentBefore)
-                            else -> Strings.Upload.rest(exported.size - sentBefore)
+                            result != null -> Strings.Upload.retry(left)
+                            else -> Strings.Upload.rest(left)
                         },
                     )
                 }
@@ -2104,7 +2109,7 @@ fun ExportScreen(vm: MainViewModel) {
                 is UploadResult.Done -> {
                     reason(result.stopped)
                     if (result.failed.isNotEmpty()) {
-                        Text(Strings.Upload.someFailed(result.failed.size), side.padding(top = 12.dp, bottom = 8.dp), color = cs.error, fontWeight = FontWeight.Medium)
+                        Text(Strings.Upload.blocked(result.failed.size), side.padding(top = 12.dp, bottom = 8.dp), color = cs.error, fontWeight = FontWeight.Medium)
                         ProblemNotes(vm, exported, result.failed) { vm.fixForUpload(it) }
                     }
                 }

@@ -97,8 +97,9 @@ sealed interface UploadResult {
 sealed interface UploadState {
     data object Idle : UploadState
 
-    /** [sentBefore]: how many of the export's notes were sent when it started, so the button keeps its label. */
-    data class Running(val sentBefore: Int) : UploadState
+    /** [sentBefore]: how many of the export's notes were sent when it started, and [skipped]: how many
+     *  it left out as needing a fix, so the button keeps its label. */
+    data class Running(val sentBefore: Int, val skipped: Int) : UploadState
     data class Finished(val result: UploadResult) : UploadState
 }
 

@@ -75,6 +75,28 @@ class ExportFlowTest {
         assertEquals(setOf(1L, 2L), vm.notes.mapNotNull { it.sightingId }.toSet())
     }
 
+    /** A note that needs fixing blocks the export; "Eksporter resten" sends the others, and the
+     *  screen then offers to delete just those, with the note to fix still listed. */
+    @Test
+    fun exportingTheRestLeavesTheNoteToFix() {
+        val app = ApplicationProvider.getApplicationContext<Application>()
+        val vm = MainViewModel(FakeArtsobs(AndroidPlatform(app)))
+        rule.setContent { App(vm) }
+        rule.runOnUiThread {
+            vm.seedNote("kjøttmeis"); vm.seedNote("blåmeis")
+            vm.notes[0] = vm.notes[0].copy(sex = "I par", count = 1)
+        }
+
+        rule.onNodeWithText(Strings.Notes.export).performClick()
+        rule.onNodeWithText(Strings.Upload.button(2, all = true)).performClick()
+        rule.waitUntil(timeoutMillis = 5_000) { rule.onAllNodesWithText(Strings.Upload.rest(1)).fetchSemanticsNodes().isNotEmpty() }
+        rule.onNodeWithText(Strings.Upload.rest(1)).performClick()
+        rule.waitUntil(timeoutMillis = 5_000) { rule.onAllNodesWithText(Strings.Upload.clearExported(1)).fetchSemanticsNodes().isNotEmpty() }
+
+        rule.onNodeWithText(Strings.Upload.exportedOf(1, 2)).assertIsDisplayed()
+        rule.onNodeWithText(Strings.Upload.blocked(1)).assertIsDisplayed()
+    }
+
     /** Logged in as user 1, and stores each sighting as sent, under ids 1, 2, ... Takes a moment per
      *  sighting like the real site, so the screen draws the progress bar. */
     private class FakeArtsobs(real: Platform) : Platform by real {

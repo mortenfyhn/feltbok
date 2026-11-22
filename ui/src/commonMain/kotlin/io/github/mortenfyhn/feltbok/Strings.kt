@@ -191,7 +191,6 @@ object Strings {
         const val exported = "Eksportert til Artsobservasjoner"
         const val logInFirst = "Logg inn på Artsobservasjoner for å eksportere."
         fun blocked(n: Int) = if (n == 1) "1 observasjon må rettes:" else "$n observasjoner må rettes:"
-        fun someFailed(n: Int) = if (n == 1) "1 observasjon ble avvist av Artsobservasjoner:" else "$n observasjoner ble avvist av Artsobservasjoner:"
         const val logIn = "Logg inn"
         const val openReview = "Åpne «Kontroller funn»"
 

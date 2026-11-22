@@ -397,15 +397,15 @@ future, an end after the start), then against the site (the taxon id when the bu
 it or the species was typed in, the co-observers' user ids, the comment's length with the co-observers added). Any problem
 blocks the whole export, so it never stops halfway over something the app could find. The notes
 that need fixing are listed like the main list, each with what's wrong (the fix is left out where
-it's obvious); a tap opens the editor and returns to the export screen. The export button stays off until all are fixed.
+it's obvious); a tap opens the editor and returns to the export screen. The export button becomes
+"Eksporter resten (27)", which sends the others and leaves those to fix listed.
 
 While it sends, a bar and "12 av 30 eksportert" show how far it got, and the greyed button keeps
 the label it was tapped with. The bar stays where an export stopped (at 0 when nothing was sent):
 - A lost connection or login stops it, with the reason under the bar, and the button becomes
   "Prøv igjen (18 gjenstår)".
 - A note the site rejects is listed with the site's own reason (asked for in Norwegian, without
-  its "Invalid arguments: " prefix); the rest are sent. The button
-  stays off until it's fixed.
+  its "Invalid arguments: " prefix), under the same "må rettes" heading; the rest are sent.
 
 Each sent note keeps its sighting id from the site, so the app remembers it's exported, on this
 visit and every later one. The list shows an upload icon by its time, and its editor says

@@ -1129,16 +1129,37 @@ class MainViewModel(private val platform: Platform) : ViewModel() {
         if (s is UploadState.Finished) upload = f(s.result)?.let(UploadState::Finished) ?: UploadState.Idle
     }
 
+    /** The unsent notes listed as needing a fix, by id, with why. "Eksporter resten" skips them. Not
+     *  the ones deleted since, which an undo brings back. */
+    fun exportProblems(): Map<Long, String> {
+        val problems = when (val r = (upload as? UploadState.Finished)?.result) {
+            is UploadResult.Blocked -> r.problems
+            is UploadResult.Done -> r.failed
+            is UploadResult.NotStarted, null -> return emptyMap()
+        }
+        val left = exportLeft().mapTo(HashSet()) { it.id }
+        return problems.filterKeys { it in left }
+    }
+
     fun uploadExported() {
         if (upload is UploadState.Running) return
-        val todo = exportLeft().sortedBy { it.time }
-        upload = UploadState.Running(exportNotes().size - todo.size)
+        val skipped = exportProblems()
+        val left = exportLeft()
+        val todo = left.filter { it.id !in skipped }.sortedBy { it.time }
+        upload = UploadState.Running(exportNotes().size - left.size, skipped.size)
         viewModelScope.launch {
             val r = uploadNotes(platform, todo, taxonIds, coObsUsers.toMap()) { n, sightingId ->
                 val i = notes.indexOfFirst { it.id == n.id }
                 if (i >= 0) { notes[i] = notes[i].copy(sightingId = sightingId); persist() }
             }
-            upload = UploadState.Finished(r)
+            // The skipped notes still need fixing, so they stay listed.
+            upload = UploadState.Finished(
+                if (skipped.isEmpty()) r else when (r) {
+                    is UploadResult.Blocked -> UploadResult.Blocked(skipped + r.problems)
+                    is UploadResult.Done -> r.copy(failed = skipped + r.failed)
+                    is UploadResult.NotStarted -> UploadResult.Done(0, skipped, r.why)
+                },
+            )
             val why = (r as? UploadResult.NotStarted)?.why ?: (r as? UploadResult.Done)?.stopped
             if (why == Interruption.LoggedOut) exportNeedsLogin = true
             checkSession()

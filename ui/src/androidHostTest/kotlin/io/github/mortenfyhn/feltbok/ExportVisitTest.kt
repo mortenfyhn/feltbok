@@ -7,6 +7,7 @@ import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.setMain
 import org.junit.After
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
 
@@ -101,5 +102,19 @@ class ExportVisitTest {
         export()
         vm.clearExported()
         assertEquals(listOf(2L, 3L), vm.notes.map { it.id }.sorted())
+    }
+
+    @Test
+    fun exportingTheRestSkipsTheNotesToFixAndKeepsThemListed() {
+        vm.notes[1] = vm.notes[1].copy(sex = "I par") // an odd count "I par"
+        vm.openExport()
+        export()
+        assertEquals(setOf(2L), vm.exportProblems().keys)
+        assertTrue(p.posts.isEmpty())
+
+        export()
+        assertEquals(2, p.posts.size)
+        assertEquals(listOf(1L, 3L), sent())
+        assertEquals(setOf(2L), vm.exportProblems().keys)
     }
 }
