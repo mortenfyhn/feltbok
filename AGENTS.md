@@ -160,6 +160,9 @@ Strive to follow Jakob Nielsen's ten usability heuristics
   status). The user's own privates live in `my-localities.csv` — device-only, never bundled.
 - `scripts/` — Python build/harvest pipelines (localities, species, red list) + dev helpers
   (`scripts/dev/`) and the ruff config. Driven by the `justfile`.
+- `site/` — the store landing page at `feltbok.fyhn.lol`, which the printed QR code
+  (`docs/img/qr.svg`) points to. iPhones go straight to the App Store. GitHub Pages serves it,
+  deployed by `.github/workflows/pages.yml` on pushes to `master`; the badges and icon are symlinks.
 
 ## Data / API notes
 - Locality + checklist data come from Artsobservasjoner; the mobile API
