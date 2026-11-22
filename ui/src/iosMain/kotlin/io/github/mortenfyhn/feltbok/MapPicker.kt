@@ -222,18 +222,21 @@ actual fun LocalityScreen(vm: MainViewModel) {
 
     fun proj() = projOf(state, mapW, mapH, density)
 
-    // GPS follow mode: the map keeps the fix on the crosshair (above the panel in new-spot mode)
-    // until you pan. On from the start when the picker opens on your position.
+    // GPS follow mode: the map keeps the fix on the crosshair until you pan. On from the start when
+    // the picker opens on your position. In new-spot mode it only re-centres once, above the panel:
+    // you place the spot by hand, and each fix would move it and reload the name suggestions.
     var following by remember { mutableStateOf(vm.pickerFocus == null && vm.fix != null) }
     fun panelPx() = if (newMode) sheetH else 0
     LaunchedEffect(following, vm.fix, newMode, sheetH) {
         val f = vm.fix
         val p = proj()
         if (!following || f == null || p == null || state.isCameraMoving && state.cameraMoveReason == CameraMoveReason.Gesture) return@LaunchedEffect
+        if (newMode && sheetH == 0) return@LaunchedEffect   // panel not measured yet
         // Pan so the fix lands on the crosshair, half the panel above the centre.
         val pt = p.toPixels(f.lat, f.lon)
         val (lat, lon) = p.fromPixels(pt.x, pt.y + panelPx() / 2f)
         state.animateCamera(CameraUpdate(center = Position(lon, lat)))
+        if (newMode) following = false
     }
 
     // Once the map has settled for a second, look up public localities in view (#173).

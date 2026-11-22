@@ -9,6 +9,7 @@ import androidx.activity.ComponentActivity
 import androidx.compose.ui.test.junit4.v2.createAndroidComposeRule
 import androidx.compose.ui.test.onAllNodesWithContentDescription
 import androidx.compose.ui.test.onNodeWithContentDescription
+import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
@@ -19,6 +20,7 @@ import org.junit.Assert.assertTrue
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
+import org.osmdroid.util.GeoPoint
 import kotlin.math.abs
 
 /**
@@ -38,20 +40,7 @@ class FollowGpsTest {
 
     @Test
     fun followsUntilPannedAndAgainAfterTheButton() {
-        val app = ApplicationProvider.getApplicationContext<Application>()
-        val platform = object : Platform by AndroidPlatform(app) {
-            override val location = object : LocationSource {
-                override val fix = fixes
-                override fun start() = Unit
-                override fun stop() = Unit
-            }
-        }
-        fixFor(63.43, 10.39)
-        val vm = MainViewModel(platform)
-        rule.waitUntil { vm.fix != null }
-        rule.runOnUiThread { vm.openLocalityPicker() }
-        rule.setContent { LocalityScreen(vm) }
-        val map = waitForMap()
+        val map = openPicker()
 
         // Opened on your position, so it already follows.
         fixFor(63.44, 10.41)
@@ -74,6 +63,43 @@ class FollowGpsTest {
         rule.onNodeWithContentDescription(Strings.Picker.followGps).performClick()
         waitUntilCentredOn(map, 63.46, 10.43)
         rule.waitUntil { rule.onAllNodesWithContentDescription(Strings.Picker.followGps).fetchSemanticsNodes().isEmpty() }
+    }
+
+    @Test
+    fun newSpotPanelRecentresOnceThenStopsFollowing() {
+        val map = openPicker()
+        fixFor(63.44, 10.41)
+        waitUntilCentredOn(map, 63.44, 10.41)
+
+        // Opening the panel re-centres above it once, then stops following, so the GPS button shows.
+        rule.onNodeWithText(Strings.Picker.newButton).performClick()
+        rule.waitUntil { rule.onAllNodesWithContentDescription(Strings.Picker.followGps).fetchSemanticsNodes().isNotEmpty() }
+        rule.waitUntil(5_000) { var idle = false; rule.runOnUiThread { idle = !map.isAnimating }; idle }
+        var before = GeoPoint(0.0, 0.0)
+        rule.runOnUiThread { before = GeoPoint(map.mapCenter) }
+
+        // A new fix leaves the spot where it is.
+        fixFor(63.45, 10.42)
+        rule.waitForIdle()
+        SystemClock.sleep(1000)   // longer than the pan animation
+        rule.runOnUiThread { assertTrue("${map.mapCenter} != $before", isCentredOn(map, before.latitude, before.longitude)) }
+    }
+
+    private fun openPicker(): PickerMapView {
+        val app = ApplicationProvider.getApplicationContext<Application>()
+        val platform = object : Platform by AndroidPlatform(app) {
+            override val location = object : LocationSource {
+                override val fix = fixes
+                override fun start() = Unit
+                override fun stop() = Unit
+            }
+        }
+        fixFor(63.43, 10.39)
+        val vm = MainViewModel(platform)
+        rule.waitUntil { vm.fix != null }
+        rule.runOnUiThread { vm.openLocalityPicker() }
+        rule.setContent { LocalityScreen(vm) }
+        return waitForMap()
     }
 
     private fun fixFor(lat: Double, lon: Double) {

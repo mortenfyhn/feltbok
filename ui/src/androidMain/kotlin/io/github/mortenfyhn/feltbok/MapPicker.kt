@@ -135,17 +135,20 @@ actual fun LocalityScreen(vm: MainViewModel) {
     // Flash the tapped locality highlighted, then return to the entry screen.
     LaunchedEffect(tapped) { tapped?.let { delay(300); vm.pickLocality(it) } }
 
-    // GPS follow mode: the map keeps the fix on the crosshair (above the panel in new-spot mode)
-    // until you pan. On from the start when the picker opens on your position.
+    // GPS follow mode: the map keeps the fix on the crosshair until you pan. On from the start when
+    // the picker opens on your position. In new-spot mode it only re-centres once, above the panel:
+    // you place the spot by hand, and each fix would move it and reload the name suggestions.
     var following by remember { mutableStateOf(vm.pickerFocus == null && vm.fix != null) }
     fun panelPx() = if (newMode) sheetH else 0
     LaunchedEffect(following, vm.fix, newMode, sheetH) {
         val f = vm.fix
         if (!following || f == null || mapView.width == 0 || mapView.pinching) return@LaunchedEffect
+        if (newMode && sheetH == 0) return@LaunchedEffect   // panel not measured yet
         mapView.controller.stopPanning()   // kill any fling momentum, else it fights the animateTo
         // Pan so the fix lands on the crosshair, half the panel above the centre.
         val pt = mapView.projection.toPixels(GeoPoint(f.lat, f.lon), null)
         mapView.controller.animateTo(mapView.projection.fromPixels(pt.x, pt.y + panelPx() / 2))
+        if (newMode) following = false
     }
     mapView.onUserPan = { following = false }
     mapView.pinchPivot = if (following) { { PointF(mapView.width / 2f, (mapView.height - panelPx()) / 2f) } } else null
