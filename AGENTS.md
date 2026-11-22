@@ -8,15 +8,17 @@ needs one.
 ## Build / test / run
 Recipes live in `just --list`. Gotchas not covered there:
 
-- `just install` / `just run` build and install the **debug** build on a connected device. **Ask
-  before testing on the phone** — the usual flow is that the maintainer runs `just run` and tests by
-  hand. Build and report; never install on the device unless okayed in that moment.
-- **Check UI changes on the emulator before reporting back.** `just emu` boots one in a window
-  (seconds, from its snapshot); then use `ANDROID_SERIAL=emulator-5554` with the device recipes
-  (`just run`, `just seed`) and look with `adb exec-out screencap -p` and `uiautomator dump`. Without
-  `ANDROID_SERIAL`, recipes target the phone. Grant location with `pm grant <app id>
+- Device recipes (`just run`, `just install`, `just seed`, `just itest`, ...) target this worktree's
+  own emulator, or the phone when passed `--phone`. **Ask before using the phone**: the usual flow
+  is that the maintainer runs `just run --phone` and tests by hand. Never pass `--phone` unless
+  okayed in that moment.
+- **Check UI changes on the emulator before reporting back.** `just emu` boots this worktree's
+  emulator in a window (seconds, from its snapshot) and prints its serial. At most 3 run at once,
+  one per worktree. When all 3 are taken, `just emu` says so: wait and run it again later, and never
+  stop an emulator you didn't start. For plain `adb` (`exec-out screencap -p`, `uiautomator dump`),
+  pass `-s <serial>`. Grant location with `pm grant <app id>
   android.permission.ACCESS_FINE_LOCATION` and fake a fix with `adb emu geo fix <lon> <lat>`.
-  `just emu-stop` when done.
+  `just emu-stop` when done, to free the slot for other worktrees.
 - `allWarningsAsErrors` means any deprecation introduced by a dependency bump is a build failure.
   `./gradlew test` and `assembleRelease` do NOT compile `src/androidTest`, so after bumping
   Compose/AndroidX, also compile that source set (`just itest` or
@@ -32,8 +34,8 @@ Recipes live in `just --list`. Gotchas not covered there:
   a dependency, check `assembleRelease` output for `Missing class`/`-dontwarn` notes and add a keep
   rule if needed.
 - **Instrumented R8 smoke tests** (`just itest`, device-gated) run against the minified `releaseTest`
-  variant, so an R8 strip fails a test instead of shipping broken. Skipped cleanly when no device is
-  attached. Also carries a UI-flow layer (`UndoFlowTest`, `NavigationFlowTest`, `EditFlowTest`) for
+  variant, so an R8 strip fails a test instead of shipping broken. Skipped cleanly when the
+  worktree has no emulator (or no phone, with `--phone`). Also carries a UI-flow layer (`UndoFlowTest`, `NavigationFlowTest`, `EditFlowTest`) for
   behaviour a pure-JVM test can't reach.
 - `just format` / `just lint` are CI-gated (ktlint, detekt, ruff, shellcheck). ktlint only fixes
   whitespace/imports; it won't churn line structure or naming. Detekt (`detekt.yml`, with the
