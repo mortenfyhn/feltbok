@@ -100,6 +100,10 @@ data class TierWeights(
      *  rewarded, not required. Big enough to lift an exact-letter match over a folded one even across
      *  a frequency gap ("a" -> Alke over Ærfugl). */
     val diacriticExact: Double = 0.15,
+    /** ×otherTaxon for a taxon that isn't a species (#190), so its prefix match ranks below a
+     *  species' suffix match ("måk" lists hettemåke before måkefamilien), while typing a taxon's full
+     *  name still finds it first. */
+    val otherTaxon: Double = 0.05,
 )
 
 /**
@@ -137,7 +141,8 @@ fun rankSpecies(
             // name's æ/ø/å (or matched a part that has none) isn't penalised - it just doesn't get the
             // nudge. Keeps folding free while rewarding precision.
             val diacritic = if (matchesExact(lq, c.lowerTight)) 1.0 + tierWeights.diacriticExact else 1.0
-            Ranked(c.species, tq.first * tq.second * likelihoodMult * diacritic)
+            val rank = if (c.species.otherTaxon) tierWeights.otherTaxon else 1.0
+            Ranked(c.species, tq.first * tq.second * likelihoodMult * diacritic * rank)
         }
         .sortedWith(compareByDescending<Ranked> { it.score }.thenBy { it.species.latin })
 }

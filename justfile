@@ -144,14 +144,15 @@ build-localities *args:
 build-species:
     .venv/bin/python scripts/build_species.py
 
-# Build app/src/main/assets/ubestemt.csv ("ub." unidentified-species entries, issue #162)
+# Run after rebuilding species.csv and taxon_ids.csv. Pass --ioc for a non-default IOC xlsx path.
+# Build app/src/main/assets/other_taxa.csv (subspecies, hybrids, ub., families and more; #162, #190)
 [group('data')]
-build-ubestemt:
-    .venv/bin/python scripts/build_ubestemt.py
-    mv ubestemt.csv app/src/main/assets/ubestemt.csv
+build-other-taxa *args:
+    .venv/bin/python scripts/build_other_taxa.py {{args}}
+    mv other_taxa.csv app/src/main/assets/other_taxa.csv
 
 # Build app/src/main/assets/taxon_ids.csv (each species' Artsobservasjoner taxon id, for the upload).
-# Run after rebuilding species.csv or ubestemt.csv.
+# Run after rebuilding species.csv.
 [group('data')]
 build-taxon-ids:
     .venv/bin/python scripts/build_taxon_ids.py
@@ -182,7 +183,7 @@ push-data:
     -adb push app/src/main/assets/species.csv {{data_dir}}/species.csv
     -adb push app/src/main/assets/species_months.csv {{data_dir}}/species_months.csv
     -adb push app/src/main/assets/species_regions.csv {{data_dir}}/species_regions.csv
-    -adb push app/src/main/assets/ubestemt.csv {{data_dir}}/ubestemt.csv
+    -adb push app/src/main/assets/other_taxa.csv {{data_dir}}/other_taxa.csv
     -adb push my-localities.csv {{data_dir}}/my-localities.csv   # maintainer's own customs (device-only)
 
 # The debug build ships non-debuggable (release speed), so run-as can't reach internal storage;

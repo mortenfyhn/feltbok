@@ -32,9 +32,11 @@ private fun csvRows(text: String?): List<List<String>> =
 /** A bundled CSV's rows, empty when this build doesn't ship it. */
 private fun readData(storage: Storage, name: String): List<List<String>> = csvRows(storage.readAsset(name))
 
-/** taxon_ids.csv: Artsobservasjoner's taxon id by scientific name, for the upload. Empty when the
- *  build doesn't ship it. */
-fun loadTaxonIds(storage: Storage): Map<String, Long> = parseTaxonIds(storage.readAsset("taxon_ids.csv"))
+/** Artsobservasjoner's taxon id by scientific name, for the upload: the species' from taxon_ids.csv
+ *  and the other taxa's from other_taxa.csv. Empty when the build doesn't ship them. */
+fun loadTaxonIds(storage: Storage): Map<String, Long> =
+    parseTaxonIds(storage.readAsset("taxon_ids.csv")) +
+        readData(storage, OTHER_TAXA).mapNotNull { r -> r.getOrNull(2)?.toLongOrNull()?.let { r[0] to it } }
 
 fun parseTaxonIds(csv: String?): Map<String, Long> =
     csvRows(csv).mapNotNull { r -> r.getOrNull(1)?.toLongOrNull()?.let { r[0] to it } }.toMap()
@@ -188,14 +190,15 @@ fun loadSpecies(storage: Storage): List<Species> =
         }
     }
 
-/** "ub." (ubestemt/unidentified) entries (#162) - e.g. "ub. makrell-/rødnebbterne" for when you
- *  can narrow a sighting to a genus or a small group of similar species but not the exact one.
- *  Columns: latin,norsk (see scripts/build_ubestemt.py). Norway-only asset: optional, like
- *  [loadSpeciesMonths] - the Sweden build simply has no such file, so this degrades to empty. */
-fun loadUbestemt(storage: Storage): List<Species> =
-    readData(storage, "ubestemt.csv").mapNotNull { c ->
-        if (c.isEmpty() || c[0].isBlank()) null else Species(latin = c[0], norsk = c.getOrElse(1) { "" })
+/** The bird taxa Artsobservasjoner accepts that aren't species (#162, #190): subspecies, hybrids,
+ *  colour morphs, "ub." entries, families, orders and "fugler". Columns: latin,norsk,taxonId (see
+ *  scripts/build_other_taxa.py). */
+fun loadOtherTaxa(storage: Storage): List<Species> =
+    readData(storage, OTHER_TAXA).mapNotNull { c ->
+        if (c.isEmpty() || c[0].isBlank()) null else Species(latin = c[0], norsk = c.getOrElse(1) { "" }, otherTaxon = true)
     }
+
+private const val OTHER_TAXA = "other_taxa.csv"
 
 /** Per-species monthly report counts (latin -> 12 ints), for season-aware ranking ([SeasonalFrequency]).
  *  Optional asset: empty if absent, so search just falls back to all-time frequency. */

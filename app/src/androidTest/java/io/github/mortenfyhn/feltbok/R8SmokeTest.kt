@@ -66,11 +66,11 @@ class R8SmokeTest {
         assertTrue("expected bundled species", species.isNotEmpty())
     }
 
-    /** ubestemt.csv (#162) is an optional asset (loadUbestemt reads a missing one as empty), so this
+    /** other_taxa.csv (#190) is an optional asset (loadOtherTaxa reads a missing one as empty), so this
      *  proves R8/resource shrinking actually ships it into the built APK. */
     @Test
-    fun bundledUbestemtLoads() {
-        val ubestemt = loadUbestemt(AndroidStorage(ctx))
-        assertTrue("expected bundled ub. entries", ubestemt.isNotEmpty())
+    fun bundledOtherTaxaLoad() {
+        val taxa = loadOtherTaxa(AndroidStorage(ctx))
+        assertTrue("expected bundled other taxa", taxa.isNotEmpty())
     }
 }

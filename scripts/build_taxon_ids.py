@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 """Build taxon_ids.csv (latin,taxonId): Artsobservasjoner's taxon id for every scientific name in
-species.csv and ubestemt.csv. The upload sends a sighting by taxon id, so the app must know them.
+species.csv. The upload sends a sighting by taxon id, so the app must know them. The other taxa's ids
+come with them in other_taxa.csv (scripts/build_other_taxa.py).
 
     GET https://mobil.artsobservasjoner.no/core/TaxonName/Search?search=<name>&includeSubSpecies=true
     Header: X-CSRF: 1
@@ -10,7 +11,7 @@ Without one, the hit whose Norwegian name is the checklist's: what the paste imp
 few checklist species are subspecies or another genus on Artsobservasjoner (polarsisik is
 Acanthis flammea exilipes there, dvergflamingo Phoenicopterus minor), so includeSubSpecies matters.
 Fails if a name has no single hit: then fixing the checklist comes first. Lists the matches whose
-Norwegian name differs from the checklist's, to check by hand. Run after rebuilding either list.
+Norwegian name differs from the checklist's, to check by hand. Run after rebuilding species.csv.
 
     python scripts/build_taxon_ids.py      # -> taxon_ids.csv
 """
@@ -61,10 +62,8 @@ def taxon_ids(latin, norsk):
 
 
 def main():
-    names = []
-    for f in ("species.csv", "ubestemt.csv"):
-        with open(f"{ASSETS}/{f}", newline="", encoding="utf-8") as fh:
-            names += [(row["latin"], row["norsk"]) for row in csv.DictReader(fh)]
+    with open(f"{ASSETS}/species.csv", newline="", encoding="utf-8") as fh:
+        names = [(row["latin"], row["norsk"]) for row in csv.DictReader(fh)]
     out, bad, differ = [], [], []
     for i, (latin, norsk) in enumerate(names, 1):
         hits = taxon_ids(latin, norsk)
