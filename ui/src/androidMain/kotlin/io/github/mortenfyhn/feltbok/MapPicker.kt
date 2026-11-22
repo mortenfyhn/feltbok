@@ -119,8 +119,9 @@ actual fun LocalityScreen(vm: MainViewModel) {
             controller.setCenter(GeoPoint(lat, lon))
         }
     }
+    val fontScale = LocalDensity.current.fontScale
     val overlay = remember {
-        LocalityOverlay { tapped = it; mapView.invalidate() }   // highlight, then go
+        LocalityOverlay(fontScale) { tapped = it; mapView.invalidate() }   // highlight, then go
             .also { mapView.overlays.add(it) }
     }
     // Refresh the overlay's plain-List copy whenever the locality set changes (async load
@@ -451,6 +452,7 @@ private class PreviewOverlay : Overlay() {
  *  the nearest locality. Public localities are green; private ones will be yellow once
  *  we have the allmenn flag. */
 private class LocalityOverlay(
+    private val fontScale: Float, // the system font size, so labels grow with it like the rest of the UI
     private val onTap: (Locality) -> Unit,
 ) : Overlay() {
     // A plain-List snapshot, refreshed from the composable only when the data changes - iterating
@@ -503,10 +505,10 @@ private class LocalityOverlay(
 
     // Dark, legible text over a halo tinted by type, so the outline tells you which kind of
     // locality the name belongs to: green for public, yellow for the user's own - matching the disks.
-    private val labelFill = Paint().apply { color = MapPalette.LabelText.toInt(); textSize = 38f; textAlign = Paint.Align.CENTER; isAntiAlias = true }
-    private val labelHalo = Paint().apply { color = MapPalette.LabelHaloGreen.toInt(); textSize = 38f; textAlign = Paint.Align.CENTER; isAntiAlias = true; style = Paint.Style.STROKE; strokeWidth = 5f }
-    private val labelHaloSuper = Paint().apply { color = MapPalette.LabelHaloSuper.toInt(); textSize = 38f; textAlign = Paint.Align.CENTER; isAntiAlias = true; style = Paint.Style.STROKE; strokeWidth = 5f }
-    private val labelHaloPriv = Paint().apply { color = MapPalette.LabelHaloYellow.toInt(); textSize = 38f; textAlign = Paint.Align.CENTER; isAntiAlias = true; style = Paint.Style.STROKE; strokeWidth = 5f }
+    private val labelFill = Paint().apply { color = MapPalette.LabelText.toInt(); textSize = 38f * fontScale; textAlign = Paint.Align.CENTER; isAntiAlias = true }
+    private val labelHalo = Paint().apply { color = MapPalette.LabelHaloGreen.toInt(); textSize = 38f * fontScale; textAlign = Paint.Align.CENTER; isAntiAlias = true; style = Paint.Style.STROKE; strokeWidth = 5f }
+    private val labelHaloSuper = Paint().apply { color = MapPalette.LabelHaloSuper.toInt(); textSize = 38f * fontScale; textAlign = Paint.Align.CENTER; isAntiAlias = true; style = Paint.Style.STROKE; strokeWidth = 5f }
+    private val labelHaloPriv = Paint().apply { color = MapPalette.LabelHaloYellow.toInt(); textSize = 38f * fontScale; textAlign = Paint.Align.CENTER; isAntiAlias = true; style = Paint.Style.STROKE; strokeWidth = 5f }
     private val p = Point()
     private val path = Path()
 
@@ -555,7 +557,7 @@ private class LocalityOverlay(
             ((if (loc.isSuper) SUPER_POINT_LABEL_EXTENT_M else POINT_LABEL_EXTENT_M) * ppm).toFloat()
         else screenSpanPx(loc, ppm)
 
-    private val lineH = 32f
+    private val lineH = 32f * fontScale
 
     /** A label queued for the greedy collision pass: its wrapped lines, the first baseline to draw
      *  from, the screen-space box used for overlap tests, and a priority (higher wins a contested spot). */
@@ -569,7 +571,7 @@ private class LocalityOverlay(
      *  belonging to the shape (#135); a bare dot gets it just below [markerR] so the dot stays
      *  visible. Wrapped text is measured into a padded box for the overlap test. */
     private fun makeLabel(name: String, cx: Float, cy: Float, markerR: Float, centred: Boolean, public: Boolean, isSuper: Boolean, priority: Float): LabelCandidate {
-        val lines = wrapLabel(name, 210f)
+        val lines = wrapLabel(name, 210f * fontScale)
         var maxW = 0f
         for (l in lines) maxW = max(maxW, labelFill.measureText(l))
         val halfW = maxW / 2f + LABEL_PAD

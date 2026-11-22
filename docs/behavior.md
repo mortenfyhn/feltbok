@@ -5,6 +5,11 @@ the kind of thing a field user might wonder about. The why and the tuning knobs
 live in the code (`Search.kt`, `MainViewModel.kt`, `UseScore.kt`); this is the
 short version.
 
+## Large text
+
+The app follows the system font size, map labels included. When a screen's title doesn't fit
+between the buttons in its top bar, it moves to its own row above them.
+
 ## Species search
 
 ### Before you type (the quick list)

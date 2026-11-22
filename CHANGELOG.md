@@ -4,6 +4,7 @@
 
 ## Neste utgivelse
 
+- Med stor tekst får skjermtitler egen linje når de ikke får plass, og navna på kartet blir større på Android.
 - Slett- og Lagre-knappene legger seg ikke lenger oppå tastaturet når du skriver antall eller kommentar.
 - «Gjenopprett» i papirkurven tar deg rett tilbake til lista, der observasjonene du henta tilbake blinker.
 - Når lista er tom, står det «Ny observasjon» på +-knappen, så det er lettere å se hvor du begynner.

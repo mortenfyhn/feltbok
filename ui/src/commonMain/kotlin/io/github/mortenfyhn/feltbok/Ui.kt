@@ -1237,6 +1237,13 @@ internal fun StatusBarBand(color: Color = MaterialTheme.colorScheme.primary) {
 @Composable
 internal fun Modifier.bottomInsetPadding() = windowInsetsPadding(WindowInsets.safeDrawing.only(WindowInsetsSides.Bottom))
 
+/** Side margin of [ScreenHeader]'s title when it sits on its own row. */
+private val headerTitleRowInset = 16.dp
+
+/** How far [ScreenHeader]'s buttons move up into the title's row when the title has its own row.
+ *  A button's touch target is taller than its text, so without this the rows look far apart. */
+private val headerRowOverlap = 10.dp
+
 /** The screens' shared top bar. The back/dismiss action lives on the LEFT (not the right) so a
  *  thumb reaching the top-right corner - where it lands after typing, once the keyboard hides the
  *  Lagre button - can't leave the screen by accident (#59). Default leading control is "‹ Tilbake"
@@ -1265,11 +1272,26 @@ internal fun ScreenHeader(
         // The title gets the measured gap between the side controls, not a fixed inset: they grow
         // with large text, and on a narrow phone "+ Ny lokalitet" ran under "Velg lokalitet"
         // (#198). Centred on the screen while it fits, else shifted toward the narrower control.
+        // With large text the gap can shrink to a letter or two ("V…"), so a title that doesn't
+        // fit gets its own row above the controls instead.
         val w = constraints.maxWidth
         val loose = constraints.copy(minWidth = 0, minHeight = 0)
         val lead = measurables[0].measure(loose)
         val trail = measurables[1].measure(loose)
-        val middle = measurables[2].measure(loose.copy(maxWidth = (w - lead.width - trail.width).coerceAtLeast(0)))
+        val gap = (w - lead.width - trail.width).coerceAtLeast(0)
+        if (measurables[2].maxIntrinsicWidth(Constraints.Infinity) > gap) {
+            val inset = headerTitleRowInset.roundToPx()
+            val middle = measurables[2].measure(loose.copy(maxWidth = (w - 2 * inset).coerceAtLeast(0)))
+            val top = inset / 4
+            val rowY = top + middle.height - headerRowOverlap.roundToPx()
+            val row = maxOf(lead.height, trail.height)
+            return@Layout layout(w, maxOf(rowY + row, constraints.minHeight)) {
+                middle.placeRelative((w - middle.width) / 2, top)
+                lead.placeRelative(0, rowY + (row - lead.height) / 2)
+                trail.placeRelative(w - trail.width, rowY + (row - trail.height) / 2)
+            }
+        }
+        val middle = measurables[2].measure(loose.copy(maxWidth = gap))
         val h = maxOf(lead.height, trail.height, middle.height, constraints.minHeight)
         layout(w, h) {
             lead.placeRelative(0, (h - lead.height) / 2)
