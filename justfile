@@ -1,8 +1,8 @@
 export ANDROID_HOME := env("ANDROID_HOME", home_directory() / "Android/Sdk")
 
-# Device recipes go to the phone even while an emulator runs (`just emu`), so the emulator never
-# breaks them with "more than one device". Set ANDROID_SERIAL=emulator-5554 to target the emulator.
-export ANDROID_SERIAL := env("ANDROID_SERIAL", `adb devices 2>/dev/null | awk 'NR > 1 && $2 == "device" && $1 !~ /^emulator-/ { print $1; exit }'`)
+# Device recipes run adb through this. It targets this worktree's own emulator (`just emu`), or the
+# phone when the recipe gets --phone. See scripts/dev/device.sh.
+adb := "scripts/dev/device.sh adb"
 
 # Dev build carries the .debug applicationId suffix so it installs alongside the release app
 # I use daily. Every device-facing recipe targets this id, not the release "io.github.mortenfyhn.feltbok".
@@ -46,13 +46,16 @@ hooks:
 # real io.github.mortenfyhn.feltbok. See AGENTS.md and docs/pre-release-checklist.md.
 
 # Instrumented tests on an attached device: R8 smoke + UI wiring (skips if no device)
+[arg("FELTBOK_PHONE", long="phone", value="1", help="Use the phone instead of this worktree's emulator")]
 [group('check')]
-itest:
+itest $FELTBOK_PHONE="":
     #!/usr/bin/env bash
     set -euo pipefail
-    if [ -z "$(adb devices | sed '1d' | grep -w device || true)" ]; then
-        echo "No device attached — skipping instrumented tests."; exit 0
+    # Gradle runs on every attached device unless ANDROID_SERIAL names one.
+    if ! ANDROID_SERIAL=$(scripts/dev/device.sh serial); then
+        echo "Skipping instrumented tests."; exit 0
     fi
+    export ANDROID_SERIAL
     # The launch test needs the activity to reach RESUMED, so the screen must stay on and unlocked
     # throughout (a dark/locked screen leaves it STOPPED). `stayon` holds the screen on for the
     # whole run — a one-shot wake re-dozes during the build; then wake + dismiss a swipe-keyguard.
@@ -87,9 +90,10 @@ ci: lint test build
     ./gradlew :app:lintDebug :ui:lintAndroidMain assembleReleaseTest assembleReleaseTestAndroidTest :koverVerify
 
 # Install the dev APK on a connected device (-d allows downgrading over a newer build)
+[arg("FELTBOK_PHONE", long="phone", value="1", help="Use the phone instead of this worktree's emulator")]
 [group('app')]
-install: build
-    adb install -r -d app/build/outputs/apk/debug/app-debug.apk
+install $FELTBOK_PHONE="": build
+    {{adb}} install -r -d app/build/outputs/apk/debug/app-debug.apk
 
 # The activity class is io.github.mortenfyhn.feltbok.MainActivity (the .debug suffix changes the
 # package id, not the code namespace), so spell out the full component rather than the
@@ -97,38 +101,36 @@ install: build
 
 # Build, install, and launch the dev app. On an emulator, also set the GPS fix to the app's no-GPS
 # map centre (Country.mapCenterLat/Lon) instead of the emulator's default in California.
+[arg("FELTBOK_PHONE", long="phone", value="1", help="Use the phone instead of this worktree's emulator")]
 [group('app')]
-run: install
-    s=$(adb get-serialno); case "$s" in emulator-*) adb -s "$s" emu geo fix 8.7 63.7 ;; esac
-    adb shell am start -n io.github.mortenfyhn.feltbok.debug/io.github.mortenfyhn.feltbok.MainActivity
+run $FELTBOK_PHONE="": (install FELTBOK_PHONE)
+    s=$(scripts/dev/device.sh serial); case "$s" in emulator-*) adb -s "$s" emu geo fix 8.7 63.7 ;; esac
+    {{adb}} shell am start -n io.github.mortenfyhn.feltbok.debug/io.github.mortenfyhn.feltbok.MainActivity
 
-# For agents to check UI without the phone, and for the maintainer to watch or use it. Host GPU:
-# the software renderer crashes under Fedora's SELinux (execheap), and freshly created AVDs crash
-# SurfaceFlinger when headless. Closing the window or `just emu-stop` saves the Quick Boot snapshot,
-# so the next start takes seconds. The display is set to 360 x 760 dp, a small phone, the same
-# size as the phones in docs/mockups/.
+# For agents to check UI without the phone, and for the maintainer to watch or use it. Each
+# worktree gets its own emulator, at most 3 at once; see scripts/dev/device.sh.
 
-# Boot the emulator in its own window (target it with ANDROID_SERIAL=emulator-5554)
+# Boot this worktree's emulator in its own window and print its serial
 [group('dev')]
 emu:
-    setsid nohup "$ANDROID_HOME/emulator/emulator" -avd Medium_Phone_API_36.1 -no-audio -no-boot-anim -gpu host >/dev/null 2>&1 &
-    adb -s emulator-5554 wait-for-device shell 'while [ -z "$(getprop sys.boot_completed)" ]; do sleep 1; done'
-    adb -s emulator-5554 shell 'wm size 1080x2280 && wm density 480'
+    @scripts/dev/device.sh emu
 
-# Shut down the emulator
+# Shut down this worktree's emulator
 [group('dev')]
 emu-stop:
-    adb -s emulator-5554 emu kill 2>/dev/null || true
+    scripts/dev/device.sh emu-stop
 
 # Show device logs for the app
+[arg("FELTBOK_PHONE", long="phone", value="1", help="Use the phone instead of this worktree's emulator")]
 [group('app')]
-log:
-    adb logcat -s Feltbok:* AndroidRuntime:* --format=brief
+log $FELTBOK_PHONE="":
+    {{adb}} logcat -s Feltbok:* AndroidRuntime:* --format=brief
 
 # Uninstall the dev app from the device (NOT the release app)
+[arg("FELTBOK_PHONE", long="phone", value="1", help="Use the phone instead of this worktree's emulator")]
 [group('app')]
-uninstall:
-    adb uninstall {{app_id}}
+uninstall $FELTBOK_PHONE="":
+    {{adb}} uninstall {{app_id}}
 
 # ---- Locality / species data, rebuilt on the maintainer's machine ----
 
@@ -179,37 +181,40 @@ build-species-regions:
     .venv/bin/python scripts/build_species_regions.py
 
 # Push the built localities/species CSVs to the device (overrides the bundled assets, no rebuild)
+[arg("FELTBOK_PHONE", long="phone", value="1", help="Use the phone instead of this worktree's emulator")]
 [group('data')]
-push-data:
-    adb push app/src/main/assets/localities.csv {{data_dir}}/localities.csv
-    -adb push app/src/main/assets/species.csv {{data_dir}}/species.csv
-    -adb push app/src/main/assets/species_months.csv {{data_dir}}/species_months.csv
-    -adb push app/src/main/assets/species_regions.csv {{data_dir}}/species_regions.csv
-    -adb push app/src/main/assets/ubestemt.csv {{data_dir}}/ubestemt.csv
-    -adb push my-localities.csv {{data_dir}}/my-localities.csv   # maintainer's own customs (device-only)
+push-data $FELTBOK_PHONE="":
+    {{adb}} push app/src/main/assets/localities.csv {{data_dir}}/localities.csv
+    -{{adb}} push app/src/main/assets/species.csv {{data_dir}}/species.csv
+    -{{adb}} push app/src/main/assets/species_months.csv {{data_dir}}/species_months.csv
+    -{{adb}} push app/src/main/assets/species_regions.csv {{data_dir}}/species_regions.csv
+    -{{adb}} push app/src/main/assets/ubestemt.csv {{data_dir}}/ubestemt.csv
+    -{{adb}} push my-localities.csv {{data_dir}}/my-localities.csv   # maintainer's own customs (device-only)
 
 # The debug build ships non-debuggable (release speed), so run-as can't reach internal storage;
 # instead push a seed file to the external dir, which the dev build imports on next launch (see
 # importSeedNotes). Targets the .debug app only — never the release app with the real field notes.
 
 # Seed the dev app with varied sample observations and restart it (overwrites its notes!)
+[arg("FELTBOK_PHONE", long="phone", value="1", help="Use the phone instead of this worktree's emulator")]
 [group('dev')]
-seed:
+seed $FELTBOK_PHONE="":
     .venv/bin/python scripts/dev/seed_notes.py --users /tmp/feltbok-seed-users.json > /tmp/feltbok-seed-notes.json
-    adb push /tmp/feltbok-seed-notes.json {{data_dir}}/seed-notes.json
-    adb push /tmp/feltbok-seed-users.json {{data_dir}}/seed-coobs-users.json
-    adb shell am force-stop {{app_id}}
-    adb shell am start -n {{app_id}}/io.github.mortenfyhn.feltbok.MainActivity
+    {{adb}} push /tmp/feltbok-seed-notes.json {{data_dir}}/seed-notes.json
+    {{adb}} push /tmp/feltbok-seed-users.json {{data_dir}}/seed-coobs-users.json
+    {{adb}} shell am force-stop {{app_id}}
+    {{adb}} shell am start -n {{app_id}}/io.github.mortenfyhn.feltbok.MainActivity
 
 # Installs a dev build whose footer shows the release version, then drives it with
 # scripts/dev/screenshots.py. Clears the dev app's data.
 
 # Capture the store screenshots from the attached phone into fastlane/
+[arg("FELTBOK_PHONE", long="phone", value="1", help="Use the phone instead of this worktree's emulator")]
 [group('dev')]
-screenshots:
+screenshots $FELTBOK_PHONE="":
     ./gradlew assembleDebug -Pscreenshots
-    adb install -r -d app/build/outputs/apk/debug/app-debug.apk
-    .venv/bin/python scripts/dev/screenshots.py
+    {{adb}} install -r -d app/build/outputs/apk/debug/app-debug.apk
+    ANDROID_SERIAL=$(scripts/dev/device.sh serial) .venv/bin/python scripts/dev/screenshots.py
 
 # Fresh simulator install with the showcase notes, driven by the ScreenshotTests UI test.
 

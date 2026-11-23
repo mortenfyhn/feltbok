@@ -154,7 +154,7 @@ while ! attached; do
     read -rp "No device for the R8 smoke tests. Plug one in + Enter to retry, or type 'skip' to release without them: " ans
     [ "$ans" = skip ] && { echo "Skipping R8 smoke tests for $tag."; break; }
 done
-attached && just itest
+attached && just itest --phone
 
 # Same deal for the seed->export check (docs/pre-release-checklist.md): host tests use a fake
 # server, and this is the only run against the real site, which needs your login, so the script
@@ -163,9 +163,9 @@ if attached; then
     echo
     read -rp "Set the export test up now — install + seed + launch the dev app (overwrites its notes)? (yes/no): " ans
     if [ "$ans" = yes ]; then
-        just install
-        just seed   # force-stops the app; the seed is imported on the next launch
-        just run
+        just install --phone
+        just seed --phone   # force-stops the app; the seed is imported on the next launch
+        just run --phone
         echo "Now export from the app. Each note three days back, and the one dated in the future, should"
         echo "show its error line (scripts/dev/seed_notes.py --why). Delete those, then export the rest:"
         echo "all should reach Kontroller funn."
