@@ -220,7 +220,7 @@ Locustella naevia,0,0,0,514,4636,3343,990,634,311,121,0,0
 Asio otus,451,540,920,995,1252,3156,1498,296,260,450,354,278
 Tetrastes bonasia,539,448,668,1241,1446,981,780,599,796,1080,775,490
 Panurus biarmicus,1145,513,418,721,1118,601,505,477,635,1466,1268,808
-Acanthis hornemanni,1648,1453,1235,670,306,688,242,146,919,1185,560,543
+Acanthis flammea exilipes,1648,1453,1235,670,306,688,242,146,919,1185,560,543
 Phylloscopus inornatus,0,0,0,5,16,2,0,7,5128,4294,104,0
 Loxia leucoptera,717,479,321,268,178,130,643,1553,1313,1756,1312,626
 Stercorarius longicaudus,0,0,0,0,1925,4005,1915,619,315,87,4,0
@@ -259,7 +259,7 @@ Ficedula parva,0,0,0,3,504,330,42,72,653,1012,26,0
 Anser caerulescens,66,18,92,624,495,206,141,225,301,250,96,71
 Milvus milvus,76,102,500,950,347,94,69,161,120,78,26,68
 Circus macrourus,0,0,0,214,451,125,67,335,1117,75,2,0
-Anas carolinensis,15,40,126,1008,806,146,29,0,0,3,0,4
+Anas crecca carolinensis,15,40,126,1008,806,146,29,0,0,3,0,4
 Anser erythropus,6,4,17,93,1619,13,1,17,240,64,30,8
 Pastor roseus,1,0,2,4,80,228,255,251,698,439,110,6
 Upupa epops,10,0,11,321,318,51,21,51,391,636,236,23
@@ -401,7 +401,7 @@ Ardea purpurea,0,0,0,15,17,0,5,4,0,55,0,15
 Lanius nubicus,0,0,0,0,0,0,0,7,0,103,0,0
 Melospiza melodia,0,0,0,1,5,0,92,11,0,0,0,0
 Vanellus cinereus,0,0,0,0,109,0,0,0,0,0,0,0
-Puffinus mauretanicus,0,0,0,0,1,2,16,54,28,6,0,0
+Puffinus yelkouan mauretanicus,0,0,0,0,1,2,16,54,28,6,0,0
 Sylvia nana,0,0,0,0,0,0,0,0,0,6,100,0
 Ichthyaetus ichthyaetus,0,0,0,0,0,5,0,99,0,0,0,0
 Iduna caligata,0,0,0,0,4,4,1,20,46,17,3,0
@@ -521,7 +521,7 @@ Eophona personata,0,0,0,1,0,1,0,0,0,2,0,0
 Hesperiphona vespertina,0,0,0,0,4,0,0,0,0,0,0,0
 Colinus virginianus,0,0,0,2,0,0,0,1,0,1,0,0
 Ardeola bacchus,0,0,0,0,0,2,0,0,0,1,0,0
-Phoeniconaias minor,0,0,0,1,0,0,0,0,2,0,0,0
+Phoenicopterus minor,0,0,0,1,0,0,0,0,2,0,0,0
 Limosa haemastica,0,0,0,0,0,3,0,0,0,0,0,0
 Cathartes aura,0,0,0,0,0,3,0,0,0,0,0,0
 Molothrus ater,0,0,0,0,2,1,0,0,0,0,0,0

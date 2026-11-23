@@ -16,6 +16,8 @@ data class Species(
     val svensk: String = "",
     val status: String = "",
     val count: Int = 0,
+    /** A subspecies, hybrid, ub. entry, family or other taxon that isn't a species (#190). */
+    val otherTaxon: Boolean = false,
 ) {
     fun name(lang: Lang): String = when (lang) {
         Lang.NORSK -> norsk

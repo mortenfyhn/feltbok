@@ -37,7 +37,7 @@ class MainViewModel(private val platform: Platform) : ViewModel() {
     /** Whether you've fetched your own localities (the footer then offers to update them). Derived,
      *  so the ~80k scan runs only when [localities] changes, not on every recomposition of the
      *  list screen - that scan was most of the list's lag on an iPhone 7. */
-    val species: List<Species> = loadSpecies(storage) + loadUbestemt(storage)
+    val species: List<Species> = loadSpecies(storage) + loadOtherTaxa(storage)
 
     /** Species normalized (folded forms, token splits) for the search scorer - never per keystroke.
      *  Cached per active-language set ([LangPrefs.searchLangs]) and rebuilt only when that changes,

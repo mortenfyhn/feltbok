@@ -14,6 +14,7 @@
 - Ny lokalitet foreslår navn fra Norgeskart, med flere å velge mellom.
 - «Endre observasjon» hopper ikke lenger til toppen når du kommer tilbake fra medobservatører, art eller lokalitet.
 - Hver dag i lista viser antall arter den dagen, i stedet for totalt antall arter.
+- Du kan nå føre underarter, hybrider, fargefaser og familier, helt opp til «fugler» (f.eks. gråkråke, brunnakke x stokkand, havhest, lysfaset, kråkefamilien).
 - Sveip en observasjon mot venstre for å slette den.
 - Observasjoner du får tilbake med «Angre» blinker, så du ser hvor de havna.
 - Innlogginga på Artsobservasjoner viser at den jobber mens siden laster.

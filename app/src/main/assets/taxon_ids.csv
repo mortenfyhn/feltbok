@@ -219,7 +219,7 @@ Locustella naevia,4452
 Asio otus,4606
 Tetrastes bonasia,4062
 Panurus biarmicus,4360
-Acanthis hornemanni,4237
+Acanthis flammea exilipes,4237
 Phylloscopus inornatus,4465
 Loxia leucoptera,4256
 Stercorarius longicaudus,3810
@@ -258,7 +258,7 @@ Ficedula parva,4350
 Anser caerulescens,3474
 Milvus milvus,3892
 Circus macrourus,3882
-Anas carolinensis,3452
+Anas crecca carolinensis,3452
 Anser erythropus,3478
 Pastor roseus,4422
 Upupa epops,4638
@@ -400,7 +400,7 @@ Ardea purpurea,3561
 Lanius nubicus,4306
 Melospiza melodia,4215
 Vanellus cinereus,175724
-Puffinus mauretanicus,3996
+Puffinus yelkouan mauretanicus,3996
 Curruca nana,1100651
 Ichthyaetus ichthyaetus,1100382
 Iduna caligata,4441
@@ -520,7 +520,7 @@ Eophona personata,128053
 Hesperiphona vespertina,4247
 Colinus virginianus,4044
 Ardeola bacchus,3564
-Phoeniconaias minor,3946
+Phoenicopterus minor,3946
 Limosa haemastica,3764
 Cathartes aura,128486
 Molothrus ater,4290
@@ -575,104 +575,3 @@ Agropsar sturninus,4424
 Lanius borealis,181492
 Gyps himalayensis,175197
 Dicrurus leucophaeus,181624
-Anser,3428
-Branta,3430
-Melanitta deglandi/stejnegeri,10019365
-Anthus japonicus/rubescens,10019395
-Lymnocryptes/Gallinago,1100323
-Limnodromus,3760
-Merops,4029
-Phylloscopus humei/inornatus,1100922
-Fringilla,4249
-Glareola,3658
-Cecropis rufula/daurica,10019396
-Aix,3425
-Cygnus columbianus/cygnus,1100950
-Zapornia pusilla/parva,1100884
-Emberiza pusilla/rustica,1100926
-Podiceps,3951
-Phylloscopus bonelli/orientalis,1100894
-Motacilla,4331
-Falco,3901
-Mergus,3440
-Phoenicopterus,3944
-Fregata sp.,1100050
-Regulus,4475
-Milvus,3889
-Larus argentatus/fuscus,1101000
-Picus,4590
-Emberiza citrinella/leucocephalos,1100928
-Motacilla flava/citreola,1100945
-Motacilla flava/tschutschensis,10019376
-Phylloscopus inornatus/proregulus,1100925
-Accipiter,3852
-Sterna,3818
-Haliaeetus,3886
-Asio,4603
-Egretta,3557
-Gavia immer/adamsii,1100008
-Lanius isabellinus/phoenicuroides,10019370
-Falco rusticolus/peregrinus,1100952
-Prunella,4403
-Circus,3877
-Thalasseus maximus/albididorsalis,10019368
-Loxia,4253
-Rissa tridactyla/Hydrocoloeus minutus,1100946
-Rissa tridactyla/Xema sabini,1100947
-Bucephala,3431
-Limosa lapponica/Calidris canutus,1100929
-Calonectris/Ardenna/Puffinus,1100030
-Uria aalge/Alca torda,1100438
-Pterodroma madeira/feae/deserta,10019382
-Sterna hirundo/paradisaea,1100851
-Charadrius mongolus/leschenaultii,1100949
-Circus cyaneus/macrourus,1100948
-Luscinia,4511
-Caprimulgus,4596
-Garrulus glandarius/Nucifraga caryocatactes,1100944
-Pelecanus,3928
-Anthus,4311
-Larus hyperboreus/glaucoides,10019341
-Stercorarius pomarinus/parasiticus,1100852
-Uria,3617
-Calonectris diomedea/borealis,10019369
-Oenanthe hispanica/melanoleuca,10019375
-Saxicola maurus/stejnegeri,10019374
-Lagopus,4065
-Curruca iberiae/subalpina/cantillans,10019373
-Curruca iberiae/cantillans,10019372
-Turdus naumanni/eunomus,1100606
-Phoenicurus,4530
-Alaudala cheleensis/rufescens/heinei,10019371
-Pluvialis fulva/dominica,1100288
-Melanitta fusca/nigra,10019380
-Columba oenas/palumbus,10019366
-Strix uralensis/nebulosa,1100924
-Gavia stellata/arctica,1100007
-Numenius,3772
-Circus macrourus/pygargus,1100195
-Stercorarius skua/pomarinus,1100923
-Ciconia,3586
-Actitis,3718
-Cygnus,3435
-Emberiza melanocephala/bruniceps,1101020
-Larus marinus/fuscus,1100953
-Limosa,3763
-Ficedula hypoleuca/albicollis,1100693
-Turdus atrogularis/ruficollis,1100609
-Phalaropus,3779
-Anser fabalis/serrirostris,10019364
-Anthus richardi/godlewski,1100942
-Iduna caligata/rama,1100893
-Calidris temminckii/minuta,1100873
-Aythya fuligula/marila,1100868
-Anthus trivialis/hodgsoni,1100943
-Certhia,4153
-Anser albifrons/erythropus,1100951
-Streptopelia turtur/decaocto,10019367
-Stercorarius parasiticus/longicaudus,1100853
-Apus apus/pallidus,10019381
-Anthus spinoletta/petrosus,1100927
-Pernis apivorus/Buteo buteo,1100206
-Vanellus,3650
-Buteo,3866

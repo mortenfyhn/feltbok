@@ -73,15 +73,23 @@ is the typed name (case aside), e.g. `sitronsommerfugl`, `svartryggerle` or `ær
 borealis`. When no taxon or several have that name, the note is listed as "Arten finnes ikke på
 Artsobservasjoner".
 
-### Ubestemt (ub.) entries
+### Subspecies, hybrids, ub. and other taxa
 
-Artsobservasjoner also lets a sighting be logged as "ub. X" ("ubestemt") when you can narrow it
-to a genus (`ub. svane`) or a small group of similar species (`ub. makrell-/rødnebbterne`) but not
-the exact species. These are fetched from Artsobservasjoner itself
-(`scripts/build_ubestemt.py`) and searchable like any other checklist entry — but they carry no
-observation-count data, so they never get the "what's likely here and now" boost real species get;
-a matching real species generally ranks above a same-tier ub. entry, though a better match tier
-(e.g. typing "ub. …" exactly) still wins outright, same as for two real species.
+Besides species, the list has every other bird taxon Artsobservasjoner accepts, the same set its
+search shows with "vis underarter og hybrider" ticked:
+
+- subspecies: `gråkråke`, `ærfugl, underarten borealis`
+- hybrids: `brunnakke x stokkand`. The order is Artsobservasjoner's, so `stokkand x brunnakke`
+  finds it only through `stokkand` or `brunnakke`.
+- colour morphs and domestic forms: `havhest, lysfaset`, `moskusand`
+- "ub." ("ubestemt") entries, for a sighting narrowed to a genus (`ub. svane`) or a small group of
+  similar species (`ub. makrell-/rødnebbterne`) but not the exact species
+- families, orders and the class: `kråkefamilien`, `spurvefugler`, `fugler`
+
+They are fetched from Artsobservasjoner (`scripts/build_other_taxa.py`) and searchable like any
+other entry, except genera without a Norwegian name. They rank about one match tier below the
+species, so `måk` lists `gråmåke` before `måkefamilien`, while typing a taxon's full name
+(`gråkråke`) still finds it first.
 
 ### Names and languages
 

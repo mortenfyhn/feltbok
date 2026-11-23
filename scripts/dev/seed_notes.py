@@ -98,12 +98,20 @@ MARIHONE_LATIN = ("Coccinella septempunctata", "", "")
 SVARTRYGGERLE = ("svartryggerle", "", "")
 AERFUGL_BOREALIS = ("Ærfugl, underarten borealis", "", "")
 TYPO = ("sitronsommerfulg", "", "")
-# ub. (ubestemt/unidentified) entries (#162): a species-complex and a genus-level example.
-# UB_TERNE (the species-complex) was confirmed live to import cleanly via the app's existing
-# free-text override; UB_SVANE (genus-level) wasn't separately tested, but the import mechanism
-# doesn't distinguish the two categories, so it's expected to behave the same.
+# Taxa that aren't species (#162, #190), from other_taxa.csv. They upload by taxon id like a species.
 UB_TERNE = ("ub. makrell-/rødnebbterne", "Sterna hirundo/paradisaea", "")
 UB_SVANE = ("ub. svane", "Cygnus", "")
+AERFUGL_BOREALIS_LISTED = (
+    "ærfugl, underarten borealis",
+    "Somateria mollissima borealis",
+    "",
+)
+BRUNNAKKE_X_STOKKAND = (
+    "brunnakke x stokkand",
+    "Mareca penelope x Anas platyrhynchos",
+    "",
+)
+KRAAKEFAMILIEN = ("kråkefamilien", "Corvidae", "")
 
 UNKNOWN_COUNT = -1
 MINUTE = 60_000
@@ -548,6 +556,29 @@ ROWS = [
         "",
         "Trekkende",
         "Leangenbukta",
+    ),
+    note(
+        "subspecies (#190)",
+        DAY // MINUTE + 820,
+        AERFUGL_BOREALIS_LISTED,
+        3,
+        "",
+        "",
+        "",
+        "Ilsvika",
+    ),
+    note(
+        "hybrid (#190)",
+        DAY // MINUTE + 830,
+        BRUNNAKKE_X_STOKKAND,
+        1,
+        "",
+        "Hann",
+        "",
+        "Leangenbukta",
+    ),
+    note(
+        "family (#190)", DAY // MINUTE + 840, KRAAKEFAMILIEN, 4, "", "", "", "Ilsvika"
     ),
     note(
         "typed insect, Norwegian name (#144): found on the site by name, group fields blank",

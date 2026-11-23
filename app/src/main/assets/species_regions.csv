@@ -251,7 +251,7 @@ latS,lonW,latin,count
 57,6,Lullula arborea,6
 57,6,Surnia ulula,6
 57,6,Milvus migrans,6
-57,6,Acanthis hornemanni,6
+57,6,Acanthis flammea exilipes,6
 57,6,Curruca cantillans,6
 57,6,Dendrocopos leucotos,5
 57,6,Calidris temminckii,5
@@ -529,7 +529,7 @@ latS,lonW,latin,count
 58,4,Regulus ignicapilla,547
 58,4,Surnia ulula,534
 58,4,Chlidonias niger,515
-58,4,Anas carolinensis,503
+58,4,Anas crecca carolinensis,503
 58,4,Anthus richardi,499
 58,4,Alcedo atthis,475
 58,4,Acrocephalus palustris,420
@@ -596,7 +596,7 @@ latS,lonW,latin,count
 58,4,Upupa epops,156
 58,4,Falco vespertinus,153
 58,4,Chroicocephalus philadelphia,151
-58,4,Acanthis hornemanni,143
+58,4,Acanthis flammea exilipes,143
 58,4,Pastor roseus,142
 58,4,Lullula arborea,138
 58,4,Turdus atrogularis,136
@@ -654,7 +654,7 @@ latS,lonW,latin,count
 58,4,Lanius minor,35
 58,4,Merops apiaster,34
 58,4,Leucophaeus atricilla,34
-58,4,Puffinus mauretanicus,33
+58,4,Puffinus yelkouan mauretanicus,33
 58,4,Calidris ruficollis,32
 58,4,Ficedula albicilla,31
 58,4,Chlidonias hybrida,29
@@ -987,7 +987,7 @@ latS,lonW,latin,count
 58,6,Phasianus colchicus,142
 58,6,Acrocephalus arundinaceus,140
 58,6,Phalaropus lobatus,140
-58,6,Acanthis hornemanni,137
+58,6,Acanthis flammea exilipes,137
 58,6,Oenanthe deserti,135
 58,6,Coracias garrulus,130
 58,6,Streptopelia orientalis,130
@@ -1006,7 +1006,7 @@ latS,lonW,latin,count
 58,6,Ficedula parva,80
 58,6,Turdus atrogularis,78
 58,6,Anthus campestris,77
-58,6,Anas carolinensis,75
+58,6,Anas crecca carolinensis,75
 58,6,Motacilla tschutschensis,72
 58,6,Lanius minor,71
 58,6,Phalaropus fulicarius,68
@@ -1061,7 +1061,7 @@ latS,lonW,latin,count
 58,6,Oenanthe isabellina,26
 58,6,Luscinia megarhynchos,26
 58,6,Hydroprogne caspia,25
-58,6,Puffinus mauretanicus,25
+58,6,Puffinus yelkouan mauretanicus,25
 58,6,Nycticorax nycticorax,24
 58,6,Xenus cinereus,22
 58,6,Turdus eunomus,22
@@ -1337,7 +1337,7 @@ latS,lonW,latin,count
 58,8,Panurus biarmicus,267
 58,8,Anthus spinoletta,265
 58,8,Milvus milvus,256
-58,8,Acanthis hornemanni,247
+58,8,Acanthis flammea exilipes,247
 58,8,Polysticta stelleri,243
 58,8,Phylloscopus inornatus,239
 58,8,Egretta garzetta,234
@@ -1380,7 +1380,7 @@ latS,lonW,latin,count
 58,8,Acrocephalus arundinaceus,65
 58,8,Phylloscopus proregulus,64
 58,8,Motacilla citreola,63
-58,8,Anas carolinensis,62
+58,8,Anas crecca carolinensis,62
 58,8,Phalaropus fulicarius,62
 58,8,Luscinia megarhynchos,61
 58,8,Lagopus lagopus,60
@@ -1418,7 +1418,7 @@ latS,lonW,latin,count
 58,8,Cecropis daurica,17
 58,8,Motacilla tschutschensis,15
 58,8,Aix sponsa,15
-58,8,Puffinus mauretanicus,15
+58,8,Puffinus yelkouan mauretanicus,15
 58,8,Botaurus stellaris,14
 58,8,Emberiza calandra,14
 58,8,Curruca cantillans,14
@@ -1665,7 +1665,7 @@ latS,lonW,latin,count
 58,10,Hydrocoloeus minutus,10
 58,10,Fulica atra,9
 58,10,Saxicola rubicola,9
-58,10,Acanthis hornemanni,9
+58,10,Acanthis flammea exilipes,9
 58,10,Polysticta stelleri,9
 58,10,Chlidonias niger,8
 58,10,Streptopelia turtur,8
@@ -1995,7 +1995,7 @@ latS,lonW,latin,count
 59,4,Emberiza melanocephala,146
 59,4,Motacilla citreola,143
 59,4,Hydrocoloeus minutus,142
-59,4,Acanthis hornemanni,134
+59,4,Acanthis flammea exilipes,134
 59,4,Spatula querquedula,125
 59,4,Tetrao urogallus,118
 59,4,Falco subbuteo,115
@@ -2105,7 +2105,7 @@ latS,lonW,latin,count
 59,4,Chlidonias niger,10
 59,4,Chlidonias leucopterus,10
 59,4,Emberiza rutila,10
-59,4,Puffinus mauretanicus,10
+59,4,Puffinus yelkouan mauretanicus,10
 59,4,Empidonax alnorum,9
 59,4,Tadorna ferruginea,9
 59,4,Chroicocephalus philadelphia,9
@@ -2113,7 +2113,7 @@ latS,lonW,latin,count
 59,4,Spatula cyanoptera,9
 59,4,Tachymarptis melba,8
 59,4,Bubulcus ibis,8
-59,4,Anas carolinensis,8
+59,4,Anas crecca carolinensis,8
 59,4,Lanius phoenicuroides,8
 59,4,Polysticta stelleri,8
 59,4,Coracias garrulus,7
@@ -2297,7 +2297,7 @@ latS,lonW,latin,count
 59,6,Asio otus,30
 59,6,Aix galericulata,28
 59,6,Lanius collurio,28
-59,6,Acanthis hornemanni,27
+59,6,Acanthis flammea exilipes,27
 59,6,Corvus corone,27
 59,6,Fulica atra,26
 59,6,Phalacrocorax aristotelis,26
@@ -2540,7 +2540,7 @@ latS,lonW,latin,count
 59,8,Locustella naevia,212
 59,8,Loxia leucoptera,194
 59,8,Acrocephalus dumetorum,191
-59,8,Acanthis hornemanni,191
+59,8,Acanthis flammea exilipes,191
 59,8,Rissa tridactyla,185
 59,8,Circus macrourus,160
 59,8,Sterna paradisaea,159
@@ -2562,7 +2562,7 @@ latS,lonW,latin,count
 59,8,Pluvialis squatarola,81
 59,8,Podiceps grisegena,72
 59,8,Anthus cervinus,71
-59,8,Anas carolinensis,69
+59,8,Anas crecca carolinensis,69
 59,8,Upupa epops,68
 59,8,Arenaria interpres,64
 59,8,Locustella luscinioides,64
@@ -2850,7 +2850,7 @@ latS,lonW,latin,count
 59,10,Anthus cervinus,1221
 59,10,Calidris alba,1207
 59,10,Saxicola rubicola,1197
-59,10,Acanthis hornemanni,1100
+59,10,Acanthis flammea exilipes,1100
 59,10,Thalasseus sandvicensis,1049
 59,10,Gallinago media,976
 59,10,Tadorna ferruginea,942
@@ -2882,7 +2882,7 @@ latS,lonW,latin,count
 59,10,Ichthyaetus melanocephalus,431
 59,10,Sylvia nisoria,429
 59,10,Phalaropus lobatus,405
-59,10,Anas carolinensis,388
+59,10,Anas crecca carolinensis,388
 59,10,Upupa epops,388
 59,10,Serinus serinus,376
 59,10,Sternula albifrons,360
@@ -2989,7 +2989,7 @@ latS,lonW,latin,count
 59,10,Lophodytes cucullatus,19
 59,10,Ciconia nigra,16
 59,10,Anthus hodgsoni,14
-59,10,Puffinus mauretanicus,13
+59,10,Puffinus yelkouan mauretanicus,13
 59,10,Alectoris chukar,12
 59,10,Perisoreus infaustus,12
 59,10,Emberiza rustica,12
@@ -3423,7 +3423,7 @@ latS,lonW,latin,count
 60,4,Circus aeruginosus,49
 60,4,Falco rusticolus,49
 60,4,Calandrella brachydactyla,47
-60,4,Acanthis hornemanni,47
+60,4,Acanthis flammea exilipes,47
 60,4,Ficedula parva,45
 60,4,Bucanetes githagineus,45
 60,4,Pluvialis dominica,43
@@ -3446,7 +3446,7 @@ latS,lonW,latin,count
 60,4,Lophodytes cucullatus,27
 60,4,Eremophila alpestris,27
 60,4,Phasianus colchicus,26
-60,4,Anas carolinensis,25
+60,4,Anas crecca carolinensis,25
 60,4,Emberiza melanocephala,25
 60,4,Anthus rubescens,23
 60,4,Tadorna ferruginea,23
@@ -3672,7 +3672,7 @@ latS,lonW,latin,count
 60,6,Limosa lapponica,29
 60,6,Saxicola rubicola,28
 60,6,Aythya ferina,26
-60,6,Anas carolinensis,24
+60,6,Anas crecca carolinensis,24
 60,6,Mergellus albellus,24
 60,6,Gallinula chloropus,24
 60,6,Crex crex,22
@@ -3688,7 +3688,7 @@ latS,lonW,latin,count
 60,6,Uria aalge,13
 60,6,Acrocephalus palustris,13
 60,6,Locustella naevia,13
-60,6,Acanthis hornemanni,13
+60,6,Acanthis flammea exilipes,13
 60,6,Ardea alba,12
 60,6,Dryocopus martius,11
 60,6,Calidris canutus,11
@@ -3861,7 +3861,7 @@ latS,lonW,latin,count
 60,8,Falco peregrinus,183
 60,8,Lanius collurio,150
 60,8,Anthus petrosus,144
-60,8,Acanthis hornemanni,138
+60,8,Acanthis flammea exilipes,138
 60,8,Larus fuscus,136
 60,8,Gallinago media,135
 60,8,Tachybaptus ruficollis,133
@@ -3886,7 +3886,7 @@ latS,lonW,latin,count
 60,8,Charadrius dubius,54
 60,8,Corvus corone,54
 60,8,Pernis apivorus,53
-60,8,Anas carolinensis,50
+60,8,Anas crecca carolinensis,50
 60,8,Spatula querquedula,48
 60,8,Phoenicurus ochruros,43
 60,8,Fulica atra,41
@@ -4139,13 +4139,13 @@ latS,lonW,latin,count
 60,10,Aix galericulata,275
 60,10,Hydrocoloeus minutus,275
 60,10,Perisoreus infaustus,271
-60,10,Acanthis hornemanni,266
+60,10,Acanthis flammea exilipes,266
 60,10,Gavia adamsii,249
 60,10,Aquila chrysaetos,227
 60,10,Cygnus columbianus,219
 60,10,Emberiza hortulana,214
 60,10,Sterna paradisaea,199
-60,10,Anas carolinensis,195
+60,10,Anas crecca carolinensis,195
 60,10,Calidris ferruginea,191
 60,10,Calidris canutus,180
 60,10,Anser caerulescens,174
@@ -4377,7 +4377,7 @@ latS,lonW,latin,count
 60,12,Haliaeetus albicilla,37
 60,12,Circus cyaneus,33
 60,12,Turdus torquatus,33
-60,12,Acanthis hornemanni,32
+60,12,Acanthis flammea exilipes,32
 60,12,Spatula clypeata,32
 60,12,Larus marinus,31
 60,12,Linaria flavirostris,31
@@ -4693,7 +4693,7 @@ latS,lonW,latin,count
 61,4,Lanius collurio,19
 61,4,Spatula clypeata,19
 61,4,Streptopelia turtur,17
-61,4,Acanthis hornemanni,17
+61,4,Acanthis flammea exilipes,17
 61,4,Aythya ferina,16
 61,4,Falco rusticolus,16
 61,4,Stercorarius pomarinus,15
@@ -4888,7 +4888,7 @@ latS,lonW,latin,count
 61,6,Corvus corone,22
 61,6,Limosa limosa,21
 61,6,Calidris pugnax,21
-61,6,Acanthis hornemanni,20
+61,6,Acanthis flammea exilipes,20
 61,6,Spatula clypeata,20
 61,6,Larus glaucoides,19
 61,6,Loxia leucoptera,18
@@ -5099,7 +5099,7 @@ latS,lonW,latin,count
 61,8,Phylloscopus sibillatrix,51
 61,8,Tachybaptus ruficollis,47
 61,8,Tadorna tadorna,46
-61,8,Acanthis hornemanni,46
+61,8,Acanthis flammea exilipes,46
 61,8,Spatula querquedula,43
 61,8,Circus macrourus,39
 61,8,Podiceps cristatus,38
@@ -5133,7 +5133,7 @@ latS,lonW,latin,count
 61,8,Corvus frugilegus,10
 61,8,Anser indicus,10
 61,8,Limosa lapponica,9
-61,8,Anas carolinensis,9
+61,8,Anas crecca carolinensis,9
 61,8,Corvus corone,9
 61,8,Upupa epops,8
 61,8,Pluvialis squatarola,6
@@ -5312,13 +5312,13 @@ latS,lonW,latin,count
 61,10,Calcarius lapponicus,143
 61,10,Fulica atra,139
 61,10,Sylvia communis,135
-61,10,Acanthis hornemanni,130
+61,10,Acanthis flammea exilipes,130
 61,10,Asio otus,124
 61,10,Coturnix coturnix,121
 61,10,Tachybaptus ruficollis,116
 61,10,Linaria flavirostris,103
 61,10,Pernis apivorus,102
-61,10,Anas carolinensis,101
+61,10,Anas crecca carolinensis,101
 61,10,Lagopus muta,100
 61,10,Circus aeruginosus,85
 61,10,Anthus petrosus,78
@@ -5537,7 +5537,7 @@ latS,lonW,latin,count
 61,12,Falco peregrinus,10
 61,12,Melanitta fusca,10
 61,12,Anser fabalis,9
-61,12,Acanthis hornemanni,9
+61,12,Acanthis flammea exilipes,9
 61,12,Linaria flavirostris,9
 61,12,Pernis apivorus,8
 61,12,Strix nebulosa,8
@@ -5734,7 +5734,7 @@ latS,lonW,latin,count
 62,4,Spatula querquedula,39
 62,4,Lanius excubitor,39
 62,4,Asio flammeus,37
-62,4,Acanthis hornemanni,35
+62,4,Acanthis flammea exilipes,35
 62,4,Phoenicurus phoenicurus,35
 62,4,Locustella fluviatilis,34
 62,4,Anas acuta,34
@@ -6002,7 +6002,7 @@ latS,lonW,latin,count
 62,6,Puffinus puffinus,83
 62,6,Asio flammeus,81
 62,6,Stercorarius pomarinus,80
-62,6,Acanthis hornemanni,78
+62,6,Acanthis flammea exilipes,78
 62,6,Thalasseus sandvicensis,76
 62,6,Jynx torquilla,76
 62,6,Phylloscopus sibillatrix,74
@@ -6046,7 +6046,7 @@ latS,lonW,latin,count
 62,6,Calidris falcinellus,25
 62,6,Porzana porzana,24
 62,6,Anser erythropus,24
-62,6,Anas carolinensis,24
+62,6,Anas crecca carolinensis,24
 62,6,Zonotrichia leucophrys,24
 62,6,Lanius minor,23
 62,6,Carpodacus erythrinus,23
@@ -6105,7 +6105,7 @@ latS,lonW,latin,count
 62,6,Acrocephalus scirpaceus,5
 62,6,Melanitta perspicillata,5
 62,6,Puffinus gravis,5
-62,6,Puffinus mauretanicus,5
+62,6,Puffinus yelkouan mauretanicus,5
 62,6,Iduna caligata,5
 62,6,Charadrius dubius,5
 62,8,Parus major,11680
@@ -6247,7 +6247,7 @@ latS,lonW,latin,count
 62,8,Carduelis carduelis,461
 62,8,Dendrocopos leucotos,435
 62,8,Alauda arvensis,418
-62,8,Acanthis hornemanni,414
+62,8,Acanthis flammea exilipes,414
 62,8,Tetrao urogallus,380
 62,8,Loxia curvirostra,379
 62,8,Loxia pytyopsittacus,376
@@ -6340,7 +6340,7 @@ latS,lonW,latin,count
 62,8,Aythya ferina,12
 62,8,Luscinia luscinia,11
 62,8,Carpodacus erythrinus,11
-62,8,Anas carolinensis,11
+62,8,Anas crecca carolinensis,11
 62,8,Porzana porzana,10
 62,8,Pastor roseus,10
 62,8,Emberiza leucocephalos,9
@@ -6490,7 +6490,7 @@ latS,lonW,latin,count
 62,10,Plectrophenax nivalis,227
 62,10,Pinicola enucleator,214
 62,10,Tetrastes bonasia,204
-62,10,Acanthis hornemanni,191
+62,10,Acanthis flammea exilipes,191
 62,10,Phalacrocorax carbo,185
 62,10,Aythya marila,184
 62,10,Falco peregrinus,183
@@ -6550,7 +6550,7 @@ latS,lonW,latin,count
 62,10,Upupa epops,16
 62,10,Limosa lapponica,15
 62,10,Anthus petrosus,15
-62,10,Anas carolinensis,15
+62,10,Anas crecca carolinensis,15
 62,10,Branta bernicla,15
 62,10,Porzana porzana,13
 62,10,Arenaria interpres,13
@@ -6899,7 +6899,7 @@ latS,lonW,latin,count
 63,6,Rallus aquaticus,27
 63,6,Aythya marila,27
 63,6,Branta bernicla,27
-63,6,Acanthis hornemanni,26
+63,6,Acanthis flammea exilipes,26
 63,6,Puffinus puffinus,25
 63,6,Motacilla flava,24
 63,6,Calidris ferruginea,23
@@ -7128,7 +7128,7 @@ latS,lonW,latin,count
 63,8,Limosa limosa,816
 63,8,Fulica atra,793
 63,8,Tringa glareola,783
-63,8,Acanthis hornemanni,753
+63,8,Acanthis flammea exilipes,753
 63,8,Tringa ochropus,712
 63,8,Motacilla flava,708
 63,8,Mergellus albellus,705
@@ -7209,7 +7209,7 @@ latS,lonW,latin,count
 63,8,Turdus atrogularis,93
 63,8,Phalaropus lobatus,86
 63,8,Lullula arborea,72
-63,8,Anas carolinensis,68
+63,8,Anas crecca carolinensis,68
 63,8,Charadrius morinellus,67
 63,8,Luscinia luscinia,67
 63,8,Chroicocephalus philadelphia,65
@@ -7457,7 +7457,7 @@ latS,lonW,latin,count
 63,10,Gavia immer,1369
 63,10,Anser fabalis,1329
 63,10,Luscinia svecica,1275
-63,10,Acanthis hornemanni,1173
+63,10,Acanthis flammea exilipes,1173
 63,10,Surnia ulula,1158
 63,10,Anser serrirostris,1101
 63,10,Loxia leucoptera,1068
@@ -7498,7 +7498,7 @@ latS,lonW,latin,count
 63,10,Phalaropus lobatus,379
 63,10,Jynx torquilla,367
 63,10,Ardea alba,364
-63,10,Anas carolinensis,355
+63,10,Anas crecca carolinensis,355
 63,10,Porzana porzana,347
 63,10,Crex crex,320
 63,10,Carpodacus erythrinus,316
@@ -7743,7 +7743,7 @@ latS,lonW,latin,count
 63,12,Loxia pytyopsittacus,38
 63,12,Mergus serrator,36
 63,12,Apus apus,36
-63,12,Acanthis hornemanni,35
+63,12,Acanthis flammea exilipes,35
 63,12,Sylvia borin,33
 63,12,Accipiter gentilis,31
 63,12,Passer montanus,25
@@ -7777,7 +7777,7 @@ latS,lonW,latin,count
 63,12,Buteo buteo,6
 63,12,Aegithalos caudatus,6
 63,12,Anas acuta,6
-63,12,Anas carolinensis,6
+63,12,Anas crecca carolinensis,6
 63,12,Melanitta fusca,6
 63,12,Strix aluco,5
 64,6,Rissa tridactyla,82
@@ -7939,7 +7939,7 @@ latS,lonW,latin,count
 64,8,Motacilla flava,18
 64,8,Certhia familiaris,17
 64,8,Delichon urbicum,17
-64,8,Acanthis hornemanni,17
+64,8,Acanthis flammea exilipes,17
 64,8,Loxia curvirostra,17
 64,8,Phoenicurus ochruros,16
 64,8,Calidris alba,15
@@ -8169,7 +8169,7 @@ latS,lonW,latin,count
 64,10,Coturnix coturnix,63
 64,10,Rallus aquaticus,63
 64,10,Somateria spectabilis,60
-64,10,Acanthis hornemanni,57
+64,10,Acanthis flammea exilipes,57
 64,10,Mareca strepera,56
 64,10,Ardea alba,56
 64,10,Emberiza leucocephalos,54
@@ -8217,7 +8217,7 @@ latS,lonW,latin,count
 64,10,Serinus serinus,20
 64,10,Streptopelia turtur,20
 64,10,Columba oenas,18
-64,10,Anas carolinensis,17
+64,10,Anas crecca carolinensis,17
 64,10,Melanitta deglandi,16
 64,10,Aythya affinis,16
 64,10,Hydrobates pelagicus,15
@@ -8389,7 +8389,7 @@ latS,lonW,latin,count
 64,12,Stercorarius longicaudus,84
 64,12,Melanitta fusca,76
 64,12,Loxia leucoptera,76
-64,12,Acanthis hornemanni,74
+64,12,Acanthis flammea exilipes,74
 64,12,Alauda arvensis,70
 64,12,Calcarius lapponicus,68
 64,12,Lymnocryptes minimus,66
@@ -8413,7 +8413,7 @@ latS,lonW,latin,count
 64,12,Acrocephalus schoenobaenus,31
 64,12,Streptopelia decaocto,31
 64,12,Emberiza rustica,28
-64,12,Anas carolinensis,25
+64,12,Anas crecca carolinensis,25
 64,12,Tadorna tadorna,24
 64,12,Anser albifrons,22
 64,12,Spatula clypeata,22
@@ -8732,7 +8732,7 @@ latS,lonW,latin,count
 65,10,Bombycilla garrulus,42
 65,10,Prunella modularis,42
 65,10,Anser albifrons,40
-65,10,Acanthis hornemanni,40
+65,10,Acanthis flammea exilipes,40
 65,10,Loxia leucoptera,40
 65,10,Aquila chrysaetos,39
 65,10,Tringa erythropus,39
@@ -8976,7 +8976,7 @@ latS,lonW,latin,count
 65,12,Picus viridis,95
 65,12,Hippolais icterina,94
 65,12,Phalaropus lobatus,94
-65,12,Acanthis hornemanni,93
+65,12,Acanthis flammea exilipes,93
 65,12,Rallus aquaticus,87
 65,12,Uria aalge,87
 65,12,Fulica atra,85
@@ -9162,7 +9162,7 @@ latS,lonW,latin,count
 65,14,Hirundo rustica,8
 65,14,Circus cyaneus,7
 65,14,Numenius arquata,7
-65,14,Acanthis hornemanni,7
+65,14,Acanthis flammea exilipes,7
 65,14,Coturnix coturnix,6
 65,14,Linaria flavirostris,6
 65,14,Falco rusticolus,6
@@ -9294,7 +9294,7 @@ latS,lonW,latin,count
 66,12,Columba livia,627
 66,12,Anser brachyrhynchus,596
 66,12,Podiceps auritus,584
-66,12,Acanthis hornemanni,574
+66,12,Acanthis flammea exilipes,574
 66,12,Falco columbarius,570
 66,12,Acrocephalus schoenobaenus,555
 66,12,Luscinia svecica,540
@@ -9431,7 +9431,7 @@ latS,lonW,latin,count
 66,12,Circus macrourus,11
 66,12,Anthus cervinus,11
 66,12,Streptopelia orientalis,11
-66,12,Anas carolinensis,11
+66,12,Anas crecca carolinensis,11
 66,12,Branta bernicla,11
 66,12,Calidris alba,10
 66,12,Puffinus puffinus,10
@@ -9599,7 +9599,7 @@ latS,lonW,latin,count
 66,14,Branta canadensis,73
 66,14,Larus glaucoides,72
 66,14,Alca torda,70
-66,14,Acanthis hornemanni,69
+66,14,Acanthis flammea exilipes,69
 66,14,Somateria spectabilis,67
 66,14,Spatula clypeata,56
 66,14,Spatula querquedula,54
@@ -9622,7 +9622,7 @@ latS,lonW,latin,count
 66,14,Falco rusticolus,27
 66,14,Aegithalos caudatus,24
 66,14,Sterna hirundo,24
-66,14,Anas carolinensis,23
+66,14,Anas crecca carolinensis,23
 66,14,Limosa limosa,21
 66,14,Jynx torquilla,21
 66,14,Anser erythropus,20
@@ -9858,7 +9858,7 @@ latS,lonW,latin,count
 67,12,Calidris ferruginea,449
 67,12,Regulus regulus,443
 67,12,Larus glaucoides,428
-67,12,Acanthis hornemanni,423
+67,12,Acanthis flammea exilipes,423
 67,12,Uria aalge,353
 67,12,Pluvialis squatarola,349
 67,12,Accipiter nisus,332
@@ -9985,7 +9985,7 @@ latS,lonW,latin,count
 67,12,Calidris falcinellus,15
 67,12,Lanius excubitor,15
 67,12,Rallus aquaticus,14
-67,12,Anas carolinensis,14
+67,12,Anas crecca carolinensis,14
 67,12,Mergellus albellus,14
 67,12,Oceanodroma leucorhoa,13
 67,12,Icterus galbula,13
@@ -10211,7 +10211,7 @@ latS,lonW,latin,count
 67,14,Larus hyperboreus,80
 67,14,Uria aalge,78
 67,14,Branta leucopsis,77
-67,14,Acanthis hornemanni,74
+67,14,Acanthis flammea exilipes,74
 67,14,Tachybaptus ruficollis,72
 67,14,Aix galericulata,70
 67,14,Calcarius lapponicus,62
@@ -10254,7 +10254,7 @@ latS,lonW,latin,count
 67,14,Podilymbus podiceps,17
 67,14,Anser erythropus,17
 67,14,Porzana porzana,14
-67,14,Anas carolinensis,13
+67,14,Anas crecca carolinensis,13
 67,14,Recurvirostra avosetta,12
 67,14,Locustella naevia,12
 67,14,Cygnus olor,12
@@ -10457,7 +10457,7 @@ latS,lonW,latin,count
 68,12,Lagopus muta,150
 68,12,Garrulus glandarius,142
 68,12,Loxia leucoptera,141
-68,12,Acanthis hornemanni,137
+68,12,Acanthis flammea exilipes,137
 68,12,Accipiter gentilis,126
 68,12,Periparus ater,126
 68,12,Calidris temminckii,115
@@ -10509,7 +10509,7 @@ latS,lonW,latin,count
 68,12,Streptopelia turtur,26
 68,12,Branta ruficollis,26
 68,12,Ardea alba,26
-68,12,Anas carolinensis,25
+68,12,Anas crecca carolinensis,25
 68,12,Calidris falcinellus,25
 68,12,Anthus trivialis,24
 68,12,Coccothraustes coccothraustes,24
@@ -10691,7 +10691,7 @@ latS,lonW,latin,count
 68,14,Larus hyperboreus,154
 68,14,Calidris canutus,149
 68,14,Calidris minuta,147
-68,14,Acanthis hornemanni,141
+68,14,Acanthis flammea exilipes,141
 68,14,Saxicola rubetra,137
 68,14,Asio otus,137
 68,14,Certhia familiaris,127
@@ -10786,7 +10786,7 @@ latS,lonW,latin,count
 68,14,Columba oenas,7
 68,14,Plegadis falcinellus,6
 68,14,Carduelis carduelis,6
-68,14,Anas carolinensis,6
+68,14,Anas crecca carolinensis,6
 68,14,Aythya ferina,6
 68,14,Hydrobates pelagicus,6
 68,14,Buteo buteo,5
@@ -10921,7 +10921,7 @@ latS,lonW,latin,count
 68,16,Motacilla flava,86
 68,16,Lagopus muta,85
 68,16,Asio otus,81
-68,16,Acanthis hornemanni,70
+68,16,Acanthis flammea exilipes,70
 68,16,Arenaria interpres,64
 68,16,Phalaropus lobatus,62
 68,16,Mareca strepera,58
@@ -11063,7 +11063,7 @@ latS,lonW,latin,count
 68,18,Emberiza citrinella,59
 68,18,Turdus merula,58
 68,18,Oenanthe oenanthe,58
-68,18,Acanthis hornemanni,56
+68,18,Acanthis flammea exilipes,56
 68,18,Tetrao urogallus,55
 68,18,Phylloscopus inornatus,55
 68,18,Columba palumbus,54
@@ -11229,7 +11229,7 @@ latS,lonW,latin,count
 68,22,Chloris chloris,6
 68,22,Parus major,6
 68,22,Aythya marila,5
-68,22,Acanthis hornemanni,5
+68,22,Acanthis flammea exilipes,5
 68,24,Cygnus cygnus,57
 68,24,Tringa glareola,30
 68,24,Aythya fuligula,29
@@ -11404,7 +11404,7 @@ latS,lonW,latin,count
 69,14,Melanitta fusca,13
 69,14,Falco peregrinus,12
 69,14,Puffinus puffinus,11
-69,14,Acanthis hornemanni,10
+69,14,Acanthis flammea exilipes,10
 69,14,Loxia curvirostra,10
 69,14,Accipiter nisus,9
 69,14,Mergellus albellus,9
@@ -11539,7 +11539,7 @@ latS,lonW,latin,count
 69,16,Stercorarius longicaudus,43
 69,16,Surnia ulula,42
 69,16,Cinclus cinclus,41
-69,16,Acanthis hornemanni,40
+69,16,Acanthis flammea exilipes,40
 69,16,Scolopax rusticola,39
 69,16,Picus canus,37
 69,16,Passer montanus,36
@@ -11728,7 +11728,7 @@ latS,lonW,latin,count
 69,18,Phalacrocorax aristotelis,439
 69,18,Dryobates minor,418
 69,18,Anthus trivialis,417
-69,18,Acanthis hornemanni,415
+69,18,Acanthis flammea exilipes,415
 69,18,Pinicola enucleator,406
 69,18,Muscicapa striata,400
 69,18,Fratercula arctica,398
@@ -11821,7 +11821,7 @@ latS,lonW,latin,count
 69,18,Stercorarius skua,16
 69,18,Tringa flavipes,16
 69,18,Poecile cinctus,16
-69,18,Anas carolinensis,15
+69,18,Anas crecca carolinensis,15
 69,18,Linaria cannabina,15
 69,18,Carpodacus erythrinus,14
 69,18,Mareca americana,13
@@ -11991,7 +11991,7 @@ latS,lonW,latin,count
 69,20,Calidris alba,12
 69,20,Sylvia atricapilla,12
 69,20,Aythya marila,12
-69,20,Acanthis hornemanni,12
+69,20,Acanthis flammea exilipes,12
 69,20,Hydrocoloeus minutus,12
 69,20,Anthus cervinus,11
 69,20,Turdus viscivorus,11
@@ -12123,7 +12123,7 @@ latS,lonW,latin,count
 69,22,Turdus merula,97
 69,22,Anser fabalis,94
 69,22,Rissa tridactyla,90
-69,22,Acanthis hornemanni,81
+69,22,Acanthis flammea exilipes,81
 69,22,Regulus regulus,79
 69,22,Hirundo rustica,77
 69,22,Calidris minuta,76
@@ -12270,7 +12270,7 @@ latS,lonW,latin,count
 69,24,Pinicola enucleator,35
 69,24,Anser fabalis,35
 69,24,Melanitta fusca,35
-69,24,Acanthis hornemanni,34
+69,24,Acanthis flammea exilipes,34
 69,24,Anas acuta,33
 69,24,Turdus viscivorus,32
 69,24,Lagopus muta,32
@@ -12428,7 +12428,7 @@ latS,lonW,latin,count
 69,28,Dendrocopos major,298
 69,28,Cyanistes caeruleus,279
 69,28,Lymnocryptes minimus,274
-69,28,Acanthis hornemanni,274
+69,28,Acanthis flammea exilipes,274
 69,28,Delichon urbicum,269
 69,28,Prunella modularis,234
 69,28,Picoides tridactylus,225
@@ -12608,7 +12608,7 @@ latS,lonW,latin,count
 69,30,Melanitta fusca,136
 69,30,Charadrius hiaticula,136
 69,30,Melanitta nigra,134
-69,30,Acanthis hornemanni,133
+69,30,Acanthis flammea exilipes,133
 69,30,Cygnus cygnus,131
 69,30,Pinicola enucleator,130
 69,30,Spinus spinus,126
@@ -12835,7 +12835,7 @@ latS,lonW,latin,count
 70,18,Larus hyperboreus,7
 70,18,Stercorarius skua,7
 70,18,Calidris ferruginea,7
-70,18,Acanthis hornemanni,7
+70,18,Acanthis flammea exilipes,7
 70,18,Accipiter gentilis,6
 70,18,Falco peregrinus,6
 70,18,Coccothraustes coccothraustes,6
@@ -13041,7 +13041,7 @@ latS,lonW,latin,count
 70,22,Columba livia,66
 70,22,Somateria spectabilis,66
 70,22,Erithacus rubecula,63
-70,22,Acanthis hornemanni,63
+70,22,Acanthis flammea exilipes,63
 70,22,Aegolius funereus,58
 70,22,Dendrocopos major,56
 70,22,Fratercula arctica,55
@@ -13208,7 +13208,7 @@ latS,lonW,latin,count
 70,24,Rissa tridactyla,271
 70,24,Lagopus muta,267
 70,24,Spatula clypeata,266
-70,24,Acanthis hornemanni,237
+70,24,Acanthis flammea exilipes,237
 70,24,Aythya marila,236
 70,24,Limosa limosa,226
 70,24,Fringilla coelebs,213
@@ -13289,7 +13289,7 @@ latS,lonW,latin,count
 70,24,Larus hyperboreus,15
 70,24,Fulmarus glacialis,15
 70,24,Stercorarius pomarinus,15
-70,24,Anas carolinensis,15
+70,24,Anas crecca carolinensis,15
 70,24,Polysticta stelleri,15
 70,24,Ardea alba,15
 70,24,Mareca americana,14
@@ -13422,7 +13422,7 @@ latS,lonW,latin,count
 70,26,Phylloscopus collybita,36
 70,26,Hirundo rustica,34
 70,26,Poecile montanus,33
-70,26,Acanthis hornemanni,31
+70,26,Acanthis flammea exilipes,31
 70,26,Sterna hirundo,31
 70,26,Bombycilla garrulus,28
 70,26,Prunella modularis,25
@@ -13553,7 +13553,7 @@ latS,lonW,latin,count
 70,28,Surnia ulula,433
 70,28,Bombycilla garrulus,423
 70,28,Pyrrhula pyrrhula,420
-70,28,Acanthis hornemanni,392
+70,28,Acanthis flammea exilipes,392
 70,28,Eremophila alpestris,388
 70,28,Anser fabalis,383
 70,28,Anser serrirostris,373
@@ -13767,7 +13767,7 @@ latS,lonW,latin,count
 70,30,Anas platyrhynchos,585
 70,30,Anthus petrosus,528
 70,30,Asio flammeus,517
-70,30,Acanthis hornemanni,517
+70,30,Acanthis flammea exilipes,517
 70,30,Fulmarus glacialis,495
 70,30,Anser serrirostris,495
 70,30,Melanitta fusca,475
@@ -14094,7 +14094,7 @@ latS,lonW,latin,count
 71,26,Larus glaucoides,7
 71,26,Aix galericulata,7
 71,26,Turdus atrogularis,7
-71,26,Acanthis hornemanni,7
+71,26,Acanthis flammea exilipes,7
 71,26,Ardea cinerea,7
 71,26,Morus bassanus,6
 71,26,Larus fuscus,6
@@ -14170,7 +14170,7 @@ latS,lonW,latin,count
 71,28,Calidris canutus,49
 71,28,Anser brachyrhynchus,49
 71,28,Lagopus muta,48
-71,28,Acanthis hornemanni,46
+71,28,Acanthis flammea exilipes,46
 71,28,Asio flammeus,45
 71,28,Buteo lagopus,42
 71,28,Aythya fuligula,42

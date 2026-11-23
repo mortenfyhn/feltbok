@@ -28,9 +28,9 @@ authoritative `isPrivate` flag. No login needed; the harvest is resumable. Extra
 `hovedlokalitet` is resolved from each site's `parentSiteId`; manual public/private
 corrections in `locality_overrides.csv` (keyed by siteId) win over the flag.
 
-`build_ubestemt.py` (`just build-ubestemt`) harvests Artsobservasjoner's "ub." (ubestemt)
-taxon entries from the same mobile API's `TaxonName/Search` endpoint and writes
-`ubestemt.csv` (Norway-only — no Swedish equivalent has been investigated).
+`build_other_taxa.py` (`just build-other-taxa`) harvests every bird taxon that isn't a species
+(subspecies, hybrids, colour morphs, "ub." entries, families, orders, "fugler") from the same
+mobile API's `TaxonName/Search` endpoint and writes `other_taxa.csv` with their taxon ids.
 
 Push onto the device with `just push-data` — it overrides the bundled asset, no
 rebuild.
