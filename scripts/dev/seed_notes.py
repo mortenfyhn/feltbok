@@ -89,12 +89,16 @@ SVARTHALESPOVE = ("svarthalespove", "Limosa limosa", "CR")  # long name + red ba
 # (no registry key, no status badge). Exports verbatim in Artsnavn — rådyr resolves on the portal
 # (it covers all species, not just birds), so a clean seed still imports without error.
 RAADYR = ("rådyr", "", "")
-# ub. (ubestemt/unidentified) entries (#162): a species-complex and a genus-level example.
-# UB_TERNE (the species-complex) was confirmed live to import cleanly via the app's existing
-# free-text override; UB_SVANE (genus-level) wasn't separately tested, but the import mechanism
-# doesn't distinguish the two categories, so it's expected to behave the same.
+# Taxa that aren't species (#162, #190), from other_taxa.csv. They upload by taxon id like a species.
 UB_TERNE = ("ub. makrell-/rødnebbterne", "Sterna hirundo/paradisaea", "")
 UB_SVANE = ("ub. svane", "Cygnus", "")
+AERFUGL_BOREALIS = ("ærfugl, underarten borealis", "Somateria mollissima borealis", "")
+BRUNNAKKE_X_STOKKAND = (
+    "brunnakke x stokkand",
+    "Mareca penelope x Anas platyrhynchos",
+    "",
+)
+KRAAKEFAMILIEN = ("kråkefamilien", "Corvidae", "")
 
 UNKNOWN_COUNT = -1
 MINUTE = 60_000
@@ -553,6 +557,29 @@ ROWS = [
         "",
         "Trekkende",
         "Leangenbukta",
+    ),
+    note(
+        "subspecies (#190)",
+        DAY // MINUTE + 820,
+        AERFUGL_BOREALIS,
+        3,
+        "",
+        "",
+        "",
+        "Ilsvika",
+    ),
+    note(
+        "hybrid (#190)",
+        DAY // MINUTE + 830,
+        BRUNNAKKE_X_STOKKAND,
+        1,
+        "",
+        "Hann",
+        "",
+        "Leangenbukta",
+    ),
+    note(
+        "family (#190)", DAY // MINUTE + 840, KRAAKEFAMILIEN, 4, "", "", "", "Ilsvika"
     ),
 ]
 
