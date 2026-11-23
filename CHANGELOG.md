@@ -20,8 +20,6 @@
 - Innlogginga på Artsobservasjoner viser at den jobber mens siden laster.
 - Alder, kjønn og aktivitet kan settes til «(Uspesifisert)» i stedet for en strek.
 - Eksporter rett til «Kontroller funn» på Artsobservasjoner, uten kopiering og liming. Krever innlogging. Eksporterte observasjoner er merka i lista og blir ikke sendt to ganger.
-- Arter må velges fra artslista. For andre arter: velg nærmeste «ub.»-art og skriv resten i merknaden.
-- Eksporter rett til «Kontroller funn» på Artsobservasjoner, uten kopiering og liming. Krever innlogging.
 - Arter som ikke står i artslista, som insekter, kan fortsatt skrives inn. Eksporten finner dem på Artsobservasjoner.
 - GPS-knappen på kartet låser kartet til posisjonen din, så det følger med når du går. Drar du i kartet, slipper det.
 - Foreslått lokalitet treffer bedre når du står ved en punktlokalitet inne i et større område, som et vatn eller et reservat.
