@@ -228,17 +228,19 @@ fun LocalityLayers(d: LayerData) {
     val labelColor = const(Color(MapPalette.LabelText.toInt()))
     // A footprint's name sits centred on it; a dot's name sits just below the dot (labelFor).
     val below = feature["pos"]
+    val anchor = switch(below, case("below", const(SymbolAnchor.Top)), fallback = const(SymbolAnchor.Center))
+    val offset = switch(below, case("below", textOffset(0.dp, apx(15f + 6f))), fallback = textOffset(0.dp, 0.dp))
     SymbolLayer(id = "labels", source = labels, sortKey = sort, textField = text, textFont = LabelFont,
         textSize = LabelSize,
         textColor = labelColor, textHaloColor = halo, textHaloWidth = const(1.5.dp),
         textMaxWidth = LabelMaxWidth, textPadding = const(apx(8f)), textLineHeight = const(1.0f.em),
-        textAnchor = switch(below, case("below", const(SymbolAnchor.Top)), fallback = const(SymbolAnchor.Center)),
-        textOffset = switch(below, case("below", textOffset(0.dp, apx(15f + 6f))), fallback = textOffset(0.dp, 0.dp)))
+        textAnchor = anchor, textOffset = offset)
     // The pick always gets its name, and others keep clear of it.
     SymbolLayer(id = "label-picked", source = pickedLabel, textField = text, textFont = LabelFont,
         textSize = LabelSize,
         textColor = labelColor, textHaloColor = halo, textHaloWidth = const(1.5.dp),
-        textMaxWidth = LabelMaxWidth, textLineHeight = const(1.0f.em), textAllowOverlap = const(true))
+        textMaxWidth = LabelMaxWidth, textLineHeight = const(1.0f.em), textAllowOverlap = const(true),
+        textAnchor = anchor, textOffset = offset)
     // The GPS fix on top of everything, labels included, as on Android.
     FillLayer(id = "gps-acc", source = gpsAcc, color = const(Color(MapPalette.GpsAccFillFaint.toInt())))
     LineLayer(id = "gps-acc-line", source = gpsAcc, color = const(Color(MapPalette.GpsAccStrokeFaint.toInt())), width = const(apx(2f)))

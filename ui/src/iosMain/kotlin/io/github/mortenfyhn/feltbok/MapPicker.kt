@@ -364,7 +364,7 @@ actual fun LocalityScreen(vm: MainViewModel) {
             }
             // osmdroid's CopyrightOverlay: the OSM tile policy requires the credit.
             Text("© OpenStreetMap-bidragsytere", fontSize = 10.sp, color = Color(0xFF444444),
-                modifier = Modifier.align(Alignment.BottomStart).then(mapInset).background(Color(0x99FFFFFF)).padding(horizontal = 4.dp, vertical = 1.dp))
+                modifier = Modifier.align(Alignment.BottomStart).then(mapInset).padding(horizontal = 4.dp, vertical = 1.dp))
             // One-handed zoom + re-centre: thumb-reachable buttons. In new-spot mode only re-centre
             // stays, above the panel (whose height includes the home-indicator inset).
             Column(
