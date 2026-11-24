@@ -22,12 +22,13 @@ fun parseCsvLine(line: String): List<String> {
     return out
 }
 
-private fun csvRows(text: String?): List<List<String>> =
+private fun csvRowSequence(text: String?): Sequence<List<String>> =
     text.orEmpty().lineSequence()
         .filter { it.isNotBlank() }
         .drop(1) // header
         .map { parseCsvLine(it) }
-        .toList()
+
+private fun csvRows(text: String?): List<List<String>> = csvRowSequence(text).toList()
 
 /** A bundled CSV's rows, empty when this build doesn't ship it. */
 private fun readData(storage: Storage, name: String): List<List<String>> = csvRows(storage.readAsset(name))
@@ -97,7 +98,10 @@ fun parseLocalityRow(c: List<String>): Locality? {
  *  `localities.csv` is optional — the Sweden flavor ships none (its import is coordinate-driven,
  *  so spots are minted on the map) — so a missing file yields an empty list, not a crash. */
 fun loadLocalities(storage: Storage, versionCode: Int): List<Locality> {
-    val base = (readData(storage, "localities.csv") + readMyLocalities(storage)).mapNotNull(::parseLocalityRow)
+    // Lazy, so the bundled file's 80k rows are never all held as strings at once: cuts the load's
+    // peak heap from ~104 to ~66 MB on the emulator, where 192 MB ran out in the instrumented tests.
+    val base = (csvRowSequence(storage.readAsset("localities.csv")) + readMyLocalities(storage))
+        .mapNotNull(::parseLocalityRow).toList()
     return base + withoutKnownIds(readLiveLocalities(storage, versionCode).mapNotNull(::parseLocalityRow), base)
 }
 

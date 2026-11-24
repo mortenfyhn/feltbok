@@ -22,7 +22,7 @@ class CopyAsNewTest {
 
     @Test
     fun copyKeepsTheOriginalAndOpensANewNoteWithoutComments() {
-        val vm = MainViewModel(FakePlatform())
+        val vm = loadedViewModel()
         val original = Note(
             id = 1, time = 1, species = "Gråspurv", latin = "Passer domesticus", count = 3, age = "", activity = "",
             sex = "", publicComment = "offentlig", privateComment = "privat", locName = "Sted", locFull = "",

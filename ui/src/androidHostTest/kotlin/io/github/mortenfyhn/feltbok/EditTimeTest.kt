@@ -18,7 +18,7 @@ class EditTimeTest {
     @Before
     fun setUp() {
         Dispatchers.setMain(UnconfinedTestDispatcher())
-        vm = MainViewModel(FakePlatform())
+        vm = loadedViewModel()
     }
 
     @After
