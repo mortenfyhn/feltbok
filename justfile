@@ -65,6 +65,12 @@ itest $FELTBOK_PHONE="":
     adb shell wm dismiss-keyguard
     ./gradlew connectedReleaseTestAndroidTest
 
+# Upgrade test: enter data in the last release, install this build over it, check nothing is lost
+[arg("FELTBOK_PHONE", long="phone", value="1", help="Use the phone instead of this worktree's emulator")]
+[group('check')]
+upgrade-test tag="" $FELTBOK_PHONE="":
+    ANDROID_SERIAL=$(scripts/dev/device.sh serial) python3 scripts/dev/upgrade_test.py run {{tag}}
+
 # Auto-format Kotlin (ktlint) + Python (ruff); run before committing manual tweaks
 [group('check')]
 format:

@@ -26,6 +26,9 @@ not a one-off tap-through.
   (own localities, toasts, failures), the **live locality fetch** (splitting cut-off responses,
   the 2 km cells), the **export** (checks before sending, stopping and resuming, a rejected note,
   the login check), and **files written by v1.4** loading after the update.
+- `just upgrade-test` (device; also a `release.sh` pre-flight): builds the last release, enters
+  notes, a deleted note, a co-observer and a name-language setting through its UI, installs this
+  build over it, and checks the app still shows them all.
 
 ## Hand-test these — automation can't (or doesn't yet)
 
@@ -54,12 +57,11 @@ not a one-off tap-through.
 - On your own phone, export one note at **one of your private localities** and one at a
   **live-fetched** public locality (one the map toast reported). Each links to that exact site.
 
-**Upgrade from the previous release** *(the host test reads v1.4's files; nothing installs the new
-APK over the old one)*
+**Upgrade from the previous release** *(`just upgrade-test` covers notes, papirkurv,
+co-observers, the party and name-language settings, on the test build)*
 - `release.sh` keeps the signed APK locally until the push prompt. Install it over the daily
-  release app before answering `yes`. Notes, papirkurv, co-observers, the party, name-language
-  settings and private localities are all still there. Notes saved under the old version still
-  export.
+  release app before answering `yes`. Your private localities are still there, and notes saved
+  under the old version still export.
 
 **Login and network on the release build** *(the R8 smoke tests don't reach these code paths, and
 host tests use a fake server)*

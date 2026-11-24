@@ -39,10 +39,11 @@ editor fails to start, the script pauses until you hit enter. The `## Neste utgi
 (rewriting it into shippable notes is a real part of cutting a release); the script only adds the
 `## v0.8` heading above its bullets.
 
-Next come the two gates: the R8 smoke tests (`just itest`) and the seed->export check, which the
-script sets up for you on request: `just install`, `just seed`, `just run`, so the dev app is
-loaded with the sample batch and you only export by hand (see the pre-release checklist). Both are
-skippable, but only by typing `skip`.
+Next come the gates: the R8 smoke tests (`just itest`), the upgrade test (`just upgrade-test`,
+about 7 minutes) and the seed->export check. The script sets the export check up for you on
+request: `just install`, `just seed`, `just run`, so the dev app is loaded with the sample batch
+and you only export by hand (see the pre-release checklist). All are skippable, but only by typing
+`skip`.
 
 After that it commits (version bump + changelog), tags `v0.8`, and builds the signed APK
 (`feltbok-v0.8.apk`) and the Play AAB (`app/build/outputs/bundle/release/app-release.aab`). All of
