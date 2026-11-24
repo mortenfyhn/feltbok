@@ -19,7 +19,7 @@ class DraftChangesTest {
     @Before
     fun setUp() {
         Dispatchers.setMain(UnconfinedTestDispatcher())
-        vm = MainViewModel(FakePlatform())
+        vm = loadedViewModel()
         vm.notes.addAll(listOf(note(1), note(2)))
     }
 

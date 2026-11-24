@@ -29,7 +29,7 @@ class ExportVisitTest {
             if (p.posts.size > offlineAfter) NoAnswer(offline = true)
             else HttpResponse(201, body.dropLast(1) + ""","id":${++lastId},"site":{"id":352401},"taxon":{"id":3681},"observers":[{"id":58758}]}""")
         }
-        vm = MainViewModel(p)
+        vm = loadedViewModel(p)
         val t = nowMs() - 3_600_000
         for (id in 1L..3L) {
             vm.notes += Note(
