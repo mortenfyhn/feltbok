@@ -57,11 +57,10 @@ not a one-off tap-through.
 - On your own phone, export one note at **one of your private localities** and one at a
   **live-fetched** public locality (one the map toast reported). Each links to that exact site.
 
-**Upgrade from the previous release** *(`just upgrade-test` covers notes, papirkurv,
-co-observers, the party and name-language settings, on the test build)*
+**Upgrade from the previous release** *(`just upgrade-test` covers the data on the test build,
+and `UpdateFromV14Test` the private localities and old notes)*
 - `release.sh` keeps the signed APK locally until the push prompt. Install it over the daily
-  release app before answering `yes`. Your private localities are still there, and notes saved
-  under the old version still export.
+  release app before answering `yes`, to check the signed build installs as an update.
 
 **Login and network on the release build** *(the R8 smoke tests don't reach these code paths, and
 host tests use a fake server)*
