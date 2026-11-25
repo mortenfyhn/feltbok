@@ -23,7 +23,7 @@ Usage: ./release.sh <tag>      e.g. ./release.sh v1.6
 Cuts a signed release from master's tip, or from a release/* branch's tip:
   1. Checks: clean tree (drafted changelogs allowed), branch tip, tag free, keystore.
   2. Opens CHANGELOG.md, then the English F-Droid changelog, in git's editor, and waits.
-  3. Gates: the R8 smoke tests (just itest) and the seed->export check. Type 'skip' to skip one.
+  3. Gates: the R8 smoke tests (just itest), the upgrade test and the seed->export check. Type 'skip' to skip one.
   4. Bumps versionCode, commits, tags, and builds the signed APK and the Play AAB. All local.
   5. Asks before pushing and publishing the GitHub release. Answer no to keep it a rehearsal.
 
@@ -155,6 +155,9 @@ while ! attached; do
     [ "$ans" = skip ] && { echo "Skipping R8 smoke tests for $tag."; break; }
 done
 attached && just itest --phone
+# Then install this build over the last release, as an app store update does, and check it keeps
+# the notes, papirkurv, co-observers and settings (scripts/dev/upgrade_test.py).
+attached && just upgrade-test --phone
 
 # Same deal for the seed->export check (docs/pre-release-checklist.md): host tests use a fake
 # server, and this is the only run against the real site, which needs your login, so the script
