@@ -55,7 +55,8 @@ private fun parsePolygon(wkt: String): List<DoubleArray> {
         if (c == '-' || c == '.' || c in '0'..'9') {
             val start = i++
             while (i < n && (wkt[i] in '0'..'9' || wkt[i] == '.')) i++
-            val v = wkt.substring(start, i).toDouble()
+            // A cut-off number ("-", "1.") is skipped: a crash here would repeat at every launch.
+            val v = fastDouble(wkt.substring(start, i)) ?: continue
             if (lon.isNaN()) lon = v else { pts.add(doubleArrayOf(v, lon)); lon = Double.NaN }  // WKT is lon lat
         } else i++
     }
