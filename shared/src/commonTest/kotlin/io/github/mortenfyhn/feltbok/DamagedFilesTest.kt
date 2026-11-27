@@ -1,6 +1,7 @@
 package io.github.mortenfyhn.feltbok
 
 import kotlin.test.Test
+import kotlin.test.assertEquals
 import kotlin.test.assertTrue
 
 /** The app's files, damaged at random (#201). Loading must not crash, and damage to one note must
@@ -52,6 +53,35 @@ class DamagedFilesTest {
         s.files[name] = damage(s.files.getValue(name))
         val _ = loadLocalities(s, VERSION)
     }
+
+    @Test
+    fun aBadNoteDoesNotLoseTheOthers() = forSeeds {
+        val notes = notes().ifEmpty { listOf(note()) }
+        val bad = notes.indices.random(r)
+        // A required field gone, as a bug or a hand edit could leave it.
+        val objects = notes.map { noteToJson(it).toString() }.toMutableList()
+        objects[bad] = objects[bad].replace(oneOf(""""species":""", """"count":""", """"lat":"""), """"x":""")
+        val s = MemStorage(mutableMapOf("notes.json" to objects.joinToString(",", "[", "]")))
+        assertEquals(notes.filterIndexed { i, _ -> i != bad }, loadNotes(s))
+        assertKept(s, objects.joinToString(",", "[", "]"))
+    }
+
+    /** The next save writes the notes that loaded over notes.json, so the damaged file is kept
+     *  beside it, for a later version or a developer to recover. */
+    @Test
+    fun aDamagedNotesFileIsKept() = forSeeds {
+        val text = damage(notesJson(notes().ifEmpty { listOf(note()) }))
+        val s = MemStorage(mutableMapOf("notes.json" to text))
+        val loaded = loadNotes(s)
+        if (runCatching { parseNotes(text) }.isFailure) {
+            assertKept(s, text)
+            saveNotes(s, loaded)
+            assertKept(s, text)
+        }
+    }
+
+    private fun assertKept(s: MemStorage, text: String) =
+        assertTrue(s.files.any { (name, t) -> name.startsWith("notes-damaged-") && t == text }, "Not kept: $text")
 
     @Test
     fun aDamagedArchiveLineLosesOnlyThatNote() = forSeeds {

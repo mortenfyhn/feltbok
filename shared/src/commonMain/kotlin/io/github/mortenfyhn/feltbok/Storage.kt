@@ -1,5 +1,7 @@
 package io.github.mortenfyhn.feltbok
 
+import kotlinx.serialization.json.jsonArray
+import kotlinx.serialization.json.jsonObject
 import kotlin.time.Clock
 
 /** The app's files by name, implemented per platform (on Android: internal storage, the APK's
@@ -32,8 +34,15 @@ interface Storage {
 
 private const val NOTES = "notes.json"
 
-fun loadNotes(storage: Storage): List<Note> =
-    runCatching { storage.read(NOTES)?.let(::parseNotes) }.getOrNull() ?: emptyList()
+/** The notes that load. A note that doesn't load (a field missing or mistyped) is skipped, not
+ *  the whole file. When anything is skipped, the file is kept as notes-damaged-<time>.json first,
+ *  since the next save writes only the notes that loaded. */
+fun loadNotes(storage: Storage): List<Note> {
+    val text = storage.read(NOTES) ?: return emptyList()
+    val notes = runCatching { parseJson(text).jsonArray.map { runCatching { noteFromJson(it.jsonObject) }.getOrNull() } }.getOrNull()
+    if (notes == null || null in notes) storage.write("notes-damaged-${nowMs()}.json", text)
+    return withUniqueIds(notes.orEmpty().filterNotNull())
+}
 
 fun saveNotes(storage: Storage, notes: List<Note>) = storage.write(NOTES, notesJson(notes))
 
