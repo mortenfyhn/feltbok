@@ -92,14 +92,18 @@ fun uploadProblem(n: Note, now: Long, zone: TimeZone = TimeZone.currentSystemDef
     }
 }
 
+// The upload's parsers give null on an answer they can't read, such as a wifi login page that
+// answers 200 with HTML: a throw would crash the export.
+
 /** The logged-in user's id, from /bff/user's claims. */
-fun parseUserId(json: String): Long? =
+fun parseUserId(json: String): Long? = runCatching {
     parseJson(json).jsonArray.map { it.jsonObject }
         .firstOrNull { it.optString("type") == "user_id" }?.optString("value")?.toLongOrNull()
+}.getOrNull()
 
 /** The bird taxon whose scientific name, or a synonym of it, is [latin], from a TaxonName/Search
  *  answer. The same rule as scripts/build_taxon_ids.py, which fills taxon_ids.csv. */
-fun parseTaxonId(json: String, latin: String): Long? =
+fun parseTaxonId(json: String, latin: String): Long? = runCatching {
     parseJson(json).jsonArray.map { it.jsonObject }
         .filter { it.optInt("speciesGroupId") == 8 }
         .firstOrNull { h ->
@@ -107,6 +111,7 @@ fun parseTaxonId(json: String, latin: String): Long? =
             names.any { it.optString("name").equals(latin, ignoreCase = true) }
         }
         ?.optLong("taxonId")
+}.getOrNull()
 
 /** A taxon found by name, with its species group (8 = birds). */
 data class TypedTaxon(val id: Long, val groupId: Int)
@@ -116,7 +121,7 @@ const val BIRDS = 8
 /** The taxon of any species group whose scientific or Norwegian name, or a synonym of one, is
  *  [name], from a TaxonName/Search answer. For a species typed in by hand (#144); null unless
  *  exactly one taxon has that name. */
-fun parseTaxonByName(json: String, name: String): TypedTaxon? =
+fun parseTaxonByName(json: String, name: String): TypedTaxon? = runCatching {
     parseJson(json).jsonArray.map { it.jsonObject }
         .filter { h ->
             val names = listOfNotNull(h.optObject("scientificName"), h.optObject("vernacularName")) +
@@ -124,6 +129,7 @@ fun parseTaxonByName(json: String, name: String): TypedTaxon? =
             names.any { it.optString("name").trim().equals(name.trim(), ignoreCase = true) }
         }
         .map { TypedTaxon(it.optLong("taxonId"), it.optInt("speciesGroupId")) }.distinct().singleOrNull()
+}.getOrNull()
 
 /** The age (stage), sex (gender) and activity ids a species group allows, and its name. */
 data class GroupLists(val name: String, val stages: Set<Int>, val genders: Set<Int>, val activities: Set<Int>)
